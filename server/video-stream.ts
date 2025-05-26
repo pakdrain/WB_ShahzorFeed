@@ -122,19 +122,30 @@ class VideoStreamService {
 
         console.log(`Starting MJPEG stream for camera ${cameraId}`);
 
-        // Set headers for MJPEG stream
-        res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=--myboundary');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection', 'close');
-        res.setHeader('Access-Control-Allow-Origin', '*');
+        // Set proper headers for MJPEG stream
+        res.writeHead(200, {
+          'Content-Type': 'multipart/x-mixed-replace; boundary=--myboundary',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0',
+          'Pragma': 'no-cache',
+          'Connection': 'close',
+          'Expires': 'Mon, 3 Jan 2000 12:34:56 GMT',
+          'Access-Control-Allow-Origin': '*'
+        });
 
-        // Start FFmpeg process to convert RTSP to MJPEG
+        // Start FFmpeg process with multiple connection attempts
         const ffmpeg = spawn('ffmpeg', [
-          '-rtsp_transport', 'tcp',
+          '-fflags', '+genpts',
+          '-rtsp_transport', 'udp',
+          '-allowed_media_types', 'video',
+          '-analyzeduration', '2000000',
+          '-probesize', '2000000',
+          '-max_delay', '500000',
           '-i', camera.rtspUrl,
-          '-q:v', '5',
-          '-r', '10',
           '-f', 'mjpeg',
+          '-q:v', '3',
+          '-r', '8',
+          '-s', '640x480',
+          '-vf', 'fps=8',
           '-'
         ]);
 
