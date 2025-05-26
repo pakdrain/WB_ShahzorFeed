@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -38,28 +38,30 @@ export default function CameraSettings() {
   const form = useForm<CameraSettingsForm>({
     resolver: zodResolver(cameraSettingsSchema),
     defaultValues: {
-      name: camera?.name || 'Camera 01',
-      ip: camera?.ip || '10.10.10.146',
-      port: camera?.port || 554,
-      username: camera?.username || 'admin',
-      password: camera?.password || 'admin123',
+      name: 'Camera 01',
+      ip: '10.10.10.146',
+      port: 554,
+      username: 'admin',
+      password: 'admin123',
       channel: 1,
       subtype: 0,
     },
   });
 
   // Update form when camera data loads
-  if (camera && !form.getValues().name) {
-    form.reset({
-      name: camera.name,
-      ip: camera.ip,
-      port: camera.port,
-      username: camera.username,
-      password: camera.password,
-      channel: 1,
-      subtype: 0,
-    });
-  }
+  React.useEffect(() => {
+    if (camera) {
+      form.reset({
+        name: camera.name || 'Camera 01',
+        ip: camera.ip || '10.10.10.146',
+        port: camera.port || 554,
+        username: camera.username || 'admin',
+        password: camera.password || 'admin123',
+        channel: 1,
+        subtype: 0,
+      });
+    }
+  }, [camera, form]);
 
   // Save settings mutation
   const saveSettingsMutation = useMutation({
@@ -76,17 +78,18 @@ export default function CameraSettings() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/cameras/1'] });
       toast({
         title: "Settings Saved",
         description: "Camera settings have been updated successfully.",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Save error:', error);
       toast({
         title: "Error",
-        description: "Failed to save camera settings. Please try again.",
+        description: error.message || "Failed to save camera settings. Please try again.",
         variant: "destructive",
       });
     },
@@ -124,6 +127,7 @@ export default function CameraSettings() {
   });
 
   const onSubmit = (data: CameraSettingsForm) => {
+    console.log('Form data being submitted:', data);
     saveSettingsMutation.mutate(data);
   };
 
