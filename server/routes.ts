@@ -63,12 +63,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const id = parseInt(req.params.id);
       const updates = req.body;
       
+      console.log("Updating camera with ID:", id, "Updates:", updates);
+      
       // Generate new RTSP URL based on updated settings
       if (updates.ip || updates.port || updates.username || updates.password) {
-        const ip = updates.ip || req.body.ip;
-        const port = updates.port || req.body.port || 554;
-        const username = updates.username || req.body.username;
-        const password = updates.password || req.body.password;
+        const ip = updates.ip;
+        const port = updates.port || 554;
+        const username = updates.username;
+        const password = updates.password;
         const channel = updates.channel || 1;
         const subtype = updates.subtype || 0;
         
@@ -78,13 +80,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedCamera = await storage.updateCamera(id, updates);
       
       if (!updatedCamera) {
+        console.log("Camera not found with ID:", id);
         return res.status(404).json({ message: "Camera not found" });
       }
 
-      res.json(updatedCamera);
+      console.log("Successfully updated camera:", updatedCamera);
+      res.status(200).json(updatedCamera);
     } catch (error) {
       console.error("Error updating camera:", error);
-      res.status(500).json({ message: "Internal server error" });
+      res.status(500).json({ message: "Internal server error", error: error.message });
     }
   });
 
