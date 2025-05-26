@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { streamService } from "./stream-service";
+import { videoStreamService } from "./video-stream";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -9,6 +10,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize WebSocket service
   streamService.initialize(httpServer);
+  
+  // Register video streaming routes
+  videoStreamService.registerRoutes(app);
 
   // Get default camera (Camera 01) - Put this BEFORE the parameterized route
   app.get("/api/cameras/default", async (req, res) => {
