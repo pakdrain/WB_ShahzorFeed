@@ -18,56 +18,7 @@ export default function VideoStream({
   streamStats,
   connectionError,
 }: VideoStreamProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const [hlsStreamUrl, setHlsStreamUrl] = useState<string | null>(null);
-  const [videoLoading, setVideoLoading] = useState(false);
-
-  // Start HLS stream when connected and streaming
-  useEffect(() => {
-    if (isConnected && isStreaming && camera?.id) {
-      startHlsStream();
-    }
-    return () => {
-      if (camera?.id) {
-        stopHlsStream();
-      }
-    };
-  }, [isConnected, isStreaming, camera?.id]);
-
-  const startHlsStream = async () => {
-    if (!camera?.id) return;
-    
-    try {
-      setVideoLoading(true);
-      const response = await fetch(`/api/stream/${camera.id}/start`, {
-        method: 'POST',
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setHlsStreamUrl(data.streamUrl);
-        console.log('HLS stream started:', data.streamUrl);
-      }
-    } catch (error) {
-      console.error('Error starting HLS stream:', error);
-    } finally {
-      setVideoLoading(false);
-    }
-  };
-
-  const stopHlsStream = async () => {
-    if (!camera?.id) return;
-    
-    try {
-      await fetch(`/api/stream/${camera.id}/stop`, {
-        method: 'POST',
-      });
-      setHlsStreamUrl(null);
-      console.log('HLS stream stopped');
-    } catch (error) {
-      console.error('Error stopping HLS stream:', error);
-    }
-  };
+  const [streamLoading, setStreamLoading] = useState(false);
 
   const handleFullscreen = () => {
     const element = document.getElementById('video-container');
@@ -119,36 +70,34 @@ export default function VideoStream({
     // Connected and streaming - show actual live video
     return (
       <div className="absolute inset-0 bg-black">
-        {videoLoading && (
+        {streamLoading && (
           <div className="absolute inset-0 bg-black bg-opacity-75 flex items-center justify-center z-10">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-monitoring-blue mx-auto mb-2"></div>
-              <div className="text-sm text-white">Starting live stream...</div>
+              <div className="text-sm text-white">Loading live stream...</div>
             </div>
           </div>
         )}
         
-        {hlsStreamUrl ? (
-          <video
-            ref={videoRef}
+        {isConnected && isStreaming ? (
+          <img
             className="w-full h-full object-contain bg-black"
-            autoPlay
-            muted
-            controls
-            onLoadStart={() => console.log('Video loading started')}
-            onCanPlay={() => console.log('Video can play')}
-            onError={(e) => console.error('Video error:', e)}
-          >
-            <source src={hlsStreamUrl} type="application/x-mpegURL" />
-            <source src={hlsStreamUrl} type="application/vnd.apple.mpegurl" />
-            Your browser does not support HLS video playback.
-          </video>
+            src={`/api/stream/${camera.id}/mjpeg`}
+            alt="Live Camera Feed"
+            onLoad={() => console.log('MJPEG stream loaded')}
+            onError={(e) => console.error('MJPEG stream error:', e)}
+            style={{ 
+              maxWidth: '100%', 
+              maxHeight: '100%',
+              backgroundColor: 'black'
+            }}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">
               <div className="text-6xl text-monitoring-green mb-4">📹</div>
               <div className="text-lg font-medium text-monitoring-green mb-2">
-                {videoLoading ? 'Starting Live Stream...' : 'Preparing Video Feed'}
+                {streamLoading ? 'Starting Live Stream...' : 'Preparing Video Feed'}
               </div>
               <div className="text-sm text-gray-400 font-mono mb-4">
                 Converting RTSP to web-compatible format

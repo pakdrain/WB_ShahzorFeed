@@ -1,8 +1,9 @@
 import { spawn, ChildProcess } from 'child_process';
-import { Express } from 'express';
+import { Express, Request, Response } from 'express';
 import { storage } from './storage';
 import path from 'path';
 import fs from 'fs';
+import { Readable } from 'stream';
 
 class VideoStreamService {
   private ffmpegProcesses: Map<number, ChildProcess> = new Map();
@@ -37,19 +38,14 @@ class VideoStreamService {
 
       console.log(`Starting FFmpeg stream for camera ${cameraId}: ${camera.rtspUrl}`);
 
-      // FFmpeg command to convert RTSP to HLS
+      // FFmpeg command to convert RTSP to MJPEG stream for better browser compatibility
       const ffmpeg = spawn('ffmpeg', [
+        '-rtsp_transport', 'tcp',
         '-i', camera.rtspUrl,
-        '-c:v', 'libx264',
-        '-preset', 'fast',
-        '-tune', 'zerolatency',
-        '-c:a', 'aac',
-        '-f', 'hls',
-        '-hls_time', '2',
-        '-hls_list_size', '3',
-        '-hls_flags', 'delete_segments',
-        '-y', // Overwrite output files
-        playlistPath
+        '-q:v', '5',  // Good quality
+        '-r', '15',   // 15 FPS for smooth streaming
+        '-f', 'mjpeg',
+        '-'  // Output to stdout
       ]);
 
       ffmpeg.stdout.on('data', (data) => {
@@ -114,45 +110,67 @@ class VideoStreamService {
   }
 
   registerRoutes(app: Express): void {
-    // Serve HLS playlists
-    app.get('/api/stream/:cameraId/playlist.m3u8', (req, res) => {
+    // MJPEG stream endpoint
+    app.get('/api/stream/:cameraId/mjpeg', async (req: Request, res: Response) => {
       const cameraId = parseInt(req.params.cameraId);
-      const streamPath = this.streamPaths.get(cameraId);
       
-      if (!streamPath) {
-        return res.status(404).json({ error: 'Stream not found' });
+      try {
+        const camera = await storage.getCamera(cameraId);
+        if (!camera) {
+          return res.status(404).json({ error: 'Camera not found' });
+        }
+
+        console.log(`Starting MJPEG stream for camera ${cameraId}`);
+
+        // Set headers for MJPEG stream
+        res.setHeader('Content-Type', 'multipart/x-mixed-replace; boundary=--myboundary');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'close');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+
+        // Start FFmpeg process to convert RTSP to MJPEG
+        const ffmpeg = spawn('ffmpeg', [
+          '-rtsp_transport', 'tcp',
+          '-i', camera.rtspUrl,
+          '-q:v', '5',
+          '-r', '10',
+          '-f', 'mjpeg',
+          '-'
+        ]);
+
+        // Handle FFmpeg output
+        ffmpeg.stdout.on('data', (data: Buffer) => {
+          res.write('--myboundary\r\n');
+          res.write('Content-Type: image/jpeg\r\n');
+          res.write(`Content-Length: ${data.length}\r\n\r\n`);
+          res.write(data);
+          res.write('\r\n');
+        });
+
+        ffmpeg.stderr.on('data', (data) => {
+          console.log(`FFmpeg stderr: ${data}`);
+        });
+
+        ffmpeg.on('close', () => {
+          console.log('FFmpeg process closed');
+          res.end();
+        });
+
+        ffmpeg.on('error', (error) => {
+          console.error('FFmpeg error:', error);
+          res.status(500).end();
+        });
+
+        // Clean up when client disconnects
+        req.on('close', () => {
+          console.log('Client disconnected, stopping FFmpeg');
+          ffmpeg.kill('SIGTERM');
+        });
+
+      } catch (error) {
+        console.error('Error starting MJPEG stream:', error);
+        res.status(500).json({ error: 'Failed to start stream' });
       }
-
-      const playlistPath = path.join(streamPath, 'playlist.m3u8');
-      
-      if (!fs.existsSync(playlistPath)) {
-        return res.status(404).json({ error: 'Playlist not found' });
-      }
-
-      res.setHeader('Content-Type', 'application/vnd.apple.mpegurl');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.sendFile(playlistPath);
-    });
-
-    // Serve HLS segments
-    app.get('/api/stream/:cameraId/:segment', (req, res) => {
-      const cameraId = parseInt(req.params.cameraId);
-      const segment = req.params.segment;
-      const streamPath = this.streamPaths.get(cameraId);
-      
-      if (!streamPath) {
-        return res.status(404).json({ error: 'Stream not found' });
-      }
-
-      const segmentPath = path.join(streamPath, segment);
-      
-      if (!fs.existsSync(segmentPath)) {
-        return res.status(404).json({ error: 'Segment not found' });
-      }
-
-      res.setHeader('Content-Type', 'video/MP2T');
-      res.setHeader('Access-Control-Allow-Origin', '*');
-      res.sendFile(segmentPath);
     });
 
     // Start stream endpoint
