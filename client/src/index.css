@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 60 4.8% 95.9%;
+  --secondary-foreground: 24 9.8% 10%;
+  --accent: 60 4.8% 95.9%;
+  --accent-foreground: 24 9.8% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 20 14.3% 4.1%;
+  --radius: 0.5rem;
+
+  /* Custom monitoring theme colors */
+  --monitoring-dark: 222 84% 5%; /* #111827 */
+  --monitoring-slate: 210 40% 8%; /* #1F2937 */
+  --monitoring-gray: 215 28% 17%; /* #374151 */
+  --monitoring-blue: 213 94% 68%; /* #3B82F6 */
+  --monitoring-green: 160 84% 39%; /* #10B981 */
+  --monitoring-yellow: 38 92% 50%; /* #F59E0B */
+  --monitoring-red: 0 84% 60%; /* #EF4444 */
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 207 90% 54%;
+  --primary-foreground: 211 100% 99%;
+  --secondary: 240 3.7% 15.9%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased;
+    background-color: hsl(var(--monitoring-dark));
+    color: hsl(0 0% 96%);
+  }
+}
+
+@layer utilities {
+  .bg-monitoring-dark {
+    background-color: hsl(var(--monitoring-dark));
+  }
+  
+  .bg-monitoring-slate {
+    background-color: hsl(var(--monitoring-slate));
+  }
+  
+  .bg-monitoring-gray {
+    background-color: hsl(var(--monitoring-gray));
+  }
+  
+  .bg-monitoring-blue {
+    background-color: hsl(var(--monitoring-blue));
+  }
+  
+  .bg-monitoring-green {
+    background-color: hsl(var(--monitoring-green));
+  }
+  
+  .bg-monitoring-yellow {
+    background-color: hsl(var(--monitoring-yellow));
+  }
+  
+  .bg-monitoring-red {
+    background-color: hsl(var(--monitoring-red));
+  }
+  
+  .text-monitoring-blue {
+    color: hsl(var(--monitoring-blue));
+  }
+  
+  .text-monitoring-green {
+    color: hsl(var(--monitoring-green));
+  }
+  
+  .text-monitoring-yellow {
+    color: hsl(var(--monitoring-yellow));
+  }
+  
+  .text-monitoring-red {
+    color: hsl(var(--monitoring-red));
+  }
+  
+  .border-monitoring-gray {
+    border-color: hsl(var(--monitoring-gray));
+  }
+  
+  .border-monitoring-red {
+    border-color: hsl(var(--monitoring-red));
+  }
+}
