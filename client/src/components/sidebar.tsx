@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navigation = [
-  { name: 'Weighbridge', href: '/', icon: Home },
-  { name: 'Camera View', href: '/camera', icon: Video },
+  { name: 'Home', href: '/', icon: Home },
   { name: 'Camera Settings', href: '/settings', icon: Settings },
 ];
 
