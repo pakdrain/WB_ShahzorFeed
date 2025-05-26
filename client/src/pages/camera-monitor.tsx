@@ -87,6 +87,7 @@ export default function CameraMonitor() {
             <CameraSettings
               isStreaming={isStreaming}
               isConnected={isConnected}
+              currentCamera={camera}
               onStartStream={startStream}
               onStopStream={stopStream}
               onReconnect={reconnectStream}
@@ -95,6 +96,11 @@ export default function CameraMonitor() {
                 if (element) {
                   element.requestFullscreen();
                 }
+              }}
+              onUpdateCamera={(config) => {
+                console.log('Updating camera configuration:', config);
+                // In a real app, this would call an API to update the camera
+                // For now, we'll just log the configuration
               }}
             />
           </div>

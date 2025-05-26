@@ -17,10 +17,12 @@ import { Card } from '@/components/ui/card';
 interface CameraSettingsProps {
   isStreaming: boolean;
   isConnected: boolean;
+  currentCamera: any;
   onStartStream: () => void;
   onStopStream: () => void;
   onReconnect: () => void;
   onFullscreen: () => void;
+  onUpdateCamera: (config: CameraConfig) => void;
 }
 
 interface CameraConfig {
@@ -32,33 +34,43 @@ interface CameraConfig {
   fps: string;
   quality: string;
   channel: string;
+  name: string;
+  subtype: string;
 }
 
 export default function CameraSettings({
   isStreaming,
   isConnected,
+  currentCamera,
   onStartStream,
   onStopStream,
   onReconnect,
   onFullscreen,
+  onUpdateCamera,
 }: CameraSettingsProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [cameraConfig, setCameraConfig] = useState<CameraConfig>({
-    ip: '10.10.10.146',
-    port: '554',
-    username: 'admin',
-    password: 'admin123',
+    ip: currentCamera?.ip || '10.10.10.146',
+    port: currentCamera?.port?.toString() || '554',
+    username: currentCamera?.username || 'admin',
+    password: currentCamera?.password || 'admin123',
     resolution: '640x480',
     fps: '10',
     quality: '5',
-    channel: '1'
+    channel: '1',
+    name: currentCamera?.name || 'Camera 01',
+    subtype: '0'
   });
 
-  const handleSaveConfig = () => {
-    // Save camera configuration
-    console.log('Saving camera config:', cameraConfig);
-    // Here you would typically call an API to update the camera settings
-    setIsOpen(false);
+  const handleSaveConfig = async () => {
+    try {
+      // Update camera configuration via API
+      onUpdateCamera(cameraConfig);
+      console.log('Saving camera config:', cameraConfig);
+      setIsOpen(false);
+    } catch (error) {
+      console.error('Error saving camera config:', error);
+    }
   };
 
   return (
@@ -81,6 +93,16 @@ export default function CameraSettings({
           <Card className="bg-monitoring-dark border-monitoring-gray p-4">
             <h3 className="text-sm font-medium text-gray-300 mb-4">Camera Configuration</h3>
             <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <Label htmlFor="name" className="text-xs text-gray-400">Camera Name</Label>
+                <Input
+                  id="name"
+                  value={cameraConfig.name}
+                  onChange={(e) => setCameraConfig({...cameraConfig, name: e.target.value})}
+                  className="bg-monitoring-slate border-monitoring-gray text-white"
+                  placeholder="Camera 01"
+                />
+              </div>
               <div>
                 <Label htmlFor="ip" className="text-xs text-gray-400">IP Address</Label>
                 <Input
@@ -124,13 +146,29 @@ export default function CameraSettings({
               </div>
               <div>
                 <Label htmlFor="channel" className="text-xs text-gray-400">Channel</Label>
-                <Input
-                  id="channel"
-                  value={cameraConfig.channel}
-                  onChange={(e) => setCameraConfig({...cameraConfig, channel: e.target.value})}
-                  className="bg-monitoring-slate border-monitoring-gray text-white"
-                  placeholder="1"
-                />
+                <Select value={cameraConfig.channel} onValueChange={(value) => setCameraConfig({...cameraConfig, channel: value})}>
+                  <SelectTrigger className="bg-monitoring-slate border-monitoring-gray text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-monitoring-slate border-monitoring-gray">
+                    <SelectItem value="1">Channel 1</SelectItem>
+                    <SelectItem value="2">Channel 2</SelectItem>
+                    <SelectItem value="3">Channel 3</SelectItem>
+                    <SelectItem value="4">Channel 4</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="subtype" className="text-xs text-gray-400">Stream Type</Label>
+                <Select value={cameraConfig.subtype} onValueChange={(value) => setCameraConfig({...cameraConfig, subtype: value})}>
+                  <SelectTrigger className="bg-monitoring-slate border-monitoring-gray text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-monitoring-slate border-monitoring-gray">
+                    <SelectItem value="0">Main Stream (High Quality)</SelectItem>
+                    <SelectItem value="1">Sub Stream (Low Quality)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </Card>

@@ -57,6 +57,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update camera configuration
+  app.put("/api/cameras/:id", async (req, res) => {
+    try {
+      const cameraId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      // Build RTSP URL from configuration
+      const rtspUrl = `rtsp://${updateData.username}:${updateData.password}@${updateData.ip}:${updateData.port}/cam/realmonitor?channel=${updateData.channel}&subtype=${updateData.subtype}`;
+      
+      const cameraUpdate = {
+        name: updateData.name,
+        ip: updateData.ip,
+        port: parseInt(updateData.port),
+        username: updateData.username,
+        password: updateData.password,
+        rtspUrl: rtspUrl
+      };
+      
+      const updatedCamera = await storage.updateCamera(cameraId, cameraUpdate);
+      
+      if (!updatedCamera) {
+        return res.status(404).json({ error: "Camera not found" });
+      }
+      
+      res.json(updatedCamera);
+    } catch (error) {
+      console.error("Error updating camera:", error);
+      res.status(500).json({ error: "Internal server error" });
+    }
+  });
+
   // Test camera connection
   app.post("/api/cameras/:id/test", async (req, res) => {
     try {
