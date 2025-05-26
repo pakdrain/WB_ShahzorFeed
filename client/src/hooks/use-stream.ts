@@ -47,6 +47,15 @@ export function useStream(cameraId?: number): UseStreamReturn {
       ws.onopen = () => {
         console.log('WebSocket connected');
         setConnectionError(null);
+        // Auto-start stream after connection
+        setTimeout(() => {
+          if (cameraId && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({
+              type: 'start_stream',
+              cameraId: cameraId
+            }));
+          }
+        }, 1500);
       };
 
       ws.onmessage = (event) => {

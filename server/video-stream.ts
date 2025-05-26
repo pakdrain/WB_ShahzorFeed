@@ -132,20 +132,25 @@ class VideoStreamService {
           'Access-Control-Allow-Origin': '*'
         });
 
-        // Start FFmpeg process with multiple connection attempts
+        // Start FFmpeg process with robust connection handling for camera movement
         const ffmpeg = spawn('ffmpeg', [
-          '-fflags', '+genpts',
-          '-rtsp_transport', 'udp',
+          '-fflags', '+genpts+igndts',
+          '-rtsp_transport', 'tcp',
           '-allowed_media_types', 'video',
-          '-analyzeduration', '2000000',
-          '-probesize', '2000000',
+          '-analyzeduration', '1000000',
+          '-probesize', '1000000',
           '-max_delay', '500000',
+          '-reconnect', '1',
+          '-reconnect_at_eof', '1', 
+          '-reconnect_streamed', '1',
+          '-reconnect_delay_max', '2',
           '-i', camera.rtspUrl,
           '-f', 'mjpeg',
-          '-q:v', '3',
-          '-r', '8',
+          '-q:v', '4',
+          '-r', '10',
           '-s', '640x480',
-          '-vf', 'fps=8',
+          '-vf', 'fps=10',
+          '-avoid_negative_ts', 'make_zero',
           '-'
         ]);
 
