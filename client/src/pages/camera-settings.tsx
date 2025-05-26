@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, Save, TestTube, Eye, EyeOff } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
 
 // Form validation schema
 const cameraSettingsSchema = z.object({
@@ -66,16 +66,7 @@ export default function CameraSettings() {
   // Save settings mutation
   const saveSettingsMutation = useMutation({
     mutationFn: async (data: CameraSettingsForm) => {
-      const response = await fetch(`/api/cameras/1`, {
-        method: 'PATCH',
-        body: JSON.stringify(data),
-        headers: { 'Content-Type': 'application/json' },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to save camera settings');
-      }
-      
+      const response = await apiRequest('PATCH', '/api/cameras/1', data);
       return response.json();
     },
     onSuccess: (data) => {
