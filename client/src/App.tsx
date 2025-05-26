@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Sidebar from "@/components/sidebar";
 import CameraMonitor from "@/pages/camera-monitor";
 import CameraSettings from "@/pages/camera-settings";
-import PurchaseWeighbridge from "@/pages/purchase-weighbridge";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -14,7 +13,6 @@ function Router() {
     <Switch>
       <Route path="/" component={CameraMonitor} />
       <Route path="/settings" component={CameraSettings} />
-      <Route path="/weighbridge" component={PurchaseWeighbridge} />
       <Route component={NotFound} />
     </Switch>
   );

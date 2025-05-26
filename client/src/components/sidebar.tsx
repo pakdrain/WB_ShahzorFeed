@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Home, Settings, Video, Menu, X, Scale } from 'lucide-react';
+import { Home, Settings, Video, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 const navigation = [
   { name: 'Home', href: '/', icon: Home },
-  { name: 'Weighbridge', href: '/weighbridge', icon: Scale },
   { name: 'Camera Settings', href: '/settings', icon: Settings },
 ];
 
