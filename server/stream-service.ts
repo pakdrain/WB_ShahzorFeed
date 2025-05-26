@@ -17,9 +17,15 @@ export class StreamService {
   private streamIntervals: Map<string, NodeJS.Timeout> = new Map();
 
   initialize(server: Server): void {
-    this.wss = new WebSocketServer({ server, path: '/ws' });
+    console.log('Initializing WebSocket server on path /ws');
+    this.wss = new WebSocketServer({ 
+      server, 
+      path: '/ws',
+      verifyClient: () => true  // Allow all connections for local development
+    });
     
-    this.wss.on('connection', (ws: WebSocket) => {
+    this.wss.on('connection', (ws: WebSocket, req) => {
+      console.log('WebSocket client connected from:', req.socket.remoteAddress);
       const connectionId = nanoid();
       
       ws.on('message', async (message: string) => {
