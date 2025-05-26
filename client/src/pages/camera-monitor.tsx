@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Camera, Video, Clock } from "lucide-react";
 import ConnectionStatus from "@/components/connection-status";
 import VideoStream from "@/components/video-stream";
@@ -22,11 +21,23 @@ export default function CameraMonitor() {
     streamPath: '/cam/realmonitor?channel=1&subtype=0',
   });
 
-  // Fetch default camera information
-  const { data: camera, isLoading: cameraLoading } = useQuery({
-    queryKey: ['/api/cameras/1'],
-    refetchInterval: false,
-  });
+  const {
+    isConnected,
+    isStreaming,
+    streamStats,
+    connectionError,
+    startStream,
+    stopStream,
+    reconnectStream,
+  } = useStream(1);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Initialize WebSocket stream connection
   const {
