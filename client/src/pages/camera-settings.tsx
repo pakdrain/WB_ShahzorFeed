@@ -64,11 +64,17 @@ export default function CameraSettings() {
   // Save settings mutation
   const saveSettingsMutation = useMutation({
     mutationFn: async (data: CameraSettingsForm) => {
-      return apiRequest(`/api/cameras/1`, {
+      const response = await fetch(`/api/cameras/1`, {
         method: 'PATCH',
         body: JSON.stringify(data),
         headers: { 'Content-Type': 'application/json' },
       });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save camera settings');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cameras/1'] });
@@ -90,11 +96,17 @@ export default function CameraSettings() {
   const testConnectionMutation = useMutation({
     mutationFn: async (data: CameraSettingsForm) => {
       const rtspUrl = `rtsp://${data.username}:${data.password}@${data.ip}:${data.port}/cam/realmonitor?channel=${data.channel}&subtype=${data.subtype}`;
-      return apiRequest(`/api/cameras/test`, {
+      const response = await fetch(`/api/cameras/test`, {
         method: 'POST',
         body: JSON.stringify({ rtspUrl }),
         headers: { 'Content-Type': 'application/json' },
       });
+      
+      if (!response.ok) {
+        throw new Error('Connection test failed');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
