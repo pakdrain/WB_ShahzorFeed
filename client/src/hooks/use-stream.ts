@@ -33,6 +33,11 @@ export function useStream(cameraId?: number): UseStreamReturn {
     if (!cameraId) return;
 
     try {
+      // Don't create new connection if one already exists and is open/connecting
+      if (wsRef.current && (wsRef.current.readyState === WebSocket.CONNECTING || wsRef.current.readyState === WebSocket.OPEN)) {
+        return;
+      }
+
       // Clear any existing connection
       if (wsRef.current) {
         wsRef.current.close();
@@ -72,13 +77,16 @@ export function useStream(cameraId?: number): UseStreamReturn {
         setIsConnected(false);
         setIsStreaming(false);
         
-        if (event.code !== 1000) { // Not a normal closure
+        // Only reconnect if it was an unexpected closure (not user-initiated)
+        if (event.code !== 1000 && event.code !== 1001 && !event.wasClean) {
           setConnectionError('Connection lost. Attempting to reconnect...');
           
-          // Attempt to reconnect after 3 seconds
+          // Attempt to reconnect after 5 seconds for stability
           reconnectTimeoutRef.current = setTimeout(() => {
-            connectWebSocket();
-          }, 3000);
+            if (cameraId) {
+              connectWebSocket();
+            }
+          }, 5000);
         }
       };
 
