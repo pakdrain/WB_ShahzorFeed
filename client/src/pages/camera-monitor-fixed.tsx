@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Camera, Video, Clock } from "lucide-react";
 import ConnectionStatus from "@/components/connection-status";
 import VideoStream from "@/components/video-stream";
@@ -22,13 +21,6 @@ export default function CameraMonitor() {
     streamPath: '/cam/realmonitor?channel=1&subtype=0',
   });
 
-  // Fetch default camera information
-  const { data: camera, isLoading: cameraLoading } = useQuery({
-    queryKey: ['/api/cameras/1'],
-    refetchInterval: false,
-  });
-
-  // Initialize WebSocket stream connection
   const {
     isConnected,
     isStreaming,
@@ -37,9 +29,8 @@ export default function CameraMonitor() {
     startStream,
     stopStream,
     reconnectStream,
-  } = useStream(camera?.id);
+  } = useStream(1);
 
-  // Update current time every second
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -47,39 +38,6 @@ export default function CameraMonitor() {
 
     return () => clearInterval(timer);
   }, []);
-
-  // Auto-start stream when camera is loaded
-  useEffect(() => {
-    if (camera && !isStreaming) {
-      startStream();
-    }
-  }, [camera, isStreaming, startStream]);
-
-  if (cameraLoading) {
-    return (
-      <div className="min-h-screen bg-monitoring-dark flex items-center justify-center">
-        <Card className="bg-monitoring-slate border-monitoring-gray p-8">
-          <div className="flex items-center space-x-3">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-monitoring-blue"></div>
-            <span className="text-gray-300">Loading camera configuration...</span>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
-  if (!camera) {
-    return (
-      <div className="min-h-screen bg-monitoring-dark flex items-center justify-center">
-        <Card className="bg-monitoring-slate border-monitoring-red p-8">
-          <div className="flex items-center space-x-3">
-            <Video className="h-6 w-6 text-monitoring-red" />
-            <span className="text-gray-300">Camera not found. Please check configuration.</span>
-          </div>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-monitoring-dark">
@@ -186,36 +144,6 @@ export default function CameraMonitor() {
               />
             </div>
           </div>
-        </div>
-      </main>
-    </div>
-  );
-}
-              
-              <StreamControls
-                isStreaming={isStreaming}
-                onToggleStream={isStreaming ? stopStream : startStream}
-                onReconnect={reconnectStream}
-              />
-            </div>
-          </div>
-
-          {/* Video Container */}
-          <VideoStream
-            camera={camera}
-            isConnected={isConnected}
-            isStreaming={isStreaming}
-            currentTime={currentTime}
-            streamStats={streamStats}
-            connectionError={connectionError}
-          />
-
-          {/* Stream Information Panels */}
-          <StreamInfoPanels
-            camera={camera}
-            isConnected={isConnected}
-            streamStats={streamStats}
-          />
         </div>
       </main>
     </div>
