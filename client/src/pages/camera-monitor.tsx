@@ -1,19 +1,15 @@
 import { useEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Camera, Video, Clock } from "lucide-react";
 import ConnectionStatus from "@/components/connection-status";
 import VideoStream from "@/components/video-stream";
+import StreamControls from "@/components/stream-controls";
 import StreamInfoPanels from "@/components/stream-info-panels";
-import CameraSettings from "@/components/camera-settings";
 import { useStream } from "@/hooks/use-stream";
 import { Card } from "@/components/ui/card";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 
 export default function CameraMonitor() {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   // Fetch default camera information
   const { data: camera, isLoading: cameraLoading } = useQuery({
@@ -32,38 +28,6 @@ export default function CameraMonitor() {
     reconnectStream,
   } = useStream(camera?.id);
 
-  // Mutation to update camera configuration
-  const updateCameraMutation = useMutation({
-    mutationFn: async (config: any) => {
-      const response = await fetch(`/api/cameras/${camera?.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(config),
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update camera');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/cameras/1'] });
-      toast({
-        title: "Camera Settings Updated",
-        description: "Camera configuration has been saved successfully.",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Update Failed",
-        description: "Failed to save camera configuration. Please try again.",
-        variant: "destructive",
-      });
-      console.error('Error updating camera:', error);
-    },
-  });
-
   // Update current time every second
   useEffect(() => {
     const timer = setInterval(() => {
@@ -73,7 +37,17 @@ export default function CameraMonitor() {
     return () => clearInterval(timer);
   }, []);
 
-  // Remove auto-start - user will control manually through settings
+  // Auto-start stream immediately when camera is available
+  useEffect(() => {
+    if (camera?.id) {
+      // Start stream immediately when camera is loaded
+      const timer = setTimeout(() => {
+        startStream();
+      }, 500); // Small delay to ensure WebSocket is ready
+
+      return () => clearTimeout(timer);
+    }
+  }, [camera?.id, startStream]);
 
   if (cameraLoading) {
     return (
@@ -120,23 +94,6 @@ export default function CameraMonitor() {
               <Clock className="h-4 w-4" />
               <span>{currentTime.toLocaleTimeString('en-US', { hour12: false })}</span>
             </div>
-            <CameraSettings
-              isStreaming={isStreaming}
-              isConnected={isConnected}
-              currentCamera={camera}
-              onStartStream={startStream}
-              onStopStream={stopStream}
-              onReconnect={reconnectStream}
-              onFullscreen={() => {
-                const element = document.getElementById('video-container');
-                if (element) {
-                  element.requestFullscreen();
-                }
-              }}
-              onUpdateCamera={(config) => {
-                updateCameraMutation.mutate(config);
-              }}
-            />
           </div>
         </div>
       </header>
@@ -163,7 +120,11 @@ export default function CameraMonitor() {
                 </div>
               </div>
               
-              {/* Stream controls now handled by settings icon in header */}
+              <StreamControls
+                isStreaming={isStreaming}
+                onToggleStream={isStreaming ? stopStream : startStream}
+                onReconnect={reconnectStream}
+              />
             </div>
           </div>
 
