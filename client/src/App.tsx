@@ -9,7 +9,7 @@ import NotFound from "@/pages/not-found";
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={lazy(() => import("@/pages/camera-monitor-fixed"))} />
+      <Route path="/" component={CameraMonitor} />
       <Route path="/monitor" component={CameraMonitor} />
       <Route component={NotFound} />
     </Switch>
