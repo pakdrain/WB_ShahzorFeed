@@ -10,24 +10,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize WebSocket service
   streamService.initialize(httpServer);
 
-  // Get camera by ID
-  app.get("/api/cameras/:id", async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const camera = await storage.getCamera(id);
-      
-      if (!camera) {
-        return res.status(404).json({ message: "Camera not found" });
-      }
-
-      res.json(camera);
-    } catch (error) {
-      console.error("Error getting camera:", error);
-      res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get default camera (Camera 01)
+  // Get default camera (Camera 01) - Put this BEFORE the parameterized route
   app.get("/api/cameras/default", async (req, res) => {
     try {
       console.log("Looking for default camera...");
@@ -43,6 +26,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(camera);
     } catch (error) {
       console.error("Error getting default camera:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get camera by ID
+  app.get("/api/cameras/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Skip if this is the "default" string which should be handled by the route above
+      if (isNaN(id)) {
+        return res.status(404).json({ message: "Camera not found" });
+      }
+      
+      const camera = await storage.getCamera(id);
+      
+      if (!camera) {
+        return res.status(404).json({ message: "Camera not found" });
+      }
+
+      res.json(camera);
+    } catch (error) {
+      console.error("Error getting camera:", error);
       res.status(500).json({ message: "Internal server error" });
     }
   });
