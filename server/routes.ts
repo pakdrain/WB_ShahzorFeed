@@ -8,33 +8,8 @@ import { z } from "zod";
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  // Initialize WebSocket service (but add fallback HTTP routes for local dev)
+  // Initialize WebSocket service
   streamService.initialize(httpServer);
-  
-  // Add HTTP-based stream control endpoints for local development
-  app.post("/api/cameras/start-stream", async (req, res) => {
-    try {
-      const { cameraId } = req.body;
-      const streamPath = await videoStreamService.startStream(cameraId);
-      if (streamPath) {
-        res.json({ success: true, streamPath });
-      } else {
-        res.status(500).json({ message: "Failed to start stream" });
-      }
-    } catch (error) {
-      res.status(500).json({ message: "Error starting stream" });
-    }
-  });
-  
-  app.post("/api/cameras/stop-stream", async (req, res) => {
-    try {
-      const { cameraId } = req.body;
-      videoStreamService.stopStream(cameraId);
-      res.json({ success: true });
-    } catch (error) {
-      res.status(500).json({ message: "Error stopping stream" });
-    }
-  });
   
   // Register video streaming routes
   videoStreamService.registerRoutes(app);

@@ -32,50 +32,21 @@ export function useStream(cameraId?: number): UseStreamReturn {
   const connectWebSocket = useCallback(() => {
     if (!cameraId) return;
 
-    // Skip WebSocket connection to avoid endless connection errors
-    setIsConnected(true);
-    setIsStreaming(true);
-    setConnectionError(null);
-    setStreamStats({
-      bandwidth: '1.4 Mbps',
-      fps: 10,
-      latency: 16,
-      droppedFrames: 1,
-      uptime: '00:00:05',
-      buffer: '2.1s'
-    });
-    return;
-
     try {
-      // Don't create new connection if one already exists and is open/connecting
-      if (wsRef.current && (wsRef.current.readyState === WebSocket.CONNECTING || wsRef.current.readyState === WebSocket.OPEN)) {
-        return;
-      }
-
       // Clear any existing connection
       if (wsRef.current) {
         wsRef.current.close();
       }
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const wsUrl = `${protocol}//${window.location.host}/ws/stream`;
       
-      console.log('Connecting to WebSocket:', wsUrl);
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
         console.log('WebSocket connected');
         setConnectionError(null);
-        // Auto-start stream after connection
-        setTimeout(() => {
-          if (cameraId && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-              type: 'start_stream',
-              cameraId: cameraId
-            }));
-          }
-        }, 1500);
       };
 
       ws.onmessage = (event) => {
@@ -92,16 +63,13 @@ export function useStream(cameraId?: number): UseStreamReturn {
         setIsConnected(false);
         setIsStreaming(false);
         
-        // Only reconnect if it was an unexpected closure (not user-initiated)
-        if (event.code !== 1000 && event.code !== 1001 && !event.wasClean) {
+        if (event.code !== 1000) { // Not a normal closure
           setConnectionError('Connection lost. Attempting to reconnect...');
           
-          // Attempt to reconnect after 5 seconds for stability
+          // Attempt to reconnect after 3 seconds
           reconnectTimeoutRef.current = setTimeout(() => {
-            if (cameraId) {
-              connectWebSocket();
-            }
-          }, 5000);
+            connectWebSocket();
+          }, 3000);
         }
       };
 
