@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { Settings, Play, Pause, RotateCcw, Maximize2 } from 'lucide-react';
+import { Settings, Play, Pause, RotateCcw, Maximize2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +23,17 @@ interface CameraSettingsProps {
   onFullscreen: () => void;
 }
 
+interface CameraConfig {
+  ip: string;
+  port: string;
+  username: string;
+  password: string;
+  resolution: string;
+  fps: string;
+  quality: string;
+  channel: string;
+}
+
 export default function CameraSettings({
   isStreaming,
   isConnected,
@@ -29,6 +43,23 @@ export default function CameraSettings({
   onFullscreen,
 }: CameraSettingsProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [cameraConfig, setCameraConfig] = useState<CameraConfig>({
+    ip: '10.10.10.146',
+    port: '554',
+    username: 'admin',
+    password: 'admin123',
+    resolution: '640x480',
+    fps: '10',
+    quality: '5',
+    channel: '1'
+  });
+
+  const handleSaveConfig = () => {
+    // Save camera configuration
+    console.log('Saving camera config:', cameraConfig);
+    // Here you would typically call an API to update the camera settings
+    setIsOpen(false);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -46,6 +77,128 @@ export default function CameraSettings({
         </DialogHeader>
         
         <div className="space-y-6">
+          {/* Camera Configuration */}
+          <Card className="bg-monitoring-dark border-monitoring-gray p-4">
+            <h3 className="text-sm font-medium text-gray-300 mb-4">Camera Configuration</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="ip" className="text-xs text-gray-400">IP Address</Label>
+                <Input
+                  id="ip"
+                  value={cameraConfig.ip}
+                  onChange={(e) => setCameraConfig({...cameraConfig, ip: e.target.value})}
+                  className="bg-monitoring-slate border-monitoring-gray text-white"
+                  placeholder="10.10.10.146"
+                />
+              </div>
+              <div>
+                <Label htmlFor="port" className="text-xs text-gray-400">Port</Label>
+                <Input
+                  id="port"
+                  value={cameraConfig.port}
+                  onChange={(e) => setCameraConfig({...cameraConfig, port: e.target.value})}
+                  className="bg-monitoring-slate border-monitoring-gray text-white"
+                  placeholder="554"
+                />
+              </div>
+              <div>
+                <Label htmlFor="username" className="text-xs text-gray-400">Username</Label>
+                <Input
+                  id="username"
+                  value={cameraConfig.username}
+                  onChange={(e) => setCameraConfig({...cameraConfig, username: e.target.value})}
+                  className="bg-monitoring-slate border-monitoring-gray text-white"
+                  placeholder="admin"
+                />
+              </div>
+              <div>
+                <Label htmlFor="password" className="text-xs text-gray-400">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={cameraConfig.password}
+                  onChange={(e) => setCameraConfig({...cameraConfig, password: e.target.value})}
+                  className="bg-monitoring-slate border-monitoring-gray text-white"
+                  placeholder="admin123"
+                />
+              </div>
+              <div>
+                <Label htmlFor="channel" className="text-xs text-gray-400">Channel</Label>
+                <Input
+                  id="channel"
+                  value={cameraConfig.channel}
+                  onChange={(e) => setCameraConfig({...cameraConfig, channel: e.target.value})}
+                  className="bg-monitoring-slate border-monitoring-gray text-white"
+                  placeholder="1"
+                />
+              </div>
+            </div>
+          </Card>
+
+          {/* Stream Settings */}
+          <Card className="bg-monitoring-dark border-monitoring-gray p-4">
+            <h3 className="text-sm font-medium text-gray-300 mb-4">Stream Settings</h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="resolution" className="text-xs text-gray-400">Resolution</Label>
+                <Select value={cameraConfig.resolution} onValueChange={(value) => setCameraConfig({...cameraConfig, resolution: value})}>
+                  <SelectTrigger className="bg-monitoring-slate border-monitoring-gray text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-monitoring-slate border-monitoring-gray">
+                    <SelectItem value="320x240">320x240</SelectItem>
+                    <SelectItem value="640x480">640x480</SelectItem>
+                    <SelectItem value="800x600">800x600</SelectItem>
+                    <SelectItem value="1024x768">1024x768</SelectItem>
+                    <SelectItem value="1280x720">1280x720 (HD)</SelectItem>
+                    <SelectItem value="1920x1080">1920x1080 (Full HD)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="fps" className="text-xs text-gray-400">Frame Rate (FPS)</Label>
+                <Select value={cameraConfig.fps} onValueChange={(value) => setCameraConfig({...cameraConfig, fps: value})}>
+                  <SelectTrigger className="bg-monitoring-slate border-monitoring-gray text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-monitoring-slate border-monitoring-gray">
+                    <SelectItem value="5">5 FPS</SelectItem>
+                    <SelectItem value="8">8 FPS</SelectItem>
+                    <SelectItem value="10">10 FPS</SelectItem>
+                    <SelectItem value="15">15 FPS</SelectItem>
+                    <SelectItem value="20">20 FPS</SelectItem>
+                    <SelectItem value="25">25 FPS</SelectItem>
+                    <SelectItem value="30">30 FPS</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="quality" className="text-xs text-gray-400">Quality</Label>
+                <Select value={cameraConfig.quality} onValueChange={(value) => setCameraConfig({...cameraConfig, quality: value})}>
+                  <SelectTrigger className="bg-monitoring-slate border-monitoring-gray text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-monitoring-slate border-monitoring-gray">
+                    <SelectItem value="1">Highest (1)</SelectItem>
+                    <SelectItem value="2">High (2)</SelectItem>
+                    <SelectItem value="3">Good (3)</SelectItem>
+                    <SelectItem value="4">Medium (4)</SelectItem>
+                    <SelectItem value="5">Standard (5)</SelectItem>
+                    <SelectItem value="6">Low (6)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={handleSaveConfig}
+              className="w-full mt-4 bg-monitoring-blue hover:bg-blue-600 text-white"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Save Configuration
+            </Button>
+          </Card>
+
           {/* Stream Controls */}
           <Card className="bg-monitoring-dark border-monitoring-gray p-4">
             <h3 className="text-sm font-medium text-gray-300 mb-3">Stream Control</h3>
@@ -131,6 +284,31 @@ export default function CameraSettings({
               <div className="flex justify-between">
                 <span className="text-gray-400">Protocol:</span>
                 <span className="text-gray-300 font-mono">RTSP/TCP</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Current Configuration Display */}
+          <Card className="bg-monitoring-dark border-monitoring-gray p-4">
+            <h3 className="text-sm font-medium text-gray-300 mb-3">Current Configuration</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-400">RTSP URL:</span>
+                <span className="text-gray-300 font-mono text-xs break-all">
+                  rtsp://{cameraConfig.username}:{cameraConfig.password}@{cameraConfig.ip}:{cameraConfig.port}/cam/realmonitor?channel={cameraConfig.channel}&subtype=0
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Stream Resolution:</span>
+                <span className="text-gray-300">{cameraConfig.resolution}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Frame Rate:</span>
+                <span className="text-gray-300">{cameraConfig.fps} FPS</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Quality Level:</span>
+                <span className="text-gray-300">Level {cameraConfig.quality}</span>
               </div>
             </div>
           </Card>
