@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Camera, Video, Clock } from "lucide-react";
 import ConnectionStatus from "@/components/connection-status";
 import VideoStream from "@/components/video-stream";
@@ -7,9 +7,13 @@ import StreamInfoPanels from "@/components/stream-info-panels";
 import CameraSettings from "@/components/camera-settings";
 import { useStream } from "@/hooks/use-stream";
 import { Card } from "@/components/ui/card";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CameraMonitor() {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch default camera information
   const { data: camera, isLoading: cameraLoading } = useQuery({
@@ -27,6 +31,38 @@ export default function CameraMonitor() {
     stopStream,
     reconnectStream,
   } = useStream(camera?.id);
+
+  // Mutation to update camera configuration
+  const updateCameraMutation = useMutation({
+    mutationFn: async (config: any) => {
+      const response = await fetch(`/api/cameras/${camera?.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(config),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to update camera');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cameras/1'] });
+      toast({
+        title: "Camera Settings Updated",
+        description: "Camera configuration has been saved successfully.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Update Failed",
+        description: "Failed to save camera configuration. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error updating camera:', error);
+    },
+  });
 
   // Update current time every second
   useEffect(() => {
@@ -98,9 +134,7 @@ export default function CameraMonitor() {
                 }
               }}
               onUpdateCamera={(config) => {
-                console.log('Updating camera configuration:', config);
-                // In a real app, this would call an API to update the camera
-                // For now, we'll just log the configuration
+                updateCameraMutation.mutate(config);
               }}
             />
           </div>
