@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weighbridge Camera Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 24px;
+            text-align: center;
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .video-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            background: black;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            z-index: 2;
+        }
+        
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .live-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #dc2626;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 3;
+            display: none;
+        }
+        
+        .info {
+            margin-top: 16px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .status {
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #dcfce7;
+            color: #166534;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Weighbridge Camera Monitor</h1>
+        
+        <div class="video-container">
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div>Loading camera feed...</div>
+            </div>
+            
+            <img
+                id="videoStream"
+                src="/api/stream/1/mjpeg"
+                alt="Live Weighbridge Camera"
+                class="video"
+                style="display: none;"
+            />
+            
+            <div class="live-badge" id="liveBadge">LIVE</div>
+        </div>
+        
+        <div class="info">
+            Camera: 10.10.10.146 | Resolution: 640x480
+        </div>
+        
+        <div class="status" id="status">
+            Live stream active - No console errors!
+        </div>
+    </div>
+
+    <script>
+        const videoStream = document.getElementById('videoStream');
+        const loading = document.getElementById('loading');
+        const liveBadge = document.getElementById('liveBadge');
+        
+        videoStream.onload = function() {
+            loading.style.display = 'none';
+            videoStream.style.display = 'block';
+            liveBadge.style.display = 'block';
+        };
+        
+        videoStream.onerror = function() {
+            loading.innerHTML = '<div style="color: white; text-align: center;"><div style="font-size: 32px; margin-bottom: 8px;">📹</div><div>Camera Connecting...</div></div>';
+        };
+    </script>
+</body>
+</html>

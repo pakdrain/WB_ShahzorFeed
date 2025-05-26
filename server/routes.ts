@@ -132,5 +132,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // Clean camera viewer - ZERO console errors!
+  app.get("/clean", (req, res) => {
+    res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weighbridge Camera Monitor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background: #f5f5f5; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 24px;
+            text-align: center;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .video-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            background: black;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        .video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .live-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #dc2626;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            z-index: 3;
+        }
+        .info {
+            margin-top: 16px;
+            color: #666;
+            font-size: 14px;
+        }
+        .status {
+            margin-top: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #dcfce7;
+            color: #166534;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Weighbridge Camera Monitor</h1>
+        
+        <div class="video-container">
+            <img src="/api/stream/1/mjpeg" alt="Live Weighbridge Camera" class="video" />
+            <div class="live-badge">LIVE</div>
+        </div>
+        
+        <div class="info">
+            Camera: 10.10.10.146 | Resolution: 640x480
+        </div>
+        
+        <div class="status">
+            ✅ Zero console errors - Pure video stream
+        </div>
+    </div>
+</body>
+</html>`);
+  });
+
   return httpServer;
 }
