@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface SimpleVideoPlayerProps {
   cameraId: number;
@@ -7,28 +7,6 @@ interface SimpleVideoPlayerProps {
 export default function SimpleVideoPlayer({ cameraId }: SimpleVideoPlayerProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    // Auto-start stream when component mounts
-    const startStream = async () => {
-      try {
-        const response = await fetch(`/api/stream/${cameraId}/start`, {
-          method: 'POST',
-        });
-        
-        if (response.ok) {
-          setIsLoading(false);
-        } else {
-          setHasError(true);
-        }
-      } catch (error) {
-        console.error('Error starting stream:', error);
-        setHasError(true);
-      }
-    };
-
-    startStream();
-  }, [cameraId]);
 
   const handleImageLoad = () => {
     setIsLoading(false);
