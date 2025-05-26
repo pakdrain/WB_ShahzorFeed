@@ -27,7 +27,6 @@ type CameraSettingsForm = z.infer<typeof cameraSettingsSchema>;
 
 export default function CameraSettings() {
   const [showPassword, setShowPassword] = useState(false);
-  const [quickCommand, setQuickCommand] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -137,7 +136,7 @@ export default function CameraSettings() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center space-x-3 mb-6">
         <Camera className="h-8 w-8 text-monitoring-blue" />
@@ -147,54 +146,7 @@ export default function CameraSettings() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Left Region - Quick Actions */}
-        <div className="lg:col-span-1">
-          <Card className="bg-monitoring-slate border-monitoring-gray">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center space-x-2">
-                <TestTube className="h-5 w-5 text-monitoring-blue" />
-                <span>Quick Actions</span>
-              </CardTitle>
-              <CardDescription className="text-gray-400">
-                Execute camera commands
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="quick-command" className="text-white mb-2 block">
-                  Command
-                </Label>
-                <Input
-                  id="quick-command"
-                  placeholder="Enter command..."
-                  value={quickCommand}
-                  onChange={(e) => setQuickCommand(e.target.value)}
-                  className="bg-monitoring-dark border-monitoring-gray text-white placeholder-gray-400"
-                />
-              </div>
-              <Button
-                type="button"
-                onClick={() => {
-                  if (quickCommand.trim()) {
-                    toast({
-                      title: "Command Executed",
-                      description: `Executed: ${quickCommand}`,
-                    });
-                    setQuickCommand('');
-                  }
-                }}
-                className="w-full bg-monitoring-blue hover:bg-monitoring-blue/80 text-white"
-              >
-                Execute
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right Region - Settings Form */}
-        <div className="lg:col-span-3">
-          <Form {...form}>
+      <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Basic Settings */}
           <Card className="bg-monitoring-slate border-monitoring-gray">
@@ -429,10 +381,8 @@ export default function CameraSettings() {
               {testConnectionMutation.isPending ? 'Testing...' : 'Test Connection'}
             </Button>
           </div>
-          </form>
-          </Form>
-        </div>
-      </div>
+        </form>
+      </Form>
     </div>
   );
 }
