@@ -76,76 +76,16 @@ export default function CameraMonitor() {
   }
 
   return (
-    <div className="min-h-screen bg-monitoring-dark">
-      {/* Header */}
-      <header className="bg-monitoring-slate border-b border-monitoring-gray px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <Video className="text-monitoring-blue text-xl" />
-              <h1 className="text-xl font-semibold text-white">Live CCTV Monitor</h1>
-            </div>
-            <div className="text-sm text-gray-400 font-mono">localhost:5000</div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <ConnectionStatus isConnected={isConnected} />
-            <div className="text-sm text-gray-400 font-mono flex items-center space-x-2">
-              <Clock className="h-4 w-4" />
-              <span>{currentTime.toLocaleTimeString('en-US', { hour12: false })}</span>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-black overflow-hidden">
 
-      {/* Main Content */}
-      <main className="flex-1 p-6">
-        <div className="max-w-6xl mx-auto">
-          {/* Camera Info Bar */}
-          <div className="bg-monitoring-slate rounded-lg p-4 mb-6 border border-monitoring-gray">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2">
-                  <Camera className="text-monitoring-blue" />
-                  <span className="font-medium">{camera.name}</span>
-                </div>
-                <div className="text-sm text-gray-400 font-mono">
-                  IP: <span className="text-white">{camera.ip}:{camera.port}</span>
-                </div>
-                <div className="text-sm text-gray-400">
-                  Resolution: <span className="text-white">640x480</span>
-                </div>
-                <div className="text-sm text-gray-400">
-                  Format: <span className="text-white">H.264</span>
-                </div>
-              </div>
-              
-              <StreamControls
-                isStreaming={isStreaming}
-                onToggleStream={isStreaming ? stopStream : startStream}
-                onReconnect={reconnectStream}
-              />
-            </div>
-          </div>
-
-          {/* Video Container */}
-          <VideoStream
-            camera={camera}
-            isConnected={isConnected}
-            isStreaming={isStreaming}
-            currentTime={currentTime}
-            streamStats={streamStats}
-            connectionError={connectionError}
-          />
-
-          {/* Stream Information Panels */}
-          <StreamInfoPanels
-            camera={camera}
-            isConnected={isConnected}
-            streamStats={streamStats}
-          />
-        </div>
-      </main>
+      <VideoStream
+        camera={camera}
+        isConnected={isConnected}
+        isStreaming={isStreaming}
+        currentTime={currentTime}
+        streamStats={streamStats}
+        connectionError={connectionError}
+      />
     </div>
   );
 }
