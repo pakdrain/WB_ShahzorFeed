@@ -44,7 +44,7 @@ export function useStream(cameraId?: number): UseStreamReturn {
       }
 
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws/stream`;
+      const wsUrl = `${protocol}//${window.location.host}/ws`;
       
       const ws = new WebSocket(wsUrl);
       wsRef.current = ws;

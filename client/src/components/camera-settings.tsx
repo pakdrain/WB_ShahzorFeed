@@ -95,13 +95,16 @@ export default function CameraSettings({ onSettingsUpdate, currentSettings }: Ca
           Settings
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md" aria-describedby="settings-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="w-5 h-5" />
             Camera Settings
           </DialogTitle>
         </DialogHeader>
+        <div id="settings-description" className="sr-only">
+          Configure your camera network settings, video quality, and streaming parameters
+        </div>
         
         <div className="space-y-4">
           {/* Network Settings */}

@@ -17,7 +17,7 @@ export class StreamService {
   private streamIntervals: Map<string, NodeJS.Timeout> = new Map();
 
   initialize(server: Server): void {
-    this.wss = new WebSocketServer({ server, path: '/ws/stream' });
+    this.wss = new WebSocketServer({ server, path: '/ws' });
     
     this.wss.on('connection', (ws: WebSocket) => {
       const connectionId = nanoid();
@@ -62,13 +62,23 @@ export class StreamService {
     }
   }
 
-  private async startStream(connectionId: string, ws: WebSocket, cameraId: number): Promise<void> {
+  private async startStream(connectionId: string, ws: WebSocket, cameraId: number, customSettings?: any): Promise<void> {
     try {
       const camera = await storage.getCamera(cameraId);
       if (!camera) {
         ws.send(JSON.stringify({ type: 'error', message: 'Camera not found' }));
         return;
       }
+
+      // Use custom settings if provided, otherwise use stored camera settings
+      const effectiveCamera = customSettings ? {
+        ...camera,
+        ip: customSettings.ip || camera.ip,
+        port: customSettings.port || camera.port,
+        username: customSettings.username || camera.username,
+        password: customSettings.password || camera.password,
+        rtspUrl: `rtsp://${customSettings.username || camera.username}:${customSettings.password || camera.password}@${customSettings.ip || camera.ip}:${customSettings.port || camera.port}${customSettings.streamPath || '/cam/realmonitor?channel=1&subtype=0'}`
+      } : camera;
 
       // Create stream session
       const session = await storage.createStreamSession({
