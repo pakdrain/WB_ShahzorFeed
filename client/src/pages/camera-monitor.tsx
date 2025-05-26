@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Camera, Video, Clock } from "lucide-react";
 import ConnectionStatus from "@/components/connection-status";
 import VideoStream from "@/components/video-stream";
-import StreamControls from "@/components/stream-controls";
 import StreamInfoPanels from "@/components/stream-info-panels";
+import CameraSettings from "@/components/camera-settings";
 import { useStream } from "@/hooks/use-stream";
 import { Card } from "@/components/ui/card";
 
@@ -37,17 +37,7 @@ export default function CameraMonitor() {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-start stream immediately when camera is available
-  useEffect(() => {
-    if (camera?.id) {
-      // Start stream immediately when camera is loaded
-      const timer = setTimeout(() => {
-        startStream();
-      }, 500); // Small delay to ensure WebSocket is ready
-
-      return () => clearTimeout(timer);
-    }
-  }, [camera?.id, startStream]);
+  // Remove auto-start - user will control manually through settings
 
   if (cameraLoading) {
     return (
@@ -94,6 +84,19 @@ export default function CameraMonitor() {
               <Clock className="h-4 w-4" />
               <span>{currentTime.toLocaleTimeString('en-US', { hour12: false })}</span>
             </div>
+            <CameraSettings
+              isStreaming={isStreaming}
+              isConnected={isConnected}
+              onStartStream={startStream}
+              onStopStream={stopStream}
+              onReconnect={reconnectStream}
+              onFullscreen={() => {
+                const element = document.getElementById('video-container');
+                if (element) {
+                  element.requestFullscreen();
+                }
+              }}
+            />
           </div>
         </div>
       </header>
@@ -120,11 +123,7 @@ export default function CameraMonitor() {
                 </div>
               </div>
               
-              <StreamControls
-                isStreaming={isStreaming}
-                onToggleStream={isStreaming ? stopStream : startStream}
-                onReconnect={reconnectStream}
-              />
+              {/* Stream controls now handled by settings icon in header */}
             </div>
           </div>
 

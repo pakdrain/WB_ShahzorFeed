@@ -215,8 +215,8 @@ export function useStream(cameraId?: number): UseStreamReturn {
   // Initialize WebSocket connection
   useEffect(() => {
     if (cameraId) {
-      // Set auto-restart flag to true by default for immediate streaming
-      shouldAutoRestart.current = true;
+      // Do not auto-start streaming - user controls manually
+      shouldAutoRestart.current = false;
       connectWebSocket();
     }
 
