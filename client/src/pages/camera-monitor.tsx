@@ -13,7 +13,7 @@ export default function CameraMonitor() {
 
   // Fetch default camera information
   const { data: camera, isLoading: cameraLoading } = useQuery({
-    queryKey: ['/api/cameras/default'],
+    queryKey: ['/api/cameras/1'],
     refetchInterval: false,
   });
 
