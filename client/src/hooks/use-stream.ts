@@ -27,6 +27,9 @@ export function useStream(cameraId?: number): UseStreamReturn {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const shouldAutoRestart = useRef(false);
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 20;
   const { toast } = useToast();
 
   const connectWebSocket = useCallback(() => {
@@ -63,13 +66,27 @@ export function useStream(cameraId?: number): UseStreamReturn {
         setIsConnected(false);
         setIsStreaming(false);
         
-        if (event.code !== 1000) { // Not a normal closure
-          setConnectionError('Connection lost. Attempting to reconnect...');
+        if (event.code !== 1000 && reconnectAttempts.current < maxReconnectAttempts) { // Not a normal closure
+          reconnectAttempts.current++;
+          setConnectionError(`Connection lost. Reconnecting... (${reconnectAttempts.current}/${maxReconnectAttempts})`);
           
-          // Attempt to reconnect after 3 seconds
+          // Auto-reconnect with exponential backoff
+          const delay = Math.min(1000 + (reconnectAttempts.current * 1000), 5000);
           reconnectTimeoutRef.current = setTimeout(() => {
             connectWebSocket();
-          }, 3000);
+            
+            // Auto-restart stream if it was previously streaming
+            if (shouldAutoRestart.current && cameraId) {
+              setTimeout(() => {
+                if (wsRef.current?.readyState === WebSocket.OPEN) {
+                  wsRef.current.send(JSON.stringify({
+                    type: 'start_stream',
+                    cameraId,
+                  }));
+                }
+              }, 2000);
+            }
+          }, delay);
         }
       };
 
@@ -99,6 +116,7 @@ export function useStream(cameraId?: number): UseStreamReturn {
         console.log('Stream connected');
         setIsConnected(true);
         setConnectionError(null);
+        reconnectAttempts.current = 0; // Reset reconnect attempts on successful connection
         toast({
           title: "Stream Connected",
           description: "Camera feed is now live",
@@ -133,6 +151,9 @@ export function useStream(cameraId?: number): UseStreamReturn {
 
   const startStream = useCallback(() => {
     if (!cameraId || !wsRef.current) return;
+
+    // Mark that stream should auto-restart on reconnection
+    shouldAutoRestart.current = true;
 
     if (wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
