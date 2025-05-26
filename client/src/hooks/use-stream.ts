@@ -50,6 +50,18 @@ export function useStream(cameraId?: number): UseStreamReturn {
       ws.onopen = () => {
         console.log('WebSocket connected');
         setConnectionError(null);
+        
+        // Auto-start stream immediately upon connection if camera is available
+        if (cameraId && shouldAutoRestart.current) {
+          setTimeout(() => {
+            if (ws.readyState === WebSocket.OPEN) {
+              ws.send(JSON.stringify({
+                type: 'start_stream',
+                cameraId,
+              }));
+            }
+          }, 1000);
+        }
       };
 
       ws.onmessage = (event) => {
@@ -203,6 +215,8 @@ export function useStream(cameraId?: number): UseStreamReturn {
   // Initialize WebSocket connection
   useEffect(() => {
     if (cameraId) {
+      // Set auto-restart flag to true by default for immediate streaming
+      shouldAutoRestart.current = true;
       connectWebSocket();
     }
 

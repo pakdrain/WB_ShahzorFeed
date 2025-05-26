@@ -37,12 +37,17 @@ export default function CameraMonitor() {
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-start stream when camera is loaded
+  // Auto-start stream immediately when camera is available
   useEffect(() => {
-    if (camera && !isStreaming) {
-      startStream();
+    if (camera?.id) {
+      // Start stream immediately when camera is loaded
+      const timer = setTimeout(() => {
+        startStream();
+      }, 500); // Small delay to ensure WebSocket is ready
+
+      return () => clearTimeout(timer);
     }
-  }, [camera, isStreaming, startStream]);
+  }, [camera?.id, startStream]);
 
   if (cameraLoading) {
     return (
