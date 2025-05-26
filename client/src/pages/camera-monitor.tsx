@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Camera, Video, Clock } from "lucide-react";
 import ConnectionStatus from "@/components/connection-status";
-import VideoStream from "@/components/video-stream";
+import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
 import StreamControls from "@/components/stream-controls";
 import StreamInfoPanels from "@/components/stream-info-panels";
 import { useStream } from "@/hooks/use-stream";
@@ -78,13 +78,10 @@ export default function CameraMonitor() {
   return (
     <div className="min-h-screen bg-black overflow-hidden">
 
-      <VideoStream
+      <VideoStreamFullscreen
         camera={camera}
         isConnected={isConnected}
         isStreaming={isStreaming}
-        currentTime={currentTime}
-        streamStats={streamStats}
-        connectionError={connectionError}
       />
     </div>
   );
