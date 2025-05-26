@@ -37,34 +37,36 @@ export default function VideoStreamFullscreen({
   }
 
   return (
-    <div className="w-screen h-screen bg-black overflow-hidden">
-      {streamLoading && (
-        <div className="absolute inset-0 bg-black flex items-center justify-center z-10">
-          <div className="text-white text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
-            <div className="text-xl">Loading live stream...</div>
+    <div className="w-screen h-screen bg-black flex items-start justify-start p-4">
+      <div 
+        className="bg-gray-800 border border-gray-600 overflow-hidden"
+        style={{ width: '30px', height: '30px' }}
+      >
+        {streamLoading && (
+          <div className="w-full h-full bg-black flex items-center justify-center">
+            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
           </div>
-        </div>
-      )}
-      
-      <img
-        className="w-full h-full object-contain bg-black"
-        src={`/api/stream/${camera.id}/mjpeg`}
-        alt="Live Camera Feed"
-        onLoad={() => {
-          console.log('MJPEG stream loaded');
-          setStreamLoading(false);
-        }}
-        onError={(e) => {
-          console.error('MJPEG stream error:', e);
-          setStreamLoading(false);
-        }}
-        style={{ 
-          maxWidth: '100%', 
-          maxHeight: '100%',
-          backgroundColor: 'black'
-        }}
-      />
+        )}
+        
+        <img
+          className="w-full h-full object-cover bg-black"
+          src={`/api/stream/${camera.id}/mjpeg`}
+          alt="Live Camera Feed"
+          onLoad={() => {
+            console.log('MJPEG stream loaded');
+            setStreamLoading(false);
+          }}
+          onError={(e) => {
+            console.error('MJPEG stream error:', e);
+            setStreamLoading(false);
+          }}
+          style={{ 
+            width: '30px',
+            height: '30px',
+            backgroundColor: 'black'
+          }}
+        />
+      </div>
     </div>
   );
 }
