@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { streamService } from "./stream-service";
 import { videoStreamService } from "./video-stream";
-import { recordingService } from "./recording-service";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -131,114 +130,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
-  });
-
-  // Recording API endpoints
-  // Start recording
-  app.post("/api/cameras/:id/recording/start", async (req, res) => {
-    try {
-      const cameraId = parseInt(req.params.id);
-      const camera = await storage.getCamera(cameraId);
-      
-      if (!camera) {
-        return res.status(404).json({ message: "Camera not found" });
-      }
-
-      if (recordingService.isRecording(cameraId)) {
-        return res.status(400).json({ message: "Recording already in progress" });
-      }
-
-      const recordingId = await recordingService.startRecording(cameraId, camera.rtspUrl);
-      res.json({ recordingId, message: "Recording started" });
-    } catch (error) {
-      console.error("Error starting recording:", error);
-      res.status(500).json({ message: "Failed to start recording" });
-    }
-  });
-
-  // Stop recording
-  app.post("/api/cameras/:id/recording/stop", async (req, res) => {
-    try {
-      const cameraId = parseInt(req.params.id);
-      
-      if (!recordingService.isRecording(cameraId)) {
-        return res.status(400).json({ message: "No active recording found" });
-      }
-
-      const recording = await recordingService.stopRecording(cameraId);
-      res.json({ recording, message: "Recording stopped" });
-    } catch (error) {
-      console.error("Error stopping recording:", error);
-      res.status(500).json({ message: "Failed to stop recording" });
-    }
-  });
-
-  // Get recording status
-  app.get("/api/cameras/:id/recording/status", async (req, res) => {
-    try {
-      const cameraId = parseInt(req.params.id);
-      const isRecording = recordingService.isRecording(cameraId);
-      const currentRecording = recordingService.getCurrentRecording(cameraId);
-      
-      res.json({ 
-        isRecording, 
-        currentRecording 
-      });
-    } catch (error) {
-      console.error("Error getting recording status:", error);
-      res.status(500).json({ message: "Failed to get recording status" });
-    }
-  });
-
-  // Get all recordings for a camera
-  app.get("/api/cameras/:id/recordings", async (req, res) => {
-    try {
-      const cameraId = parseInt(req.params.id);
-      const recordings = recordingService.getAllRecordings(cameraId);
-      res.json(recordings);
-    } catch (error) {
-      console.error("Error getting recordings:", error);
-      res.status(500).json({ message: "Failed to get recordings" });
-    }
-  });
-
-  // Download recording
-  app.get("/api/recordings/:recordingId/download", async (req, res) => {
-    try {
-      const recordingId = req.params.recordingId;
-      const recording = recordingService.getRecording(recordingId);
-      
-      if (!recording) {
-        return res.status(404).json({ message: "Recording not found" });
-      }
-
-      const filePath = recordingService.getRecordingFilePath(recordingId);
-      if (!filePath) {
-        return res.status(404).json({ message: "Recording file not found" });
-      }
-
-      res.download(filePath, recording.filename);
-    } catch (error) {
-      console.error("Error downloading recording:", error);
-      res.status(500).json({ message: "Failed to download recording" });
-    }
-  });
-
-  // Delete recording
-  app.delete("/api/recordings/:recordingId", async (req, res) => {
-    try {
-      const recordingId = req.params.recordingId;
-      const success = await recordingService.deleteRecording(recordingId);
-      
-      if (!success) {
-        return res.status(404).json({ message: "Recording not found" });
-      }
-
-      res.json({ message: "Recording deleted successfully" });
-    } catch (error) {
-      console.error("Error deleting recording:", error);
-      res.status(500).json({ message: "Failed to delete recording" });
-    }
   });
 
   return httpServer;
