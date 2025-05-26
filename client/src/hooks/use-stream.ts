@@ -168,6 +168,9 @@ export function useStream(cameraId?: number): UseStreamReturn {
   const stopStream = useCallback(() => {
     if (!wsRef.current) return;
 
+    // Mark that stream should NOT auto-restart
+    shouldAutoRestart.current = false;
+
     if (wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify({
         type: 'stop_stream',
