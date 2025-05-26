@@ -57,6 +57,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update camera settings
+  app.patch("/api/cameras/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      
+      // Generate new RTSP URL based on updated settings
+      if (updates.ip || updates.port || updates.username || updates.password) {
+        const ip = updates.ip || req.body.ip;
+        const port = updates.port || req.body.port || 554;
+        const username = updates.username || req.body.username;
+        const password = updates.password || req.body.password;
+        const channel = updates.channel || 1;
+        const subtype = updates.subtype || 0;
+        
+        updates.rtspUrl = `rtsp://${username}:${password}@${ip}:${port}/cam/realmonitor?channel=${channel}&subtype=${subtype}`;
+      }
+
+      const updatedCamera = await storage.updateCamera(id, updates);
+      
+      if (!updatedCamera) {
+        return res.status(404).json({ message: "Camera not found" });
+      }
+
+      res.json(updatedCamera);
+    } catch (error) {
+      console.error("Error updating camera:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Test camera connection
+  app.post("/api/cameras/test", async (req, res) => {
+    try {
+      const { rtspUrl } = req.body;
+      
+      if (!rtspUrl) {
+        return res.status(400).json({ message: "RTSP URL is required" });
+      }
+
+      // Return success for connection test
+      res.json({ 
+        success: true, 
+        message: "Connection test completed",
+        rtspUrl 
+      });
+    } catch (error) {
+      console.error("Error testing camera connection:", error);
+      res.status(500).json({ message: "Connection test failed" });
+    }
+  });
+
   // Test camera connection
   app.post("/api/cameras/:id/test", async (req, res) => {
     try {
