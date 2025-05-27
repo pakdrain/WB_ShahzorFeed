@@ -12,6 +12,8 @@ app.use(express.urlencoded({ extended: false }));
 let currentWeight = '0.00';
 let currentUnit = 'kg';
 let isPortConnected = false;
+let currentComPort = 'COM3';
+let currentBaudRate = 9600;
 let serialPort: SerialPort | null = null;
 
 // Initialize serial port connection for weight indicator
@@ -26,8 +28,8 @@ async function connectToWeightScale() {
     });
 
     serialPort = new SerialPort({
-      path: 'COM3',
-      baudRate: 9600,
+      path: currentComPort,
+      baudRate: currentBaudRate,
       dataBits: 8,
       parity: 'none',
       stopBits: 1,
@@ -147,11 +149,54 @@ app.post('/api/weight/tare', (req, res) => {
 app.get('/api/weight/status', (req, res) => {
   res.json({
     connected: isPortConnected,
-    port: 'COM3',
-    baudRate: 9600,
+    port: currentComPort,
+    baudRate: currentBaudRate,
     currentWeight,
     currentUnit
   });
+});
+
+// New endpoint to handle dynamic COM port connection
+app.post('/api/weight/connect', async (req, res) => {
+  try {
+    const { comPort, baudRate = 9600, dataBits = 8, parity = 'none', stopBits = 1 } = req.body;
+    
+    if (!comPort) {
+      return res.status(400).json({ success: false, message: 'COM port is required' });
+    }
+
+    // Close existing connection if any
+    if (serialPort && !serialPort.destroyed) {
+      serialPort.close();
+      serialPort = null;
+      isPortConnected = false;
+      log(`🔌 Closed existing connection to ${currentComPort}`);
+    }
+
+    // Update current settings
+    currentComPort = comPort;
+    currentBaudRate = parseInt(baudRate);
+
+    // Try to connect to the new port
+    await connectToWeightScale();
+    
+    res.json({ 
+      success: true, 
+      message: `Connected to ${currentComPort}`,
+      port: currentComPort,
+      baudRate: currentBaudRate,
+      connected: isPortConnected
+    });
+    
+  } catch (error: any) {
+    log(`❌ Connection failed: ${error.message}`);
+    res.status(500).json({ 
+      success: false, 
+      message: `Failed to connect to ${currentComPort}: ${error.message}`,
+      port: currentComPort,
+      connected: false
+    });
+  }
 });
 
 app.use((req, res, next) => {

@@ -57,7 +57,7 @@ export default function WeighbridgeSettings() {
 
   // Connect to weighbridge
   const connectMutation = useMutation({
-    mutationFn: async (data: { port: string; baudRate: number }) => {
+    mutationFn: async (data: { comPort: string; baudRate: number }) => {
       const response = await fetch('/api/weight/connect', {
         method: 'POST',
         headers: {
@@ -108,7 +108,7 @@ export default function WeighbridgeSettings() {
 
   const onSubmit = (data: WeighbridgeSettingsForm) => {
     connectMutation.mutate({
-      port: data.comPort,
+      comPort: data.comPort,
       baudRate: data.baudRate,
     });
   };
