@@ -5,6 +5,7 @@ import ConnectionStatus from "@/components/connection-status";
 import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
 import StreamControls from "@/components/stream-controls";
 import StreamInfoPanels from "@/components/stream-info-panels";
+import WeightIndicator from "@/components/weight-indicator";
 import { useStream } from "@/hooks/use-stream";
 import { Card } from "@/components/ui/card";
 
@@ -76,13 +77,20 @@ export default function CameraMonitor() {
   }
 
   return (
-    <div className="min-h-screen bg-black overflow-hidden">
-
-      <VideoStreamFullscreen
-        camera={camera}
-        isConnected={isConnected}
-        isStreaming={isStreaming}
-      />
+    <div className="min-h-screen bg-black overflow-hidden flex">
+      {/* Camera View - Takes most of the screen */}
+      <div className="flex-1">
+        <VideoStreamFullscreen
+          camera={camera}
+          isConnected={isConnected}
+          isStreaming={isStreaming}
+        />
+      </div>
+      
+      {/* Weight Indicator Panel - Fixed width on the right */}
+      <div className="w-80 bg-monitoring-dark p-4">
+        <WeightIndicator comPort="COM1" />
+      </div>
     </div>
   );
 }
