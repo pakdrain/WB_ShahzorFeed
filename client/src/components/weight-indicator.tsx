@@ -21,7 +21,7 @@ export default function WeightIndicator({ comPort = 'COM3' }: WeightIndicatorPro
     const connectToSerialPort = async () => {
       try {
         // Try to connect to local serial port service
-        const response = await fetch(`http://localhost:3001/api/weight/connect`, {
+        const response = await fetch(`/api/weight/connect`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ export default function WeightIndicator({ comPort = 'COM3' }: WeightIndicatorPro
     const startWeightPolling = () => {
       interval = setInterval(async () => {
         try {
-          const response = await fetch('http://localhost:3001/api/weight/data');
+          const response = await fetch('/api/weight/data');
           if (response.ok) {
             const data = await response.json();
             setWeight(data.weight || '0.00');
@@ -77,7 +77,7 @@ export default function WeightIndicator({ comPort = 'COM3' }: WeightIndicatorPro
 
   const handleTare = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/weight/tare', {
+      const response = await fetch('/api/weight/tare', {
         method: 'POST',
       });
       

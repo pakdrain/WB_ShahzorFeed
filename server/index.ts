@@ -1,10 +1,148 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { SerialPort } from 'serialport';
+import { ReadlineParser } from '@serialport/parser-readline';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Weight Service Integration
+let currentWeight = '0.00';
+let currentUnit = 'kg';
+let isPortConnected = false;
+let serialPort: SerialPort | null = null;
+
+// Initialize serial port connection for weight indicator
+async function connectToWeightScale() {
+  try {
+    serialPort = new SerialPort({
+      path: 'COM3',
+      baudRate: 9600,
+      dataBits: 8,
+      parity: 'none',
+      stopBits: 1,
+    });
+
+    const parser = serialPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
+
+    serialPort.on('open', () => {
+      log('✅ Connected to COM3 weight indicator');
+      isPortConnected = true;
+    });
+
+    serialPort.on('error', (err) => {
+      log(`❌ Serial port error: ${err.message}`);
+      isPortConnected = false;
+    });
+
+    serialPort.on('close', () => {
+      log('📡 Serial port closed');
+      isPortConnected = false;
+    });
+
+    // Parse incoming weight data
+    parser.on('data', (data) => {
+      const weightData = parseWeightData(data);
+      if (weightData) {
+        currentWeight = weightData.weight;
+        currentUnit = weightData.unit;
+        log(`📊 Weight: ${currentWeight} ${currentUnit}`);
+      }
+    });
+
+  } catch (error: any) {
+    log(`❌ Failed to connect to serial port: ${error.message}`);
+    isPortConnected = false;
+  }
+}
+
+// Parse weight data from serial input
+function parseWeightData(rawData: string) {
+  try {
+    const data = rawData.toString().trim();
+    log(`📥 Raw data received: ${data}`);
+
+    let weight = '0.00';
+    let unit = 'kg';
+
+    // Parse different weight indicator formats
+    if (data.includes('ST,GS,')) {
+      // Pattern for Comm Operator format: "ST,GS,     5.00 kg"
+      const match = data.match(/ST,GS,\s*([0-9]+\.?[0-9]*)\s*(kg|g|lb)/i);
+      if (match) {
+        weight = parseFloat(match[1]).toFixed(2);
+        unit = match[2].toLowerCase();
+      }
+    } else if (data.match(/[+-]?[0-9]+\.?[0-9]*\s*(kg|g|lb)/i)) {
+      // Simple format: "5.00 kg"
+      const match = data.match(/([+-]?[0-9]+\.?[0-9]*)\s*(kg|g|lb)/i);
+      if (match) {
+        weight = parseFloat(match[1]).toFixed(2);
+        unit = match[2].toLowerCase();
+      }
+    } else if (data.match(/[+-]?[0-9]+\.?[0-9]*kg/i)) {
+      // Compact format: "+0005.00kg"
+      const match = data.match(/([+-]?[0-9]+\.?[0-9]*)kg/i);
+      if (match) {
+        weight = parseFloat(match[1]).toFixed(2);
+        unit = 'kg';
+      }
+    }
+
+    return { weight, unit };
+  } catch (error: any) {
+    log(`❌ Error parsing weight data: ${error.message}`);
+    return null;
+  }
+}
+
+// Weight API endpoints
+app.post('/api/weight/connect', (req, res) => {
+  const { port, baudRate } = req.body;
+  log(`🔌 Connecting to ${port || 'COM3'} at ${baudRate || 9600} baud...`);
+  
+  if (!isPortConnected) {
+    connectToWeightScale();
+  }
+  
+  res.json({ 
+    success: true, 
+    message: `Connecting to ${port || 'COM3'}`,
+    connected: isPortConnected 
+  });
+});
+
+app.get('/api/weight/data', (req, res) => {
+  res.json({
+    weight: currentWeight,
+    unit: currentUnit,
+    connected: isPortConnected,
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.post('/api/weight/tare', (req, res) => {
+  if (serialPort && isPortConnected) {
+    // Send tare command to scale
+    serialPort.write('T\r\n');
+    log('⚖️ Tare command sent');
+    res.json({ success: true, message: 'Tare command sent' });
+  } else {
+    res.status(400).json({ success: false, message: 'Serial port not connected' });
+  }
+});
+
+app.get('/api/weight/status', (req, res) => {
+  res.json({
+    connected: isPortConnected,
+    port: 'COM3',
+    baudRate: 9600,
+    currentWeight,
+    currentUnit
+  });
+});
 
 app.use((req, res, next) => {
   const start = Date.now();
@@ -62,5 +200,11 @@ app.use((req, res, next) => {
   const port = 5000;
   server.listen(port, () => {
     log(`serving on port ${port}`);
+    log(`📡 Attempting to connect to COM3 weight indicator...`);
+    
+    // Auto-connect to weight scale on startup
+    setTimeout(() => {
+      connectToWeightScale();
+    }, 2000); // Wait 2 seconds after server starts
   });
 })();
