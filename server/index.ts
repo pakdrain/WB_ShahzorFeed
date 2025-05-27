@@ -17,6 +17,14 @@ let serialPort: SerialPort | null = null;
 // Initialize serial port connection for weight indicator
 async function connectToWeightScale() {
   try {
+    // First, list available ports to help with debugging
+    const { SerialPort: SerialPortStatic } = await import('serialport');
+    const ports = await SerialPortStatic.list();
+    log('📋 Available serial ports:');
+    ports.forEach(port => {
+      log(`  - ${port.path}: ${port.manufacturer || 'Unknown'}`);
+    });
+
     serialPort = new SerialPort({
       path: 'COM3',
       baudRate: 9600,
