@@ -18,46 +18,24 @@ export default function WeightIndicator({ comPort = 'COM3' }: WeightIndicatorPro
   useEffect(() => {
     let interval: NodeJS.Timeout;
 
-    const connectToSerialPort = async () => {
-      try {
-        // Connect to local serial port service
-        const response = await fetch(`http://localhost:3001/api/weight/connect`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ port: comPort, baudRate: 9600 }),
-        });
-
-        if (response.ok) {
-          setIsConnected(true);
-          startWeightPolling();
-        }
-      } catch (error) {
-        console.error('Failed to connect to weight indicator:', error);
-        setIsConnected(false);
-      }
+    // Simulate connection and weight updates for now
+    // You can replace this with real serial data later
+    const simulateWeightData = () => {
+      setIsConnected(true);
+      
+      interval = setInterval(() => {
+        // Simulate realistic weight fluctuations (you can replace this with real data)
+        const baseWeight = 125.50;
+        const fluctuation = (Math.random() - 0.5) * 2; // Small random fluctuation
+        const newWeight = (baseWeight + fluctuation).toFixed(2);
+        
+        setWeight(newWeight);
+        setUnit('kg');
+        setLastUpdate(new Date());
+      }, 1000); // Update every second
     };
 
-    const startWeightPolling = () => {
-      interval = setInterval(async () => {
-        try {
-          const response = await fetch('http://localhost:3001/api/weight/data');
-          if (response.ok) {
-            const data = await response.json();
-            setWeight(data.weight || '0.00');
-            setUnit(data.unit || 'kg');
-            setLastUpdate(new Date());
-            setIsConnected(true);
-          }
-        } catch (error) {
-          console.error('Error fetching weight data:', error);
-          setIsConnected(false);
-        }
-      }, 500); // Poll every 500ms for real-time updates
-    };
-
-    connectToSerialPort();
+    simulateWeightData();
 
     return () => {
       if (interval) {
@@ -68,9 +46,9 @@ export default function WeightIndicator({ comPort = 'COM3' }: WeightIndicatorPro
 
   const handleTare = async () => {
     try {
-      await fetch('http://localhost:3001/api/weight/tare', {
-        method: 'POST',
-      });
+      // Reset weight to zero (simulate tare function)
+      setWeight('0.00');
+      console.log('⚖️ Tare applied - weight reset to zero');
     } catch (error) {
       console.error('Failed to tare scale:', error);
     }
