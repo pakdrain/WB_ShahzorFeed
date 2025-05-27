@@ -48,6 +48,8 @@ async function connectToWeightScale() {
     serialPort.on('close', () => {
       log('📡 Serial port closed');
       isPortConnected = false;
+      currentWeight = '0.00';
+      currentUnit = 'kg';
     });
 
     // Parse incoming weight data

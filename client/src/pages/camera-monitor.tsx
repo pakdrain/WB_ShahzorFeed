@@ -77,19 +77,22 @@ export default function CameraMonitor() {
   }
 
   return (
-    <div className="min-h-screen bg-black overflow-hidden flex">
-      {/* Camera View - Takes most of the screen */}
-      <div className="flex-1">
-        <VideoStreamFullscreen
-          camera={camera}
-          isConnected={isConnected}
-          isStreaming={isStreaming}
-        />
-      </div>
-      
-      {/* Weight Indicator Panel - Fixed width on the right */}
-      <div className="w-80 bg-monitoring-dark p-4">
+    <div className="min-h-screen bg-monitoring-dark overflow-hidden">
+      {/* Weight Region - Full screen with camera embedded inside */}
+      <div className="h-full flex flex-col items-center justify-center p-8">
+        
+        {/* Embedded Camera View - Small size inside weight region */}
+        <div className="w-40 h-30 mb-8 border border-monitoring-gray rounded overflow-hidden">
+          <VideoStreamFullscreen
+            camera={camera}
+            isConnected={isConnected}
+            isStreaming={isStreaming}
+          />
+        </div>
+        
+        {/* Weight Display - Main focus, clean interface */}
         <WeightIndicator comPort="COM3" />
+        
       </div>
     </div>
   );
