@@ -37,9 +37,9 @@ export default function VideoStreamFullscreen({
   }
 
   return (
-    <div className="w-screen h-screen bg-black flex items-start justify-start p-4">
+    <div className="w-full h-full bg-black flex items-center justify-center">
       <div 
-        className="bg-gray-800 border border-gray-600 overflow-hidden"
+        className="bg-gray-800 border border-gray-600 overflow-hidden rounded"
         style={{ width: '30px', height: '30px' }}
       >
         {streamLoading && (
