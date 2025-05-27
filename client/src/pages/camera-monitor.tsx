@@ -89,7 +89,7 @@ export default function CameraMonitor() {
       
       {/* Weight Indicator Panel - Fixed width on the right */}
       <div className="w-80 bg-monitoring-dark p-4">
-        <WeightIndicator comPort="COM1" />
+        <WeightIndicator comPort="COM3" />
       </div>
     </div>
   );

@@ -9,7 +9,7 @@ interface WeightIndicatorProps {
   comPort?: string;
 }
 
-export default function WeightIndicator({ comPort = 'COM1' }: WeightIndicatorProps) {
+export default function WeightIndicator({ comPort = 'COM3' }: WeightIndicatorProps) {
   const [weight, setWeight] = useState<string>('0.00');
   const [isConnected, setIsConnected] = useState(false);
   const [unit, setUnit] = useState('kg');
