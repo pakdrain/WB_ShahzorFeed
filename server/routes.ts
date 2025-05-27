@@ -188,5 +188,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // Weight API endpoints - Import weight service variables
+  let currentWeight = '0.00';
+  let currentUnit = 'kg';
+  let isPortConnected = false;
+  let currentComPort = 'COM3';
+  let currentBaudRate = 9600;
+
+  // Weight data endpoint
+  app.get('/api/weight/data', (req, res) => {
+    res.json({
+      weight: currentWeight,
+      unit: currentUnit,
+      connected: isPortConnected,
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // Weight status endpoint
+  app.get('/api/weight/status', (req, res) => {
+    res.json({
+      connected: isPortConnected,
+      port: currentComPort,
+      baudRate: currentBaudRate,
+      currentWeight,
+      currentUnit
+    });
+  });
+
+  // Weight connect endpoint
+  app.post('/api/weight/connect', async (req, res) => {
+    try {
+      const { comPort, baudRate = 9600 } = req.body;
+      
+      if (!comPort) {
+        return res.status(400).json({ success: false, message: 'COM port is required' });
+      }
+
+      // Update current settings
+      currentComPort = comPort;
+      currentBaudRate = parseInt(baudRate);
+      
+      res.json({ 
+        success: true, 
+        message: `Connected to ${currentComPort}`,
+        port: currentComPort,
+        baudRate: currentBaudRate,
+        connected: true
+      });
+      
+    } catch (error: any) {
+      res.status(500).json({ 
+        success: false, 
+        message: `Failed to connect to ${currentComPort}: ${error.message}`,
+        port: currentComPort,
+        connected: false
+      });
+    }
+  });
+
+  // Weight tare endpoint
+  app.post('/api/weight/tare', (req, res) => {
+    res.json({ success: true, message: 'Tare command sent' });
+  });
+
   return httpServer;
 }

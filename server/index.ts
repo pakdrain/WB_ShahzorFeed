@@ -126,78 +126,7 @@ app.post('/api/weight/connect', (req, res) => {
   });
 });
 
-app.get('/api/weight/data', (req, res) => {
-  res.json({
-    weight: currentWeight,
-    unit: currentUnit,
-    connected: isPortConnected,
-    timestamp: new Date().toISOString()
-  });
-});
-
-app.post('/api/weight/tare', (req, res) => {
-  if (serialPort && isPortConnected) {
-    // Send tare command to scale
-    serialPort.write('T\r\n');
-    log('⚖️ Tare command sent');
-    res.json({ success: true, message: 'Tare command sent' });
-  } else {
-    res.status(400).json({ success: false, message: 'Serial port not connected' });
-  }
-});
-
-app.get('/api/weight/status', (req, res) => {
-  res.json({
-    connected: isPortConnected,
-    port: currentComPort,
-    baudRate: currentBaudRate,
-    currentWeight,
-    currentUnit
-  });
-});
-
-// New endpoint to handle dynamic COM port connection
-app.post('/api/weight/connect', async (req, res) => {
-  try {
-    const { comPort, baudRate = 9600, dataBits = 8, parity = 'none', stopBits = 1 } = req.body;
-    
-    if (!comPort) {
-      return res.status(400).json({ success: false, message: 'COM port is required' });
-    }
-
-    // Close existing connection if any
-    if (serialPort && !serialPort.destroyed) {
-      serialPort.close();
-      serialPort = null;
-      isPortConnected = false;
-      log(`🔌 Closed existing connection to ${currentComPort}`);
-    }
-
-    // Update current settings
-    currentComPort = comPort;
-    currentBaudRate = parseInt(baudRate);
-
-    // Try to connect to the new port
-    await connectToWeightScale();
-    
-    res.json({ 
-      success: true, 
-      message: `Connected to ${currentComPort}`,
-      port: currentComPort,
-      baudRate: currentBaudRate,
-      connected: isPortConnected
-    });
-    
-  } catch (error: any) {
-    log(`❌ Connection failed: ${error.message}`);
-    res.status(500).json({ 
-      success: false, 
-      message: `Failed to connect to ${currentComPort}: ${error.message}`,
-      port: currentComPort,
-      connected: false
-    });
-  }
-});
+// Weight API routes moved to routes.ts file
 
 app.use((req, res, next) => {
   const start = Date.now();
