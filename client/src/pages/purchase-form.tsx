@@ -238,30 +238,8 @@ export default function PurchaseForm() {
             </div>
           </div>
 
-          {/* Columns 4-6 - Camera and Weight in vertical stack */}
-          <div className="col-span-3">
-            <div className="space-y-2 h-full">
-              {/* Weight Region */}
-              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-2 h-1/2">
-                <h3 className="text-white text-center text-xs mb-2">Weight Monitor</h3>
-                <WeightIndicator comPort="COM3" />
-              </div>
-              {/* Camera Region */}
-              <div className="bg-black border border-monitoring-gray rounded overflow-hidden h-1/2">
-                <h3 className="text-white text-center text-xs p-1 bg-monitoring-dark">Camera Feed</h3>
-                <div className="h-[calc(100%-28px)]">
-                  <VideoStreamFullscreen
-                    camera={camera || { id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
-                    isConnected={true}
-                    isStreaming={true}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Columns 7-12 - Tabs and Table */}
-          <div className="col-span-3">
+          {/* Columns 4-9 - Tabs and Table */}
+          <div className="col-span-6">
             <Tabs defaultValue="purchase" className="h-full">
               <TabsList className="h-6">
                 <TabsTrigger value="purchase" className="text-xs">Purchase</TabsTrigger>
@@ -354,6 +332,28 @@ export default function PurchaseForm() {
                 <div className="text-center p-4 text-xs text-black">Offline tab content here</div>
               </TabsContent>
             </Tabs>
+          </div>
+
+          {/* Columns 10-12 - Camera and Weight regions */}
+          <div className="col-span-3">
+            <div className="space-y-2 h-full">
+              {/* Weight Region */}
+              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-2 h-1/2">
+                <h3 className="text-white text-center text-xs mb-2">Weight Monitor</h3>
+                <WeightIndicator comPort="COM3" />
+              </div>
+              {/* Camera Region */}
+              <div className="bg-black border border-monitoring-gray rounded overflow-hidden h-1/2">
+                <h3 className="text-white text-center text-xs p-1 bg-monitoring-dark">Camera Feed</h3>
+                <div className="h-[calc(100%-28px)]">
+                  <VideoStreamFullscreen
+                    camera={camera || { id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
+                    isConnected={true}
+                    isStreaming={true}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
