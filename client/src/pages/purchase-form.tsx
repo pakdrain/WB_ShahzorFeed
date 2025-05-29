@@ -570,9 +570,9 @@ export default function PurchaseForm() {
           </div>
 
           {/* Right Side - Camera and Weight (Columns 11-12) - 10x10 regions */}
-          <div className="col-span-2 flex flex-col gap-1 items-start">
+          <div className="col-span-2 flex flex-col gap-2 items-start pt-2">
             {/* Weight Region - Top 10x10 (80px x 80px) */}
-            <div className="bg-monitoring-dark border border-monitoring-gray rounded p-1 h-20 w-20 flex-shrink-0">
+            <div className="bg-monitoring-dark border border-monitoring-gray rounded p-1 h-20 w-20 flex-shrink-0 mb-2">
               <h3 className="text-white text-center text-xs mb-1">Weight</h3>
               <div className="h-[calc(100%-16px)] text-xs">
                 <WeightIndicator comPort="COM3" />
