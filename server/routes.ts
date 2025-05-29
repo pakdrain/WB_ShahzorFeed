@@ -88,7 +88,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json(updatedCamera);
     } catch (error) {
       console.error("Error updating camera:", error);
-      res.status(500).json({ message: "Internal server error", error: error.message });
+      res.status(500).json({ message: "Internal server error", error: error instanceof Error ? error.message : String(error) });
     }
   });
 
