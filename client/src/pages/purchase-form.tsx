@@ -84,7 +84,7 @@ export default function PurchaseForm() {
   const [loading, setLoading] = useState(false);
   const [onlineMode, setOnlineMode] = useState(true);
   const [igpItems, setIgpItems] = useState([]);
-  const [itemsData, setItemsData] = useState([]);
+  const [itemsData, setItemsData] = useState<any[]>([]);
 
   // Get camera data
   const { data: camera } = useQuery({
@@ -211,7 +211,7 @@ export default function PurchaseForm() {
       vehicle_no: formData.vehicleNo || null,
       item_code: formData.itemCode || null,
       item_desc: formData.itemDesc || null,
-      po_no: formData.poNo || null,
+      po_no: formData.po_no || null,
       po_qty: formData.poQty ? parseFloat(formData.poQty) : null,
       igp_qty: formData.igpQty ? parseFloat(formData.igpQty) : null,
       balance_qty: formData.balanceQty ? parseFloat(formData.balanceQty) : null,
@@ -433,8 +433,8 @@ export default function PurchaseForm() {
           <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Prev</Button>
           <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Next</Button>
           <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Last</Button>
-          <Button className="bg-green-600 hover:bg-green-700 h-6 px-3 text-xs" onClick={handleSave} disabled={loading}>
-            {loading ? 'Saving...' : 'Save'}
+          <Button className="bg-green-600 hover:bg-green-700 h-6 px-3 text-xs" onClick={handleSaveAll} disabled={loading}>
+            {loading ? 'Saving...' : 'Save All'}
           </Button>
           <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Print</Button>
           <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Rej</Button>
@@ -607,8 +607,8 @@ export default function PurchaseForm() {
                   {/* Mini Column 4 - Additional fields */}
                   <div className="space-y-1">
                     <div>
-                      <Button onClick={handleSaveItems} className="w-full h-4 bg-green-500 text-xs" disabled={loading}>
-                        {loading ? 'Saving...' : 'Save Items'}
+                      <Button onClick={addItemToList} className="w-full h-4 bg-blue-500 text-xs">
+                        Add Item
                       </Button>
                     </div>
                     <div>
