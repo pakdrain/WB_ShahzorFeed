@@ -1,12 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { apiRequest } from '@/lib/queryClient';
 
 const PurchaseForm = () => {
   const initialFormData = {
@@ -24,6 +16,7 @@ const PurchaseForm = () => {
     vendor: '',
     companyId: '',
     branchId: '',
+    branch: '',
     onlineEntry: 'Yes',
     offlineEntry: '',
     createdBy: '',
@@ -77,6 +70,8 @@ const PurchaseForm = () => {
     net_supplier_weight: '',
     bag_condition: '',
     bardana_type_id: '',
+    rate: '',
+    amount: '',
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -87,13 +82,15 @@ const PurchaseForm = () => {
   const [purchaseItems, setPurchaseItems] = useState([]);
 
   // Handle changes for master form inputs
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   // Handle changes for item details inputs
-  const handleItemChange = (field: string, value: string) => {
-    setItemData(prev => ({ ...prev, [field]: value }));
+  const handleItemChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setItemData(prev => ({ ...prev, [name]: value }));
   };
 
   // Toggle online/offline
@@ -225,244 +222,328 @@ const PurchaseForm = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-4">
+    <div className="container-fluid p-0" style={{ backgroundColor: '#d7e9f7' }}>
       {/* Top Bar Buttons */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap justify-between items-center gap-2">
-            <div className="flex gap-2 flex-wrap">
-              <Button variant="outline">Purc</Button>
-              <Button variant="outline">Sale</Button>
-              <Button variant="outline">Edit</Button>
-              <Button variant="outline">|&lt; First</Button>
-              <Button variant="outline">&lt; Prev</Button>
-              <Button variant="outline">Next &gt;</Button>
-              <Button variant="outline">Last &gt;|</Button>
-              <Button 
-                onClick={handleSaveAll} 
-                disabled={loading}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {loading ? 'Saving...' : 'Save All'}
-              </Button>
-              <Button variant="outline">Print</Button>
-              <Button variant="outline">Rej</Button>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                variant={onlineMode ? "default" : "outline"}
-                onClick={() => toggleOnlineMode(true)}
-              >
-                ONLINE
-              </Button>
-              <Button 
-                variant={!onlineMode ? "default" : "outline"}
-                onClick={() => toggleOnlineMode(false)}
-              >
-                OFFLINE
-              </Button>
-            </div>
-            <div className="text-3xl font-bold text-green-600">2500</div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="d-flex flex-wrap justify-content-between align-items-center bg-light border rounded p-2 mb-2">
+        <div className="d-flex gap-2 flex-wrap">
+          <button className="btn btn-outline-secondary">Purc</button>
+          <button className="btn btn-outline-secondary">Sale</button>
+          <button className="btn btn-outline-secondary">Edit</button>
+          <button className="btn btn-outline-secondary">|&lt; First</button>
+          <button className="btn btn-outline-secondary">&lt; Prev</button>
+          <button className="btn btn-outline-secondary">Next &gt;</button>
+          <button className="btn btn-outline-secondary">Last &gt;|</button>
+          <button className="btn btn-success me-2" onClick={handleSaveAll} disabled={loading}>
+            {loading ? 'Saving...' : 'Save'}
+          </button>
+          <button className="btn btn-outline-secondary">Print</button>
+          <button className="btn btn-outline-secondary">Rej</button>
+        </div>
+        <div className="d-flex gap-2">
+          <button className="btn btn-dark">ONLINE</button>
+          <button className="btn btn-dark">OFFLINE</button>
+        </div>
+        <div className="display-6 text-success fw-bold">2500</div>
+      </div>
 
       {/* Main Form Section */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Column 1 */}
-            <div className="space-y-4">
-              <div>
-                <Label>Slip No</Label>
-                <Input
-                  value={formData.slipNo}
-                  readOnly
-                  className="bg-gray-100"
-                />
-              </div>
-              
-              <div>
-                <Label>Net Weight</Label>
-                <Input
-                  value={formData.netWeight}
-                  onChange={(e) => handleChange('netWeight', e.target.value)}
-                  className="bg-yellow-100"
-                />
-              </div>
-              
-              <div>
-                <Label>Freight</Label>
-                <Input
-                  value={formData.freight}
-                  onChange={(e) => handleChange('freight', e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label>Remarks</Label>
-                <Textarea
-                  value={formData.remarks}
-                  onChange={(e) => handleChange('remarks', e.target.value)}
-                  placeholder="Add remarks"
-                  className="h-20"
-                />
-              </div>
-            </div>
+      <div className="bg-white p-2 rounded border mb-2">
+        <div className="row mb-2">
+          <div className="col-md-2">
+            <label>Slip No</label>
+            <input
+              className="form-control mb-4"
+              name="slipNo"
+              value={formData.slipNo}
+              readOnly
+            />
+            <label className="mt-4">Net Weight</label>
+            <input
+              className="form-control bg-warning mb-2"
+              name="netWeight"
+              value={formData.netWeight}
+              onChange={handleChange}
+            />
+            <label className="mt-2">Freight</label>
+            <input
+              className="form-control"
+              name="freight"
+              value={formData.freight}
+              onChange={handleChange}
+            />
+            <textarea
+              className="form-control mt-4 mb-3"
+              placeholder="Add remarks"
+              name="remarks"
+              value={formData.remarks}
+              onChange={handleChange}
+              style={{ height: '50px', width: '558px' }}
+            />
+          </div>
 
-            {/* Column 2 */}
-            <div className="space-y-4">
-              <div>
-                <Label>First Weight</Label>
-                <Input
-                  value={formData.firstWeight}
-                  onChange={(e) => handleChange('firstWeight', e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label>Second Weight</Label>
-                <Input
-                  value={formData.secondWeight}
-                  onChange={(e) => handleChange('secondWeight', e.target.value)}
-                  className="text-green-600"
-                />
-              </div>
-              
-              <div>
-                <Label>Bardana Weight</Label>
-                <Input
-                  value={formData.bardanaWeight}
-                  onChange={(e) => handleChange('bardanaWeight', e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label>Gross Weight</Label>
-                <Input
-                  value={formData.grossWeight}
-                  readOnly
-                  className="bg-gray-100"
-                />
-              </div>
-            </div>
+          <div className="col-md-2">
+            <label>First Weight</label>
+            <input
+              className="form-control"
+              name="firstWeight"
+              value={formData.firstWeight}
+              onChange={handleChange}
+            />
+            <label>Second Weight</label>
+            <input
+              className="form-control text-success"
+              name="secondWeight"
+              value={formData.secondWeight}
+              onChange={handleChange}
+            />
+            <label>Bardana Weight</label>
+            <input
+              className="form-control"
+              name="bardanaWeight"
+              value={formData.bardanaWeight}
+              onChange={handleChange}
+            />
+            <label>Gross Weight</label>
+            <input
+              className="form-control"
+              name="grossWeight"
+              value={formData.grossWeight}
+              readOnly
+            />
+          </div>
 
-            {/* Column 3 */}
-            <div className="space-y-4">
-              <div>
-                <Label>Branch</Label>
-                <Select value={formData.branchId} onValueChange={(value) => handleChange('branchId', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select branch" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">Branch 1</SelectItem>
-                    <SelectItem value="2">Branch 2</SelectItem>
-                  </SelectContent>
-                </Select>
+          <div className="col-md-2">
+            <label>Branch</label>
+            <select
+              className="form-select"
+              name="branch"
+              value={formData.branch}
+              onChange={handleChange}
+            >
+              <option value="">Select branch</option>
+              <option value="Branch 1">Branch 1</option>
+              <option value="Branch 2">Branch 2</option>
+            </select>
+
+            <label>Driver Name</label>
+            <input
+              className="form-control"
+              placeholder="Enter driver name"
+              name="driverName"
+              value={formData.driverName}
+              onChange={handleChange}
+            />
+
+            <label>Date & Time</label>
+            <input
+              className="form-control"
+              value="30-04-25 09:10:30 AM"
+              readOnly
+            />
+
+            <div className="mt-3">
+              <div className="d-flex gap-2 mb-2">
+                <button className="btn btn-success w-50">1st WHT</button>
+                <button className="btn btn-secondary w-50">2nd WHT</button>
               </div>
-              
-              <div>
-                <Label>Driver Name</Label>
-                <Input
-                  value={formData.driverName}
-                  onChange={(e) => handleChange('driverName', e.target.value)}
-                  placeholder="Enter driver name"
-                />
-              </div>
-              
-              <div>
-                <Label>Vendor</Label>
-                <Input
-                  value={formData.vendor}
-                  onChange={(e) => handleChange('vendor', e.target.value)}
-                  placeholder="Enter vendor"
-                />
-              </div>
-              
-              <div>
-                <Label>Vehicle No</Label>
-                <Input
-                  value={formData.vehicleNo}
-                  onChange={(e) => handleChange('vehicleNo', e.target.value)}
-                  placeholder="Enter vehicle number"
-                />
+              <div className="d-flex gap-2">
+                <button className="btn btn-warning w-50">Clear</button>
+                <button className="btn btn-danger w-50">Exit</button>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      {/* IGP Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>IGP Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2 mb-4">
-            <div className="flex-1">
-              <Label>IGP No</Label>
-              <Input
-                value={formData.igpNo}
-                onChange={(e) => handleChange('igpNo', e.target.value)}
-                placeholder="Enter IGP No"
-              />
-            </div>
-            <Button className="mt-6">Fetch IGP Data</Button>
+          <div className="col-md-2">
+            <label>Vendor</label>
+            <input
+              className="form-control"
+              placeholder="Enter vendor name"
+              name="vendor"
+              value={formData.vendor}
+              onChange={handleChange}
+            />
+
+            <label>Vehicle No</label>
+            <input
+              className="form-control"
+              placeholder="Enter vehicle number"
+              name="vehicleNo"
+              value={formData.vehicleNo}
+              onChange={handleChange}
+            />
+
+            <label>PO No</label>
+            <input
+              className="form-control"
+              placeholder="Enter PO number"
+              name="po_no"
+              value={formData.po_no}
+              onChange={handleChange}
+            />
+
+            <label>IGP No</label>
+            <input
+              className="form-control"
+              placeholder="Enter IGP number"
+              name="igpNo"
+              value={formData.igpNo}
+              onChange={handleChange}
+            />
           </div>
-        </CardContent>
-      </Card>
 
-      {/* Purchase Tab */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Purchase Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="purchase" className="w-full">
-            <TabsList>
-              <TabsTrigger value="purchase">Purchase</TabsTrigger>
-            </TabsList>
-            <TabsContent value="purchase" className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <Label>PO No</Label>
-                  <Input
-                    value={formData.po_no}
-                    onChange={(e) => handleChange('po_no', e.target.value)}
-                    placeholder="Enter PO No"
-                  />
+          <div className="col-md-2">
+            <div className="p-3 border rounded bg-light">
+              <div className="row">
+                <div className="col-6">
+                  <div className="text-center mb-2">
+                    <small>Gross Wt</small>
+                    <div className="fw-bold">2500</div>
+                  </div>
+                  <div className="text-center mb-2">
+                    <small>Tare Wt</small>
+                    <div className="fw-bold">1200</div>
+                  </div>
                 </div>
-                <div>
-                  <Label>Item Code</Label>
-                  <Input
-                    value={itemData.item_code}
-                    onChange={(e) => handleItemChange('item_code', e.target.value)}
-                    placeholder="Enter item code"
-                  />
-                </div>
-                <div>
-                  <Label>Item Description</Label>
-                  <Input
-                    value={itemData.item_desc}
-                    onChange={(e) => handleItemChange('item_desc', e.target.value)}
-                    placeholder="Enter description"
-                  />
-                </div>
-                <div>
-                  <Label>Quantity</Label>
-                  <Input
-                    value={itemData.po_qty}
-                    onChange={(e) => handleItemChange('po_qty', e.target.value)}
-                    placeholder="Enter quantity"
-                  />
+                <div className="col-6">
+                  <div className="text-center mb-2">
+                    <small>Net Wt</small>
+                    <div className="fw-bold text-success">1300</div>
+                  </div>
+                  <div className="text-center mb-2">
+                    <small>Bardana</small>
+                    <div className="fw-bold">50</div>
+                  </div>
                 </div>
               </div>
-              <Button variant="outline">Add Item</Button>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+            </div>
+
+            <div className="mt-3">
+              <button className="btn btn-primary w-100 mb-2">Fetch IGP Data</button>
+              <button className="btn btn-info w-100">Calculate Weight</button>
+            </div>
+          </div>
+
+          <div className="col-md-2">
+            <div className="text-center">
+              <div className="bg-success text-white p-2 rounded mb-2">
+                <div>Live Weight</div>
+                <div className="h4 mb-0">0.00 KG</div>
+              </div>
+              <div className="bg-info text-white p-2 rounded">
+                <div>Status</div>
+                <div>Stable</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Purchase Tab Section */}
+      <div className="bg-white p-2 rounded border">
+        <ul className="nav nav-tabs" id="myTab" role="tablist">
+          <li className="nav-item" role="presentation">
+            <button
+              className="nav-link active"
+              id="purchase-tab"
+              data-bs-toggle="tab"
+              data-bs-target="#purchase"
+              type="button"
+              role="tab"
+            >
+              Purchase
+            </button>
+          </li>
+        </ul>
+        <div className="tab-content" id="myTabContent">
+          <div className="tab-pane fade show active" id="purchase" role="tabpanel">
+            <div className="row mt-3">
+              <div className="col-md-2">
+                <label>Item Code</label>
+                <input
+                  className="form-control"
+                  name="item_code"
+                  value={itemData.item_code}
+                  onChange={handleItemChange}
+                  placeholder="Enter item code"
+                />
+              </div>
+              <div className="col-md-3">
+                <label>Item Description</label>
+                <input
+                  className="form-control"
+                  name="item_desc"
+                  value={itemData.item_desc}
+                  onChange={handleItemChange}
+                  placeholder="Enter description"
+                />
+              </div>
+              <div className="col-md-2">
+                <label>Quantity</label>
+                <input
+                  className="form-control"
+                  name="po_qty"
+                  value={itemData.po_qty}
+                  onChange={handleItemChange}
+                  placeholder="Enter quantity"
+                />
+              </div>
+              <div className="col-md-2">
+                <label>Rate</label>
+                <input
+                  className="form-control"
+                  name="rate"
+                  value={itemData.rate}
+                  onChange={handleItemChange}
+                  placeholder="Enter rate"
+                />
+              </div>
+              <div className="col-md-2">
+                <label>Amount</label>
+                <input
+                  className="form-control"
+                  name="amount"
+                  value={itemData.amount}
+                  readOnly
+                />
+              </div>
+              <div className="col-md-1">
+                <label>&nbsp;</label>
+                <button className="btn btn-primary d-block">Add</button>
+              </div>
+            </div>
+
+            {/* Items Table */}
+            <div className="mt-3">
+              <table className="table table-bordered table-sm">
+                <thead className="table-light">
+                  <tr>
+                    <th>Item Code</th>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {purchaseItems.map((item, index) => (
+                    <tr key={index}>
+                      <td>{item.item_code}</td>
+                      <td>{item.item_desc}</td>
+                      <td>{item.po_qty}</td>
+                      <td>{item.rate}</td>
+                      <td>{item.amount}</td>
+                      <td>
+                        <button className="btn btn-danger btn-sm">Remove</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
