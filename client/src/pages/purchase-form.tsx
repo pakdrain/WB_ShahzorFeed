@@ -359,8 +359,8 @@ export default function PurchaseForm() {
       {/* Main Form Layout - 100% visible without scrolling */}
       <div className="bg-white p-1 rounded border h-[calc(100vh-60px)] overflow-hidden">
         <div className="grid grid-cols-12 gap-1 h-full">
-          {/* Left Side - Main Form (Columns 1-8) */}
-          <div className="col-span-8">
+          {/* Left Side - Main Form (Columns 1-10) */}
+          <div className="col-span-10">
             {/* Top Row - Form Fields - Compact */}
             <div className="grid grid-cols-9 gap-1 mb-2">
               {/* Column 1 - Left Form Fields */}
@@ -569,27 +569,25 @@ export default function PurchaseForm() {
             </Tabs>
           </div>
 
-          {/* Right Side - Camera and Weight (Columns 9-12) - 10x10 regions */}
-          <div className="col-span-4">
-            <div className="grid grid-rows-2 gap-1 h-full">
-              {/* Weight Region - Top 10x10 */}
-              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-1 h-32 w-32">
-                <h3 className="text-white text-center text-xs mb-1">Weight</h3>
-                <div className="h-[calc(100%-20px)]">
-                  <WeightIndicator comPort="COM3" />
-                </div>
+          {/* Right Side - Camera and Weight (Columns 11-12) - 10x10 regions */}
+          <div className="col-span-2 flex flex-col gap-1 items-start">
+            {/* Weight Region - Top 10x10 (80px x 80px) */}
+            <div className="bg-monitoring-dark border border-monitoring-gray rounded p-1 h-20 w-20 flex-shrink-0">
+              <h3 className="text-white text-center text-xs mb-1">Weight</h3>
+              <div className="h-[calc(100%-16px)] text-xs">
+                <WeightIndicator comPort="COM3" />
               </div>
-              
-              {/* Camera Region - Bottom 10x10 */}
-              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-1 h-32 w-32">
-                <h3 className="text-white text-center text-xs mb-1">Camera</h3>
-                <div className="bg-black rounded h-[calc(100%-20px)] overflow-hidden">
-                  <VideoStreamFullscreen
-                    camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
-                    isConnected={true}
-                    isStreaming={true}
-                  />
-                </div>
+            </div>
+            
+            {/* Camera Region - Bottom 10x10 (80px x 80px) */}
+            <div className="bg-monitoring-dark border border-monitoring-gray rounded p-1 h-20 w-20 flex-shrink-0">
+              <h3 className="text-white text-center text-xs mb-1">Camera</h3>
+              <div className="bg-black rounded h-[calc(100%-16px)] overflow-hidden">
+                <VideoStreamFullscreen
+                  camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
+                  isConnected={true}
+                  isStreaming={true}
+                />
               </div>
             </div>
           </div>
