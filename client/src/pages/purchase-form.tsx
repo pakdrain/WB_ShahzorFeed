@@ -569,21 +569,21 @@ export default function PurchaseForm() {
             </Tabs>
           </div>
 
-          {/* Right Side - Camera and Weight (Columns 9-12) - 30x30 regions */}
+          {/* Right Side - Camera and Weight (Columns 9-12) - 10x10 regions */}
           <div className="col-span-4">
             <div className="grid grid-rows-2 gap-1 h-full">
-              {/* Weight Region - Top 30% */}
-              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-2">
-                <h3 className="text-white text-center text-xs mb-2">Weight Monitor</h3>
-                <div className="h-[calc(100%-30px)]">
+              {/* Weight Region - Top 10x10 */}
+              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-1 h-32 w-32">
+                <h3 className="text-white text-center text-xs mb-1">Weight</h3>
+                <div className="h-[calc(100%-20px)]">
                   <WeightIndicator comPort="COM3" />
                 </div>
               </div>
               
-              {/* Camera Region - Bottom 30% */}
-              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-2">
-                <h3 className="text-white text-center text-xs mb-2">Camera Feed</h3>
-                <div className="bg-black rounded h-[calc(100%-30px)] overflow-hidden">
+              {/* Camera Region - Bottom 10x10 */}
+              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-1 h-32 w-32">
+                <h3 className="text-white text-center text-xs mb-1">Camera</h3>
+                <div className="bg-black rounded h-[calc(100%-20px)] overflow-hidden">
                   <VideoStreamFullscreen
                     camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
                     isConnected={true}
