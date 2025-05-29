@@ -277,7 +277,7 @@ export default function PurchaseForm() {
     };
 
     try {
-      const response = await fetch('/api/purchases-with-items', {
+      const response = await fetch('/api/purchases', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
