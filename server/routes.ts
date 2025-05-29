@@ -533,7 +533,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Updated POST to handle master and detail together according to your server code
   app.post('/api/purchases', async (req, res) => {
     const purchaseData = req.body;
-    console.log('📥 Incoming purchase data:', purchaseData);
+    console.log('📥 Incoming purchase data:', JSON.stringify(purchaseData, null, 2));
 
     try {
       // Start transaction
@@ -544,31 +544,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const masterData = purchaseData.masterData || purchaseData;
       const itemsData = purchaseData.itemsData || purchaseData.purchase_items || [];
 
-      const {
-        slip_no = null,
-        slip_in_time = null,
-        first_weight = null,
-        second_weight = null,
-        net_weight = null,
-        bardana_weight = null,
-        gross_weight = null,
-        freight = null,
-        remarks = null,
-        driver_name = null,
-        company_id = null,
-        branch_id = null,
-        online_entry = null,
-        offline_entry = null,
-        created_by = null,
-        creation_date = null,
-        last_updated_by = null,
-        last_updated_date = null,
-        manual_dc_no = null,
-        entry_type = null,
-        slip_out_time = null,
-        status = null,
-        slip_date = null,
-      } = masterData;
+      console.log('📋 Processing master data:', JSON.stringify(masterData, null, 2));
+
+      // Direct assignment with proper logging
+      const slip_no = masterData.slip_no;
+      const slip_in_time = masterData.slip_in_time;
+      const first_weight = masterData.first_weight;
+      const second_weight = masterData.second_weight;
+      const net_weight = masterData.net_weight;
+      const bardana_weight = masterData.bardana_weight;
+      const gross_weight = masterData.gross_weight;
+      const freight = masterData.freight;
+      const remarks = masterData.remarks;
+      const driver_name = masterData.driver_name;
+      const company_id = masterData.company_id;
+      const branch_id = masterData.branch_id;
+      const online_entry = masterData.online_entry;
+      const offline_entry = masterData.offline_entry;
+      const created_by = masterData.created_by;
+      const creation_date = masterData.creation_date;
+      const last_updated_by = masterData.last_updated_by;
+      const last_updated_date = masterData.last_updated_date;
+      const manual_dc_no = masterData.manual_dc_no;
+      const entry_type = masterData.entry_type;
+      const slip_out_time = masterData.slip_out_time;
+      const status = masterData.status;
+      const slip_date = masterData.slip_date;
+
+      console.log('🔍 Extracted values:', {
+        slip_no,
+        driver_name,
+        first_weight,
+        WB_ID
+      });
 
       const masterInsertQuery = `
         INSERT INTO WB_WEIGHBRIDGE (
