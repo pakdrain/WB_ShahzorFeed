@@ -9,26 +9,15 @@ import { Pool } from "pg";
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  // PostgreSQL connection setup
+  // PostgreSQL connection pool setup (matching working config from index.ts)
   const pool = new Pool({
-    user: process.env.PGUSER,
-    host: process.env.PGHOST,
-    database: process.env.PGDATABASE,
-    password: process.env.PGPASSWORD,
-    port: parseInt(process.env.PGPORT || '5432'),
-    ssl: {
-      rejectUnauthorized: false
-    },
+    user: 'postgres',
+    host: 'localhost',
+    database: 'wb',
+    password: '@1122',
+    port: 5432,
+    ssl: false
   });
-
-  // Test database connection on startup
-  try {
-    const client = await pool.connect();
-    console.log('✅ PostgreSQL connected successfully');
-    client.release();
-  } catch (err) {
-    console.error('❌ PostgreSQL connection failed:', err);
-  }
 
   // Helper function to generate a unique WB_ID
   async function generateWBID() {
