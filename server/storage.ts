@@ -1,4 +1,13 @@
-import { cameras, streamSessions, streamStats, type Camera, type InsertCamera, type StreamSession, type InsertStreamSession, type StreamStats, type InsertStreamStats } from "@shared/schema";
+import { 
+  cameras, streamSessions, streamStats, wbWeighbridge, wbWeighbridgeItemsPurchase, wbImages,
+  type Camera, type InsertCamera, type StreamSession, type InsertStreamSession, 
+  type StreamStats, type InsertStreamStats,
+  type WbWeighbridge, type InsertWbWeighbridge, 
+  type WbWeighbridgeItemsPurchase, type InsertWbWeighbridgeItemsPurchase,
+  type WbImages, type InsertWbImages 
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, max } from "drizzle-orm";
 
 export interface IStorage {
   // Camera operations
@@ -15,6 +24,16 @@ export interface IStorage {
   // Stream stats operations
   addStreamStats(stats: InsertStreamStats): Promise<StreamStats>;
   getLatestStreamStats(cameraId: number): Promise<StreamStats | undefined>;
+
+  // Purchase/Weighbridge operations
+  createPurchase(purchase: InsertWbWeighbridge, items: InsertWbWeighbridgeItemsPurchase[]): Promise<WbWeighbridge>;
+  getPurchases(): Promise<WbWeighbridge[]>;
+  getPurchaseById(wbId: number): Promise<WbWeighbridge | undefined>;
+  getMaxSlipNo(): Promise<number>;
+  
+  // Image operations
+  addPurchaseImage(image: InsertWbImages): Promise<WbImages>;
+  getPurchaseImages(wbId: number): Promise<WbImages[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -136,6 +155,43 @@ export class MemStorage implements IStorage {
       .sort((a, b) => (b.timestamp?.getTime() || 0) - (a.timestamp?.getTime() || 0));
     
     return cameraStats[0];
+  }
+
+  // Purchase/Weighbridge operations
+  async createPurchase(purchase: InsertWbWeighbridge, items: InsertWbWeighbridgeItemsPurchase[]): Promise<WbWeighbridge> {
+    const [purchaseRecord] = await db.insert(wbWeighbridge).values(purchase).returning();
+    
+    // Insert purchase items with the created purchase ID
+    if (items.length > 0) {
+      const itemsWithWbId = items.map(item => ({ ...item, wbId: purchaseRecord.wbId }));
+      await db.insert(wbWeighbridgeItemsPurchase).values(itemsWithWbId);
+    }
+    
+    return purchaseRecord;
+  }
+
+  async getPurchases(): Promise<WbWeighbridge[]> {
+    return await db.select().from(wbWeighbridge).orderBy(desc(wbWeighbridge.creationDate));
+  }
+
+  async getPurchaseById(wbId: number): Promise<WbWeighbridge | undefined> {
+    const [purchase] = await db.select().from(wbWeighbridge).where(eq(wbWeighbridge.wbId, wbId));
+    return purchase || undefined;
+  }
+
+  async getMaxSlipNo(): Promise<number> {
+    const [result] = await db.select({ maxSlip: max(wbWeighbridge.slipNo) }).from(wbWeighbridge);
+    return parseInt(result.maxSlip || "0") || 0;
+  }
+
+  // Image operations
+  async addPurchaseImage(image: InsertWbImages): Promise<WbImages> {
+    const [imageRecord] = await db.insert(wbImages).values(image).returning();
+    return imageRecord;
+  }
+
+  async getPurchaseImages(wbId: number): Promise<WbImages[]> {
+    return await db.select().from(wbImages).where(eq(wbImages.wbId, wbId));
   }
 }
 
