@@ -604,6 +604,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slip_out_time, status, slip_date
       ];
 
+      console.log('🔍 SQL Query:', masterInsertQuery);
+      console.log('🔍 SQL Values:', masterValues);
+
       const masterResult = await pool.query(masterInsertQuery, masterValues);
 
       // Insert detail records if any
@@ -656,8 +659,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Rollback transaction on error
       await pool.query('ROLLBACK');
       console.error('❌ Error inserting purchase and items:', err);
-      console.error('Master data received:', masterData);
-      console.error('Items data received:', itemsData);
+      console.error('Purchase data received:', purchaseData);
       res.status(500).json({ error: 'Insert error', details: err instanceof Error ? err.message : 'Unknown error' });
     }
   });
