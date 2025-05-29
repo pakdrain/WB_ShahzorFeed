@@ -309,13 +309,5 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Try to use database storage, fallback to memory storage if database unavailable
-let storage: IStorage;
-try {
-  storage = new DatabaseStorage();
-} catch (error) {
-  console.log('Database not available, using in-memory storage');
-  storage = new MemStorage();
-}
-
-export { storage };
+// Use in-memory storage for now - will switch to database when PostgreSQL is running
+export const storage = new MemStorage();
