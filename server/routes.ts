@@ -255,25 +255,96 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ success: true, message: 'Tare command sent' });
   });
 
-  // Purchase API endpoints
+  // Purchase API endpoints - Using existing WB_WEIGHBRIDGE table
   app.get('/api/purchases', async (req, res) => {
     try {
-      const allPurchases = await db.select().from(purchases).orderBy(desc(purchases.creationDate));
-      res.json(allPurchases);
+      const result = await db.execute(sql`SELECT * FROM WB_WEIGHBRIDGE ORDER BY WB_ID DESC`);
+      res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching purchases:', error);
       res.status(500).json({ message: 'Failed to fetch purchases', error: error.message });
     }
   });
 
-  app.post('/api/purchases', async (req, res) => {
+  app.get('/api/purchase-by-igp', async (req, res) => {
+    const { igpNo } = req.query;
+    if (!igpNo) {
+      return res.status(400).json({ error: 'igpNo query parameter is required' });
+    }
+
     try {
-      const validatedData = insertPurchaseSchema.parse(req.body);
-      const [newPurchase] = await db.insert(purchases).values(validatedData).returning();
-      res.status(201).json(newPurchase);
+      const result = await db.execute(sql`SELECT * FROM WB_WEIGHBRIDGE WHERE igp_no = ${igpNo}`);
+      
+      if (!result.rows || result.rows.length === 0) {
+        return res.status(404).json({ message: 'No data found for this IGP No' });
+      }
+      res.json(result.rows);
     } catch (error: any) {
-      console.error('Error creating purchase:', error);
-      res.status(400).json({ message: 'Failed to create purchase', error: error.message });
+      console.error('Error fetching data by IGP No:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/purchases', async (req, res) => {
+    const purchaseData = req.body;
+    console.log('📥 Incoming purchase data:', purchaseData);
+
+    try {
+      // Generate WB_ID
+      const maxIdResult = await db.execute(sql`SELECT COALESCE(MAX(WB_ID), 0) + 1 AS new_id FROM WB_WEIGHBRIDGE`);
+      const WB_ID = maxIdResult.rows[0]?.new_id || 1;
+
+      // Prepare data for insertion
+      const {
+        slipNo: slip_no = null,
+        slipInTime: slip_in_time = null,
+        firstWeight: first_weight = null,
+        secondWeight: second_weight = null,
+        netWeight: net_weight = null,
+        bardanaWeight: bardana_weight = null,
+        grossWeight: gross_weight = null,
+        freight = null,
+        remarks = null,
+        driverName: driver_name = null,
+        companyId: company_id = null,
+        branchId: branch_id = null,
+        onlineEntry: online_entry = null,
+        offlineEntry: offline_entry = null,
+        createdBy: created_by = null,
+        lastUpdatedBy: last_updated_by = null,
+        manualDcNo: manual_dc_no = null,
+        entryType: entry_type = null,
+        slipOutTime: slip_out_time = null,
+        status = null,
+        slipDate: slip_date = null,
+      } = purchaseData;
+
+      const onlineEntryStr = online_entry !== null ? String(online_entry) : null;
+      const offlineEntryStr = offline_entry !== null ? String(offline_entry) : null;
+      const currentTimestamp = new Date().toISOString();
+
+      const result = await db.execute(sql`
+        INSERT INTO WB_WEIGHBRIDGE (
+          WB_ID, SLIP_NO, SLIP_IN_TIME, FIRST_WEIGHT, SECOND_WEIGHT, NET_WEIGHT,
+          BARDANA_WEIGHT, GROSS_WEIGHT, FREIGHT, REMARKS, DRIVER_NAME, COMPANY_ID,
+          BRANCH_ID, ONLINE_ENTRY, OFFLINE_ENTRY, CREATED_BY, CREATION_DATE,
+          LAST_UPDATED_BY, LAST_UPDATED_DATE, MANUAL_DC_NO, ENTRY_TYPE,
+          SLIP_OUT_TIME, STATUS, SLIP_DATE
+        )
+        VALUES (
+          ${WB_ID}, ${slip_no}, ${slip_in_time}, ${first_weight}, ${second_weight}, ${net_weight},
+          ${bardana_weight}, ${gross_weight}, ${freight}, ${remarks}, ${driver_name}, ${company_id},
+          ${branch_id}, ${onlineEntryStr}, ${offlineEntryStr}, ${created_by}, ${currentTimestamp},
+          ${last_updated_by}, ${currentTimestamp}, ${manual_dc_no}, ${entry_type},
+          ${slip_out_time}, ${status}, ${slip_date}
+        )
+        RETURNING *
+      `);
+      
+      res.json(result.rows[0]);
+    } catch (error: any) {
+      console.error('❌ Error inserting purchase:', error);
+      res.status(500).json({ error: 'Insert error', details: error.message });
     }
   });
 
