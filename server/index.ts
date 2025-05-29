@@ -16,6 +16,7 @@ export const pool = new Pool({
   database: 'wb',
   password: '@1122',
   port: 5432,
+  ssl: false
 });
 
 // Weight Service Integration
