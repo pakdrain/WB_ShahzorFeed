@@ -347,9 +347,9 @@ export default function PurchaseForm() {
                 <WeightIndicator comPort="COM3" />
               </div>
               {/* Camera Region - Bottom */}
-              <div className="bg-black border border-monitoring-gray rounded overflow-hidden h-[50%]">
-                <h3 className="text-white text-center text-sm p-2 bg-monitoring-dark">Camera Feed</h3>
-                <div className="h-[calc(100%-40px)]">
+              <div className="h-[50%]">
+                <h3 className="text-white text-center text-sm p-2 bg-monitoring-dark rounded-t">Camera Feed</h3>
+                <div className="h-[calc(100%-40px)] bg-black rounded-b overflow-hidden">
                   <VideoStreamFullscreen
                     camera={camera || { id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
                     isConnected={true}
