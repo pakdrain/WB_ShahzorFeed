@@ -4,6 +4,9 @@ import { storage } from "./storage";
 import { streamService } from "./stream-service";
 import { videoStreamService } from "./video-stream";
 import { z } from "zod";
+import { purchases, purchaseItems, insertPurchaseSchema, insertPurchaseItemSchema } from "../shared/schema";
+import { db } from "./db";
+import { desc, eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -250,6 +253,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Weight tare endpoint
   app.post('/api/weight/tare', (req, res) => {
     res.json({ success: true, message: 'Tare command sent' });
+  });
+
+  // Purchase API endpoints
+  app.get('/api/purchases', async (req, res) => {
+    try {
+      const allPurchases = await db.select().from(purchases).orderBy(desc(purchases.creationDate));
+      res.json(allPurchases);
+    } catch (error: any) {
+      console.error('Error fetching purchases:', error);
+      res.status(500).json({ message: 'Failed to fetch purchases', error: error.message });
+    }
+  });
+
+  app.post('/api/purchases', async (req, res) => {
+    try {
+      const validatedData = insertPurchaseSchema.parse(req.body);
+      const [newPurchase] = await db.insert(purchases).values(validatedData).returning();
+      res.status(201).json(newPurchase);
+    } catch (error: any) {
+      console.error('Error creating purchase:', error);
+      res.status(400).json({ message: 'Failed to create purchase', error: error.message });
+    }
+  });
+
+  app.get('/api/purchases/:id', async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const [purchase] = await db.select().from(purchases).where(eq(purchases.id, id));
+      
+      if (!purchase) {
+        return res.status(404).json({ message: 'Purchase not found' });
+      }
+      
+      res.json(purchase);
+    } catch (error: any) {
+      console.error('Error fetching purchase:', error);
+      res.status(500).json({ message: 'Failed to fetch purchase', error: error.message });
+    }
+  });
+
+  // Purchase Items API endpoints
+  app.get('/api/purchase-items', async (req, res) => {
+    try {
+      const allItems = await db.select().from(purchaseItems).orderBy(desc(purchaseItems.creationDate));
+      res.json(allItems);
+    } catch (error: any) {
+      console.error('Error fetching purchase items:', error);
+      res.status(500).json({ message: 'Failed to fetch purchase items', error: error.message });
+    }
+  });
+
+  app.post('/api/purchase-items', async (req, res) => {
+    try {
+      const validatedData = insertPurchaseItemSchema.parse(req.body);
+      const [newItem] = await db.insert(purchaseItems).values(validatedData).returning();
+      res.status(201).json(newItem);
+    } catch (error: any) {
+      console.error('Error creating purchase item:', error);
+      res.status(400).json({ message: 'Failed to create purchase item', error: error.message });
+    }
   });
 
   return httpServer;
