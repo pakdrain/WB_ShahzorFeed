@@ -98,9 +98,10 @@ export default function PurchaseForm() {
       return;
     }
     try {
-      const response = await axios.get('/api/igp/data', {
-        params: { igp_no: formData.igpNo }
-      });
+      const response = await axios.get(
+        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data`,
+        { params: { igp_no: formData.igpNo } }
+      );
 
       if (response.data && response.data.items && response.data.items.length > 0) {
         const data = response.data.items;
@@ -162,7 +163,7 @@ export default function PurchaseForm() {
 
   useEffect(() => {
     // Fetch next slip number
-    axios.get('/api/purchases')
+    axios.get('http://localhost:5000/api/purchases')
       .then(res => {
         if (res.data.length > 0) {
           const maxSlip = res.data.reduce((max: number, curr: any) => {
@@ -177,8 +178,6 @@ export default function PurchaseForm() {
       })
       .catch(err => {
         console.error('Error fetching purchases:', err);
-        // Set default slip number if API fails
-        setFormData(prev => ({ ...prev, slipNo: '1' }));
       });
 
     const now = new Date().toISOString();
@@ -226,7 +225,7 @@ export default function PurchaseForm() {
     };
 
     try {
-      const res = await axios.post('/api/purchases', payload);
+      const res = await axios.post('http://localhost:5000/api/purchases', payload);
       alert('Purchase saved successfully!');
       console.log('Saved:', res.data);
       resetForm();
@@ -281,7 +280,7 @@ export default function PurchaseForm() {
     };
 
     try {
-      const res = await axios.post('/api/purchase-items', payload);
+      const res = await axios.post('http://localhost:5000/api/purchase-items', payload);
       alert('Purchase items saved successfully!');
       console.log('Items saved:', res.data);
     } catch (err) {
