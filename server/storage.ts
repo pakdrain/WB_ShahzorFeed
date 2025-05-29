@@ -195,4 +195,5 @@ export class MemStorage implements IStorage {
   }
 }
 
+// Use MemStorage for now until database is properly set up
 export const storage = new MemStorage();
