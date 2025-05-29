@@ -1,0 +1,142 @@
+const express = require('express');
+const app = express();
+const { Pool } = require('pg');
+
+// PostgreSQL connection pool setup
+const pool = new Pool({
+  user: 'postgres',
+  host: 'localhost',
+  database: 'wb',
+  password: '@1122',
+  port: 5432,
+});
+
+// Middleware to parse JSON
+app.use(express.json());
+
+// Utility: Generate WB_ID
+async function generateWBID() {
+  const client = await pool.connect();
+  try {
+    const result = await client.query('SELECT MAX(WB_ID) AS max_id FROM WB_WEIGHBRIDGE');
+    const maxId = result.rows[0].max_id || 0;
+    return maxId + 1;
+  } finally {
+    client.release();
+  }
+}
+
+// Master + Detail Insert Endpoint
+app.post('/api/purchases', async (req, res) => {
+  const purchaseData = req.body;
+  console.log('📥 Incoming purchase data:', purchaseData);
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const WB_ID = await generateWBID();
+
+    const {
+      slip_no = null,
+      slip_in_time = null,
+      first_weight = null,
+      second_weight = null,
+      net_weight = null,
+      bardana_weight = null,
+      gross_weight = null,
+      freight = null,
+      remarks = null,
+      driver_name = null,
+      company_id = null,
+      branch_id = null,
+      online_entry = null,
+      offline_entry = null,
+      created_by = null,
+      creation_date = null,
+      last_updated_by = null,
+      last_updated_date = null,
+      manual_dc_no = null,
+      entry_type = null,
+      slip_out_time = null,
+      status = null,
+      slip_date = null,
+      purchase_items = [], // array of detail items
+    } = purchaseData;
+
+    const masterInsertQuery = `
+      INSERT INTO WB_WEIGHBRIDGE (
+        WB_ID, SLIP_NO, SLIP_IN_TIME, FIRST_WEIGHT, SECOND_WEIGHT, NET_WEIGHT,
+        BARDANA_WEIGHT, GROSS_WEIGHT, FREIGHT, REMARKS, DRIVER_NAME, COMPANY_ID,
+        BRANCH_ID, ONLINE_ENTRY, OFFLINE_ENTRY, CREATED_BY, CREATION_DATE,
+        LAST_UPDATED_BY, LAST_UPDATED_DATE, MANUAL_DC_NO, ENTRY_TYPE,
+        SLIP_OUT_TIME, STATUS, SLIP_DATE
+      )
+      VALUES (
+        $1, $2, $3, $4, $5, $6,
+        $7, $8, $9, $10, $11, $12,
+        $13, $14, $15, $16, $17,
+        $18, $19, $20, $21,
+        $22, $23, $24
+      );
+    `;
+
+    const masterValues = [
+      WB_ID, slip_no, slip_in_time, first_weight, second_weight, net_weight,
+      bardana_weight, gross_weight, freight, remarks, driver_name, company_id,
+      branch_id, String(online_entry), String(offline_entry), created_by, creation_date,
+      last_updated_by, last_updated_date, manual_dc_no, entry_type,
+      slip_out_time, status, slip_date
+    ];
+
+    await client.query(masterInsertQuery, masterValues);
+
+    for (const item of purchase_items) {
+      const detailQuery = `
+        INSERT INTO wb_weighbridge_items_purchase (
+          wb_item_p_id, wb_id, manual_dc_no, do_id, do_no, customer_id, customer_name,
+          vehicle_no, do_date, item_id, item_code, item_desc, created_by, creation_date,
+          last_updated_by, last_updated_date, po_id, po_no, po_qty, igp_qty, balance_qty,
+          bardana_type, igp_no, manual_igp_no, igp_id, vendor_id, vendor_name, no_of_bags,
+          weight_per_bags, bardana_weight, igp_date, quality_deduction, supplier_weight,
+          sup_weight_wthout_bardana, net_supplier_weight, bag_condition, bardana_type_id
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7,
+          $8, $9, $10, $11, $12, $13, $14,
+          $15, $16, $17, $18, $19, $20, $21,
+          $22, $23, $24, $25, $26, $27, $28,
+          $29, $30, $31, $32, $33, $34,
+          $35, $36, $37, $38
+        );
+      `;
+
+      const detailValues = [
+        item.wb_item_p_id, WB_ID, item.manual_dc_no, item.do_id, item.do_no, item.customer_id, item.customer_name,
+        item.vehicle_no, item.do_date, item.item_id, item.item_code, item.item_desc, item.created_by, item.creation_date,
+        item.last_updated_by, item.last_updated_date, item.po_id, item.po_no, item.po_qty, item.igp_qty, item.balance_qty,
+        item.bardana_type, item.igp_no, item.manual_igp_no, item.igp_id, item.vendor_id, item.vendor_name, item.no_of_bags,
+        item.weight_per_bags, item.bardana_weight, item.igp_date, item.quality_deduction, item.supplier_weight,
+        item.sup_weight_wthout_bardana, item.net_supplier_weight, item.bag_condition, item.bardana_type_id
+      ];
+
+      await client.query(detailQuery, detailValues);
+    }
+
+    await client.query('COMMIT');
+    res.status(200).json({ message: 'Master and detail records inserted successfully', WB_ID });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('❌ Error inserting purchase and items:', err);
+    res.status(500).json({ error: 'Insert error', details: err.message });
+  } finally {
+    client.release();
+  }
+});
+
+//
+
+// Start server
+const PORT = 5000;
+app.listen(PORT, 'localhost', () => {
+  console.log(✅ Server running at http://localhost:${PORT});
+});

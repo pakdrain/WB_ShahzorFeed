@@ -5,13 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '@/components/ui/card';
-import WeightIndicator from '@/components/weight-indicator';
-import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
-import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiRequest } from '@/lib/queryClient';
 
-export default function PurchaseForm() {
+const PurchaseForm = () => {
   const initialFormData = {
     slipNo: '',
     slipInTime: '',
@@ -38,126 +35,68 @@ export default function PurchaseForm() {
     slipOutTime: '',
     status: '',
     slipDate: '',
-    branch: '',
-    bardanaType: '',
-    wtPerBag: '',
-    noOfBags: '',
-    qualityDed: '',
     igpNo: '',
-    igpDate: '',
     vehicleNo: '',
-    weight: '',
-    bags: '',
-    superweight: '',
-    supWtBardana: '',
-    swtsOurWt: '',
-    // Additional fields from your code
-    wbItemPId: '',
-    wbId: '',
-    doId: '',
-    doNo: '',
-    customerId: '',
-    customerName: '',
-    doDate: '',
-    itemId: '',
-    itemCode: '',
-    itemDesc: '',
-    poId: '',
-    poQty: '',
-    igpQty: '',
-    balanceQty: '',
-    baradanaType: '',
-    manualIgpNo: '',
-    igpId: '',
-    vendorId: '',
-    vendorName: '',
-    weightPerBags: '',
-    qualityDeduction: '',
-    supplierWeight: '',
-    supWeightWithoutBardana: '',
-    netSupplierWeight: '',
-    bagCondition: '',
-    bardanaTypeId: '',
+  };
+
+  const initialItemData = {
+    wb_item_p_id: '',
+    wb_id: '',
+    manual_dc_no: '',
+    do_id: '',
+    do_no: '',
+    customer_id: '',
+    customer_name: '',
+    vehicle_no: '',
+    do_date: '',
+    item_id: '',
+    item_code: '',
+    item_desc: '',
+    created_by: '',
+    creation_date: '',
+    last_updated_by: '',
+    last_updated_date: '',
+    po_id: '',
+    po_no: '',
+    po_qty: '',
+    igp_qty: '',
+    balance_qty: '',
+    bardana_type: '',
+    igp_no: '',
+    manual_igp_no: '',
+    igp_id: '',
+    vendor_id: '',
+    vendor_name: '',
+    no_of_bags: '',
+    weight_per_bags: '',
+    bardana_weight: '',
+    igp_date: '',
+    quality_deduction: '',
+    supplier_weight: '',
+    sup_weight_wthout_bardana: '',
+    net_supplier_weight: '',
+    bag_condition: '',
+    bardana_type_id: '',
   };
 
   const [formData, setFormData] = useState(initialFormData);
+  const [itemData, setItemData] = useState(initialItemData);
   const [loading, setLoading] = useState(false);
   const [onlineMode, setOnlineMode] = useState(true);
   const [igpItems, setIgpItems] = useState([]);
-  const [itemsData, setItemsData] = useState<any[]>([]);
+  const [purchaseItems, setPurchaseItems] = useState([]);
 
-  // Get camera data
-  const { data: camera } = useQuery({
-    queryKey: ['/api/cameras/1'],
-    enabled: true,
-  });
-
-  // IGP Data fetch function
-  const fetchIgpData = async () => {
-    if (!formData.igpNo) {
-      alert('Please enter IGP No');
-      return;
-    }
-    try {
-      const response = await fetch(
-        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data?igp_no=${formData.igpNo}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
-      if (data && data.items && data.items.length > 0) {
-        const items = data.items;
-        const firstItem = items[0];
-        setFormData(prev => ({
-          ...prev,
-          driverName: firstItem.driver_name || '',
-          vendor: firstItem.vendor_name || '',
-          vehicleNo: firstItem.vehicle_no || '',
-          bardanaWeight: firstItem.bardana_qty ? String(firstItem.bardana_qty) : '',
-        }));
-        setIgpItems(items);
-      } else {
-        alert('No data found for this IGP No.');
-        setIgpItems([]);
-      }
-    } catch (error) {
-      console.error('Error fetching IGP data:', error);
-      alert('Failed to fetch IGP data');
-      setIgpItems([]);
-    }
+  // Handle changes for master form inputs
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const formatDatetimeLocal = (isoString: string) => {
-    if (!isoString) return '';
-    return isoString.slice(0, 16);
+  // Handle changes for item details inputs
+  const handleItemChange = (field: string, value: string) => {
+    setItemData(prev => ({ ...prev, [field]: value }));
   };
 
-  const formatISODate = (localString: string) => {
-    if (!localString) return null;
-    return new Date(localString).toISOString();
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    const numericFields = [
-      'firstWeight', 'secondWeight', 'netWeight',
-      'bardanaWeight', 'grossWeight', 'freight',
-      'companyId', 'branchId', 'createdBy', 'lastUpdatedBy'
-    ];
-
-    if (numericFields.includes(name)) {
-      if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
-        setFormData(prev => ({ ...prev, [name]: value }));
-      }
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
+  // Toggle online/offline
   const toggleOnlineMode = (isOnline: boolean) => {
     setOnlineMode(isOnline);
     setFormData(prev => ({
@@ -168,10 +107,10 @@ export default function PurchaseForm() {
   };
 
   useEffect(() => {
-    // Fetch next slip number
+    // Fetch max slip no logic
     fetch('/api/purchases')
       .then(res => res.json())
-      .then((data: any[]) => {
+      .then(data => {
         if (data.length > 0) {
           const maxSlip = data.reduce((max: number, curr: any) => {
             const slip = parseInt(curr.slip_no, 10);
@@ -183,101 +122,85 @@ export default function PurchaseForm() {
           setFormData(prev => ({ ...prev, slipNo: '1' }));
         }
       })
-      .catch((err: any) => {
+      .catch(err => {
         console.error('Error fetching purchases:', err);
       });
 
     const now = new Date().toISOString();
     setFormData(prev => ({
       ...prev,
-      slipInTime: formatDatetimeLocal(now),
+      slipInTime: now.slice(0, 16),
       creationDate: now,
       lastUpdatedDate: now,
       slipDate: now,
     }));
+
     toggleOnlineMode(true);
   }, []);
 
+  // Reset all forms
   const resetForm = () => {
     setFormData(initialFormData);
-    setItemsData([]);
+    setItemData(initialItemData);
     toggleOnlineMode(true);
   };
 
-  // Add current item data to the collection
-  const addItemToList = () => {
-    const currentItemData = {
-      manual_dc_no: formData.manualDcNo || null,
-      vehicle_no: formData.vehicleNo || null,
-      item_code: formData.itemCode || null,
-      item_desc: formData.itemDesc || null,
-      po_no: formData.po_no || null,
-      po_qty: formData.poQty ? parseFloat(formData.poQty) : null,
-      igp_qty: formData.igpQty ? parseFloat(formData.igpQty) : null,
-      balance_qty: formData.balanceQty ? parseFloat(formData.balanceQty) : null,
-      bardana_type: formData.bardanaType || null,
-      igp_no: formData.igpNo || null,
-      vendor_name: formData.vendorName || null,
-      no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags, 10) : null,
-      weight_per_bags: formData.weightPerBags ? parseFloat(formData.weightPerBags) : null,
-      bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
-      igp_date: formData.igpDate || null,
-      quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
-      supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
-      sup_weight_wthout_bardana: formData.supWeightWithoutBardana ? parseFloat(formData.supWeightWithoutBardana) : null,
-      net_supplier_weight: formData.netSupplierWeight ? parseFloat(formData.netSupplierWeight) : null,
-      bag_condition: formData.bagCondition || null,
-      bardana_type_id: formData.bardanaTypeId ? parseInt(formData.bardanaTypeId, 10) : null,
-      created_by: 1,
-      creation_date: new Date().toISOString(),
-      last_updated_by: 1,
-      last_updated_date: new Date().toISOString(),
-    };
-
-    setItemsData([...itemsData, currentItemData]);
-    alert('Item added to list successfully!');
-  };
-
-  // Save master and detail records together
   const handleSaveAll = async () => {
     setLoading(true);
-
-    const masterData = {
-      slip_no: formData.slipNo || null,
-      slip_in_time: formatISODate(formData.slipInTime),
-      first_weight: formData.firstWeight ? parseFloat(formData.firstWeight) : null,
-      second_weight: formData.secondWeight ? parseFloat(formData.secondWeight) : null,
-      net_weight: formData.netWeight ? parseFloat(formData.netWeight) : null,
-      bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
-      gross_weight: formData.grossWeight ? parseFloat(formData.grossWeight) : null,
-      freight: formData.freight ? parseFloat(formData.freight) : null,
-      remarks: formData.remarks || null,
-      driver_name: formData.driverName || null,
-      vendor: formData.vendor || null,
-      vehicle_no: formData.vehicleNo || null,
-      igp_no: formData.igpNo || null,
-      company_id: formData.companyId ? parseInt(formData.companyId, 10) : null,
-      branch_id: formData.branchId ? parseInt(formData.branchId, 10) : null,
-      online_entry: formData.onlineEntry || null,
-      offline_entry: formData.offlineEntry || null,
-      created_by: formData.createdBy ? parseInt(formData.createdBy, 10) : 1,
-      creation_date: formData.creationDate || new Date().toISOString(),
-      last_updated_by: formData.lastUpdatedBy ? parseInt(formData.lastUpdatedBy, 10) : 1,
-      last_updated_date: formData.lastUpdatedDate || new Date().toISOString(),
-      manual_dc_no: formData.manualDcNo || null,
-      entry_type: formData.entryType || 'PURCHASE',
-      slip_out_time: formatISODate(formData.slipOutTime),
-      status: formData.status || null,
-      slip_date: formData.slipDate || new Date().toISOString(),
-    };
-
-    const payload = {
-      masterData,
-      itemsData
-    };
-
     try {
-      const response = await fetch('/api/purchases', {
+      // Prepare master data exactly as your working index.js expects
+      const payload = {
+        slip_no: formData.slipNo || null,
+        slip_in_time: formData.slipInTime || null,
+        first_weight: formData.firstWeight ? parseFloat(formData.firstWeight) : null,
+        second_weight: formData.secondWeight ? parseFloat(formData.secondWeight) : null,
+        net_weight: formData.netWeight ? parseFloat(formData.netWeight) : null,
+        bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
+        gross_weight: formData.grossWeight ? parseFloat(formData.grossWeight) : null,
+        freight: formData.freight ? parseFloat(formData.freight) : null,
+        remarks: formData.remarks || null,
+        driver_name: formData.driverName || null,
+        vendor: formData.vendor || null,
+        vehicle_no: formData.vehicleNo || null,
+        igp_no: formData.igpNo || null,
+        entry_type: 'PURCHASE',
+        online_entry: onlineMode ? 'Yes' : 'No',
+        purchase_items: purchaseItems.map((item: any) => ({
+          wb_item_p_id: item.wb_item_p_id ? parseInt(item.wb_item_p_id, 10) : null,
+          manual_dc_no: item.manual_dc_no || null,
+          do_id: item.do_id ? parseInt(item.do_id, 10) : null,
+          item_id: item.item_id ? parseInt(item.item_id, 10) : null,
+          item_desc: item.item_desc || null,
+          created_by: item.created_by ? parseInt(item.created_by, 10) : null,
+          creation_date: item.creation_date || null,
+          last_updated_by: item.last_updated_by ? parseInt(item.last_updated_by, 10) : null,
+          last_updated_date: item.last_updated_date || null,
+          po_id: item.po_id ? parseInt(item.po_id, 10) : null,
+          po_no: item.po_no || null,
+          po_qty: item.po_qty ? parseFloat(item.po_qty) : null,
+          igp_qty: item.igp_qty ? parseFloat(item.igp_qty) : null,
+          balance_qty: item.balance_qty ? parseFloat(item.balance_qty) : null,
+          bardana_type: item.bardana_type || null,
+          igp_no: item.igp_no || null,
+          manual_igp_no: item.manual_igp_no || null,
+          igp_id: item.igp_id ? parseInt(item.igp_id, 10) : null,
+          vendor_id: item.vendor_id ? parseInt(item.vendor_id, 10) : null,
+          vendor_name: item.vendor_name || null,
+          no_of_bags: item.no_of_bags ? parseInt(item.no_of_bags, 10) : null,
+          weight_per_bags: item.weight_per_bags ? parseFloat(item.weight_per_bags) : null,
+          bardana_weight: item.bardana_weight ? parseFloat(item.bardana_weight) : null,
+          igp_date: item.igp_date || null,
+          quality_deduction: item.quality_deduction ? parseFloat(item.quality_deduction) : null,
+          supplier_weight: item.supplier_weight ? parseFloat(item.supplier_weight) : null,
+          sup_weight_wthout_bardana: item.sup_weight_wthout_bardana ? parseFloat(item.sup_weight_wthout_bardana) : null,
+          net_supplier_weight: item.net_supplier_weight ? parseFloat(item.net_supplier_weight) : null,
+          bag_condition: item.bag_condition || null,
+          bardana_type_id: item.bardana_type_id ? parseInt(item.bardana_type_id, 10) : null,
+        }))
+      };
+
+      // POST payload to backend
+      const res = await fetch('/api/purchases', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -285,414 +208,263 @@ export default function PurchaseForm() {
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (res.ok) {
+        const result = await res.json();
+        console.log('Data saved:', result);
+        alert('Data saved successfully!');
+        resetForm();
+      } else {
+        throw new Error('Failed to save data');
       }
-
-      const data = await response.json();
-      alert('Master and detail records saved successfully!');
-      console.log('Data saved:', data);
-      
-      resetForm();
-    } catch (err) {
-      alert('Failed to save data.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    setLoading(true);
-    const payload = {
-      slip_no: formData.slipNo || null,
-      slip_in_time: formatISODate(formData.slipInTime),
-      first_weight: formData.firstWeight ? parseFloat(formData.firstWeight) : null,
-      second_weight: formData.secondWeight ? parseFloat(formData.secondWeight) : null,
-      net_weight: formData.netWeight ? parseFloat(formData.netWeight) : null,
-      bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
-      gross_weight: formData.grossWeight ? parseFloat(formData.grossWeight) : null,
-      freight: formData.freight ? parseFloat(formData.freight) : null,
-      remarks: formData.remarks || null,
-      driver_name: formData.driverName || null,
-      company_id: formData.companyId ? parseInt(formData.companyId, 10) : null,
-      branch_id: formData.branchId ? parseInt(formData.branchId, 10) : null,
-      online_entry: formData.onlineEntry || null,
-      offline_entry: formData.offlineEntry || null,
-      created_by: formData.createdBy ? parseInt(formData.createdBy, 10) : null,
-      creation_date: formData.creationDate || null,
-      last_updated_by: formData.lastUpdatedBy ? parseInt(formData.lastUpdatedBy, 10) : null,
-      last_updated_date: formData.lastUpdatedDate || null,
-      manual_dc_no: formData.manualDcNo || null,
-      entry_type: formData.entryType || null,
-      slip_out_time: formatISODate(formData.slipOutTime),
-      status: formData.status || null,
-      slip_date: formData.slipDate || null,
-    };
-
-    try {
-      const response = await fetch('/api/purchases', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      alert('Purchase saved successfully!');
-      console.log('Saved:', data);
-      resetForm();
-    } catch (err) {
-      alert('Failed to save purchase.');
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveItems = async () => {
-    setLoading(true);
-    const payload = {
-      wb_item_p_id: formData.wbItemPId ? parseInt(formData.wbItemPId, 10) : null,
-      wb_id: formData.wbId ? parseInt(formData.wbId, 10) : null,
-      manual_dc_no: formData.manualDcNo || null,
-      do_id: formData.doId ? parseInt(formData.doId, 10) : null,
-      do_no: formData.doNo || null,
-      customer_id: formData.customerId ? parseInt(formData.customerId, 10) : null,
-      customer_name: formData.customerName || null,
-      vehicle_no: formData.vehicleNo || null,
-      do_date: formData.doDate || null,
-      item_id: formData.itemId ? parseInt(formData.itemId, 10) : null,
-      item_code: formData.itemCode || null,
-      item_desc: formData.itemDesc || null,
-      created_by: formData.createdBy ? parseInt(formData.createdBy, 10) : null,
-      creation_date: formData.creationDate || null,
-      last_updated_by: formData.lastUpdatedBy ? parseInt(formData.lastUpdatedBy, 10) : null,
-      last_updated_date: formData.lastUpdatedDate || null,
-      po_id: formData.poId ? parseInt(formData.poId, 10) : null,
-      po_no: formData.po_no || null,
-      po_qty: formData.poQty ? parseFloat(formData.poQty) : null,
-      igp_qty: formData.igpQty ? parseFloat(formData.igpQty) : null,
-      balance_qty: formData.balanceQty ? parseFloat(formData.balanceQty) : null,
-      baradana_type: formData.baradanaType || null,
-      igp_no: formData.igpNo || null,
-      manual_igp_no: formData.manualIgpNo || null,
-      igp_id: formData.igpId ? parseInt(formData.igpId, 10) : null,
-      vendor_id: formData.vendorId ? parseInt(formData.vendorId, 10) : null,
-      vendor_name: formData.vendorName || null,
-      no_of_bags: formData.noOfBags ? parseFloat(formData.noOfBags) : null,
-      weight_per_bags: formData.weightPerBags ? parseFloat(formData.weightPerBags) : null,
-      bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
-      igp_date: formData.igpDate || null,
-      quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
-      supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
-      sup_weight_wthout_bardana: formData.supWeightWithoutBardana ? parseFloat(formData.supWeightWithoutBardana) : null,
-      net_supplier_weight: formData.netSupplierWeight ? parseFloat(formData.netSupplierWeight) : null,
-      bag_condition: formData.bagCondition || null,
-      bardana_type_id: formData.bardanaTypeId ? parseInt(formData.bardanaTypeId, 10) : null,
-    };
-
-    try {
-      const response = await fetch('/api/purchase-items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      alert('Purchase items saved successfully!');
-      console.log('Items saved:', data);
-    } catch (err) {
-      alert('Failed to save purchase items.');
-      console.error(err);
+    } catch (error) {
+      console.error('Error saving data:', error);
+      alert('Error saving data. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="h-screen bg-blue-50 p-1 overflow-hidden">
-      {/* Compact Top Bar */}
-      <div className="flex justify-between items-center bg-white border rounded p-1 mb-1">
-        <div className="flex gap-1 text-xs">
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Purc</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Sale</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Edit</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">First</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Prev</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Next</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Last</Button>
-          <Button className="bg-green-600 hover:bg-green-700 h-6 px-3 text-xs" onClick={handleSaveAll} disabled={loading}>
-            {loading ? 'Saving...' : 'Save All'}
-          </Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Print</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Rej</Button>
-        </div>
-        <div className="flex gap-1">
-          <Button 
-            className={`h-6 px-3 text-xs ${onlineMode ? 'bg-black' : 'bg-gray-400'}`}
-            onClick={() => toggleOnlineMode(true)}
-          >
-            ONLINE
-          </Button>
-          <Button 
-            className={`h-6 px-3 text-xs ${!onlineMode ? 'bg-black' : 'bg-gray-400'}`}
-            onClick={() => toggleOnlineMode(false)}
-          >
-            OFFLINE
-          </Button>
-        </div>
-        <div className="text-2xl text-green-600 font-bold">2500</div>
-      </div>
-
-      {/* Main Form Layout - 100% visible without scrolling */}
-      <div className="bg-white p-1 rounded border h-[calc(100vh-60px)] overflow-hidden">
-        <div className="grid grid-cols-12 gap-1 h-full">
-          {/* Left Side - Main Form (Columns 1-10) */}
-          <div className="col-span-10">
-            {/* Top Row - Form Fields - Compact */}
-            <div className="grid grid-cols-9 gap-1 mb-2">
-              {/* Column 1 - Left Form Fields */}
-              <div className="col-span-3 space-y-1">
-                <div>
-                  <Label className="text-xs text-black">Slip No</Label>
-                  <Input name="slipNo" value={formData.slipNo} readOnly className="h-5 text-xs text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Net Weight</Label>
-                  <Input name="netWeight" value={formData.netWeight} onChange={handleChange} className="h-5 text-xs bg-yellow-200 text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Freight</Label>
-                  <Input name="freight" value={formData.freight} onChange={handleChange} className="h-5 text-xs text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Remarks</Label>
-                  <Textarea
-                    placeholder="Add remarks"
-                    name="remarks"
-                    value={formData.remarks}
-                    onChange={handleChange}
-                    className="h-8 text-xs resize-none text-black placeholder:text-gray-500"
-                  />
-                </div>
-              </div>
-
-              {/* Column 2 - Weight Fields */}
-              <div className="col-span-3 space-y-1">
-                <div>
-                  <Label className="text-xs text-black">First Weight</Label>
-                  <Input name="firstWeight" value={formData.firstWeight} onChange={handleChange} className="h-5 text-xs text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Second Weight</Label>
-                  <Input name="secondWeight" value={formData.secondWeight} onChange={handleChange} className="h-5 text-xs text-green-600" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Bardana Weight</Label>
-                  <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-5 text-xs text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Gross Weight</Label>
-                  <Input name="grossWeight" value={formData.grossWeight} readOnly className="h-5 text-xs text-black" />
-                </div>
-              </div>
-
-              {/* Column 3 - Driver & Branch */}
-              <div className="col-span-3 space-y-1">
-                <div>
-                  <Label className="text-xs text-black">Branch</Label>
-                  <Select name="branch" value={formData.branch} onValueChange={(value) => setFormData(prev => ({...prev, branch: value}))}>
-                    <SelectTrigger className="h-5 text-xs text-black">
-                      <SelectValue placeholder="Select branch" className="text-black" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Branch 1">Branch 1</SelectItem>
-                      <SelectItem value="Branch 2">Branch 2</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Driver Name</Label>
-                  <Input
-                    placeholder="Enter driver name"
-                    name="driverName"
-                    value={formData.driverName}
-                    onChange={handleChange}
-                    className="h-5 text-xs text-black placeholder:text-gray-500"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-1">
-                  <Button className="h-5 bg-green-600 text-xs">1st WHT</Button>
-                  <Button className="h-5 bg-gray-500 text-xs">2nd WHT</Button>
-                </div>
-                <div className="grid grid-cols-2 gap-1">
-                  <Button className="h-5 bg-yellow-500 text-xs" onClick={resetForm}>Clear</Button>
-                  <Button className="h-5 bg-red-500 text-xs">Exit</Button>
-                </div>
-              </div>
+    <div className="container mx-auto p-4 space-y-4">
+      {/* Top Bar Buttons */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-wrap justify-between items-center gap-2">
+            <div className="flex gap-2 flex-wrap">
+              <Button variant="outline">Purc</Button>
+              <Button variant="outline">Sale</Button>
+              <Button variant="outline">Edit</Button>
+              <Button variant="outline">|&lt; First</Button>
+              <Button variant="outline">&lt; Prev</Button>
+              <Button variant="outline">Next &gt;</Button>
+              <Button variant="outline">Last &gt;|</Button>
+              <Button 
+                onClick={handleSaveAll} 
+                disabled={loading}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {loading ? 'Saving...' : 'Save All'}
+              </Button>
+              <Button variant="outline">Print</Button>
+              <Button variant="outline">Rej</Button>
             </div>
-
-            {/* Bottom Row - Tabs Section - Compact */}
-            <Tabs defaultValue="purchase" className="h-[calc(100%-120px)]">
-              <TabsList className="h-5">
-                <TabsTrigger value="purchase" className="text-xs">Purchase</TabsTrigger>
-                <TabsTrigger value="sale" className="text-xs">Sale</TabsTrigger>
-                <TabsTrigger value="offline" className="text-xs">Offline</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="purchase" className="mt-1">
-                <div className="grid grid-cols-4 gap-1 text-xs mb-2">
-                  {/* Mini Column 1 */}
-                  <div className="space-y-1">
-                    <div>
-                      <Label className="text-xs text-black">Bardana Type</Label>
-                      <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Wt Per Bag</Label>
-                      <Input name="wtPerBag" value={formData.wtPerBag} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">No Of Bags</Label>
-                      <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                  </div>
-
-                  {/* Mini Column 2 */}
-                  <div className="space-y-1">
-                    <div>
-                      <Label className="text-xs text-black">IGP No</Label>
-                      <div className="flex gap-1">
-                        <Input name="igpNo" value={formData.igpNo} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
-                        <Button onClick={fetchIgpData} className="h-4 px-1 text-xs bg-blue-500">Fetch</Button>
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">IGP Date</Label>
-                      <Input name="igpDate" value={formData.igpDate} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Vendor</Label>
-                      <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                  </div>
-
-                  {/* Mini Column 3 */}
-                  <div className="space-y-1">
-                    <div>
-                      <Label className="text-xs text-black">Vehicle No</Label>
-                      <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Supp's Weight</Label>
-                      <Input name="superweight" value={formData.superweight} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Button className="w-full h-4 bg-yellow-500 text-xs">Deduction +</Button>
-                    </div>
-                  </div>
-
-                  {/* Mini Column 4 - Additional fields */}
-                  <div className="space-y-1">
-                    <div>
-                      <Button onClick={addItemToList} className="w-full h-4 bg-blue-500 text-xs">
-                        Add Item
-                      </Button>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Quality Deduction</Label>
-                      <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Bag Condition</Label>
-                      <Input name="bagCondition" value={formData.bagCondition} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Compact Table with IGP Data */}
-                <div className="border rounded text-xs h-[calc(100%-120px)] overflow-auto">
-                  <table className="w-full text-center">
-                    <thead className="bg-gray-100 sticky top-0">
-                      <tr>
-                        <th className="border p-1 text-xs text-black">Po No</th>
-                        <th className="border p-1 text-xs text-black">Item Code</th>
-                        <th className="border p-1 text-xs text-black">Item Description</th>
-                        <th className="border p-1 text-xs text-black">Po Qty</th>
-                        <th className="border p-1 text-xs text-black">IGP Qty</th>
-                        <th className="border p-1 text-xs text-black">Balance Qty</th>
-                        <th className="border p-1 text-xs text-black">Vendor</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {igpItems.length > 0 ? (
-                        igpItems.map((item: any, index: number) => (
-                          <tr key={index}>
-                            <td className="border p-1 h-4 text-xs">{item.po_no || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.item_code || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.item_desc || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.po_qty || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.igp_qty || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.balance_qty || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.vendor_name || ''}</td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td className="border p-1 h-4 text-xs" colSpan={7}>No IGP data available</td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="sale">
-                <div className="text-center p-4 text-xs text-black">Sale tab content here</div>
-              </TabsContent>
-
-              <TabsContent value="offline">
-                <div className="text-center p-4 text-xs text-black">Offline tab content here</div>
-              </TabsContent>
-            </Tabs>
+            <div className="flex gap-2">
+              <Button 
+                variant={onlineMode ? "default" : "outline"}
+                onClick={() => toggleOnlineMode(true)}
+              >
+                ONLINE
+              </Button>
+              <Button 
+                variant={!onlineMode ? "default" : "outline"}
+                onClick={() => toggleOnlineMode(false)}
+              >
+                OFFLINE
+              </Button>
+            </div>
+            <div className="text-3xl font-bold text-green-600">2500</div>
           </div>
+        </CardContent>
+      </Card>
 
-          {/* Right Side - Camera and Weight (Columns 11-12) - 10x10 regions */}
-          <div className="col-span-2 flex flex-col gap-2 items-start pt-2">
-            {/* Weight Region - Top 10x10 (80px x 80px) */}
-            <div className="bg-monitoring-dark border border-monitoring-gray rounded p-1 h-20 w-20 flex-shrink-0 mb-2">
-              <h3 className="text-white text-center text-xs mb-1">Weight</h3>
-              <div className="h-[calc(100%-16px)] text-xs">
-                <WeightIndicator comPort="COM3" />
+      {/* Main Form Section */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Column 1 */}
+            <div className="space-y-4">
+              <div>
+                <Label>Slip No</Label>
+                <Input
+                  value={formData.slipNo}
+                  readOnly
+                  className="bg-gray-100"
+                />
+              </div>
+              
+              <div>
+                <Label>Net Weight</Label>
+                <Input
+                  value={formData.netWeight}
+                  onChange={(e) => handleChange('netWeight', e.target.value)}
+                  className="bg-yellow-100"
+                />
+              </div>
+              
+              <div>
+                <Label>Freight</Label>
+                <Input
+                  value={formData.freight}
+                  onChange={(e) => handleChange('freight', e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <Label>Remarks</Label>
+                <Textarea
+                  value={formData.remarks}
+                  onChange={(e) => handleChange('remarks', e.target.value)}
+                  placeholder="Add remarks"
+                  className="h-20"
+                />
               </div>
             </div>
-            
-            {/* Camera Region - Bottom 10x10 (80px x 80px) */}
-            <div className="bg-monitoring-dark border border-monitoring-gray rounded p-1 h-20 w-20 flex-shrink-0">
-              <h3 className="text-white text-center text-xs mb-1">Camera</h3>
-              <div className="bg-black rounded h-[calc(100%-16px)] overflow-hidden">
-                <VideoStreamFullscreen
-                  camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
-                  isConnected={true}
-                  isStreaming={true}
+
+            {/* Column 2 */}
+            <div className="space-y-4">
+              <div>
+                <Label>First Weight</Label>
+                <Input
+                  value={formData.firstWeight}
+                  onChange={(e) => handleChange('firstWeight', e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <Label>Second Weight</Label>
+                <Input
+                  value={formData.secondWeight}
+                  onChange={(e) => handleChange('secondWeight', e.target.value)}
+                  className="text-green-600"
+                />
+              </div>
+              
+              <div>
+                <Label>Bardana Weight</Label>
+                <Input
+                  value={formData.bardanaWeight}
+                  onChange={(e) => handleChange('bardanaWeight', e.target.value)}
+                />
+              </div>
+              
+              <div>
+                <Label>Gross Weight</Label>
+                <Input
+                  value={formData.grossWeight}
+                  readOnly
+                  className="bg-gray-100"
+                />
+              </div>
+            </div>
+
+            {/* Column 3 */}
+            <div className="space-y-4">
+              <div>
+                <Label>Branch</Label>
+                <Select value={formData.branchId} onValueChange={(value) => handleChange('branchId', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select branch" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Branch 1</SelectItem>
+                    <SelectItem value="2">Branch 2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label>Driver Name</Label>
+                <Input
+                  value={formData.driverName}
+                  onChange={(e) => handleChange('driverName', e.target.value)}
+                  placeholder="Enter driver name"
+                />
+              </div>
+              
+              <div>
+                <Label>Vendor</Label>
+                <Input
+                  value={formData.vendor}
+                  onChange={(e) => handleChange('vendor', e.target.value)}
+                  placeholder="Enter vendor"
+                />
+              </div>
+              
+              <div>
+                <Label>Vehicle No</Label>
+                <Input
+                  value={formData.vehicleNo}
+                  onChange={(e) => handleChange('vehicleNo', e.target.value)}
+                  placeholder="Enter vehicle number"
                 />
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
+
+      {/* IGP Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>IGP Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2 mb-4">
+            <div className="flex-1">
+              <Label>IGP No</Label>
+              <Input
+                value={formData.igpNo}
+                onChange={(e) => handleChange('igpNo', e.target.value)}
+                placeholder="Enter IGP No"
+              />
+            </div>
+            <Button className="mt-6">Fetch IGP Data</Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Purchase Tab */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Purchase Details</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="purchase" className="w-full">
+            <TabsList>
+              <TabsTrigger value="purchase">Purchase</TabsTrigger>
+            </TabsList>
+            <TabsContent value="purchase" className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <Label>PO No</Label>
+                  <Input
+                    value={formData.po_no}
+                    onChange={(e) => handleChange('po_no', e.target.value)}
+                    placeholder="Enter PO No"
+                  />
+                </div>
+                <div>
+                  <Label>Item Code</Label>
+                  <Input
+                    value={itemData.item_code}
+                    onChange={(e) => handleItemChange('item_code', e.target.value)}
+                    placeholder="Enter item code"
+                  />
+                </div>
+                <div>
+                  <Label>Item Description</Label>
+                  <Input
+                    value={itemData.item_desc}
+                    onChange={(e) => handleItemChange('item_desc', e.target.value)}
+                    placeholder="Enter description"
+                  />
+                </div>
+                <div>
+                  <Label>Quantity</Label>
+                  <Input
+                    value={itemData.po_qty}
+                    onChange={(e) => handleItemChange('po_qty', e.target.value)}
+                    placeholder="Enter quantity"
+                  />
+                </div>
+              </div>
+              <Button variant="outline">Add Item</Button>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default PurchaseForm;

@@ -519,7 +519,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Master + Detail Insert Endpoint (based on working index.js)
+  // GET all purchases for fetching max slip number
+  app.get('/api/purchases', async (req, res) => {
+    const client = await pool.connect();
+    try {
+      const result = await client.query('SELECT * FROM WB_WEIGHBRIDGE ORDER BY WB_ID DESC');
+      res.status(200).json(result.rows);
+    } catch (err) {
+      console.error('❌ Error fetching purchases:', err);
+      res.status(500).json({ error: 'Fetch error' });
+    } finally {
+      client.release();
+    }
+  });
+
+  // Master + Detail Insert Endpoint (exactly matching your working index.js)
   app.post('/api/purchases', async (req, res) => {
     const purchaseData = req.body;
     console.log('📥 Incoming purchase data:', purchaseData);

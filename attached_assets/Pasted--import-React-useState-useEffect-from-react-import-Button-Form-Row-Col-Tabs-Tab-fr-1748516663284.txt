@@ -1,0 +1,599 @@
+"import React, { useState, useEffect } from 'react';
+import { Button, Form, Row, Col, Tabs, Tab } from 'react-bootstrap';
+import axios from 'axios';
+
+const Purchaseonline = () => {
+  const initialFormData = {
+    slipNo: '',
+    slipInTime: '',
+    firstWeight: '',
+    secondWeight: '',
+    netWeight: '',
+    bardanaWeight: '',
+    grossWeight: '',
+    freight: '',
+    remarks: '',
+    po_no: '',
+    driverName: '',
+    vendor: '',
+    companyId: '',
+    branchId: '',
+    onlineEntry: 'Yes',
+    offlineEntry: '',
+    createdBy: '',
+    creationDate: '',
+    lastUpdatedBy: '',
+    lastUpdatedDate: '',
+    manualDcNo: '',
+    entryType: 'PURCHASE',
+    slipOutTime: '',
+    status: '',
+    slipDate: '',
+    igpNo: '',
+    vehicleNo: '',
+  };
+
+  const initialItemData = {
+    wb_item_p_id: '',
+    wb_id: '',
+    manual_dc_no: '',
+    do_id: '',
+    do_no: '',
+    customer_id: '',
+    customer_name: '',
+    vehicle_no: '',
+    do_date: '',
+    item_id: '',
+    item_code: '',
+    item_desc: '',
+    created_by: '',
+    creation_date: '',
+    last_updated_by: '',
+    last_updated_date: '',
+    po_id: '',
+    po_no: '',
+    po_qty: '',
+    igp_qty: '',
+    balance_qty: '',
+    bardana_type: '',
+    igp_no: '',
+    manual_igp_no: '',
+    igp_id: '',
+    vendor_id: '',
+    vendor_name: '',
+    no_of_bags: '',
+    weight_per_bags: '',
+    bardana_weight: '',
+    igp_date: '',
+    quality_deduction: '',
+    supplier_weight: '',
+    sup_weight_wthout_bardana: '',
+    net_supplier_weight: '',
+    bag_condition: '',
+    bardana_type_id: '',
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
+  const [itemData, setItemData] = useState(initialItemData);
+  const [loading, setLoading] = useState(false);
+  const [onlineMode, setOnlineMode] = useState(true);
+  const [igpItems, setIgpItems] = useState([]);
+  const [purchaseItems, setPurchaseItems] = useState([]);
+
+  
+
+  // Fetch IGP Data
+  const fetchIgpData = async () => {
+    if (!formData.igpNo) {
+      alert('Please enter IGP No');
+      return;
+    }
+    try {
+      const response = await axios.get(
+        http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data,
+        { params: { igp_no: formData.igpNo } }
+      );
+
+      if (response.data && response.data.items && response.data.items.length > 0) {
+        const data = response.data.items;
+
+        const firstItem = data[0];
+        setFormData(prev => ({
+          ...prev,
+          driverName: firstItem.driver_name || '',
+          vendor: firstItem.vendor_name || '',
+          vehicleNo: firstItem.vehicle_no || '',
+          bardanaWeight: firstItem.bardana_qty ? String(firstItem.bardana_qty) : '',
+        }));
+
+        setIgpItems(data);
+      } else {
+        alert('No data found for this IGP No.');
+        setIgpItems([]);
+      }
+    } catch (error) {
+      console.error('Error fetching IGP data:', error);
+      alert('Failed to fetch IGP data');
+      setIgpItems([]);
+    }
+  };
+
+  // Formatters for datetime-local inputs
+  const formatDatetimeLocal = (isoString) => {
+    if (!isoString) return '';
+    return isoString.slice(0, 16);
+  };
+
+  const formatISODate = (localString) => {
+    if (!localString) return null;
+    return new Date(localString).toISOString();
+  };
+
+  // Handle changes for master form inputs
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handle changes for item details inputs
+  const handleItemChange = (e) => {
+    const { name, value } = e.target;
+    setItemData(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Toggle online/offline
+  const toggleOnlineMode = (isOnline) => {
+    setOnlineMode(isOnline);
+    setFormData(prev => ({
+      ...prev,
+      onlineEntry: isOnline ? 'Yes' : '',
+      offlineEntry: isOnline ? '' : 'Yes',
+    }));
+  };
+
+  useEffect(() => {
+    // Fetch max slip no logic
+    axios.get('http://localhost:5000/api/purchases')
+      .then(res => {
+        if (res.data.length > 0) {
+          const maxSlip = res.data.reduce((max, curr) => {
+            const slip = parseInt(curr.slip_no, 10);
+            return slip > max ? slip : max;
+          }, 0);
+          const nextSlip = (maxSlip + 1).toString();
+          setFormData(prev => ({ ...prev, slipNo: nextSlip }));
+        } else {
+          setFormData(prev => ({ ...prev, slipNo: '1' }));
+        }
+      })
+      .catch(err => {
+        console.error('Error fetching purchases:', err);
+      });
+
+    const now = new Date().toISOString();
+    setFormData(prev => ({
+      ...prev,
+      slipInTime: formatDatetimeLocal(now),
+      creationDate: now,
+      lastUpdatedDate: now,
+      slipDate: now,
+    }));
+
+    toggleOnlineMode(true);
+  }, []);
+
+  // Reset all forms
+  const resetForm = () => {
+    setFormData(initialFormData);
+    setItemData(initialItemData);
+    toggleOnlineMode(true);
+  };
+
+  const handleSaveAll = async () => {
+  setLoading(true);
+  try {
+    // Prepare master data (fill with your actual formData fields)
+    const masterPayload = {
+      slip_no: formData.slipNo || null,
+      slip_in_time: formData.slipInTime || null,
+      first_weight: formData.firstWeight ? parseFloat(formData.firstWeight) : null,
+      second_weight: formData.secondWeight ? parseFloat(formData.secondWeight) : null,
+      net_weight: formData.netWeight ? parseFloat(formData.netWeight) : null,
+      bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
+      gross_weight: formData.grossWeight ? parseFloat(formData.grossWeight) : null,
+      freight: formData.freight ? parseFloat(formData.freight) : null,
+      remarks: formData.remarks || null,
+      driver_name: formData.driverName || null,
+      vendor: formData.vendor || null,
+      vehicle_no: formData.vehicleNo || null,
+      igp_no: formData.igpNo || null,
+      entry_type: 'PURCHASE',
+      online_entry: onlineMode ? 'Yes' : 'No',
+      // add other master fields if any
+    };
+
+    // Prepare detail array - you can send multiple items if you have them
+    const purchase_items = purchaseItems.map((item) => ({
+      wb_item_p_id: item.wb_item_p_id ? parseInt(item.wb_item_p_id, 10) : null,
+      manual_dc_no: item.manual_dc_no || null,
+      do_id: item.do_id ? parseInt(item.do_id, 10) : null,
+      item_id: item.item_id ? parseInt(item.item_id, 10) : null,
+      item_desc: item.item_desc || null,
+      created_by: item.created_by ? parseInt(item.created_by, 10) : null,
+      creation_date: item.creation_date || null,
+      last_updated_by: item.last_updated_by ? parseInt(item.last_updated_by, 10) : null,
+      last_updated_date: item.last_updated_date || null,
+      po_id: item.po_id ? parseInt(item.po_id, 10) : null,
+      po_no: item.po_no || null,
+      po_qty: item.po_qty ? parseFloat(item.po_qty) : null,
+      igp_qty: item.igp_qty ? parseFloat(item.igp_qty) : null,
+      balance_qty: item.balance_qty ? parseFloat(item.balance_qty) : null,
+      bardana_type: item.bardana_type || null,
+      igp_no: item.igp_no || null,
+      manual_igp_no: item.manual_igp_no || null,
+      igp_id: item.igp_id ? parseInt(item.igp_id, 10) : null,
+      vendor_id: item.vendor_id ? parseInt(item.vendor_id, 10) : null,
+      vendor_name: item.vendor_name || null,
+      no_of_bags: item.no_of_bags ? parseInt(item.no_of_bags, 10) : null,
+      weight_per_bags: item.weight_per_bags ? parseFloat(item.weight_per_bags) : null,
+      bardana_weight: item.bardana_weight ? parseFloat(item.bardana_weight) : null,
+      igp_date: item.igp_date || null,
+      quality_deduction: item.quality_deduction ? parseFloat(item.quality_deduction) : null,
+      supplier_weight: item.supplier_weight ? parseFloat(item.supplier_weight) : null,
+      sup_weight_wthout_bardana: item.sup_weight_wthout_bardana ? parseFloat(item.sup_weight_wthout_bardana) : null,
+      net_supplier_weight: item.net_supplier_weight ? parseFloat(item.net_supplier_weight) : null,
+      bag_condition: item.bag_condition || null,
+      bardana_type_id: item.bardana_type_id ? parseInt(item.bardana_type_id, 10) : null,
+      // add other item fields if needed
+    }));
+
+    // Combine master and detail into one payload
+    const payload = {
+      ...masterPayload,
+      purchase_items,
+    };
+
+    // POST payload to backend
+    const res = await axios.post('http://localhost:5000/api/purchases', payload);
+    console.log('Master + Detail saved:', res.data);
+    alert('Data saved successfully!');
+    resetForm();
+  } catch (error) {
+    console.error('Error saving data:', error);
+    alert('Error saving data. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+  return (
+    <div className="container-fluid p-0" style={{ backgroundColor: '#d7e9f7' }}>
+      {/* Top Bar Buttons */}
+      <div className="d-flex flex-wrap justify-content-between align-items-center bg-light border rounded p-2 mb-2">
+        <div className="d-flex gap-2 flex-wrap">
+          <button className="btn btn-outline-secondary">Purc</button>
+          <button className="btn btn-outline-secondary">Sale</button>
+          <button className="btn btn-outline-secondary">Edit</button>
+          <button className="btn btn-outline-secondary">|&lt; First</button>
+          <button className="btn btn-outline-secondary">&lt; Prev</button>
+          <button className="btn btn-outline-secondary">Next &gt;</button>
+          <button className="btn btn-outline-secondary">Last &gt;|</button>
+       <button className="btn btn-success me-2" onClick={handleSaveAll} disabled={loading}>
+  {loading ? 'Saving...' : 'Save'}
+</button>
+
+          <button className="btn btn-outline-secondary">Print</button>
+          <button className="btn btn-outline-secondary">Rej</button>
+        </div>
+        <div className="d-flex gap-2">
+          <button className="btn btn-dark">ONLINE</button>
+          <button className="btn btn-dark">OFFLINE</button>
+        </div>
+        <div className="display-6 text-success fw-bold">2500</div>
+      </div>
+
+      {/* Main Form Section */}
+      <div className="bg-white p-2 rounded border mb-2">
+        <div className="row mb-2">
+          <div className="col-md-2">
+            <label>Slip No</label>
+            <input
+              className="form-control mb-4"
+              name="slipNo"
+              value={formData.slipNo}
+              readOnly
+            />
+            <label className="mt-4">Net Weight</label>
+            <input
+              className="form-control bg-warning mb-2"
+              name="netWeight"
+              value={formData.netWeight}
+              onChange={handleChange}
+            />
+            <label className="mt-2">Freight</label>
+            <input
+              className="form-control"
+              name="freight"
+              value={formData.freight}
+              onChange={handleChange}
+            />
+            <textarea
+              className="form-control mt-4 mb-3"
+              placeholder="Add remarks"
+              name="remarks"
+              value={formData.remarks}
+              onChange={handleChange}
+              style={{ height: '50px', width: '558px' }}
+            />
+          </div>
+
+          <div className="col-md-2">
+            <label>First Weight</label>
+            <input
+              className="form-control"
+              name="firstWeight"
+              value={formData.firstWeight}
+              onChange={handleChange}
+            />
+            <label>Second Weight</label>
+            <input
+              className="form-control text-success"
+              name="secondWeight"
+              value={formData.secondWeight}
+              onChange={handleChange}
+            />
+            <label>Bardana Weight</label>
+            <input
+              className="form-control"
+              name="bardanaWeight"
+              value={formData.bardanaWeight}
+              onChange={handleChange}
+            />
+            <label>Gross Weight</label>
+            <input
+              className="form-control"
+              name="grossWeight"
+              value={formData.grossWeight}
+              readOnly
+            />
+          </div>
+
+          <div className="col-md-2">
+            <label>Branch</label>
+            <select
+              className="form-select"
+              name="branch"
+              value={formData.branch}
+              onChange={handleChange}
+            >
+              <option value="">Select branch</option>
+              <option value="Branch 1">Branch 1</option>
+              <option value="Branch 2">Branch 2</option>
+            </select>
+
+            <label>Driver Name</label>
+            <input
+              className="form-control"
+              placeholder="Enter driver name"
+              name="driverName"
+              value={formData.driverName}
+              onChange={handleChange}
+            />
+
+            <label>Date & Time</label>
+            <input
+              className="form-control"
+              value="30-04-25 09:10:30 AM"
+              readOnly
+            />
+
+            <div className="mt-3">
+              <div className="d-flex gap-2 mb-2">
+                <button className="btn btn-success w-50">1st WHT</button>
+                <button className="btn btn-secondary w-50">2nd WHT</button>
+              </div>
+              <div className="d-flex gap-2">
+                <button className="btn btn-warning w-50">Clear</button>
+                <button className="btn btn-danger w-50">Exit</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Tabs defaultActiveKey="purchase" className="mb-2">
+        <Tab eventKey="purchase" title="Purchase">
+          <div className="row mb-2">
+            <div className="col-md-2">
+              <label>Bardana Type</label>
+              <input
+                className="form-control"
+                name="bardana_type"
+                value={itemData.bardana_type}
+                onChange={handleChange}
+              />
+              <label>Wt Per Bag</label>
+              <input
+                className="form-control"
+                name="weight_per_bags"
+                value={itemData.weight_per_bags}
+                onChange={handleChange}
+              />
+              <label>No Of Bags</label>
+              <input
+                className="form-control"
+                name="no_of_bags"
+                value={itemData.no_of_bags}
+                onChange={handleChange}
+              />
+              <label>Bardana Wht</label>
+              <input
+                className="form-control"
+                name="bardana_weight"
+                value={itemData.bardana_weight}
+                onChange={handleChange}
+              />
+              <label>Quality Ded</label>
+              <input
+                className="form-control"
+                name="quality_deduction"
+                value={itemData.quality_deduction}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="col-md-2">
+              <label>IGP No</label>
+              <input
+                className="form-control"
+                name="igp_no"
+                value={itemData.igp_no}
+                onChange={handleChange}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    fetchIgpData();
+                  }
+                }}
+              />
+
+              <label>IGP Date</label>
+              <input
+                className="form-control"
+                name="igp_date"
+                value={itemData.igp_date}
+                onChange={handleChange}
+              />
+              <label>Vendor</label>
+              <input
+                className="form-control"
+                name="vendor_name"
+                value={itemData.vendor_name}
+                onChange={handleChange}
+              />
+
+              <label>Vehicle No</label>
+              <input
+                className="form-control"
+                name="vehicle_no"
+                value={itemData.vehicle_no}
+                onChange={handleChange}
+              />
+
+              <div className="row">
+                <div className="col-8">
+                  <label>Weight</label>
+                  <input
+                    className="form-control"
+                    name="net_supplier_weight"
+                    value={itemData.net_supplier_weight}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="col-4">
+                  <label>% Bags</label>
+                  <input
+                    className="form-control"
+                    name="bag_condition"
+                    value={itemData.bag_condition}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="col-md-2">
+              <label>Supp's Weight</label>
+              <input
+                className="form-control"
+                name="supplier_weight"
+                value={itemData.supplier_weight}
+                onChange={handleChange}
+              />
+              <label>Sup.Wt - Bardana</label>
+              <input
+                className="form-control"
+                name="sup_weight_wthout_bardana"
+                value={itemData.sup_weight_wthout_bardana}
+                onChange={handleChange}
+              />
+
+              <label>S.Wts - Our Wt</label>
+              <input
+                className="form-control"
+                name="net_supplier_weight"
+                value={itemData.net_supplier_weight}
+                onChange={handleChange}
+              />
+
+              <div className="col-md-6 mt-4">
+                <button className="btn btn-warning w-100">Deduction +</button>
+              </div>
+            </div>
+
+            <div className="col-md-2">
+              <label>Bardana Type ID</label>
+              <input
+                className="form-control"
+                name="bardana_type_id"
+                value={itemData.bardana_type_id}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+        </Tab>
+
+        <Tab eventKey="sale" title="Sale">
+          <div className="text-center p-3">Sale tab content here</div>
+        </Tab>
+
+        <Tab eventKey="offline" title="Offline">
+          <div className="text-center p-3">Offline tab content here</div>
+        </Tab>
+      </Tabs>
+
+      {/* Data Table */}
+      <div className="table-responsive border rounded">
+        <table className="table table-bordered mb-0 text-center">
+          <thead className="table-light">
+            <tr>
+              <th>Po No</th>
+              <th>Item Code</th>
+              <th>Item Description</th>
+              <th>Po Qty</th>
+              <th>IgP Qty</th>
+              <th>Balance Qty</th>
+            </tr>
+          </thead>
+          <tbody>
+            {igpItems.length === 0 ? (
+              <tr>
+                <td colSpan="6">No data available</td>
+              </tr>
+            ) : (
+              igpItems.map((item, idx) => {
+                const qty = parseFloat(item.qty) || 0;
+                const receivedQty = parseFloat(item.received_qty) || 0;
+                const balanceQty = receivedQty - qty;
+
+                return (
+                  <tr key={idx}>
+                    <td>{item.po_no || ''}</td>
+                    <td>{item.item_code || ''}</td>
+                    <td>{item.item_desc || ''}</td>
+                    <td>{qty}</td>
+                    <td>{receivedQty}</td>
+                    <td>{balanceQty}</td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+export default Purchaseonline;"
