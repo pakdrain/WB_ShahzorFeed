@@ -7,7 +7,7 @@ import {
   type WbImages, type InsertWbImages 
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, max } from "drizzle-orm";
+import { eq, desc, max, and, isNull } from "drizzle-orm";
 
 export interface IStorage {
   // Camera operations
@@ -222,5 +222,100 @@ export class MemStorage implements IStorage {
   }
 }
 
-// Use MemStorage for now until database is properly set up
-export const storage = new MemStorage();
+// Database Storage Implementation
+export class DatabaseStorage implements IStorage {
+  async getCamera(id: number): Promise<Camera | undefined> {
+    const [camera] = await db.select().from(cameras).where(eq(cameras.id, id));
+    return camera || undefined;
+  }
+
+  async getCameraByIp(ip: string): Promise<Camera | undefined> {
+    const [camera] = await db.select().from(cameras).where(eq(cameras.ip, ip));
+    return camera || undefined;
+  }
+
+  async createCamera(insertCamera: InsertCamera): Promise<Camera> {
+    const [camera] = await db.insert(cameras).values(insertCamera).returning();
+    return camera;
+  }
+
+  async updateCamera(id: number, updates: Partial<InsertCamera>): Promise<Camera | undefined> {
+    const [camera] = await db.update(cameras).set(updates).where(eq(cameras.id, id)).returning();
+    return camera || undefined;
+  }
+
+  async createStreamSession(insertSession: InsertStreamSession): Promise<StreamSession> {
+    const [session] = await db.insert(streamSessions).values(insertSession).returning();
+    return session;
+  }
+
+  async getActiveStreamSession(cameraId: number): Promise<StreamSession | undefined> {
+    const [session] = await db.select().from(streamSessions)
+      .where(and(eq(streamSessions.cameraId, cameraId), isNull(streamSessions.endTime)));
+    return session || undefined;
+  }
+
+  async endStreamSession(sessionId: string): Promise<void> {
+    await db.update(streamSessions)
+      .set({ endTime: new Date() })
+      .where(eq(streamSessions.sessionId, sessionId));
+  }
+
+  async addStreamStats(insertStats: InsertStreamStats): Promise<StreamStats> {
+    const [stats] = await db.insert(streamStats).values(insertStats).returning();
+    return stats;
+  }
+
+  async getLatestStreamStats(cameraId: number): Promise<StreamStats | undefined> {
+    const [stats] = await db.select().from(streamStats)
+      .where(eq(streamStats.cameraId, cameraId))
+      .orderBy(desc(streamStats.timestamp))
+      .limit(1);
+    return stats || undefined;
+  }
+
+  async createPurchase(purchase: InsertWbWeighbridge, items: InsertWbWeighbridgeItemsPurchase[]): Promise<WbWeighbridge> {
+    const [purchaseRecord] = await db.insert(wbWeighbridge).values(purchase).returning();
+    
+    if (items.length > 0) {
+      const itemsWithWbId = items.map(item => ({ ...item, wbId: purchaseRecord.wbId }));
+      await db.insert(wbWeighbridgeItemsPurchase).values(itemsWithWbId);
+    }
+    
+    return purchaseRecord;
+  }
+
+  async getPurchases(): Promise<WbWeighbridge[]> {
+    return await db.select().from(wbWeighbridge).orderBy(desc(wbWeighbridge.creationDate));
+  }
+
+  async getPurchaseById(wbId: number): Promise<WbWeighbridge | undefined> {
+    const [purchase] = await db.select().from(wbWeighbridge).where(eq(wbWeighbridge.wbId, wbId));
+    return purchase || undefined;
+  }
+
+  async getMaxSlipNo(): Promise<number> {
+    const [result] = await db.select({ maxSlip: max(wbWeighbridge.slipNo) }).from(wbWeighbridge);
+    return parseInt(result.maxSlip || "0") || 0;
+  }
+
+  async addPurchaseImage(image: InsertWbImages): Promise<WbImages> {
+    const [imageRecord] = await db.insert(wbImages).values(image).returning();
+    return imageRecord;
+  }
+
+  async getPurchaseImages(wbId: number): Promise<WbImages[]> {
+    return await db.select().from(wbImages).where(eq(wbImages.wbId, wbId));
+  }
+}
+
+// Try to use database storage, fallback to memory storage if database unavailable
+let storage: IStorage;
+try {
+  storage = new DatabaseStorage();
+} catch (error) {
+  console.log('Database not available, using in-memory storage');
+  storage = new MemStorage();
+}
+
+export { storage };
