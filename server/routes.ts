@@ -252,5 +252,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ success: true, message: 'Tare command sent' });
   });
 
+  // Purchase/Weighbridge endpoints
+  app.get("/api/purchases", async (req, res) => {
+    try {
+      const purchases = await storage.getPurchases();
+      res.json(purchases);
+    } catch (error: any) {
+      console.error("Error fetching purchases:", error);
+      res.status(500).json({ error: "Failed to fetch purchases" });
+    }
+  });
+
+  app.post("/api/purchases", async (req, res) => {
+    try {
+      const { purchase_items = [], ...purchaseData } = req.body;
+      
+      // Create purchase with items
+      const purchase = await storage.createPurchase(purchaseData, purchase_items);
+      
+      res.status(201).json({ 
+        message: "Purchase created successfully", 
+        purchase,
+        WB_ID: purchase.wbId 
+      });
+    } catch (error: any) {
+      console.error("Error creating purchase:", error);
+      res.status(500).json({ error: "Failed to create purchase" });
+    }
+  });
+
+  app.get("/api/purchases/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const purchase = await storage.getPurchaseById(id);
+      if (!purchase) {
+        return res.status(404).json({ error: "Purchase not found" });
+      }
+      res.json(purchase);
+    } catch (error: any) {
+      console.error("Error fetching purchase:", error);
+      res.status(500).json({ error: "Failed to fetch purchase" });
+    }
+  });
+
+  // IGP data fetching endpoint
+  app.get("/api/igp-data", async (req, res) => {
+    try {
+      const igpNo = req.query.igp_no as string;
+      
+      if (!igpNo) {
+        return res.status(400).json({ error: "IGP number is required" });
+      }
+
+      // Fetch from external IGP API
+      const fetch = (await import('node-fetch')).default;
+      const response = await fetch(
+        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data?igp_no=${igpNo}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`IGP API responded with status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error: any) {
+      console.error("Error fetching IGP data:", error);
+      res.status(500).json({ error: "Failed to fetch IGP data" });
+    }
+  });
+
+  // Image upload endpoint
+  app.post("/api/purchases/:id/images", async (req, res) => {
+    try {
+      const wbId = parseInt(req.params.id);
+      const { imagePath, imageType = 'camera' } = req.body;
+      
+      if (!imagePath) {
+        return res.status(400).json({ error: "Image path is required" });
+      }
+
+      const image = await storage.addPurchaseImage({
+        wbId,
+        imagePath,
+        imageType
+      });
+      
+      res.status(201).json(image);
+    } catch (error: any) {
+      console.error("Error adding purchase image:", error);
+      res.status(500).json({ error: "Failed to add purchase image" });
+    }
+  });
+
+  app.get("/api/purchases/:id/images", async (req, res) => {
+    try {
+      const wbId = parseInt(req.params.id);
+      const images = await storage.getPurchaseImages(wbId);
+      res.json(images);
+    } catch (error: any) {
+      console.error("Error fetching purchase images:", error);
+      res.status(500).json({ error: "Failed to fetch purchase images" });
+    }
+  });
+
   return httpServer;
 }
