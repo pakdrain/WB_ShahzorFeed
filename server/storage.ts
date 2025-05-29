@@ -309,5 +309,26 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-// Use in-memory storage for now - will switch to database when PostgreSQL is running
-export const storage = new MemStorage();
+// Dynamic storage - will use database when PostgreSQL is available
+async function createStorage(): Promise<IStorage> {
+  try {
+    // Test database connection
+    await db.select().from(cameras).limit(1);
+    console.log('✅ Database connection successful - using PostgreSQL storage');
+    return new DatabaseStorage();
+  } catch (error) {
+    console.log('⚠️ Database not available - using in-memory storage');
+    return new MemStorage();
+  }
+}
+
+// Initialize storage
+let storage: IStorage = new MemStorage(); // Start with memory storage
+createStorage().then(s => {
+  storage = s;
+  console.log('Storage initialized successfully');
+}).catch(() => {
+  console.log('Keeping in-memory storage as fallback');
+});
+
+export { storage };
