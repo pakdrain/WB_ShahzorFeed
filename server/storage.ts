@@ -312,12 +312,23 @@ export class DatabaseStorage implements IStorage {
 // Smart storage - use database when available, memory otherwise
 async function createSmartStorage(): Promise<IStorage> {
   try {
-    // Test database connection using raw SQL
-    const { pool } = await import('./db');
+    // Test database connection using raw SQL - compatible with your existing database
+    const { Pool } = await import('pg');
+    const pool = new Pool({
+      user: 'postgres',
+      host: 'localhost',
+      database: 'wb',
+      password: '@1122',
+      port: 5432,
+    });
+    
     const client = await pool.connect();
-    await client.query('SELECT 1');
-    client.release();
+    const result = await client.query('SELECT current_database()');
     console.log('✅ Database connected - using PostgreSQL storage');
+    console.log('Connected to database:', result.rows[0].current_database);
+    client.release();
+    await pool.end();
+    
     return new DatabaseStorage();
   } catch (error) {
     console.log('❌ Failed to connect to PostgreSQL:', (error as Error).message);
