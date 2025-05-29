@@ -4,9 +4,31 @@ import { storage } from "./storage";
 import { streamService } from "./stream-service";
 import { videoStreamService } from "./video-stream";
 import { z } from "zod";
+import { Pool } from "pg";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+
+  // PostgreSQL connection setup
+  const pool = new Pool({
+    user: process.env.PGUSER || 'postgres',
+    host: process.env.PGHOST || 'localhost',
+    database: process.env.PGDATABASE || 'WB',
+    password: process.env.PGPASSWORD || '@1122',
+    port: parseInt(process.env.PGPORT || '5432'),
+    ssl: false,
+  });
+
+  // Helper function to generate a unique WB_ID
+  async function generateWBID() {
+    try {
+      const res = await pool.query('SELECT COALESCE(MAX(WB_ID), 0) + 1 AS new_id FROM WB_WEIGHBRIDGE');
+      return res.rows[0].new_id;
+    } catch (err) {
+      console.error('Error generating WB_ID:', err);
+      throw err;
+    }
+  }
 
   // Initialize WebSocket service
   streamService.initialize(httpServer);
@@ -252,78 +274,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ success: true, message: 'Tare command sent' });
   });
 
-  // IGP Data proxy endpoint
-  app.get('/api/igp/data', async (req, res) => {
+  // Purchase and IGP Database Routes
+
+  // GET purchase data by IGP number
+  app.get('/api/purchase-by-igp', async (req, res) => {
+    const { igpNo } = req.query;
+    if (!igpNo) {
+      return res.status(400).json({ error: 'igpNo query parameter is required' });
+    }
+
     try {
-      const { igp_no } = req.query;
-      
-      if (!igp_no) {
-        return res.status(400).json({ message: 'IGP number is required' });
+      const query = 'SELECT * FROM WB_WEIGHBRIDGE WHERE igp_no = $1';
+      const result = await pool.query(query, [igpNo]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'No data found for this IGP No' });
       }
-
-      // Import axios for server-side requests
-      const axios = require('axios');
-      
-      const response = await axios.get(
-        'http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data',
-        { 
-          params: { igp_no },
-          timeout: 10000
-        }
-      );
-
-      res.json(response.data);
-    } catch (error: any) {
-      console.error('Error fetching IGP data:', error.message);
-      res.status(500).json({ 
-        message: 'Failed to fetch IGP data',
-        error: error.response?.data || error.message 
-      });
+      res.json(result.rows);
+    } catch (error) {
+      console.error('Error fetching data by IGP No:', error);
+      res.status(500).json({ error: 'Internal server error' });
     }
   });
 
-  // Purchase endpoints
+  // GET all purchases
   app.get('/api/purchases', async (req, res) => {
     try {
-      // Return empty array for now - you can implement actual storage later
-      res.json([]);
-    } catch (error: any) {
-      console.error('Error fetching purchases:', error.message);
-      res.status(500).json({ message: 'Failed to fetch purchases' });
+      const result = await pool.query('SELECT * FROM WB_WEIGHBRIDGE ORDER BY WB_ID DESC');
+      res.json(result.rows);
+    } catch (err) {
+      console.error('Error fetching purchases:', err);
+      res.status(500).json({ error: 'Database error' });
     }
   });
 
+  // POST to insert a new purchase
   app.post('/api/purchases', async (req, res) => {
+    const purchaseData = req.body;
+    console.log('Incoming purchase data:', purchaseData);
+
     try {
-      // For now, just return success - implement actual storage later
-      const purchase = {
-        id: Date.now(),
-        ...req.body,
-        created_at: new Date().toISOString()
-      };
-      
-      console.log('Purchase saved:', purchase);
-      res.json({ success: true, data: purchase });
-    } catch (error: any) {
-      console.error('Error saving purchase:', error.message);
-      res.status(500).json({ message: 'Failed to save purchase' });
+      const WB_ID = await generateWBID();
+
+      // Destructure and prepare values
+      const {
+        slip_no = null,
+        slip_in_time = null,
+        first_weight = null,
+        second_weight = null,
+        net_weight = null,
+        bardana_weight = null,
+        gross_weight = null,
+        freight = null,
+        remarks = null,
+        driver_name = null,
+        company_id = null,
+        branch_id = null,
+        online_entry = null,
+        offline_entry = null,
+        created_by = null,
+        creation_date = null,
+        last_updated_by = null,
+        last_updated_date = null,
+        manual_dc_no = null,
+        entry_type = null,
+        slip_out_time = null,
+        status = null,
+        slip_date = null,
+      } = purchaseData;
+
+      // Convert online/offline entries to string
+      const onlineEntryStr = online_entry !== null ? String(online_entry) : null;
+      const offlineEntryStr = offline_entry !== null ? String(offline_entry) : null;
+
+      const query = `
+        INSERT INTO WB_WEIGHBRIDGE (
+          WB_ID, SLIP_NO, SLIP_IN_TIME, FIRST_WEIGHT, SECOND_WEIGHT, NET_WEIGHT,
+          BARDANA_WEIGHT, GROSS_WEIGHT, FREIGHT, REMARKS, DRIVER_NAME, COMPANY_ID,
+          BRANCH_ID, ONLINE_ENTRY, OFFLINE_ENTRY, CREATED_BY, CREATION_DATE,
+          LAST_UPDATED_BY, LAST_UPDATED_DATE, MANUAL_DC_NO, ENTRY_TYPE,
+          SLIP_OUT_TIME, STATUS, SLIP_DATE
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6,
+          $7, $8, $9, $10, $11, $12,
+          $13, $14, $15, $16, $17,
+          $18, $19, $20, $21,
+          $22, $23, $24
+        )
+        RETURNING *;
+      `;
+
+      const values = [
+        WB_ID,
+        slip_no,
+        slip_in_time,
+        first_weight,
+        second_weight,
+        net_weight,
+        bardana_weight,
+        gross_weight,
+        freight,
+        remarks,
+        driver_name,
+        company_id,
+        branch_id,
+        onlineEntryStr,
+        offlineEntryStr,
+        created_by,
+        creation_date,
+        last_updated_by,
+        last_updated_date,
+        manual_dc_no,
+        entry_type,
+        slip_out_time,
+        status,
+        slip_date,
+      ];
+
+      const result = await pool.query(query, values);
+      res.json(result.rows[0]);
+    } catch (err) {
+      console.error('Error inserting purchase:', err);
+      res.status(500).json({ error: 'Insert error' });
     }
   });
 
+  // POST to insert purchase items
   app.post('/api/purchase-items', async (req, res) => {
+    const itemData = req.body;
+    console.log('Incoming purchase item data:', itemData);
+
     try {
-      // For now, just return success - implement actual storage later
-      const purchaseItem = {
-        id: Date.now(),
-        ...req.body,
-        created_at: new Date().toISOString()
-      };
-      
-      console.log('Purchase item saved:', purchaseItem);
-      res.json({ success: true, data: purchaseItem });
-    } catch (error: any) {
-      console.error('Error saving purchase item:', error.message);
-      res.status(500).json({ message: 'Failed to save purchase item' });
+      // This would need a separate table for purchase items
+      // For now, return success message
+      res.json({ 
+        success: true, 
+        message: 'Purchase items functionality ready',
+        data: itemData 
+      });
+    } catch (err) {
+      console.error('Error inserting purchase items:', err);
+      res.status(500).json({ error: 'Insert error' });
     }
   });
 

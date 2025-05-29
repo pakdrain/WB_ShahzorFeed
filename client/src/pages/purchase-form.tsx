@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import WeightIndicator from '@/components/weight-indicator';
 import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
 import { useQuery } from '@tanstack/react-query';
-import axios from 'axios';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function PurchaseForm() {
   const initialFormData = {
@@ -98,13 +98,19 @@ export default function PurchaseForm() {
       return;
     }
     try {
-      const response = await axios.get('/api/igp/data', {
-        params: { igp_no: formData.igpNo }
-      });
+      const response = await fetch(
+        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data?igp_no=${formData.igpNo}`
+      );
 
-      if (response.data && response.data.items && response.data.items.length > 0) {
-        const data = response.data.items;
-        const firstItem = data[0];
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      if (data && data.items && data.items.length > 0) {
+        const items = data.items;
+        const firstItem = items[0];
         setFormData(prev => ({
           ...prev,
           driverName: firstItem.driver_name || '',
@@ -112,7 +118,7 @@ export default function PurchaseForm() {
           vehicleNo: firstItem.vehicle_no || '',
           bardanaWeight: firstItem.bardana_qty ? String(firstItem.bardana_qty) : '',
         }));
-        setIgpItems(data);
+        setIgpItems(items);
       } else {
         alert('No data found for this IGP No.');
         setIgpItems([]);
@@ -162,10 +168,11 @@ export default function PurchaseForm() {
 
   useEffect(() => {
     // Fetch next slip number
-    axios.get('/api/purchases')
-      .then(res => {
-        if (res.data.length > 0) {
-          const maxSlip = res.data.reduce((max: number, curr: any) => {
+    fetch('/api/purchases')
+      .then(res => res.json())
+      .then((data: any[]) => {
+        if (data.length > 0) {
+          const maxSlip = data.reduce((max: number, curr: any) => {
             const slip = parseInt(curr.slip_no, 10);
             return slip > max ? slip : max;
           }, 0);
@@ -175,10 +182,8 @@ export default function PurchaseForm() {
           setFormData(prev => ({ ...prev, slipNo: '1' }));
         }
       })
-      .catch(err => {
+      .catch((err: any) => {
         console.error('Error fetching purchases:', err);
-        // Set default slip number if API fails
-        setFormData(prev => ({ ...prev, slipNo: '1' }));
       });
 
     const now = new Date().toISOString();
@@ -226,9 +231,21 @@ export default function PurchaseForm() {
     };
 
     try {
-      const res = await axios.post('/api/purchases', payload);
+      const response = await fetch('/api/purchases', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       alert('Purchase saved successfully!');
-      console.log('Saved:', res.data);
+      console.log('Saved:', data);
       resetForm();
     } catch (err) {
       alert('Failed to save purchase.');
@@ -281,9 +298,21 @@ export default function PurchaseForm() {
     };
 
     try {
-      const res = await axios.post('/api/purchase-items', payload);
+      const response = await fetch('/api/purchase-items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
       alert('Purchase items saved successfully!');
-      console.log('Items saved:', res.data);
+      console.log('Items saved:', data);
     } catch (err) {
       alert('Failed to save purchase items.');
       console.error(err);
