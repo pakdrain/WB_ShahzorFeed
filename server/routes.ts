@@ -5,8 +5,8 @@ import { streamService } from "./stream-service";
 import { videoStreamService } from "./video-stream";
 import { z } from "zod";
 import { purchases, purchaseItems, insertPurchaseSchema, insertPurchaseItemSchema } from "../shared/schema";
-import { db } from "./db";
-import { desc, eq } from "drizzle-orm";
+import { db, client } from "./db";
+import { desc, eq, sql } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -89,7 +89,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Successfully updated camera:", updatedCamera);
       res.status(200).json(updatedCamera);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating camera:", error);
       res.status(500).json({ message: "Internal server error", error: error.message });
     }
@@ -258,8 +258,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Purchase API endpoints - Using existing WB_WEIGHBRIDGE table
   app.get('/api/purchases', async (req, res) => {
     try {
-      const result = await db.execute(sql`SELECT * FROM WB_WEIGHBRIDGE ORDER BY WB_ID DESC`);
-      res.json(result.rows);
+      const result = await client`SELECT * FROM WB_WEIGHBRIDGE ORDER BY WB_ID DESC`;
+      res.json(result);
     } catch (error: any) {
       console.error('Error fetching purchases:', error);
       res.status(500).json({ message: 'Failed to fetch purchases', error: error.message });
@@ -267,18 +267,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get('/api/purchase-by-igp', async (req, res) => {
-    const { igpNo } = req.query;
+    const igpNo = req.query.igpNo as string;
     if (!igpNo) {
       return res.status(400).json({ error: 'igpNo query parameter is required' });
     }
 
     try {
-      const result = await db.execute(sql`SELECT * FROM WB_WEIGHBRIDGE WHERE igp_no = ${igpNo}`);
+      const result = await client`SELECT * FROM WB_WEIGHBRIDGE WHERE igp_no = ${igpNo}`;
       
-      if (!result.rows || result.rows.length === 0) {
+      if (!result || result.length === 0) {
         return res.status(404).json({ message: 'No data found for this IGP No' });
       }
-      res.json(result.rows);
+      res.json(result);
     } catch (error: any) {
       console.error('Error fetching data by IGP No:', error);
       res.status(500).json({ error: 'Internal server error' });
@@ -291,8 +291,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       // Generate WB_ID
-      const maxIdResult = await db.execute(sql`SELECT COALESCE(MAX(WB_ID), 0) + 1 AS new_id FROM WB_WEIGHBRIDGE`);
-      const WB_ID = maxIdResult.rows[0]?.new_id || 1;
+      const maxIdResult = await client`SELECT COALESCE(MAX(WB_ID), 0) + 1 AS new_id FROM WB_WEIGHBRIDGE`;
+      const WB_ID = maxIdResult.length > 0 ? maxIdResult[0].new_id : 1;
 
       // Prepare data for insertion
       const {
@@ -323,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offlineEntryStr = offline_entry !== null ? String(offline_entry) : null;
       const currentTimestamp = new Date().toISOString();
 
-      const result = await db.execute(sql`
+      const result = await client`
         INSERT INTO WB_WEIGHBRIDGE (
           WB_ID, SLIP_NO, SLIP_IN_TIME, FIRST_WEIGHT, SECOND_WEIGHT, NET_WEIGHT,
           BARDANA_WEIGHT, GROSS_WEIGHT, FREIGHT, REMARKS, DRIVER_NAME, COMPANY_ID,
@@ -339,9 +339,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ${slip_out_time}, ${status}, ${slip_date}
         )
         RETURNING *
-      `);
+      `;
       
-      res.json(result.rows[0]);
+      res.json(result.length > 0 ? result[0] : { success: true, id: WB_ID });
     } catch (error: any) {
       console.error('❌ Error inserting purchase:', error);
       res.status(500).json({ error: 'Insert error', details: error.message });
