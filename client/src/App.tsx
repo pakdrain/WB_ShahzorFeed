@@ -28,7 +28,7 @@ function App() {
       <TooltipProvider>
         <div className="min-h-screen bg-monitoring-dark">
           <Sidebar />
-          <div className="ml-0">
+          <div className="lg:ml-64">
             <Toaster />
             <Router />
           </div>
