@@ -11,12 +11,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // PostgreSQL connection setup
   const pool = new Pool({
-    user: process.env.PGUSER || 'postgres',
-    host: process.env.PGHOST || 'localhost',
-    database: process.env.PGDATABASE || 'wb',
-    password: process.env.PGPASSWORD || '@1122',
+    user: process.env.PGUSER,
+    host: process.env.PGHOST,
+    database: process.env.PGDATABASE,
+    password: process.env.PGPASSWORD,
     port: parseInt(process.env.PGPORT || '5432'),
-    ssl: false,
+    ssl: {
+      rejectUnauthorized: false
+    },
   });
 
   // Test database connection on startup
