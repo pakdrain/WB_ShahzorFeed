@@ -603,7 +603,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const item of itemsData) {
         const detailQuery = `
           INSERT INTO wb_weighbridge_items_purchase (
-            wb_item_p_id, wb_id, manual_dc_no, do_id, do_no, customer_id, customer_name,
+            wb_id, manual_dc_no, do_id, do_no, customer_id, customer_name,
             vehicle_no, do_date, item_id, item_code, item_desc, created_by, creation_date,
             last_updated_by, last_updated_date, po_id, po_no, po_qty, igp_qty, balance_qty,
             bardana_type, igp_no, manual_igp_no, igp_id, vendor_id, vendor_name, no_of_bags,
@@ -611,18 +611,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             sup_weight_wthout_bardana, net_supplier_weight, bag_condition, bardana_type_id
           )
           VALUES (
-            $1, $2, $3, $4, $5, $6, $7,
-            $8, $9, $10, $11, $12, $13, $14,
-            $15, $16, $17, $18, $19, $20, $21,
-            $22, $23, $24, $25, $26, $27, $28,
-            $29, $30, $31, $32, $33, $34,
-            $35, $36, $37, $38
+            $1, $2, $3, $4, $5, $6,
+            $7, $8, $9, $10, $11, $12, $13,
+            $14, $15, $16, $17, $18, $19, $20,
+            $21, $22, $23, $24, $25, $26, $27,
+            $28, $29, $30, $31, $32, $33,
+            $34, $35, $36, $37
           )
           RETURNING *;
         `;
 
         const detailValues = [
-          item.wb_item_p_id, WB_ID, item.manual_dc_no, item.do_id, item.do_no, item.customer_id, item.customer_name,
+          WB_ID, item.manual_dc_no, item.do_id, item.do_no, item.customer_id, item.customer_name,
           item.vehicle_no, item.do_date, item.item_id, item.item_code, item.item_desc, item.created_by, item.creation_date,
           item.last_updated_by, item.last_updated_date, item.po_id, item.po_no, item.po_qty, item.igp_qty, item.balance_qty,
           item.bardana_type, item.igp_no, item.manual_igp_no, item.igp_id, item.vendor_id, item.vendor_name, item.no_of_bags,
@@ -648,7 +648,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Rollback transaction on error
       await pool.query('ROLLBACK');
       console.error('❌ Error inserting purchase and items:', err);
-      res.status(500).json({ error: 'Insert error', details: err.message });
+      console.error('Master data received:', masterData);
+      console.error('Items data received:', itemsData);
+      res.status(500).json({ error: 'Insert error', details: err instanceof Error ? err.message : 'Unknown error' });
     }
   });
 
