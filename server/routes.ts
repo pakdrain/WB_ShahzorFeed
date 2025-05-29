@@ -530,55 +530,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Updated POST to handle master and detail together according to your server code
+  // Working POST route for master and detail insertion
   app.post('/api/purchases', async (req, res) => {
-    const purchaseData = req.body;
-    console.log('📥 Incoming purchase data:', JSON.stringify(purchaseData, null, 2));
+    const { masterData, itemsData = [] } = req.body;
+    console.log('📥 Received purchase data with master:', !!masterData, 'items:', itemsData.length);
 
     try {
-      // Start transaction
       await pool.query('BEGIN');
       const WB_ID = await generateWBID();
+      console.log('📝 Generated WB_ID:', WB_ID);
 
-      // Handle both single purchase and master+detail formats
-      const masterData = purchaseData.masterData || purchaseData;
-      const itemsData = purchaseData.itemsData || purchaseData.purchase_items || [];
-
-      console.log('📋 Processing master data:', JSON.stringify(masterData, null, 2));
-
-      // Direct assignment with proper logging
-      const slip_no = masterData.slip_no;
-      const slip_in_time = masterData.slip_in_time;
-      const first_weight = masterData.first_weight;
-      const second_weight = masterData.second_weight;
-      const net_weight = masterData.net_weight;
-      const bardana_weight = masterData.bardana_weight;
-      const gross_weight = masterData.gross_weight;
-      const freight = masterData.freight;
-      const remarks = masterData.remarks;
-      const driver_name = masterData.driver_name;
-      const company_id = masterData.company_id;
-      const branch_id = masterData.branch_id;
-      const online_entry = masterData.online_entry;
-      const offline_entry = masterData.offline_entry;
-      const created_by = masterData.created_by;
-      const creation_date = masterData.creation_date;
-      const last_updated_by = masterData.last_updated_by;
-      const last_updated_date = masterData.last_updated_date;
-      const manual_dc_no = masterData.manual_dc_no;
-      const entry_type = masterData.entry_type;
-      const slip_out_time = masterData.slip_out_time;
-      const status = masterData.status;
-      const slip_date = masterData.slip_date;
-
-      console.log('🔍 Extracted values:', {
-        slip_no,
-        driver_name,
-        first_weight,
-        WB_ID
-      });
-
-      const masterInsertQuery = `
+      // Insert master record with actual values
+      const masterQuery = `
         INSERT INTO WB_WEIGHBRIDGE (
           WB_ID, SLIP_NO, SLIP_IN_TIME, FIRST_WEIGHT, SECOND_WEIGHT, NET_WEIGHT,
           BARDANA_WEIGHT, GROSS_WEIGHT, FREIGHT, REMARKS, DRIVER_NAME, COMPANY_ID,
@@ -587,27 +550,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
           SLIP_OUT_TIME, STATUS, SLIP_DATE
         )
         VALUES (
-          $1, $2, $3, $4, $5, $6,
-          $7, $8, $9, $10, $11, $12,
-          $13, $14, $15, $16, $17,
-          $18, $19, $20, $21,
-          $22, $23, $24
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+          $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
         )
         RETURNING *;
       `;
 
       const masterValues = [
-        WB_ID, slip_no, slip_in_time, first_weight, second_weight, net_weight,
-        bardana_weight, gross_weight, freight, remarks, driver_name, company_id,
-        branch_id, String(online_entry), String(offline_entry), created_by, creation_date,
-        last_updated_by, last_updated_date, manual_dc_no, entry_type,
-        slip_out_time, status, slip_date
+        WB_ID,
+        masterData?.slip_no || null,
+        masterData?.slip_in_time || null,
+        masterData?.first_weight || null,
+        masterData?.second_weight || null,
+        masterData?.net_weight || null,
+        masterData?.bardana_weight || null,
+        masterData?.gross_weight || null,
+        masterData?.freight || null,
+        masterData?.remarks || null,
+        masterData?.driver_name || null,
+        masterData?.company_id || null,
+        masterData?.branch_id || null,
+        masterData?.online_entry || null,
+        masterData?.offline_entry || null,
+        masterData?.created_by || null,
+        masterData?.creation_date || null,
+        masterData?.last_updated_by || null,
+        masterData?.last_updated_date || null,
+        masterData?.manual_dc_no || null,
+        masterData?.entry_type || null,
+        masterData?.slip_out_time || null,
+        masterData?.status || null,
+        masterData?.slip_date || null
       ];
 
-      console.log('🔍 SQL Query:', masterInsertQuery);
-      console.log('🔍 SQL Values:', masterValues);
+      console.log('🔍 Master values being inserted:', {
+        WB_ID,
+        slip_no: masterData?.slip_no,
+        driver_name: masterData?.driver_name,
+        first_weight: masterData?.first_weight
+      });
 
-      const masterResult = await pool.query(masterInsertQuery, masterValues);
+      const masterResult = await pool.query(masterQuery, masterValues);
 
       // Insert detail records if any
       const detailResults = [];
@@ -622,12 +605,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             sup_weight_wthout_bardana, net_supplier_weight, bag_condition, bardana_type_id
           )
           VALUES (
-            $1, $2, $3, $4, $5, $6,
-            $7, $8, $9, $10, $11, $12, $13,
-            $14, $15, $16, $17, $18, $19, $20,
-            $21, $22, $23, $24, $25, $26, $27,
-            $28, $29, $30, $31, $32, $33,
-            $34, $35, $36, $37
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
+            $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27,
+            $28, $29, $30, $31, $32, $33, $34, $35, $36, $37
           )
           RETURNING *;
         `;
@@ -645,8 +625,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         detailResults.push(detailResult.rows[0]);
       }
 
-      // Commit transaction
       await pool.query('COMMIT');
+      console.log('✅ Successfully inserted master and details');
 
       res.status(200).json({ 
         message: 'Master and detail records inserted successfully', 
@@ -656,11 +636,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
     } catch (err) {
-      // Rollback transaction on error
       await pool.query('ROLLBACK');
-      console.error('❌ Error inserting purchase and items:', err);
-      console.error('Purchase data received:', purchaseData);
-      res.status(500).json({ error: 'Insert error', details: err instanceof Error ? err.message : 'Unknown error' });
+      console.error('❌ Error inserting purchase:', err);
+      res.status(500).json({ 
+        error: 'Insert error', 
+        details: err instanceof Error ? err.message : 'Unknown error' 
+      });
     }
   });
 
