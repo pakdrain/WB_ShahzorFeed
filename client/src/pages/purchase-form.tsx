@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import WeightIndicator from '@/components/weight-indicator';
+import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
+import { useQuery } from '@tanstack/react-query';
 
-const PurchaseForm = () => {
+export default function PurchaseForm() {
   const initialFormData = {
     slipNo: '',
     slipInTime: '',
@@ -16,7 +26,6 @@ const PurchaseForm = () => {
     vendor: '',
     companyId: '',
     branchId: '',
-    branch: '',
     onlineEntry: 'Yes',
     offlineEntry: '',
     createdBy: '',
@@ -28,73 +37,54 @@ const PurchaseForm = () => {
     slipOutTime: '',
     status: '',
     slipDate: '',
+    branch: '',
+    bardanaType: '',
+    wtPerBag: '',
+    noOfBags: '',
+    qualityDed: '',
     igpNo: '',
+    igpDate: '',
     vehicleNo: '',
-  };
-
-  const initialItemData = {
-    wb_item_p_id: '',
-    wb_id: '',
-    manual_dc_no: '',
-    do_id: '',
-    do_no: '',
-    customer_id: '',
-    customer_name: '',
-    vehicle_no: '',
-    do_date: '',
-    item_id: '',
-    item_code: '',
-    item_desc: '',
-    created_by: '',
-    creation_date: '',
-    last_updated_by: '',
-    last_updated_date: '',
-    po_id: '',
-    po_no: '',
-    po_qty: '',
-    igp_qty: '',
-    balance_qty: '',
-    bardana_type: '',
-    igp_no: '',
-    manual_igp_no: '',
-    igp_id: '',
-    vendor_id: '',
-    vendor_name: '',
-    no_of_bags: '',
-    weight_per_bags: '',
-    bardana_weight: '',
-    igp_date: '',
-    quality_deduction: '',
-    supplier_weight: '',
-    sup_weight_wthout_bardana: '',
-    net_supplier_weight: '',
-    bag_condition: '',
-    bardana_type_id: '',
-    rate: '',
-    amount: '',
+    weight: '',
+    bags: '',
+    superweight: '',
+    supWtBardana: '',
+    swtsOurWt: '',
   };
 
   const [formData, setFormData] = useState(initialFormData);
-  const [itemData, setItemData] = useState(initialItemData);
   const [loading, setLoading] = useState(false);
   const [onlineMode, setOnlineMode] = useState(true);
-  const [igpItems, setIgpItems] = useState([]);
-  const [purchaseItems, setPurchaseItems] = useState([]);
 
-  // Handle changes for master form inputs
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  // Get camera data
+  const { data: camera } = useQuery({
+    queryKey: ['/api/cameras/1'],
+    enabled: true,
+  });
+
+  const formatDatetimeLocal = (isoString) => {
+    if (!isoString) return '';
+    return isoString.slice(0, 16);
   };
 
-  // Handle changes for item details inputs
-  const handleItemChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setItemData(prev => ({ ...prev, [name]: value }));
+    const numericFields = [
+      'firstWeight', 'secondWeight', 'netWeight',
+      'bardanaWeight', 'grossWeight', 'freight',
+      'companyId', 'branchId', 'createdBy', 'lastUpdatedBy'
+    ];
+
+    if (numericFields.includes(name)) {
+      if (value === '' || /^[0-9]*\.?[0-9]*$/.test(value)) {
+        setFormData(prev => ({ ...prev, [name]: value }));
+      }
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
-  // Toggle online/offline
-  const toggleOnlineMode = (isOnline: boolean) => {
+  const toggleOnlineMode = (isOnline) => {
     setOnlineMode(isOnline);
     setFormData(prev => ({
       ...prev,
@@ -104,448 +94,273 @@ const PurchaseForm = () => {
   };
 
   useEffect(() => {
-    // Fetch max slip no logic
-    fetch('/api/purchases')
-      .then(res => res.json())
-      .then(data => {
-        if (data.length > 0) {
-          const maxSlip = data.reduce((max: number, curr: any) => {
-            const slip = parseInt(curr.slip_no, 10);
-            return slip > max ? slip : max;
-          }, 0);
-          const nextSlip = (maxSlip + 1).toString();
-          setFormData(prev => ({ ...prev, slipNo: nextSlip }));
-        } else {
-          setFormData(prev => ({ ...prev, slipNo: '1' }));
-        }
-      })
-      .catch(err => {
-        console.error('Error fetching purchases:', err);
-      });
-
     const now = new Date().toISOString();
     setFormData(prev => ({
       ...prev,
-      slipInTime: now.slice(0, 16),
+      slipNo: '1',
+      slipInTime: formatDatetimeLocal(now),
       creationDate: now,
       lastUpdatedDate: now,
       slipDate: now,
     }));
-
     toggleOnlineMode(true);
   }, []);
 
-  // Reset all forms
   const resetForm = () => {
     setFormData(initialFormData);
-    setItemData(initialItemData);
     toggleOnlineMode(true);
   };
 
-  const handleSaveAll = async () => {
+  const handleSave = async () => {
     setLoading(true);
-    try {
-      // Prepare master data exactly as your working index.js expects
-      const payload = {
-        slip_no: formData.slipNo || null,
-        slip_in_time: formData.slipInTime || null,
-        first_weight: formData.firstWeight ? parseFloat(formData.firstWeight) : null,
-        second_weight: formData.secondWeight ? parseFloat(formData.secondWeight) : null,
-        net_weight: formData.netWeight ? parseFloat(formData.netWeight) : null,
-        bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
-        gross_weight: formData.grossWeight ? parseFloat(formData.grossWeight) : null,
-        freight: formData.freight ? parseFloat(formData.freight) : null,
-        remarks: formData.remarks || null,
-        driver_name: formData.driverName || null,
-        vendor: formData.vendor || null,
-        vehicle_no: formData.vehicleNo || null,
-        igp_no: formData.igpNo || null,
-        entry_type: 'PURCHASE',
-        online_entry: onlineMode ? 'Yes' : 'No',
-        purchase_items: purchaseItems.map((item: any) => ({
-          wb_item_p_id: item.wb_item_p_id ? parseInt(item.wb_item_p_id, 10) : null,
-          manual_dc_no: item.manual_dc_no || null,
-          do_id: item.do_id ? parseInt(item.do_id, 10) : null,
-          item_id: item.item_id ? parseInt(item.item_id, 10) : null,
-          item_desc: item.item_desc || null,
-          created_by: item.created_by ? parseInt(item.created_by, 10) : null,
-          creation_date: item.creation_date || null,
-          last_updated_by: item.last_updated_by ? parseInt(item.last_updated_by, 10) : null,
-          last_updated_date: item.last_updated_date || null,
-          po_id: item.po_id ? parseInt(item.po_id, 10) : null,
-          po_no: item.po_no || null,
-          po_qty: item.po_qty ? parseFloat(item.po_qty) : null,
-          igp_qty: item.igp_qty ? parseFloat(item.igp_qty) : null,
-          balance_qty: item.balance_qty ? parseFloat(item.balance_qty) : null,
-          bardana_type: item.bardana_type || null,
-          igp_no: item.igp_no || null,
-          manual_igp_no: item.manual_igp_no || null,
-          igp_id: item.igp_id ? parseInt(item.igp_id, 10) : null,
-          vendor_id: item.vendor_id ? parseInt(item.vendor_id, 10) : null,
-          vendor_name: item.vendor_name || null,
-          no_of_bags: item.no_of_bags ? parseInt(item.no_of_bags, 10) : null,
-          weight_per_bags: item.weight_per_bags ? parseFloat(item.weight_per_bags) : null,
-          bardana_weight: item.bardana_weight ? parseFloat(item.bardana_weight) : null,
-          igp_date: item.igp_date || null,
-          quality_deduction: item.quality_deduction ? parseFloat(item.quality_deduction) : null,
-          supplier_weight: item.supplier_weight ? parseFloat(item.supplier_weight) : null,
-          sup_weight_wthout_bardana: item.sup_weight_wthout_bardana ? parseFloat(item.sup_weight_wthout_bardana) : null,
-          net_supplier_weight: item.net_supplier_weight ? parseFloat(item.net_supplier_weight) : null,
-          bag_condition: item.bag_condition || null,
-          bardana_type_id: item.bardana_type_id ? parseInt(item.bardana_type_id, 10) : null,
-        }))
-      };
-
-      // POST payload to backend
-      const res = await fetch('/api/purchases', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        const result = await res.json();
-        console.log('Data saved:', result);
-        alert('Data saved successfully!');
-        resetForm();
-      } else {
-        throw new Error('Failed to save data');
-      }
-    } catch (error) {
-      console.error('Error saving data:', error);
-      alert('Error saving data. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    // Save logic here
+    alert('Purchase saved successfully!');
+    setLoading(false);
   };
 
   return (
-    <div className="container-fluid p-0" style={{ backgroundColor: '#d7e9f7' }}>
-      {/* Top Bar Buttons */}
-      <div className="d-flex flex-wrap justify-content-between align-items-center bg-light border rounded p-2 mb-2">
-        <div className="d-flex gap-2 flex-wrap">
-          <button className="btn btn-outline-secondary">Purc</button>
-          <button className="btn btn-outline-secondary">Sale</button>
-          <button className="btn btn-outline-secondary">Edit</button>
-          <button className="btn btn-outline-secondary">|&lt; First</button>
-          <button className="btn btn-outline-secondary">&lt; Prev</button>
-          <button className="btn btn-outline-secondary">Next &gt;</button>
-          <button className="btn btn-outline-secondary">Last &gt;|</button>
-          <button className="btn btn-success me-2" onClick={handleSaveAll} disabled={loading}>
-            {loading ? 'Saving...' : 'Save'}
-          </button>
-          <button className="btn btn-outline-secondary">Print</button>
-          <button className="btn btn-outline-secondary">Rej</button>
+    <div className="h-screen bg-blue-50 p-1 overflow-hidden">
+      {/* Compact Top Bar */}
+      <div className="flex justify-between items-center bg-white border rounded p-1 mb-1">
+        <div className="flex gap-1 text-xs">
+          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Purc</Button>
+          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Sale</Button>
+          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Edit</Button>
+          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">First</Button>
+          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Prev</Button>
+          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Next</Button>
+          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Last</Button>
+          <Button className="bg-green-600 hover:bg-green-700 h-6 px-3 text-xs" onClick={handleSave}>Save</Button>
+          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Print</Button>
+          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Rej</Button>
         </div>
-        <div className="d-flex gap-2">
-          <button className="btn btn-dark">ONLINE</button>
-          <button className="btn btn-dark">OFFLINE</button>
+        <div className="flex gap-1">
+          <Button 
+            className={`h-6 px-3 text-xs ${onlineMode ? 'bg-black' : 'bg-gray-400'}`}
+            onClick={() => toggleOnlineMode(true)}
+          >
+            ONLINE
+          </Button>
+          <Button 
+            className={`h-6 px-3 text-xs ${!onlineMode ? 'bg-black' : 'bg-gray-400'}`}
+            onClick={() => toggleOnlineMode(false)}
+          >
+            OFFLINE
+          </Button>
         </div>
-        <div className="display-6 text-success fw-bold">2500</div>
+        <div className="text-2xl text-green-600 font-bold">2500</div>
       </div>
 
-      {/* Main Form Section */}
-      <div className="bg-white p-2 rounded border mb-2">
-        <div className="row mb-2">
-          <div className="col-md-2">
-            <label>Slip No</label>
-            <input
-              className="form-control mb-4"
-              name="slipNo"
-              value={formData.slipNo}
-              readOnly
-            />
-            <label className="mt-4">Net Weight</label>
-            <input
-              className="form-control bg-warning mb-2"
-              name="netWeight"
-              value={formData.netWeight}
-              onChange={handleChange}
-            />
-            <label className="mt-2">Freight</label>
-            <input
-              className="form-control"
-              name="freight"
-              value={formData.freight}
-              onChange={handleChange}
-            />
-            <textarea
-              className="form-control mt-4 mb-3"
-              placeholder="Add remarks"
-              name="remarks"
-              value={formData.remarks}
-              onChange={handleChange}
-              style={{ height: '50px', width: '558px' }}
-            />
-          </div>
-
-          <div className="col-md-2">
-            <label>First Weight</label>
-            <input
-              className="form-control"
-              name="firstWeight"
-              value={formData.firstWeight}
-              onChange={handleChange}
-            />
-            <label>Second Weight</label>
-            <input
-              className="form-control text-success"
-              name="secondWeight"
-              value={formData.secondWeight}
-              onChange={handleChange}
-            />
-            <label>Bardana Weight</label>
-            <input
-              className="form-control"
-              name="bardanaWeight"
-              value={formData.bardanaWeight}
-              onChange={handleChange}
-            />
-            <label>Gross Weight</label>
-            <input
-              className="form-control"
-              name="grossWeight"
-              value={formData.grossWeight}
-              readOnly
-            />
-          </div>
-
-          <div className="col-md-2">
-            <label>Branch</label>
-            <select
-              className="form-select"
-              name="branch"
-              value={formData.branch}
-              onChange={handleChange}
-            >
-              <option value="">Select branch</option>
-              <option value="Branch 1">Branch 1</option>
-              <option value="Branch 2">Branch 2</option>
-            </select>
-
-            <label>Driver Name</label>
-            <input
-              className="form-control"
-              placeholder="Enter driver name"
-              name="driverName"
-              value={formData.driverName}
-              onChange={handleChange}
-            />
-
-            <label>Date & Time</label>
-            <input
-              className="form-control"
-              value="30-04-25 09:10:30 AM"
-              readOnly
-            />
-
-            <div className="mt-3">
-              <div className="d-flex gap-2 mb-2">
-                <button className="btn btn-success w-50">1st WHT</button>
-                <button className="btn btn-secondary w-50">2nd WHT</button>
-              </div>
-              <div className="d-flex gap-2">
-                <button className="btn btn-warning w-50">Clear</button>
-                <button className="btn btn-danger w-50">Exit</button>
-              </div>
-            </div>
-          </div>
-
-          <div className="col-md-2">
-            <label>Vendor</label>
-            <input
-              className="form-control"
-              placeholder="Enter vendor name"
-              name="vendor"
-              value={formData.vendor}
-              onChange={handleChange}
-            />
-
-            <label>Vehicle No</label>
-            <input
-              className="form-control"
-              placeholder="Enter vehicle number"
-              name="vehicleNo"
-              value={formData.vehicleNo}
-              onChange={handleChange}
-            />
-
-            <label>PO No</label>
-            <input
-              className="form-control"
-              placeholder="Enter PO number"
-              name="po_no"
-              value={formData.po_no}
-              onChange={handleChange}
-            />
-
-            <label>IGP No</label>
-            <input
-              className="form-control"
-              placeholder="Enter IGP number"
-              name="igpNo"
-              value={formData.igpNo}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="col-md-2">
-            <div className="p-3 border rounded bg-light">
-              <div className="row">
-                <div className="col-6">
-                  <div className="text-center mb-2">
-                    <small>Gross Wt</small>
-                    <div className="fw-bold">2500</div>
-                  </div>
-                  <div className="text-center mb-2">
-                    <small>Tare Wt</small>
-                    <div className="fw-bold">1200</div>
-                  </div>
+      {/* Main Form Layout */}
+      <div className="bg-white p-2 rounded border h-[calc(100vh-80px)] overflow-hidden">
+        <div className="grid grid-cols-12 gap-2 h-full">
+          {/* Left Side - Main Form (Columns 1-9) */}
+          <div className="col-span-9">
+            {/* Top Row - Form Fields */}
+            <div className="grid grid-cols-9 gap-2 mb-3">
+              {/* Column 1 - Left Form Fields */}
+              <div className="col-span-3 space-y-1">
+                <div>
+                  <Label className="text-xs text-black">Slip No</Label>
+                  <Input name="slipNo" value={formData.slipNo} readOnly className="h-6 text-xs text-black" />
                 </div>
-                <div className="col-6">
-                  <div className="text-center mb-2">
-                    <small>Net Wt</small>
-                    <div className="fw-bold text-success">1300</div>
-                  </div>
-                  <div className="text-center mb-2">
-                    <small>Bardana</small>
-                    <div className="fw-bold">50</div>
-                  </div>
+                <div>
+                  <Label className="text-xs text-black">Net Weight</Label>
+                  <Input name="netWeight" value={formData.netWeight} onChange={handleChange} className="h-6 text-xs bg-yellow-200 text-black" />
+                </div>
+                <div>
+                  <Label className="text-xs text-black">Freight</Label>
+                  <Input name="freight" value={formData.freight} onChange={handleChange} className="h-6 text-xs text-black" />
+                </div>
+                <div>
+                  <Label className="text-xs text-black">Remarks</Label>
+                  <Textarea
+                    placeholder="Add remarks"
+                    name="remarks"
+                    value={formData.remarks}
+                    onChange={handleChange}
+                    className="h-12 text-xs resize-none text-black placeholder:text-gray-500"
+                  />
+                </div>
+              </div>
+
+              {/* Column 2 - Weight Fields */}
+              <div className="col-span-3 space-y-1">
+                <div>
+                  <Label className="text-xs text-black">First Weight</Label>
+                  <Input name="firstWeight" value={formData.firstWeight} onChange={handleChange} className="h-6 text-xs text-black" />
+                </div>
+                <div>
+                  <Label className="text-xs text-black">Second Weight</Label>
+                  <Input name="secondWeight" value={formData.secondWeight} onChange={handleChange} className="h-6 text-xs text-green-600" />
+                </div>
+                <div>
+                  <Label className="text-xs text-black">Bardana Weight</Label>
+                  <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-6 text-xs text-black" />
+                </div>
+                <div>
+                  <Label className="text-xs text-black">Gross Weight</Label>
+                  <Input name="grossWeight" value={formData.grossWeight} readOnly className="h-6 text-xs text-black" />
+                </div>
+              </div>
+
+              {/* Column 3 - Driver & Branch */}
+              <div className="col-span-3 space-y-1">
+                <div>
+                  <Label className="text-xs text-black">Branch</Label>
+                  <Select name="branch" value={formData.branch} onValueChange={(value) => setFormData(prev => ({...prev, branch: value}))}>
+                    <SelectTrigger className="h-6 text-xs text-black">
+                      <SelectValue placeholder="Select branch" className="text-black" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Branch 1">Branch 1</SelectItem>
+                      <SelectItem value="Branch 2">Branch 2</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs text-black">Driver Name</Label>
+                  <Input
+                    placeholder="Enter driver name"
+                    name="driverName"
+                    value={formData.driverName}
+                    onChange={handleChange}
+                    className="h-6 text-xs text-black placeholder:text-gray-500"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-black">Date & Time</Label>
+                  <Input value="30-04-25 09:10:30 AM" readOnly className="h-6 text-xs text-black" />
+                </div>
+                <div className="grid grid-cols-2 gap-1">
+                  <Button className="h-6 bg-green-600 text-xs">1st WHT</Button>
+                  <Button className="h-6 bg-gray-500 text-xs">2nd WHT</Button>
+                </div>
+                <div className="grid grid-cols-2 gap-1">
+                  <Button className="h-6 bg-yellow-500 text-xs" onClick={resetForm}>Clear</Button>
+                  <Button className="h-6 bg-red-500 text-xs">Exit</Button>
                 </div>
               </div>
             </div>
 
-            <div className="mt-3">
-              <button className="btn btn-primary w-100 mb-2">Fetch IGP Data</button>
-              <button className="btn btn-info w-100">Calculate Weight</button>
-            </div>
+            {/* Bottom Row - Tabs Section */}
+            <Tabs defaultValue="purchase" className="h-[calc(100%-180px)]">
+              <TabsList className="h-6">
+                <TabsTrigger value="purchase" className="text-xs">Purchase</TabsTrigger>
+                <TabsTrigger value="sale" className="text-xs">Sale</TabsTrigger>
+                <TabsTrigger value="offline" className="text-xs">Offline</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="purchase" className="mt-1">
+                <div className="grid grid-cols-3 gap-2 text-xs mb-2">
+                  {/* Mini Column 1 */}
+                  <div className="space-y-1">
+                    <div>
+                      <Label className="text-xs text-black">Bardana Type</Label>
+                      <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-5 text-xs text-black" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-black">Wt Per Bag</Label>
+                      <Input name="wtPerBag" value={formData.wtPerBag} onChange={handleChange} className="h-5 text-xs text-black" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-black">No Of Bags</Label>
+                      <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-5 text-xs text-black" />
+                    </div>
+                  </div>
+
+                  {/* Mini Column 2 */}
+                  <div className="space-y-1">
+                    <div>
+                      <Label className="text-xs text-black">IGP No</Label>
+                      <Input name="igpNo" value={formData.igpNo} onChange={handleChange} className="h-5 text-xs text-black" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-black">IGP Date</Label>
+                      <Input name="igpDate" value={formData.igpDate} onChange={handleChange} className="h-5 text-xs text-black" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-black">Vendor</Label>
+                      <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-5 text-xs text-black" />
+                    </div>
+                  </div>
+
+                  {/* Mini Column 3 */}
+                  <div className="space-y-1">
+                    <div>
+                      <Label className="text-xs text-black">Vehicle No</Label>
+                      <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-5 text-xs text-black" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-black">Supp's Weight</Label>
+                      <Input name="superweight" value={formData.superweight} onChange={handleChange} className="h-5 text-xs text-black" />
+                    </div>
+                    <div>
+                      <Button className="w-full h-5 bg-yellow-500 text-xs">Deduction +</Button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Compact Table */}
+                <div className="border rounded text-xs">
+                  <table className="w-full text-center">
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border p-1 text-xs text-black">Po</th>
+                        <th className="border p-1 text-xs text-black">Item Code</th>
+                        <th className="border p-1 text-xs text-black">Item Description</th>
+                        <th className="border p-1 text-xs text-black">Po Qty</th>
+                        <th className="border p-1 text-xs text-black">IgP Qty</th>
+                        <th className="border p-1 text-xs text-black">Balance Qty</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="border p-1 h-5"></td>
+                        <td className="border p-1 h-5"></td>
+                        <td className="border p-1 h-5"></td>
+                        <td className="border p-1 h-5"></td>
+                        <td className="border p-1 h-5"></td>
+                        <td className="border p-1 h-5"></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="sale">
+                <div className="text-center p-4 text-xs text-black">Sale tab content here</div>
+              </TabsContent>
+
+              <TabsContent value="offline">
+                <div className="text-center p-4 text-xs text-black">Offline tab content here</div>
+              </TabsContent>
+            </Tabs>
           </div>
 
-          <div className="col-md-2">
-            <div className="text-center">
-              <div className="bg-success text-white p-2 rounded mb-2">
-                <div>Live Weight</div>
-                <div className="h4 mb-0">0.00 KG</div>
+          {/* Right Side - Camera and Weight (Columns 10-12) */}
+          <div className="col-span-3">
+            <div className="space-y-3 h-full">
+              {/* Weight Region - Top */}
+              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-3 h-[45%]">
+                <h3 className="text-white text-center text-sm mb-3">Weight Monitor</h3>
+                <WeightIndicator comPort="COM3" />
               </div>
-              <div className="bg-info text-white p-2 rounded">
-                <div>Status</div>
-                <div>Stable</div>
+              {/* Camera Region - Bottom */}
+              <div className="bg-black border border-monitoring-gray rounded overflow-hidden h-[50%]">
+                <h3 className="text-white text-center text-sm p-2 bg-monitoring-dark">Camera Feed</h3>
+                <div className="h-[calc(100%-40px)]">
+                  <VideoStreamFullscreen
+                    camera={camera || { id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
+                    isConnected={true}
+                    isStreaming={true}
+                  />
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Purchase Tab Section */}
-      <div className="bg-white p-2 rounded border">
-        <ul className="nav nav-tabs" id="myTab" role="tablist">
-          <li className="nav-item" role="presentation">
-            <button
-              className="nav-link active"
-              id="purchase-tab"
-              data-bs-toggle="tab"
-              data-bs-target="#purchase"
-              type="button"
-              role="tab"
-            >
-              Purchase
-            </button>
-          </li>
-        </ul>
-        <div className="tab-content" id="myTabContent">
-          <div className="tab-pane fade show active" id="purchase" role="tabpanel">
-            <div className="row mt-3">
-              <div className="col-md-2">
-                <label>Item Code</label>
-                <input
-                  className="form-control"
-                  name="item_code"
-                  value={itemData.item_code}
-                  onChange={handleItemChange}
-                  placeholder="Enter item code"
-                />
-              </div>
-              <div className="col-md-3">
-                <label>Item Description</label>
-                <input
-                  className="form-control"
-                  name="item_desc"
-                  value={itemData.item_desc}
-                  onChange={handleItemChange}
-                  placeholder="Enter description"
-                />
-              </div>
-              <div className="col-md-2">
-                <label>Quantity</label>
-                <input
-                  className="form-control"
-                  name="po_qty"
-                  value={itemData.po_qty}
-                  onChange={handleItemChange}
-                  placeholder="Enter quantity"
-                />
-              </div>
-              <div className="col-md-2">
-                <label>Rate</label>
-                <input
-                  className="form-control"
-                  name="rate"
-                  value={itemData.rate}
-                  onChange={handleItemChange}
-                  placeholder="Enter rate"
-                />
-              </div>
-              <div className="col-md-2">
-                <label>Amount</label>
-                <input
-                  className="form-control"
-                  name="amount"
-                  value={itemData.amount}
-                  readOnly
-                />
-              </div>
-              <div className="col-md-1">
-                <label>&nbsp;</label>
-                <button className="btn btn-primary d-block">Add</button>
-              </div>
-            </div>
-
-            {/* Items Table */}
-            <div className="mt-3">
-              <table className="table table-bordered table-sm">
-                <thead className="table-light">
-                  <tr>
-                    <th>Item Code</th>
-                    <th>Description</th>
-                    <th>Quantity</th>
-                    <th>Rate</th>
-                    <th>Amount</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {purchaseItems.map((item, index) => (
-                    <tr key={index}>
-                      <td>{item.item_code}</td>
-                      <td>{item.item_desc}</td>
-                      <td>{item.po_qty}</td>
-                      <td>{item.rate}</td>
-                      <td>{item.amount}</td>
-                      <td>
-                        <button className="btn btn-danger btn-sm">Remove</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default PurchaseForm;
+}

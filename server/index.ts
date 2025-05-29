@@ -3,21 +3,10 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
-import { Pool } from 'pg';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-
-// PostgreSQL connection pool setup
-export const pool = new Pool({
-  user: 'postgres',
-  host: 'localhost',
-  database: 'wb',
-  password: '@1122',
-  port: 5432,
-  ssl: false
-});
 
 // Weight Service Integration
 let currentWeight = '0.00';
