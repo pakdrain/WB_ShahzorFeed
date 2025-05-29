@@ -151,100 +151,118 @@ export default function PurchaseForm() {
         <div className="text-2xl text-green-600 font-bold">2500</div>
       </div>
 
-      {/* Main Form Layout */}
+      {/* Compact Main Form */}
       <div className="bg-white p-2 rounded border h-[calc(100vh-80px)] overflow-hidden">
         <div className="grid grid-cols-12 gap-2 h-full">
-          {/* Left Side - Main Form (Columns 1-9) */}
-          <div className="col-span-9">
-            {/* Top Row - Form Fields */}
-            <div className="grid grid-cols-9 gap-2 mb-3">
-              {/* Column 1 - Left Form Fields */}
-              <div className="col-span-3 space-y-1">
-                <div>
-                  <Label className="text-xs text-black">Slip No</Label>
-                  <Input name="slipNo" value={formData.slipNo} readOnly className="h-6 text-xs text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Net Weight</Label>
-                  <Input name="netWeight" value={formData.netWeight} onChange={handleChange} className="h-6 text-xs bg-yellow-200 text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Freight</Label>
-                  <Input name="freight" value={formData.freight} onChange={handleChange} className="h-6 text-xs text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Remarks</Label>
-                  <Textarea
-                    placeholder="Add remarks"
-                    name="remarks"
-                    value={formData.remarks}
-                    onChange={handleChange}
-                    className="h-12 text-xs resize-none text-black placeholder:text-gray-500"
-                  />
-                </div>
-              </div>
+          {/* Column 1 - Form Fields */}
+          <div className="col-span-2 space-y-1">
+            <div>
+              <Label className="text-xs text-black">Slip No</Label>
+              <Input name="slipNo" value={formData.slipNo} readOnly className="h-6 text-xs text-black" />
+            </div>
+            <div>
+              <Label className="text-xs text-black">Net Weight</Label>
+              <Input name="netWeight" value={formData.netWeight} onChange={handleChange} className="h-6 text-xs bg-yellow-200 text-black" />
+            </div>
+            <div>
+              <Label className="text-xs text-black">Freight</Label>
+              <Input name="freight" value={formData.freight} onChange={handleChange} className="h-6 text-xs text-black" />
+            </div>
+            <div>
+              <Label className="text-xs text-black">Remarks</Label>
+              <Textarea
+                placeholder="Add remarks"
+                name="remarks"
+                value={formData.remarks}
+                onChange={handleChange}
+                className="h-16 text-xs resize-none text-black placeholder:text-gray-500"
+              />
+            </div>
+          </div>
 
-              {/* Column 2 - Weight Fields */}
-              <div className="col-span-3 space-y-1">
-                <div>
-                  <Label className="text-xs text-black">First Weight</Label>
-                  <Input name="firstWeight" value={formData.firstWeight} onChange={handleChange} className="h-6 text-xs text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Second Weight</Label>
-                  <Input name="secondWeight" value={formData.secondWeight} onChange={handleChange} className="h-6 text-xs text-green-600" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Bardana Weight</Label>
-                  <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-6 text-xs text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Gross Weight</Label>
-                  <Input name="grossWeight" value={formData.grossWeight} readOnly className="h-6 text-xs text-black" />
-                </div>
-              </div>
+          {/* Column 2 - Weight Fields */}
+          <div className="col-span-2 space-y-1">
+            <div>
+              <Label className="text-xs text-black">First Weight</Label>
+              <Input name="firstWeight" value={formData.firstWeight} onChange={handleChange} className="h-6 text-xs text-black" />
+            </div>
+            <div>
+              <Label className="text-xs text-black">Second Weight</Label>
+              <Input name="secondWeight" value={formData.secondWeight} onChange={handleChange} className="h-6 text-xs text-green-600" />
+            </div>
+            <div>
+              <Label className="text-xs text-black">Bardana Weight</Label>
+              <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-6 text-xs text-black" />
+            </div>
+            <div>
+              <Label className="text-xs text-black">Gross Weight</Label>
+              <Input name="grossWeight" value={formData.grossWeight} readOnly className="h-6 text-xs text-black" />
+            </div>
+          </div>
 
-              {/* Column 3 - Driver & Branch */}
-              <div className="col-span-3 space-y-1">
-                <div>
-                  <Label className="text-xs text-black">Branch</Label>
-                  <Select name="branch" value={formData.branch} onValueChange={(value) => setFormData(prev => ({...prev, branch: value}))}>
-                    <SelectTrigger className="h-6 text-xs text-black">
-                      <SelectValue placeholder="Select branch" className="text-black" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Branch 1">Branch 1</SelectItem>
-                      <SelectItem value="Branch 2">Branch 2</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Driver Name</Label>
-                  <Input
-                    placeholder="Enter driver name"
-                    name="driverName"
-                    value={formData.driverName}
-                    onChange={handleChange}
-                    className="h-6 text-xs text-black placeholder:text-gray-500"
+          {/* Column 3 - Driver & Branch */}
+          <div className="col-span-2 space-y-1">
+            <div>
+              <Label className="text-xs text-black">Branch</Label>
+              <Select name="branch" value={formData.branch} onValueChange={(value) => setFormData(prev => ({...prev, branch: value}))}>
+                <SelectTrigger className="h-6 text-xs text-black">
+                  <SelectValue placeholder="Select branch" className="text-black" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Branch 1">Branch 1</SelectItem>
+                  <SelectItem value="Branch 2">Branch 2</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs text-black">Driver Name</Label>
+              <Input
+                placeholder="Enter driver name"
+                name="driverName"
+                value={formData.driverName}
+                onChange={handleChange}
+                className="h-6 text-xs text-black placeholder:text-gray-500"
+              />
+            </div>
+            <div>
+              <Label className="text-xs text-black">Date & Time</Label>
+              <Input value="30-04-25 09:10:30 AM" readOnly className="h-6 text-xs text-black" />
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              <Button className="h-6 bg-green-600 text-xs">1st WHT</Button>
+              <Button className="h-6 bg-gray-500 text-xs">2nd WHT</Button>
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              <Button className="h-6 bg-yellow-500 text-xs" onClick={resetForm}>Clear</Button>
+              <Button className="h-6 bg-red-500 text-xs">Exit</Button>
+            </div>
+          </div>
+
+          {/* Columns 4-6 - Camera and Weight in vertical stack */}
+          <div className="col-span-3">
+            <div className="space-y-2 h-full">
+              {/* Weight Region */}
+              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-2 h-1/2">
+                <h3 className="text-white text-center text-xs mb-2">Weight Monitor</h3>
+                <WeightIndicator comPort="COM3" />
+              </div>
+              {/* Camera Region */}
+              <div className="bg-black border border-monitoring-gray rounded overflow-hidden h-1/2">
+                <h3 className="text-white text-center text-xs p-1 bg-monitoring-dark">Camera Feed</h3>
+                <div className="h-[calc(100%-28px)]">
+                  <VideoStreamFullscreen
+                    camera={camera || { id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
+                    isConnected={true}
+                    isStreaming={true}
                   />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Date & Time</Label>
-                  <Input value="30-04-25 09:10:30 AM" readOnly className="h-6 text-xs text-black" />
-                </div>
-                <div className="grid grid-cols-2 gap-1">
-                  <Button className="h-6 bg-green-600 text-xs">1st WHT</Button>
-                  <Button className="h-6 bg-gray-500 text-xs">2nd WHT</Button>
-                </div>
-                <div className="grid grid-cols-2 gap-1">
-                  <Button className="h-6 bg-yellow-500 text-xs" onClick={resetForm}>Clear</Button>
-                  <Button className="h-6 bg-red-500 text-xs">Exit</Button>
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Bottom Row - Tabs Section */}
-            <Tabs defaultValue="purchase" className="h-[calc(100%-180px)]">
+          {/* Columns 7-12 - Tabs and Table */}
+          <div className="col-span-3">
+            <Tabs defaultValue="purchase" className="h-full">
               <TabsList className="h-6">
                 <TabsTrigger value="purchase" className="text-xs">Purchase</TabsTrigger>
                 <TabsTrigger value="sale" className="text-xs">Sale</TabsTrigger>
@@ -252,7 +270,7 @@ export default function PurchaseForm() {
               </TabsList>
 
               <TabsContent value="purchase" className="mt-1">
-                <div className="grid grid-cols-3 gap-2 text-xs mb-2">
+                <div className="grid grid-cols-3 gap-1 text-xs">
                   {/* Mini Column 1 */}
                   <div className="space-y-1">
                     <div>
@@ -302,7 +320,7 @@ export default function PurchaseForm() {
                 </div>
 
                 {/* Compact Table */}
-                <div className="border rounded text-xs">
+                <div className="border rounded mt-2 text-xs">
                   <table className="w-full text-center">
                     <thead className="bg-gray-100">
                       <tr>
@@ -316,12 +334,12 @@ export default function PurchaseForm() {
                     </thead>
                     <tbody>
                       <tr>
-                        <td className="border p-1 h-5"></td>
-                        <td className="border p-1 h-5"></td>
-                        <td className="border p-1 h-5"></td>
-                        <td className="border p-1 h-5"></td>
-                        <td className="border p-1 h-5"></td>
-                        <td className="border p-1 h-5"></td>
+                        <td className="border p-1 h-6"></td>
+                        <td className="border p-1 h-6"></td>
+                        <td className="border p-1 h-6"></td>
+                        <td className="border p-1 h-6"></td>
+                        <td className="border p-1 h-6"></td>
+                        <td className="border p-1 h-6"></td>
                       </tr>
                     </tbody>
                   </table>
@@ -336,28 +354,6 @@ export default function PurchaseForm() {
                 <div className="text-center p-4 text-xs text-black">Offline tab content here</div>
               </TabsContent>
             </Tabs>
-          </div>
-
-          {/* Right Side - Camera and Weight (Columns 10-12) */}
-          <div className="col-span-3">
-            <div className="space-y-3 h-full">
-              {/* Weight Region - Top */}
-              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-3 h-[45%]">
-                <h3 className="text-white text-center text-sm mb-3">Weight Monitor</h3>
-                <WeightIndicator comPort="COM3" />
-              </div>
-              {/* Camera Region - Bottom - Single Clean Region */}
-              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-3 h-[50%]">
-                <h3 className="text-white text-center text-sm mb-3">Camera Feed</h3>
-                <div className="bg-black rounded h-[calc(100%-60px)] overflow-hidden">
-                  <VideoStreamFullscreen
-                    camera={camera || { id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
-                    isConnected={true}
-                    isStreaming={true}
-                  />
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
