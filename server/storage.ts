@@ -312,11 +312,15 @@ export class DatabaseStorage implements IStorage {
 // Smart storage - use database when available, memory otherwise
 async function createSmartStorage(): Promise<IStorage> {
   try {
-    // Test database connection
-    await db.select().from(cameras).limit(1);
+    // Test database connection using raw SQL
+    const { pool } = await import('./db');
+    const client = await pool.connect();
+    await client.query('SELECT 1');
+    client.release();
     console.log('✅ Database connected - using PostgreSQL storage');
     return new DatabaseStorage();
   } catch (error) {
+    console.log('❌ Failed to connect to PostgreSQL:', (error as Error).message);
     console.log('ℹ️ Using in-memory storage (database not accessible from this environment)');
     return new MemStorage();
   }
