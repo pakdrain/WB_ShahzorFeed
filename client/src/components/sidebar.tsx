@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 const navigation = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'Purchase Form', href: '/purchase-form', icon: FileText },
+  { name: 'Purchase Online', href: '/purchase-online', icon: FileText },
   { name: 'Camera Settings', href: '/settings', icon: Settings },
   { name: 'Weighbridge Settings', href: '/weighbridge-settings', icon: Scale },
 ];
