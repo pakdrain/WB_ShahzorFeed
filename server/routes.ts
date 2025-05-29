@@ -13,11 +13,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const pool = new Pool({
     user: process.env.PGUSER || 'postgres',
     host: process.env.PGHOST || 'localhost',
-    database: process.env.PGDATABASE || 'WB',
+    database: process.env.PGDATABASE || 'wb',
     password: process.env.PGPASSWORD || '@1122',
     port: parseInt(process.env.PGPORT || '5432'),
     ssl: false,
   });
+
+  // Test database connection on startup
+  try {
+    const client = await pool.connect();
+    console.log('✅ PostgreSQL connected successfully');
+    client.release();
+  } catch (err) {
+    console.error('❌ PostgreSQL connection failed:', err);
+  }
 
   // Helper function to generate a unique WB_ID
   async function generateWBID() {
