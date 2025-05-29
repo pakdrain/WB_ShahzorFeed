@@ -400,22 +400,259 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // POST to insert purchase items
+  // POST to insert purchase items (detail table)
   app.post('/api/purchase-items', async (req, res) => {
     const itemData = req.body;
     console.log('Incoming purchase item data:', itemData);
 
     try {
-      // This would need a separate table for purchase items
-      // For now, return success message
-      res.json({ 
-        success: true, 
-        message: 'Purchase items functionality ready',
-        data: itemData 
-      });
+      // Destructure and prepare values for purchase items
+      const {
+        wb_item_p_id = null,
+        wb_id = null,
+        manual_dc_no = null,
+        do_id = null,
+        do_no = null,
+        customer_id = null,
+        customer_name = null,
+        vehicle_no = null,
+        do_date = null,
+        item_id = null,
+        item_code = null,
+        item_desc = null,
+        created_by = null,
+        creation_date = null,
+        last_updated_by = null,
+        last_updated_date = null,
+        po_id = null,
+        po_no = null,
+        po_qty = null,
+        igp_qty = null,
+        balance_qty = null,
+        bardana_type = null,
+        igp_no = null,
+        manual_igp_no = null,
+        igp_id = null,
+        vendor_id = null,
+        vendor_name = null,
+        no_of_bags = null,
+        weight_per_bags = null,
+        bardana_weight = null,
+        igp_date = null,
+        quality_deduction = null,
+        supplier_weight = null,
+        sup_weight_wthout_bardana = null,
+        net_supplier_weight = null,
+        bag_condition = null,
+        bardana_type_id = null,
+      } = itemData;
+
+      const query = `
+        INSERT INTO WB_WEIGHBRIDGE_ITEMS (
+          WB_ITEM_P_ID, WB_ID, MANUAL_DC_NO, DO_ID, DO_NO, CUSTOMER_ID,
+          CUSTOMER_NAME, VEHICLE_NO, DO_DATE, ITEM_ID, ITEM_CODE, ITEM_DESC,
+          CREATED_BY, CREATION_DATE, LAST_UPDATED_BY, LAST_UPDATED_DATE,
+          PO_ID, PO_NO, PO_QTY, IGP_QTY, BALANCE_QTY, BARDANA_TYPE,
+          IGP_NO, MANUAL_IGP_NO, IGP_ID, VENDOR_ID, VENDOR_NAME,
+          NO_OF_BAGS, WEIGHT_PER_BAGS, BARDANA_WEIGHT, IGP_DATE,
+          QUALITY_DEDUCTION, SUPPLIER_WEIGHT, SUP_WEIGHT_WTHOUT_BARDANA,
+          NET_SUPPLIER_WEIGHT, BAG_CONDITION, BARDANA_TYPE_ID
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6,
+          $7, $8, $9, $10, $11, $12,
+          $13, $14, $15, $16,
+          $17, $18, $19, $20, $21, $22,
+          $23, $24, $25, $26, $27,
+          $28, $29, $30, $31,
+          $32, $33, $34,
+          $35, $36, $37
+        )
+        RETURNING *;
+      `;
+
+      const values = [
+        wb_item_p_id,
+        wb_id,
+        manual_dc_no,
+        do_id,
+        do_no,
+        customer_id,
+        customer_name,
+        vehicle_no,
+        do_date,
+        item_id,
+        item_code,
+        item_desc,
+        created_by,
+        creation_date,
+        last_updated_by,
+        last_updated_date,
+        po_id,
+        po_no,
+        po_qty,
+        igp_qty,
+        balance_qty,
+        bardana_type,
+        igp_no,
+        manual_igp_no,
+        igp_id,
+        vendor_id,
+        vendor_name,
+        no_of_bags,
+        weight_per_bags,
+        bardana_weight,
+        igp_date,
+        quality_deduction,
+        supplier_weight,
+        sup_weight_wthout_bardana,
+        net_supplier_weight,
+        bag_condition,
+        bardana_type_id,
+      ];
+
+      const result = await pool.query(query, values);
+      res.json(result.rows[0]);
     } catch (err) {
       console.error('Error inserting purchase items:', err);
       res.status(500).json({ error: 'Insert error' });
+    }
+  });
+
+  // POST to save master and detail together
+  app.post('/api/purchases-with-items', async (req, res) => {
+    const { masterData, itemsData } = req.body;
+    console.log('Incoming master + items data:', { masterData, itemsData });
+
+    try {
+      // Start transaction
+      await pool.query('BEGIN');
+
+      // First, insert master record
+      const WB_ID = await generateWBID();
+      
+      const masterQuery = `
+        INSERT INTO WB_WEIGHBRIDGE (
+          WB_ID, SLIP_NO, SLIP_IN_TIME, FIRST_WEIGHT, SECOND_WEIGHT, NET_WEIGHT,
+          BARDANA_WEIGHT, GROSS_WEIGHT, FREIGHT, REMARKS, DRIVER_NAME, COMPANY_ID,
+          BRANCH_ID, ONLINE_ENTRY, OFFLINE_ENTRY, CREATED_BY, CREATION_DATE,
+          LAST_UPDATED_BY, LAST_UPDATED_DATE, MANUAL_DC_NO, ENTRY_TYPE,
+          SLIP_OUT_TIME, STATUS, SLIP_DATE
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+          $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
+        )
+        RETURNING *;
+      `;
+
+      const masterValues = [
+        WB_ID,
+        masterData.slip_no,
+        masterData.slip_in_time,
+        masterData.first_weight,
+        masterData.second_weight,
+        masterData.net_weight,
+        masterData.bardana_weight,
+        masterData.gross_weight,
+        masterData.freight,
+        masterData.remarks,
+        masterData.driver_name,
+        masterData.company_id,
+        masterData.branch_id,
+        masterData.online_entry,
+        masterData.offline_entry,
+        masterData.created_by,
+        masterData.creation_date,
+        masterData.last_updated_by,
+        masterData.last_updated_date,
+        masterData.manual_dc_no,
+        masterData.entry_type,
+        masterData.slip_out_time,
+        masterData.status,
+        masterData.slip_date,
+      ];
+
+      const masterResult = await pool.query(masterQuery, masterValues);
+
+      // Insert detail records with the generated WB_ID
+      const detailResults = [];
+      for (const item of itemsData) {
+        const detailQuery = `
+          INSERT INTO WB_WEIGHBRIDGE_ITEMS (
+            WB_ID, MANUAL_DC_NO, DO_ID, DO_NO, CUSTOMER_ID, CUSTOMER_NAME,
+            VEHICLE_NO, DO_DATE, ITEM_ID, ITEM_CODE, ITEM_DESC, CREATED_BY,
+            CREATION_DATE, LAST_UPDATED_BY, LAST_UPDATED_DATE, PO_ID, PO_NO,
+            PO_QTY, IGP_QTY, BALANCE_QTY, BARDANA_TYPE, IGP_NO, MANUAL_IGP_NO,
+            IGP_ID, VENDOR_ID, VENDOR_NAME, NO_OF_BAGS, WEIGHT_PER_BAGS,
+            BARDANA_WEIGHT, IGP_DATE, QUALITY_DEDUCTION, SUPPLIER_WEIGHT,
+            SUP_WEIGHT_WTHOUT_BARDANA, NET_SUPPLIER_WEIGHT, BAG_CONDITION, BARDANA_TYPE_ID
+          )
+          VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
+            $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23,
+            $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36
+          )
+          RETURNING *;
+        `;
+
+        const detailValues = [
+          WB_ID, // Use the generated WB_ID
+          item.manual_dc_no,
+          item.do_id,
+          item.do_no,
+          item.customer_id,
+          item.customer_name,
+          item.vehicle_no,
+          item.do_date,
+          item.item_id,
+          item.item_code,
+          item.item_desc,
+          item.created_by,
+          item.creation_date,
+          item.last_updated_by,
+          item.last_updated_date,
+          item.po_id,
+          item.po_no,
+          item.po_qty,
+          item.igp_qty,
+          item.balance_qty,
+          item.bardana_type,
+          item.igp_no,
+          item.manual_igp_no,
+          item.igp_id,
+          item.vendor_id,
+          item.vendor_name,
+          item.no_of_bags,
+          item.weight_per_bags,
+          item.bardana_weight,
+          item.igp_date,
+          item.quality_deduction,
+          item.supplier_weight,
+          item.sup_weight_wthout_bardana,
+          item.net_supplier_weight,
+          item.bag_condition,
+          item.bardana_type_id,
+        ];
+
+        const detailResult = await pool.query(detailQuery, detailValues);
+        detailResults.push(detailResult.rows[0]);
+      }
+
+      // Commit transaction
+      await pool.query('COMMIT');
+
+      res.json({
+        success: true,
+        master: masterResult.rows[0],
+        details: detailResults
+      });
+
+    } catch (err) {
+      // Rollback transaction on error
+      await pool.query('ROLLBACK');
+      console.error('Error saving master and detail records:', err);
+      res.status(500).json({ error: 'Transaction error' });
     }
   });
 

@@ -84,6 +84,7 @@ export default function PurchaseForm() {
   const [loading, setLoading] = useState(false);
   const [onlineMode, setOnlineMode] = useState(true);
   const [igpItems, setIgpItems] = useState([]);
+  const [itemsData, setItemsData] = useState([]);
 
   // Get camera data
   const { data: camera } = useQuery({
@@ -199,7 +200,106 @@ export default function PurchaseForm() {
 
   const resetForm = () => {
     setFormData(initialFormData);
+    setItemsData([]);
     toggleOnlineMode(true);
+  };
+
+  // Add current item data to the collection
+  const addItemToList = () => {
+    const currentItemData = {
+      manual_dc_no: formData.manualDcNo || null,
+      vehicle_no: formData.vehicleNo || null,
+      item_code: formData.itemCode || null,
+      item_desc: formData.itemDesc || null,
+      po_no: formData.poNo || null,
+      po_qty: formData.poQty ? parseFloat(formData.poQty) : null,
+      igp_qty: formData.igpQty ? parseFloat(formData.igpQty) : null,
+      balance_qty: formData.balanceQty ? parseFloat(formData.balanceQty) : null,
+      bardana_type: formData.bardanaType || null,
+      igp_no: formData.igpNo || null,
+      vendor_name: formData.vendorName || null,
+      no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags, 10) : null,
+      weight_per_bags: formData.weightPerBags ? parseFloat(formData.weightPerBags) : null,
+      bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
+      igp_date: formData.igpDate || null,
+      quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
+      supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
+      sup_weight_wthout_bardana: formData.supWeightWithoutBardana ? parseFloat(formData.supWeightWithoutBardana) : null,
+      net_supplier_weight: formData.netSupplierWeight ? parseFloat(formData.netSupplierWeight) : null,
+      bag_condition: formData.bagCondition || null,
+      bardana_type_id: formData.bardanaTypeId ? parseInt(formData.bardanaTypeId, 10) : null,
+      created_by: 1,
+      creation_date: new Date().toISOString(),
+      last_updated_by: 1,
+      last_updated_date: new Date().toISOString(),
+    };
+
+    setItemsData([...itemsData, currentItemData]);
+    alert('Item added to list successfully!');
+  };
+
+  // Save master and detail records together
+  const handleSaveAll = async () => {
+    setLoading(true);
+
+    const masterData = {
+      slip_no: formData.slipNo || null,
+      slip_in_time: formatISODate(formData.slipInTime),
+      first_weight: formData.firstWeight ? parseFloat(formData.firstWeight) : null,
+      second_weight: formData.secondWeight ? parseFloat(formData.secondWeight) : null,
+      net_weight: formData.netWeight ? parseFloat(formData.netWeight) : null,
+      bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
+      gross_weight: formData.grossWeight ? parseFloat(formData.grossWeight) : null,
+      freight: formData.freight ? parseFloat(formData.freight) : null,
+      remarks: formData.remarks || null,
+      driver_name: formData.driverName || null,
+      vendor: formData.vendor || null,
+      vehicle_no: formData.vehicleNo || null,
+      igp_no: formData.igpNo || null,
+      company_id: formData.companyId ? parseInt(formData.companyId, 10) : null,
+      branch_id: formData.branchId ? parseInt(formData.branchId, 10) : null,
+      online_entry: formData.onlineEntry || null,
+      offline_entry: formData.offlineEntry || null,
+      created_by: formData.createdBy ? parseInt(formData.createdBy, 10) : 1,
+      creation_date: formData.creationDate || new Date().toISOString(),
+      last_updated_by: formData.lastUpdatedBy ? parseInt(formData.lastUpdatedBy, 10) : 1,
+      last_updated_date: formData.lastUpdatedDate || new Date().toISOString(),
+      manual_dc_no: formData.manualDcNo || null,
+      entry_type: formData.entryType || 'PURCHASE',
+      slip_out_time: formatISODate(formData.slipOutTime),
+      status: formData.status || null,
+      slip_date: formData.slipDate || new Date().toISOString(),
+    };
+
+    const payload = {
+      masterData,
+      itemsData
+    };
+
+    try {
+      const response = await fetch('/api/purchases-with-items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      alert('Master and detail records saved successfully!');
+      console.log('Data saved:', data);
+      
+      resetForm();
+    } catch (err) {
+      alert('Failed to save data.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSave = async () => {
