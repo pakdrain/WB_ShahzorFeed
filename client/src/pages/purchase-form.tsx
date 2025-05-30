@@ -97,7 +97,7 @@ export default function PurchaseForm() {
     }
     try {
       const response = await fetch(
-        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data?igp_no=${formData.igpNo}`
+        `/api/igp/data?igp_no=${formData.igpNo}`
       );
 
       if (!response.ok) {
