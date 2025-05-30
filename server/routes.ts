@@ -10,6 +10,27 @@ import { Pool } from "pg";
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
+  // PostgreSQL connection setup
+  const pool = new Pool({
+    user: process.env.PGUSER || 'postgres',
+    host: process.env.PGHOST || 'localhost',
+    database: process.env.PGDATABASE || 'WB',
+    password: process.env.PGPASSWORD || '@1122',
+    port: parseInt(process.env.PGPORT || '5432'),
+    ssl: false,
+  });
+
+  // Helper function to generate a unique WB_ID
+  async function generateWBID() {
+    try {
+      const res = await pool.query('SELECT COALESCE(MAX(WB_ID), 0) + 1 AS new_id FROM WB_WEIGHBRIDGE');
+      return res.rows[0].new_id;
+    } catch (err) {
+      console.error('Error generating WB_ID:', err);
+      throw err;
+    }
+  }
+
   // Initialize WebSocket service
   streamService.initialize(httpServer);
   
@@ -252,6 +273,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Weight tare endpoint
   app.post('/api/weight/tare', (req, res) => {
     res.json({ success: true, message: 'Tare command sent' });
+  });
+
+  // Purchase API endpoints
+  app.get('/api/purchases', async (req, res) => {
+    try {
+      const result = await pool.query('SELECT * FROM WB_WEIGHBRIDGE ORDER BY WB_ID DESC');
+      res.json(result.rows);
+    } catch (err) {
+      console.error('Error fetching purchases:', err);
+      res.status(500).json({ error: 'Database error' });
+    }
+  });
+
+  // GET purchase by IGP No
+  app.get('/api/purchase-by-igp', async (req, res) => {
+    const { igpNo } = req.query;
+    if (!igpNo) {
+      return res.status(400).json({ error: 'igpNo query parameter is required' });
+    }
+
+    try {
+      const query = 'SELECT * FROM WB_WEIGHBRIDGE WHERE igp_no = $1';
+      const result = await pool.query(query, [igpNo]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'No data found for this IGP No' });
+      }
+      res.json(result.rows);
+    } catch (error) {
+      console.error('Error fetching data by IGP No:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // POST to insert a new purchase
+  app.post('/api/purchases', async (req, res) => {
+    const purchaseData = req.body;
+    console.log('Incoming purchase data:', purchaseData);
+
+    try {
+      const WB_ID = await generateWBID();
+
+      // Destructure and prepare values according to your schema
+      const {
+        slipNo: slip_no = null,
+        slipInTime: slip_in_time = null,
+        firstWeight: first_weight = null,
+        secondWeight: second_weight = null,
+        netWeight: net_weight = null,
+        bardanaWeight: bardana_weight = null,
+        grossWeight: gross_weight = null,
+        freight = null,
+        remarks = null,
+        driverName: driver_name = null,
+        vendor = null,
+        companyId: company_id = null,
+        branchId: branch_id = null,
+        onlineEntry: online_entry = null,
+        offlineEntry: offline_entry = null,
+        createdBy: created_by = null,
+        creationDate: creation_date = null,
+        lastUpdatedBy: last_updated_by = null,
+        lastUpdatedDate: last_updated_date = null,
+        manualDcNo: manual_dc_no = null,
+        entryType: entry_type = null,
+        slipOutTime: slip_out_time = null,
+        status = null,
+        slipDate: slip_date = null,
+        po_no = null,
+        igpNo: igp_no = null,
+        igpDate: igp_date = null,
+        vehicleNo: vehicle_no = null,
+        bardanaType: bardana_type = null,
+        noOfBags: no_of_bags = null,
+        weightPerBags: weight_per_bags = null,
+        qualityDeduction: quality_deduction = null,
+        supplierWeight: supplier_weight = null,
+        supWeightWithoutBardana: sup_weight_without_bardana = null,
+      } = purchaseData;
+
+      // Convert online/offline entries to string
+      const onlineEntryStr = online_entry !== null ? String(online_entry) : null;
+      const offlineEntryStr = offline_entry !== null ? String(offline_entry) : null;
+
+      const query = `
+        INSERT INTO WB_WEIGHBRIDGE (
+          WB_ID, SLIP_NO, SLIP_IN_TIME, FIRST_WEIGHT, SECOND_WEIGHT, NET_WEIGHT,
+          BARDANA_WEIGHT, GROSS_WEIGHT, FREIGHT, REMARKS, DRIVER_NAME, VENDOR, COMPANY_ID,
+          BRANCH_ID, ONLINE_ENTRY, OFFLINE_ENTRY, CREATED_BY, CREATION_DATE,
+          LAST_UPDATED_BY, LAST_UPDATED_DATE, MANUAL_DC_NO, ENTRY_TYPE,
+          SLIP_OUT_TIME, STATUS, SLIP_DATE, PO_NO, IGP_NO, IGP_DATE, VEHICLE_NO,
+          BARDANA_TYPE, NO_OF_BAGS, WEIGHT_PER_BAGS, QUALITY_DEDUCTION,
+          SUPPLIER_WEIGHT, SUP_WEIGHT_WITHOUT_BARDANA
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18,
+          $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35
+        )
+        RETURNING *;
+      `;
+
+      const values = [
+        WB_ID, slip_no, slip_in_time, first_weight, second_weight, net_weight,
+        bardana_weight, gross_weight, freight, remarks, driver_name, vendor, company_id,
+        branch_id, onlineEntryStr, offlineEntryStr, created_by, creation_date,
+        last_updated_by, last_updated_date, manual_dc_no, entry_type,
+        slip_out_time, status, slip_date, po_no, igp_no, igp_date, vehicle_no,
+        bardana_type, no_of_bags, weight_per_bags, quality_deduction,
+        supplier_weight, sup_weight_without_bardana
+      ];
+
+      const result = await pool.query(query, values);
+      res.json(result.rows[0]);
+    } catch (err) {
+      console.error('Error inserting purchase:', err);
+      res.status(500).json({ error: 'Insert error' });
+    }
   });
 
   return httpServer;

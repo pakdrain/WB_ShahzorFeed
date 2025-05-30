@@ -7,6 +7,7 @@ import Sidebar from "@/components/sidebar";
 import CameraMonitor from "@/pages/camera-monitor";
 import CameraSettings from "@/pages/camera-settings";
 import WeighbridgeSettings from "@/pages/weighbridge-settings";
+import PurchaseForm from "@/pages/purchase-form";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -15,6 +16,7 @@ function Router() {
       <Route path="/" component={CameraMonitor} />
       <Route path="/settings" component={CameraSettings} />
       <Route path="/weighbridge-settings" component={WeighbridgeSettings} />
+      <Route path="/purchase-form" component={PurchaseForm} />
       <Route component={NotFound} />
     </Switch>
   );
