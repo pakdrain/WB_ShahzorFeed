@@ -102,6 +102,8 @@ export default function PurchaseForm() {
     port: 554
   };
 
+  const cameraData = camera as any || defaultCamera;
+
   // Fetch existing purchases to generate next slip number
   const { data: purchases } = useQuery({
     queryKey: ['/api/purchases'],
@@ -283,7 +285,7 @@ export default function PurchaseForm() {
           <CardContent className="p-4">
             <h3 className="text-lg font-semibold mb-2 text-monitoring-blue">Live Camera Feed</h3>
             <VideoStreamFullscreen
-              camera={camera || defaultCamera}
+              camera={cameraData}
               isConnected={true}
               isStreaming={true}
             />

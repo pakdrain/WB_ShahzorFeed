@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { streamService } from "./stream-service";
 import { videoStreamService } from "./video-stream";
 import { z } from "zod";
-import { Pool } from "pg";
+import pkg from "pg";
+const { Pool } = pkg;
 
 
 export async function registerRoutes(app: Express): Promise<Server> {
