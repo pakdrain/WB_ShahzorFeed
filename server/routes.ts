@@ -413,16 +413,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('Incoming purchase item data:', itemData);
 
     try {
-      // This would need a separate table for purchase items
-      // For now, return success message
-      res.json({ 
-        success: true, 
-        message: 'Purchase items functionality ready',
-        data: itemData 
-      });
+      const {
+        wb_id,
+        baradana_type = null,
+        igp_no = null,
+        vehicle_no = null,
+        weight_per_bags = null,
+        igp_date = null,
+        supplier_weight = null,
+        quality_deduction = null,
+        no_of_bags = null,
+        vendor_name = null,
+        bag_condition = null,
+        po_no = null,
+        item_code = null,
+        item_desc = null,
+        po_qty = null,
+        igp_qty = null,
+        balance_qty = null
+      } = itemData;
+
+      const query = `
+        INSERT INTO wb_weighbridge_items_purchase (
+          wb_id, baradana_type, igp_no, vehicle_no, weight_per_bags, igp_date,
+          supplier_weight, quality_deduction, no_of_bags, vendor_name, bag_condition,
+          po_no, item_code, item_desc, po_qty, igp_qty, balance_qty
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+        )
+        RETURNING *;
+      `;
+
+      const values = [
+        wb_id,
+        baradana_type,
+        igp_no,
+        vehicle_no,
+        weight_per_bags ? parseFloat(weight_per_bags) : null,
+        igp_date,
+        supplier_weight ? parseFloat(supplier_weight) : null,
+        quality_deduction ? parseFloat(quality_deduction) : null,
+        no_of_bags ? parseFloat(no_of_bags) : null,
+        vendor_name,
+        bag_condition,
+        po_no,
+        item_code,
+        item_desc,
+        po_qty ? parseFloat(po_qty) : null,
+        igp_qty ? parseFloat(igp_qty) : null,
+        balance_qty ? parseFloat(balance_qty) : null
+      ];
+
+      const result = await pool.query(query, values);
+      console.log('Purchase items saved successfully:', result.rows[0]);
+      res.json(result.rows[0]);
     } catch (err) {
       console.error('Error inserting purchase items:', err);
-      res.status(500).json({ error: 'Insert error' });
+      res.status(500).json({ error: 'Insert error: ' + err.message });
     }
   });
 

@@ -202,7 +202,9 @@ export default function PurchaseForm() {
 
   const handleSave = async () => {
     setLoading(true);
-    const payload = {
+    
+    // Prepare master data payload
+    const masterPayload = {
       slip_no: formData.slipNo || null,
       slip_in_time: formatISODate(formData.slipInTime),
       first_weight: formData.firstWeight ? parseFloat(formData.firstWeight) : null,
@@ -229,22 +231,65 @@ export default function PurchaseForm() {
     };
 
     try {
-      const response = await fetch('/api/purchases', {
+      // Save master data first
+      const masterResponse = await fetch('/api/purchase', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(masterPayload),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!masterResponse.ok) {
+        throw new Error(`HTTP error! status: ${masterResponse.status}`);
       }
 
-      const data = await response.json();
-      alert('Purchase saved successfully!');
-      console.log('Saved:', data);
-      resetForm();
+      const masterData = await masterResponse.json();
+      console.log('Master purchase saved:', masterData);
+      
+      // Get the WB_ID from saved master data
+      const savedWbId = masterData.wb_id;
+      
+      // Prepare items data payload with correct field mapping
+      const itemsPayload = {
+        wb_id: savedWbId,
+        baradana_type: formData.baradanaType || null,
+        igp_no: formData.igpNo || null,
+        vehicle_no: formData.vehicleNo || null,
+        weight_per_bags: formData.weightPerBags ? parseFloat(formData.weightPerBags) : null,
+        igp_date: formData.igpDate || null,
+        supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
+        quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
+        no_of_bags: formData.noOfBags ? parseFloat(formData.noOfBags) : null,
+        vendor_name: formData.vendorName || null,
+        bag_condition: formData.bagCondition || null,
+        po_no: formData.po_no || null,
+        item_code: formData.itemCode || null,
+        item_desc: formData.itemDesc || null,
+        po_qty: formData.poQty ? parseFloat(formData.poQty) : null,
+        igp_qty: formData.igpQty ? parseFloat(formData.igpQty) : null,
+        balance_qty: formData.balanceQty ? parseFloat(formData.balanceQty) : null
+      };
+      
+      // Save items data
+      const itemsResponse = await fetch('/api/purchase-items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(itemsPayload),
+      });
+
+      if (itemsResponse.ok) {
+        const itemsData = await itemsResponse.json();
+        console.log('Items saved:', itemsData);
+        alert('Purchase and items data saved successfully!');
+        resetForm();
+      } else {
+        console.error('Failed to save items, but master data saved');
+        alert('Purchase saved, but items data failed to save.');
+      }
+      
     } catch (err) {
       alert('Failed to save purchase.');
       console.error(err);
