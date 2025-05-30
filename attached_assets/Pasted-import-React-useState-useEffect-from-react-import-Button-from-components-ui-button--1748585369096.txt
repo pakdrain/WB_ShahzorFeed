@@ -5,9 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
 import WeightIndicator from '@/components/weight-indicator';
 import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
 import { useQuery } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 export default function PurchaseForm() {
   const initialFormData = {
@@ -97,11 +99,11 @@ export default function PurchaseForm() {
     }
     try {
       const response = await fetch(
-        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data?igp_no=${formData.igpNo}`
+        http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data?igp_no=${formData.igpNo}
       );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(HTTP error! status: ${response.status});
       }
 
       const data = await response.json();
@@ -147,7 +149,7 @@ export default function PurchaseForm() {
     ];
 
     if (numericFields.includes(name)) {
-      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      if (value === '' || /^[0-9]\.?[0-9]$/.test(value)) {
         setFormData(prev => ({ ...prev, [name]: value }));
       }
     } else {
@@ -238,7 +240,7 @@ export default function PurchaseForm() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(HTTP error! status: ${response.status});
       }
 
       const data = await response.json();
@@ -305,7 +307,7 @@ export default function PurchaseForm() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(HTTP error! status: ${response.status});
       }
 
       const data = await response.json();
@@ -339,13 +341,13 @@ export default function PurchaseForm() {
         </div>
         <div className="flex gap-1">
           <Button 
-            className={`h-6 px-3 text-xs ${onlineMode ? 'bg-black' : 'bg-gray-400'}`}
+            className={h-6 px-3 text-xs ${onlineMode ? 'bg-black' : 'bg-gray-400'}}
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
           </Button>
           <Button 
-            className={`h-6 px-3 text-xs ${!onlineMode ? 'bg-black' : 'bg-gray-400'}`}
+            className={h-6 px-3 text-xs ${!onlineMode ? 'bg-black' : 'bg-gray-400'}}
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
