@@ -470,7 +470,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result.rows[0]);
     } catch (err) {
       console.error('Error inserting purchase items:', err);
-      res.status(500).json({ error: 'Insert error: ' + err.message });
+      console.error('Attempted values:', values);
+      console.error('Attempted query:', query);
+      res.status(500).json({ error: 'Insert error: ' + (err as Error).message });
     }
   });
 
