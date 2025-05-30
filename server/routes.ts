@@ -435,7 +435,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const query = `
         INSERT INTO wb_weighbridge_items_purchase (
-          wb_id, baradana_type, igp_no, vehicle_no, weight_per_bags, igp_date,
+          wb_id, bardana_type, igp_no, vehicle_no, weight_per_bags, igp_date,
           supplier_weight, quality_deduction, no_of_bags, vendor_name, bag_condition,
           po_no, item_code, item_desc, po_qty, igp_qty, balance_qty
         )
@@ -454,7 +454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         igp_date,
         supplier_weight ? parseFloat(supplier_weight) : null,
         quality_deduction ? parseFloat(quality_deduction) : null,
-        no_of_bags ? parseFloat(no_of_bags) : null,
+        no_of_bags ? parseInt(no_of_bags) : null,
         vendor_name,
         bag_condition,
         po_no,
