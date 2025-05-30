@@ -427,33 +427,33 @@ export default function PurchaseForm() {
           <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Purc</Button>
           <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Sale</Button>
           <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Edit</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">First</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Prev</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Next</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Last</Button>
-          <Button className="bg-green-600 hover:bg-green-700 h-6 px-3 text-xs" onClick={handleSave} disabled={loading}>
+          <Button className="h-6 px-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium">First</Button>
+          <Button className="h-6 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium">Prev</Button>
+          <Button className="h-6 px-2 text-xs bg-cyan-600 hover:bg-cyan-700 text-white font-medium">Next</Button>
+          <Button className="h-6 px-2 text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium">Last</Button>
+          <Button className="bg-green-600 hover:bg-green-700 h-6 px-3 text-xs text-white font-medium" onClick={handleSave} disabled={loading}>
             {loading ? 'Saving...' : 'Save'}
           </Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Print</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Rej</Button>
+          <Button className="h-6 px-2 text-xs bg-purple-600 hover:bg-purple-700 text-white font-medium">Print</Button>
+          <Button className="h-6 px-2 text-xs bg-orange-600 hover:bg-orange-700 text-white font-medium">Rej</Button>
         </div>
         <div className="flex gap-1 items-center">
+          {/* Weight Display - positioned on left side with bolder text */}
+          <div className="mr-2">
+            <WeightIndicator comPort="COM3" compact={true} />
+          </div>
           <Button 
-            className={`h-6 px-3 text-xs ${onlineMode ? 'bg-black' : 'bg-gray-400'}`}
+            className={`h-6 px-3 text-xs font-medium ${onlineMode ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
           </Button>
           <Button 
-            className={`h-6 px-3 text-xs ${!onlineMode ? 'bg-black' : 'bg-gray-400'}`}
+            className={`h-6 px-3 text-xs font-medium ${!onlineMode ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
           </Button>
-          {/* Weight Display like in the image */}
-          <div className="ml-2">
-            <WeightIndicator comPort="COM3" compact={true} />
-          </div>
         </div>
         <div className="text-2xl text-green-600 font-bold">2500</div>
       </div>
@@ -542,6 +542,20 @@ export default function PurchaseForm() {
                 <div className="grid grid-cols-2 gap-1">
                   <Button className="h-5 bg-yellow-500 text-xs" onClick={resetForm}>Clear</Button>
                   <Button className="h-5 bg-red-500 text-xs">Exit</Button>
+                </div>
+                
+                {/* Small Camera Feed below Clear/Exit buttons */}
+                <div className="mt-2">
+                  <div className="bg-black rounded border h-20 overflow-hidden">
+                    <div className="text-white text-center text-xs py-1 bg-gray-800">Camera</div>
+                    <div className="h-16">
+                      <VideoStreamFullscreen
+                        camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
+                        isConnected={true}
+                        isStreaming={true}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -671,19 +685,6 @@ export default function PurchaseForm() {
             </Tabs>
           </div>
 
-          {/* Right Side - Camera Feed (Columns 9-12) - Full height */}
-          <div className="col-span-4">
-            <div className="bg-monitoring-dark border border-monitoring-gray rounded p-2 h-full">
-              <h3 className="text-white text-center text-xs mb-2">Camera Feed</h3>
-              <div className="bg-black rounded h-[calc(100%-30px)] overflow-hidden">
-                <VideoStreamFullscreen
-                  camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
-                  isConnected={true}
-                  isStreaming={true}
-                />
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
