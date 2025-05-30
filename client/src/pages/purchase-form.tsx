@@ -250,11 +250,8 @@ export default function PurchaseForm() {
       // Get the WB_ID from saved master data
       const savedWbId = masterData.wb_id;
       
-      // Prepare items data payload - use first IGP item if available, otherwise form data
+      // Prepare items data payload using correct form field names
       const firstIgpItem = igpItems.length > 0 ? igpItems[0] : {};
-      
-      console.log('Form data for items:', formData);
-      console.log('IGP items available:', igpItems);
       
       const itemsPayload = {
         wb_id: savedWbId,
@@ -265,18 +262,16 @@ export default function PurchaseForm() {
         igp_date: formData.igpDate || null,
         supplier_weight: formData.superweight ? parseFloat(formData.superweight) : null,
         quality_deduction: formData.qualityDed ? parseFloat(formData.qualityDed) : null,
-        no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
-        vendor_name: firstIgpItem.vendor_name || formData.vendor || null,
+        no_of_bags: formData.bags ? parseInt(formData.bags) : null,
+        vendor_name: (firstIgpItem as any)?.vendor_name || formData.vendor || null,
         bag_condition: formData.bagCondition || null,
-        po_no: firstIgpItem.po_no || formData.po_no || null,
-        item_code: firstIgpItem.item_code || formData.itemCode || null,
-        item_desc: firstIgpItem.item_desc || formData.itemDesc || null,
-        po_qty: firstIgpItem.po_qty ? parseFloat(firstIgpItem.po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
-        igp_qty: firstIgpItem.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
-        balance_qty: firstIgpItem.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
+        po_no: (firstIgpItem as any)?.po_no || formData.po_no || null,
+        item_code: (firstIgpItem as any)?.item_code || formData.itemCode || null,
+        item_desc: (firstIgpItem as any)?.item_desc || formData.itemDesc || null,
+        po_qty: (firstIgpItem as any)?.po_qty ? parseFloat((firstIgpItem as any).po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
+        igp_qty: (firstIgpItem as any)?.igp_qty ? parseFloat((firstIgpItem as any).igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
+        balance_qty: (firstIgpItem as any)?.balance_qty ? parseFloat((firstIgpItem as any).balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
       };
-      
-      console.log('Items payload being sent:', itemsPayload);
       
       // Save items data
       const itemsResponse = await fetch('/api/purchase-items', {
