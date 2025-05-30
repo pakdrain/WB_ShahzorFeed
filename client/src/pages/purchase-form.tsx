@@ -424,9 +424,9 @@ export default function PurchaseForm() {
       {/* Compact Top Bar */}
       <div className="flex justify-between items-center bg-white border rounded p-1 mb-1">
         <div className="flex gap-1 text-xs">
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Purc</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Sale</Button>
-          <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Edit</Button>
+          <Button className="h-6 px-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium">Purc</Button>
+          <Button className="h-6 px-2 text-xs bg-rose-600 hover:bg-rose-700 text-white font-medium">Sale</Button>
+          <Button className="h-6 px-2 text-xs bg-amber-600 hover:bg-amber-700 text-white font-medium">Edit</Button>
           <Button className="h-6 px-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium">First</Button>
           <Button className="h-6 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium">Prev</Button>
           <Button className="h-6 px-2 text-xs bg-cyan-600 hover:bg-cyan-700 text-white font-medium">Next</Button>
