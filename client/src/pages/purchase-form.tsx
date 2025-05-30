@@ -290,8 +290,24 @@ export default function PurchaseForm() {
       if (itemsResponse.ok) {
         const itemsData = await itemsResponse.json();
         console.log('Items saved:', itemsData);
+        
+        // Increment slip number for next entry
+        const currentSlipNo = parseInt(formData.slipNo);
+        const nextSlipNo = (currentSlipNo + 1).toString();
+        
+        // Update form with next slip number and clear form fields
+        setFormData({
+          ...initialFormData,
+          slipNo: nextSlipNo,
+          slipInTime: new Date().toISOString().slice(0, 16),
+          onlineEntry: 'Yes',
+          entryType: 'PURCHASE',
+          creationDate: new Date().toISOString(),
+          lastUpdatedDate: new Date().toISOString(),
+          slipDate: new Date().toISOString()
+        });
+        
         alert('Purchase and items data saved successfully!');
-        resetForm();
       } else {
         console.error('Failed to save items, but master data saved');
         alert('Purchase saved, but items data failed to save.');
