@@ -11,23 +11,14 @@ const { Pool } = pkg;
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  // Add CORS middleware for external API calls
-  app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    
-    if (req.method === 'OPTIONS') {
-      res.sendStatus(200);
-    } else {
-      next();
-    }
-  });
-
   // PostgreSQL connection setup
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    user: process.env.PGUSER || 'postgres',
+    host: process.env.PGHOST || 'localhost',
+    database: process.env.PGDATABASE || 'WB',
+    password: process.env.PGPASSWORD || '@1122',
+    port: parseInt(process.env.PGPORT || '5432'),
+    ssl: false,
   });
 
   // Helper function to generate a unique WB_ID
@@ -283,32 +274,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Weight tare endpoint
   app.post('/api/weight/tare', (req, res) => {
     res.json({ success: true, message: 'Tare command sent' });
-  });
-
-  // IGP Data Proxy Endpoint
-  app.get('/api/igp/data', async (req, res) => {
-    const { igp_no } = req.query;
-    
-    if (!igp_no) {
-      return res.status(400).json({ error: 'igp_no query parameter is required' });
-    }
-
-    try {
-      const { default: fetch } = await import('node-fetch');
-      const response = await fetch(
-        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data?igp_no=${igp_no}`
-      );
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      res.json(data);
-    } catch (error: any) {
-      console.error('Error fetching IGP data:', error);
-      res.status(500).json({ error: 'Failed to fetch IGP data', message: error.message });
-    }
   });
 
   // Purchase API endpoints
