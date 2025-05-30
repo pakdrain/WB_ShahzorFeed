@@ -9,7 +9,12 @@ interface WeightIndicatorProps {
   comPort?: string;
 }
 
-export default function WeightIndicator({ comPort = 'COM3' }: WeightIndicatorProps) {
+interface CompactWeightIndicatorProps {
+  comPort?: string;
+  compact?: boolean;
+}
+
+export default function WeightIndicator({ comPort = 'COM3', compact = false }: CompactWeightIndicatorProps) {
   const [weight, setWeight] = useState<string>('0.00');
   const [isConnected, setIsConnected] = useState(false);
   const [unit, setUnit] = useState('kg');
@@ -96,6 +101,23 @@ export default function WeightIndicator({ comPort = 'COM3' }: WeightIndicatorPro
     return num.toFixed(2);
   };
 
+  // Compact version for top bar
+  if (compact) {
+    return (
+      <div className="flex items-center bg-gradient-to-r from-orange-500 to-red-600 rounded px-3 py-1 text-white text-sm font-mono border border-gray-300 shadow-sm">
+        <Scale className="w-3 h-3 mr-1" />
+        <span className="font-bold">{formatWeight(weight)}</span>
+        <span className="ml-1 text-xs">{unit.toUpperCase()}</span>
+        {isConnected ? (
+          <Wifi className="w-3 h-3 ml-2 text-green-300" />
+        ) : (
+          <WifiOff className="w-3 h-3 ml-2 text-red-300" />
+        )}
+      </div>
+    );
+  }
+
+  // Full version for main display
   return (
     <div className="text-center space-y-8">
       {/* Clean Weight Display - Only essential elements */}

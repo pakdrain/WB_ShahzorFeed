@@ -437,7 +437,7 @@ export default function PurchaseForm() {
           <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Print</Button>
           <Button variant="outline" size="sm" className="h-6 px-2 text-xs">Rej</Button>
         </div>
-        <div className="flex gap-1">
+        <div className="flex gap-1 items-center">
           <Button 
             className={`h-6 px-3 text-xs ${onlineMode ? 'bg-black' : 'bg-gray-400'}`}
             onClick={() => toggleOnlineMode(true)}
@@ -450,6 +450,10 @@ export default function PurchaseForm() {
           >
             OFFLINE
           </Button>
+          {/* Weight Display like in the image */}
+          <div className="ml-2">
+            <WeightIndicator comPort="COM3" compact={true} />
+          </div>
         </div>
         <div className="text-2xl text-green-600 font-bold">2500</div>
       </div>
@@ -638,18 +642,18 @@ export default function PurchaseForm() {
                       {igpItems.length > 0 ? (
                         igpItems.map((item: any, index: number) => (
                           <tr key={index}>
-                            <td className="border p-1 h-4 text-xs">{item.po_no || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.item_code || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.item_desc || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.po_qty || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.igp_qty || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.balance_qty || ''}</td>
-                            <td className="border p-1 h-4 text-xs">{item.vendor_name || ''}</td>
+                            <td className="border p-1 h-4 text-xs text-black">{item.po_no || ''}</td>
+                            <td className="border p-1 h-4 text-xs text-black">{item.item_code || ''}</td>
+                            <td className="border p-1 h-4 text-xs text-black">{item.item_desc || ''}</td>
+                            <td className="border p-1 h-4 text-xs text-black">{item.po_qty || ''}</td>
+                            <td className="border p-1 h-4 text-xs text-black">{item.igp_qty || ''}</td>
+                            <td className="border p-1 h-4 text-xs text-black">{item.balance_qty || ''}</td>
+                            <td className="border p-1 h-4 text-xs text-black">{item.vendor_name || ''}</td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td className="border p-1 h-4 text-xs" colSpan={7}>No IGP data available</td>
+                          <td className="border p-1 h-4 text-xs text-black" colSpan={7}>No IGP data available</td>
                         </tr>
                       )}
                     </tbody>
@@ -667,27 +671,16 @@ export default function PurchaseForm() {
             </Tabs>
           </div>
 
-          {/* Right Side - Camera and Weight (Columns 9-12) - 30x30 regions */}
+          {/* Right Side - Camera Feed (Columns 9-12) - Full height */}
           <div className="col-span-4">
-            <div className="grid grid-rows-2 gap-1 h-full">
-              {/* Weight Region - Top 30% */}
-              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-2">
-                <h3 className="text-white text-center text-xs mb-2">Weight Monitor</h3>
-                <div className="h-[calc(100%-30px)]">
-                  <WeightIndicator comPort="COM3" />
-                </div>
-              </div>
-              
-              {/* Camera Region - Bottom 30% */}
-              <div className="bg-monitoring-dark border border-monitoring-gray rounded p-2">
-                <h3 className="text-white text-center text-xs mb-2">Camera Feed</h3>
-                <div className="bg-black rounded h-[calc(100%-30px)] overflow-hidden">
-                  <VideoStreamFullscreen
-                    camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
-                    isConnected={true}
-                    isStreaming={true}
-                  />
-                </div>
+            <div className="bg-monitoring-dark border border-monitoring-gray rounded p-2 h-full">
+              <h3 className="text-white text-center text-xs mb-2">Camera Feed</h3>
+              <div className="bg-black rounded h-[calc(100%-30px)] overflow-hidden">
+                <VideoStreamFullscreen
+                  camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
+                  isConnected={true}
+                  isStreaming={true}
+                />
               </div>
             </div>
           </div>
