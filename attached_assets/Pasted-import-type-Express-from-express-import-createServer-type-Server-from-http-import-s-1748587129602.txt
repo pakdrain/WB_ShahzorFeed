@@ -4,8 +4,7 @@ import { storage } from "./storage";
 import { streamService } from "./stream-service";
 import { videoStreamService } from "./video-stream";
 import { z } from "zod";
-import pkg from "pg";
-const { Pool } = pkg;
+import { Pool } from "pg";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -19,15 +18,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     port: parseInt(process.env.PGPORT || '5432'),
     ssl: false,
   });
-
-  // Test database connection and log status
-  try {
-    const client = await pool.connect();
-    console.log('✅ PostgreSQL database connected successfully');
-    client.release();
-  } catch (err) {
-    console.error('❌ Failed to connect to PostgreSQL database:', err);
-  }
 
   // Helper function to generate a unique WB_ID
   async function generateWBID() {
@@ -106,7 +96,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const channel = updates.channel || 1;
         const subtype = updates.subtype || 0;
         
-        updates.rtspUrl = `rtsp://${username}:${password}@${ip}:${port}/cam/realmonitor?channel=${channel}&subtype=${subtype}`;
+        updates.rtspUrl = rtsp://${username}:${password}@${ip}:${port}/cam/realmonitor?channel=${channel}&subtype=${subtype};
       }
 
       const updatedCamera = await storage.updateCamera(id, updates);
@@ -263,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         success: true, 
-        message: `Connected to ${currentComPort}`,
+        message: Connected to ${currentComPort},
         port: currentComPort,
         baudRate: currentBaudRate,
         connected: true
@@ -272,7 +262,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       res.status(500).json({ 
         success: false, 
-        message: `Failed to connect to ${currentComPort}: ${error.message}`,
+        message: Failed to connect to ${currentComPort}: ${error.message},
         port: currentComPort,
         connected: false
       });
@@ -403,7 +393,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
 
       const result = await pool.query(query, values);
-      console.log('Purchase saved successfully:', result.rows[0]);
       res.json(result.rows[0]);
     } catch (err) {
       console.error('Error inserting purchase:', err);
