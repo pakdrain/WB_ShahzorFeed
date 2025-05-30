@@ -232,7 +232,7 @@ export default function PurchaseForm() {
 
     try {
       // Save master data first
-      const masterResponse = await fetch('/api/purchase', {
+      const masterResponse = await fetch('/api/purchases', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
