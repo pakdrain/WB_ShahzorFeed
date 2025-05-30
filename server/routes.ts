@@ -28,7 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Helper function to generate a unique WB_ID
   async function generateWBID() {
     try {
-      const res = await pool.query('SELECT COALESCE(MAX(WB_ID), 0) + 1 AS new_id FROM WB_WEIGHBRIDGE');
+      const res = await pool.query('SELECT COALESCE(MAX(wb_id), 0) + 1 AS new_id FROM wb_weighbridge');
       return res.rows[0].new_id;
     } catch (err) {
       console.error('Error generating WB_ID:', err);
@@ -290,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     try {
-      const query = 'SELECT * FROM WB_WEIGHBRIDGE WHERE igp_no = $1';
+      const query = 'SELECT * FROM wb_weighbridge WHERE igp_no = $1';
       const result = await pool.query(query, [igpNo]);
 
       if (result.rows.length === 0) {
@@ -306,7 +306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET all purchases
   app.get('/api/purchases', async (req, res) => {
     try {
-      const result = await pool.query('SELECT * FROM WB_WEIGHBRIDGE ORDER BY WB_ID DESC');
+      const result = await pool.query('SELECT * FROM wb_weighbridge ORDER BY wb_id DESC');
       res.json(result.rows);
     } catch (err) {
       console.error('Error fetching purchases:', err);
@@ -354,12 +354,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const offlineEntryStr = offline_entry !== null ? String(offline_entry) : null;
 
       const query = `
-        INSERT INTO WB_WEIGHBRIDGE (
-          WB_ID, SLIP_NO, SLIP_IN_TIME, FIRST_WEIGHT, SECOND_WEIGHT, NET_WEIGHT,
-          BARDANA_WEIGHT, GROSS_WEIGHT, FREIGHT, REMARKS, DRIVER_NAME, COMPANY_ID,
-          BRANCH_ID, ONLINE_ENTRY, OFFLINE_ENTRY, CREATED_BY, CREATION_DATE,
-          LAST_UPDATED_BY, LAST_UPDATED_DATE, MANUAL_DC_NO, ENTRY_TYPE,
-          SLIP_OUT_TIME, STATUS, SLIP_DATE
+        INSERT INTO wb_weighbridge (
+          wb_id, slip_no, slip_in_time, first_weight, second_weight, net_weight,
+          bardana_weight, gross_weight, freight, remarks, driver_name, company_id,
+          branch_id, online_entry, offline_entry, created_by, creation_date,
+          last_updated_by, last_updated_date, manual_dc_no, entry_type,
+          slip_out_time, status, slip_date
         )
         VALUES (
           $1, $2, $3, $4, $5, $6,
