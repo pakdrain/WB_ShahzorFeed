@@ -264,7 +264,7 @@ export default function PurchaseForm() {
         weight_per_bags: formData.wtPerBag ? parseFloat(formData.wtPerBag) : null,
         igp_date: formData.igpDate || null,
         supplier_weight: formData.superweight ? parseFloat(formData.superweight) : null,
-        quality_deduction: formData.qualityDed ? parseFloat(formData.qualityDed) : null,
+        quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
         no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
         vendor_name: firstIgpItem.vendor_name || formData.vendor || null,
         bag_condition: formData.bagCondition || null,

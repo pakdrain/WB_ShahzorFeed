@@ -1,7 +1,9 @@
-Table: wb_weighbridge_items_purchase (in my local database table name)
+Table: wb_weighbridge_items_purchase (in my local database table name)web_id(foreign key)
+web_item_p_id (maximum of the wb_weighbridge_items_purchase  use as slip_no )
 
 
 column name in your frontend UI
+
 
 
 Bardana Type
