@@ -544,17 +544,14 @@ export default function PurchaseForm() {
                   <Button className="h-5 bg-red-500 text-xs">Exit</Button>
                 </div>
                 
-                {/* Small Camera Feed below Clear/Exit buttons */}
+                {/* Compact Camera Feed below Clear/Exit buttons */}
                 <div className="mt-2">
-                  <div className="bg-black rounded border h-20 overflow-hidden">
-                    <div className="text-white text-center text-xs py-1 bg-gray-800">Camera</div>
-                    <div className="h-16">
-                      <VideoStreamFullscreen
-                        camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
-                        isConnected={true}
-                        isStreaming={true}
-                      />
-                    </div>
+                  <div className="bg-black rounded h-16 overflow-hidden border">
+                    <VideoStreamFullscreen
+                      camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
+                      isConnected={true}
+                      isStreaming={true}
+                    />
                   </div>
                 </div>
               </div>
