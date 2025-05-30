@@ -301,10 +301,20 @@ export default function PurchaseForm() {
   };
 
   const handleSaveItems = async () => {
+    // Check if we have a saved master record
+    if (!masterData?.wb_id) {
+      toast({
+        title: "Error",
+        description: "Please save the main form first before saving items",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     const payload = {
       wb_item_p_id: formData.wbItemPId ? parseInt(formData.wbItemPId, 10) : null,
-      wb_id: formData.wbId ? parseInt(formData.wbId, 10) : null,
+      wb_id: masterData.wb_id, // Use wb_id from saved master record
       manual_dc_no: formData.manualDcNo || null,
       do_id: formData.doId ? parseInt(formData.doId, 10) : null,
       do_no: formData.doNo || null,
