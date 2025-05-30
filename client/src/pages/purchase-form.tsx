@@ -285,8 +285,16 @@ export default function PurchaseForm() {
       if (itemsResponse.ok) {
         const itemsData = await itemsResponse.json();
         console.log('Items saved:', itemsData);
-        alert('Purchase and items data saved successfully!');
-        resetForm();
+        // Update local state with saved master data
+        setMasterData(masterData);
+        
+        toast({
+          title: "Success",
+          description: "Purchase and items data saved successfully",
+        });
+        
+        // Refresh data
+        queryClient.invalidateQueries({ queryKey: ['/api/purchases'] });
       } else {
         console.error('Failed to save items, but master data saved');
         alert('Purchase saved, but items data failed to save.');
