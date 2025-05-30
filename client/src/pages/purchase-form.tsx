@@ -250,8 +250,11 @@ export default function PurchaseForm() {
       // Get the WB_ID from saved master data
       const savedWbId = masterData.wb_id;
       
-      // Prepare items data payload using correct form field names
+      // Prepare items data payload - use first IGP item if available, otherwise form data
       const firstIgpItem = igpItems.length > 0 ? igpItems[0] : {};
+      
+      console.log('Form data for items:', formData);
+      console.log('IGP items available:', igpItems);
       
       const itemsPayload = {
         wb_id: savedWbId,
@@ -261,17 +264,19 @@ export default function PurchaseForm() {
         weight_per_bags: formData.wtPerBag ? parseFloat(formData.wtPerBag) : null,
         igp_date: formData.igpDate || null,
         supplier_weight: formData.superweight ? parseFloat(formData.superweight) : null,
-        quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
+        quality_deduction: formData.qualityDed ? parseFloat(formData.qualityDed) : null,
         no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
-        vendor_name: (firstIgpItem as any)?.vendor_name || formData.vendor || null,
+        vendor_name: firstIgpItem.vendor_name || formData.vendor || null,
         bag_condition: formData.bagCondition || null,
-        po_no: (firstIgpItem as any)?.po_no || formData.po_no || null,
-        item_code: (firstIgpItem as any)?.item_code || formData.itemCode || null,
-        item_desc: (firstIgpItem as any)?.item_desc || formData.itemDesc || null,
-        po_qty: (firstIgpItem as any)?.po_qty ? parseFloat((firstIgpItem as any).po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
-        igp_qty: (firstIgpItem as any)?.igp_qty ? parseFloat((firstIgpItem as any).igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
-        balance_qty: (firstIgpItem as any)?.balance_qty ? parseFloat((firstIgpItem as any).balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
+        po_no: firstIgpItem.po_no || formData.po_no || null,
+        item_code: firstIgpItem.item_code || formData.itemCode || null,
+        item_desc: firstIgpItem.item_desc || formData.itemDesc || null,
+        po_qty: firstIgpItem.po_qty ? parseFloat(firstIgpItem.po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
+        igp_qty: firstIgpItem.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
+        balance_qty: firstIgpItem.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
       };
+      
+      console.log('Items payload being sent:', itemsPayload);
       
       // Save items data
       const itemsResponse = await fetch('/api/purchase-items', {
@@ -285,16 +290,8 @@ export default function PurchaseForm() {
       if (itemsResponse.ok) {
         const itemsData = await itemsResponse.json();
         console.log('Items saved:', itemsData);
-        // Update local state with saved master data
-        setMasterData(masterData);
-        
-        toast({
-          title: "Success",
-          description: "Purchase and items data saved successfully",
-        });
-        
-        // Refresh data
-        queryClient.invalidateQueries({ queryKey: ['/api/purchases'] });
+        alert('Purchase and items data saved successfully!');
+        resetForm();
       } else {
         console.error('Failed to save items, but master data saved');
         alert('Purchase saved, but items data failed to save.');
@@ -309,20 +306,10 @@ export default function PurchaseForm() {
   };
 
   const handleSaveItems = async () => {
-    // Check if we have a saved master record
-    if (!masterData?.wb_id) {
-      toast({
-        title: "Error",
-        description: "Please save the main form first before saving items",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
     const payload = {
       wb_item_p_id: formData.wbItemPId ? parseInt(formData.wbItemPId, 10) : null,
-      wb_id: masterData.wb_id, // Use wb_id from saved master record
+      wb_id: formData.wbId ? parseInt(formData.wbId, 10) : null,
       manual_dc_no: formData.manualDcNo || null,
       do_id: formData.doId ? parseInt(formData.doId, 10) : null,
       do_no: formData.doNo || null,
