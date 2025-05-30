@@ -252,9 +252,13 @@ export default function PurchaseForm() {
       
       // Prepare items data payload - use first IGP item if available, otherwise form data
       const firstIgpItem = igpItems.length > 0 ? igpItems[0] : {};
+      
+      console.log('Form data for items:', formData);
+      console.log('IGP items available:', igpItems);
+      
       const itemsPayload = {
         wb_id: savedWbId,
-        baradana_type: formData.baradanaType || null,
+        baradana_type: formData.bardanaType || formData.baradanaType || null,
         igp_no: formData.igpNo || null,
         vehicle_no: formData.vehicleNo || null,
         weight_per_bags: formData.weightPerBags ? parseFloat(formData.weightPerBags) : null,
@@ -271,6 +275,8 @@ export default function PurchaseForm() {
         igp_qty: firstIgpItem.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
         balance_qty: firstIgpItem.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
       };
+      
+      console.log('Items payload being sent:', itemsPayload);
       
       // Save items data
       const itemsResponse = await fetch('/api/purchase-items', {
