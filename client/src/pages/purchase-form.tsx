@@ -200,6 +200,38 @@ export default function PurchaseForm() {
     toggleOnlineMode(true);
   };
 
+  const captureFirstWeight = async () => {
+    try {
+      const response = await fetch('/api/weight/data');
+      const weightData = await response.json();
+      
+      // Update the firstWeight field with current weight reading
+      setFormData(prev => ({
+        ...prev,
+        firstWeight: weightData.weight
+      }));
+    } catch (error) {
+      console.error('Error fetching weight data:', error);
+      alert('Failed to capture weight reading');
+    }
+  };
+
+  const captureSecondWeight = async () => {
+    try {
+      const response = await fetch('/api/weight/data');
+      const weightData = await response.json();
+      
+      // Update the secondWeight field with current weight reading
+      setFormData(prev => ({
+        ...prev,
+        secondWeight: weightData.weight
+      }));
+    } catch (error) {
+      console.error('Error fetching weight data:', error);
+      alert('Failed to capture weight reading');
+    }
+  };
+
   const handleSave = async () => {
     setLoading(true);
     
@@ -500,8 +532,8 @@ export default function PurchaseForm() {
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-1">
-                  <Button className="h-5 bg-green-600 text-xs">1st WHT</Button>
-                  <Button className="h-5 bg-gray-500 text-xs">2nd WHT</Button>
+                  <Button className="h-5 bg-green-600 text-xs" onClick={captureFirstWeight}>1st WHT</Button>
+                  <Button className="h-5 bg-gray-500 text-xs" onClick={captureSecondWeight}>2nd WHT</Button>
                 </div>
                 <div className="grid grid-cols-2 gap-1">
                   <Button className="h-5 bg-yellow-500 text-xs" onClick={resetForm}>Clear</Button>
