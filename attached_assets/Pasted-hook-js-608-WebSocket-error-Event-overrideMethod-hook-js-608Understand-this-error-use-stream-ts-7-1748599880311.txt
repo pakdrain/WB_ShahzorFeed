@@ -1,0 +1,78 @@
+hook.js:608 WebSocket error: Event
+overrideMethod @ hook.js:608Understand this error
+use-stream.ts:77 WebSocket disconnected: 1006 
+api/weight/connect:1 
+            
+            
+           Failed to load resource: net::ERR_CONNECTION_REFUSEDUnderstand this error
+weight-indicator.tsx:40 Serial service not available, using fallback
+api/weight/connect:1 
+            
+            
+           Failed to load resource: net::ERR_CONNECTION_REFUSEDUnderstand this error
+weight-indicator.tsx:40 Serial service not available, using fallback
+client:536 WebSocket connection to 'ws://localhost:5000/?token=Z0u1P9zUkPv6' failed: 
+setupWebSocket @ client:536Understand this error
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'ws://localhost:undefined/?token=Z0u1P9zUkPv6' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)Understand this error
+api/purchases:1 
+            
+            
+           Failed to load resource: net::ERR_CONNECTION_REFUSEDUnderstand this error
+hook.js:608 Error fetching purchases: TypeError: Failed to fetch
+    at purchase-form.tsx:169:5
+    at commitHookEffectListMount (chunk-WERSD76P.js?v=d516535a:16915:34)
+    at commitPassiveMountOnFiber (chunk-WERSD76P.js?v=d516535a:18156:19)
+    at commitPassiveMountEffects_complete (chunk-WERSD76P.js?v=d516535a:18129:17)
+    at commitPassiveMountEffects_begin (chunk-WERSD76P.js?v=d516535a:18119:15)
+    at commitPassiveMountEffects (chunk-WERSD76P.js?v=d516535a:18109:11)
+    at flushPassiveEffectsImpl (chunk-WERSD76P.js?v=d516535a:19490:11)
+    at flushPassiveEffects (chunk-WERSD76P.js?v=d516535a:19447:22)
+    at commitRootImpl (chunk-WERSD76P.js?v=d516535a:19416:13)
+    at commitRoot (chunk-WERSD76P.js?v=d516535a:19277:13)
+overrideMethod @ hook.js:608Understand this error
+mjpeg:1 
+            
+            
+           Failed to load resource: net::ERR_CONNECTION_REFUSEDUnderstand this error
+hook.js:608 MJPEG stream error: SyntheticBaseEvent
+overrideMethod @ hook.js:608Understand this error
+use-stream.ts:47 WebSocket connection to 'ws://localhost:5000/ws/stream' failed: 
+(anonymous) @ use-stream.ts:47Understand this error
+hook.js:608 WebSocket error: Event
+overrideMethod @ hook.js:608Understand this error
+use-stream.ts:77 WebSocket disconnected: 1006 
+api/purchases:1 
+            
+            
+           Failed to load resource: net::ERR_CONNECTION_REFUSEDUnderstand this error
+hook.js:608 TypeError: Failed to fetch
+    at handleSave (purchase-form.tsx:235:36)
+    at HTMLUnknownElement.callCallback2 (chunk-WERSD76P.js?v=d516535a:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-WERSD76P.js?v=d516535a:3699:24)
+    at invokeGuardedCallback (chunk-WERSD76P.js?v=d516535a:3733:39)
+    at invokeGuardedCallbackAndCatchFirstError (chunk-WERSD76P.js?v=d516535a:3736:33)
+    at executeDispatch (chunk-WERSD76P.js?v=d516535a:7014:11)
+    at processDispatchQueueItemsInOrder (chunk-WERSD76P.js?v=d516535a:7034:15)
+    at processDispatchQueue (chunk-WERSD76P.js?v=d516535a:7043:13)
+    at dispatchEventsForPlugins (chunk-WERSD76P.js?v=d516535a:7051:11)
+    at chunk-WERSD76P.js?v=d516535a:7174:20
+overrideMethod @ hook.js:608Understand this error
+use-stream.ts:47 WebSocket connection to 'ws://localhost:5000/ws/stream' failed: 
+(anonymous) @ use-stream.ts:47Understand this error
+hook.js:608 WebSocket error: Event
+overrideMethod @ hook.js:608Understand this error
+use-stream.ts:77 WebSocket disconnected: 1006 
+use-stream.ts:47 WebSocket connection to 'ws://localhost:5000/ws/stream' failed: 
+(anonymous) @ use-stream.ts:47
+(anonymous) @ use-stream.ts:88Understand this error
+use-stream.ts:106 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
+overrideMethod @ hook.js:608
+ws.onerror @ use-stream.ts:106Understand this error
+use-stream.ts:77 WebSocket disconnected: 1006 
+use-stream.ts:47 WebSocket connection to 'ws://localhost:5000/ws/stream' failed: 
+(anonymous) @ use-stream.ts:47
+(anonymous) @ use-stream.ts:88Understand this error
+use-stream.ts:106 WebSocket error: Event {isTrusted: true, type: 'error', target: WebSocket, currentTarget: WebSocket, eventPhase: 2, …}
