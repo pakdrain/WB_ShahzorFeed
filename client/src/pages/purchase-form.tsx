@@ -250,7 +250,8 @@ export default function PurchaseForm() {
       // Get the WB_ID from saved master data
       const savedWbId = masterData.wb_id;
       
-      // Prepare items data payload with correct field mapping
+      // Prepare items data payload - use first IGP item if available, otherwise form data
+      const firstIgpItem = igpItems.length > 0 ? igpItems[0] : {};
       const itemsPayload = {
         wb_id: savedWbId,
         baradana_type: formData.baradanaType || null,
@@ -260,15 +261,15 @@ export default function PurchaseForm() {
         igp_date: formData.igpDate || null,
         supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
         quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
-        no_of_bags: formData.noOfBags ? parseFloat(formData.noOfBags) : null,
-        vendor_name: formData.vendorName || null,
+        no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
+        vendor_name: firstIgpItem.vendor_name || formData.vendorName || null,
         bag_condition: formData.bagCondition || null,
-        po_no: formData.po_no || null,
-        item_code: formData.itemCode || null,
-        item_desc: formData.itemDesc || null,
-        po_qty: formData.poQty ? parseFloat(formData.poQty) : null,
-        igp_qty: formData.igpQty ? parseFloat(formData.igpQty) : null,
-        balance_qty: formData.balanceQty ? parseFloat(formData.balanceQty) : null
+        po_no: firstIgpItem.po_no || formData.po_no || null,
+        item_code: firstIgpItem.item_code || formData.itemCode || null,
+        item_desc: firstIgpItem.item_desc || formData.itemDesc || null,
+        po_qty: firstIgpItem.po_qty ? parseFloat(firstIgpItem.po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
+        igp_qty: firstIgpItem.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
+        balance_qty: firstIgpItem.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
       };
       
       // Save items data
