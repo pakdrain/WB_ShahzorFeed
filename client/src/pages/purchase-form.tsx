@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import WeightIndicator from '@/components/weight-indicator';
+import WeightDisplayTable from '@/components/weight-display-table';
 import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
 import { useQuery } from '@tanstack/react-query';
 
@@ -445,7 +446,18 @@ export default function PurchaseForm() {
   };
 
   return (
-    <div className="h-screen bg-blue-50 p-1 overflow-hidden">
+    <div className="h-screen bg-blue-50 p-1 overflow-hidden relative">
+      {/* Weight Display Table - Upper Right Corner */}
+      <div className="absolute top-4 right-4 z-50">
+        <WeightDisplayTable
+          slipNo={formData.slipNo || "4451"}
+          vehicleNo={formData.vehicleNo || "VRS-128"}
+          entryType="PURCHASE"
+          firstWeight={formData.firstWeight ? parseFloat(formData.firstWeight) : null}
+          secondWeight={formData.secondWeight ? parseFloat(formData.secondWeight) : null}
+        />
+      </div>
+
       {/* Compact Top Bar */}
       <div className="flex justify-between items-center bg-white border rounded p-1 mb-1">
         <div className="flex gap-1 text-xs">
