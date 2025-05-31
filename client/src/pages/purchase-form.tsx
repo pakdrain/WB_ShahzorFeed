@@ -27,7 +27,7 @@ export default function PurchaseForm() {
         setIsEditMode(true);
         setEditingWbId(data.wb_id);
         
-        // Load all the form data
+        // Load all the form data including detail table data
         setFormData(prev => ({
           ...prev,
           slipNo: data.slip_no || '',
@@ -452,6 +452,10 @@ export default function PurchaseForm() {
           // Exit edit mode and reset form
           setIsEditMode(false);
           setEditingWbId(null);
+          
+          // If second weight was entered, the record should be removed from display table
+          // This will be handled automatically by the query refetch since records with second weight
+          // are filtered out from the first-weight-records endpoint
         } else {
           alert('Purchase data saved successfully and first weight image captured!');
         }
@@ -614,7 +618,7 @@ export default function PurchaseForm() {
           <Button className="h-6 px-2 text-xs bg-cyan-600 hover:bg-cyan-700 text-white font-medium">Next</Button>
           <Button className="h-6 px-2 text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium">Last</Button>
           <Button className="bg-green-600 hover:bg-green-700 h-6 px-3 text-xs text-white font-medium" onClick={handleSave} disabled={loading}>
-            {loading ? 'Saving...' : (isEditMode ? 'Update' : 'Save')}
+            {loading ? 'Saving...' : 'Save'}
           </Button>
           {isEditMode && (
             <Button className="h-6 px-2 text-xs bg-red-600 hover:bg-red-700 text-white font-medium" onClick={cancelEdit}>
@@ -772,10 +776,18 @@ export default function PurchaseForm() {
                   <div className="space-y-1">
                     <div>
                       <Label className="text-xs text-black">IGP No</Label>
-                      <div className="flex gap-1">
-                        <Input name="igpNo" value={formData.igpNo} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
-                        <Button onClick={fetchIgpData} className="h-4 px-1 text-xs bg-blue-500">Fetch</Button>
-                      </div>
+                      <Input 
+                        name="igpNo" 
+                        value={formData.igpNo} 
+                        onChange={handleChange} 
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            fetchIgpData();
+                          }
+                        }}
+                        className="h-4 text-xs text-black" 
+                        placeholder="Press Enter to fetch"
+                      />
                     </div>
                     <div>
                       <Label className="text-xs text-black">IGP Date</Label>
