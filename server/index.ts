@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: false }));
 let currentWeight = '0.00';
 let currentUnit = 'kg';
 let isPortConnected = false;
-let currentComPort = 'COM3';
+let currentComPort = 'COM6';
 let currentBaudRate = 9600;
 let serialPort: SerialPort | null = null;
 
@@ -38,7 +38,7 @@ async function connectToWeightScale() {
     const parser = serialPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
 
     serialPort.on('open', () => {
-      log('✅ Connected to COM3 weight indicator');
+      log('✅ Connected to COM6 weight indicator');
       isPortConnected = true;
     });
 
@@ -184,7 +184,7 @@ app.use((req, res, next) => {
   const port = 5000;
   server.listen(port, () => {
     log(`serving on port ${port}`);
-    log(`📡 Attempting to connect to COM3 weight indicator...`);
+    log(`📡 Attempting to connect to COM6 weight indicator...`);
     
     // Auto-connect to weight scale on startup
     setTimeout(() => {
