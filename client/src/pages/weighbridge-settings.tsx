@@ -42,7 +42,7 @@ export default function WeighbridgeSettings() {
   const form = useForm<WeighbridgeSettingsForm>({
     resolver: zodResolver(weighbridgeSettingsSchema),
     defaultValues: {
-      comPort: 'COM3',
+      comPort: 'COM6',
       baudRate: 9600,
       dataBits: 8,
       parity: 'none',
@@ -153,7 +153,7 @@ export default function WeighbridgeSettings() {
             
             <div className="flex items-center justify-between">
               <span className="text-gray-300">Port:</span>
-              <span className="text-white font-mono">{weightStatus?.port || 'COM3'}</span>
+              <span className="text-white font-mono">{weightStatus?.port || 'COM6'}</span>
             </div>
             
             <div className="flex items-center justify-between">
@@ -205,7 +205,7 @@ export default function WeighbridgeSettings() {
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="COM3"
+                          placeholder="COM6"
                           className="bg-monitoring-slate border-monitoring-gray text-white"
                         />
                       </FormControl>

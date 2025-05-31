@@ -91,7 +91,7 @@ export default function CameraMonitor() {
         </div>
         
         {/* Weight Display - Main focus, clean interface */}
-        <WeightIndicator comPort="COM3" />
+        <WeightIndicator comPort="COM6" />
         
       </div>
     </div>
