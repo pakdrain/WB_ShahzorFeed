@@ -447,7 +447,14 @@ export default function PurchaseForm() {
           slipDate: new Date().toISOString()
         });
         
-        alert('Purchase data saved successfully and first weight image captured!');
+        if (isEditMode) {
+          alert('Record updated successfully!');
+          // Exit edit mode and reset form
+          setIsEditMode(false);
+          setEditingWbId(null);
+        } else {
+          alert('Purchase data saved successfully and first weight image captured!');
+        }
       } else {
         console.error('Failed to save items, but master data saved');
         alert('Purchase saved, but items data failed to save.');
@@ -589,6 +596,13 @@ export default function PurchaseForm() {
         </div>
       </div>
 
+      {/* Edit Mode Indicator */}
+      {isEditMode && (
+        <div className="bg-blue-600 text-white p-2 rounded mb-2 text-center text-sm font-medium">
+          EDIT MODE: Slip No. {formData.slipNo} (ID: {editingWbId})
+        </div>
+      )}
+
       {/* Compact Top Bar */}
       <div className="flex justify-between items-center bg-white border rounded p-1 mb-1">
         <div className="flex gap-1 text-xs">
@@ -600,8 +614,13 @@ export default function PurchaseForm() {
           <Button className="h-6 px-2 text-xs bg-cyan-600 hover:bg-cyan-700 text-white font-medium">Next</Button>
           <Button className="h-6 px-2 text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium">Last</Button>
           <Button className="bg-green-600 hover:bg-green-700 h-6 px-3 text-xs text-white font-medium" onClick={handleSave} disabled={loading}>
-            {loading ? 'Saving...' : 'Save'}
+            {loading ? 'Saving...' : (isEditMode ? 'Update' : 'Save')}
           </Button>
+          {isEditMode && (
+            <Button className="h-6 px-2 text-xs bg-red-600 hover:bg-red-700 text-white font-medium" onClick={cancelEdit}>
+              Cancel
+            </Button>
+          )}
           <Button className="h-6 px-2 text-xs bg-purple-600 hover:bg-purple-700 text-white font-medium">Print</Button>
           <Button className="h-6 px-2 text-xs bg-orange-600 hover:bg-orange-700 text-white font-medium">Rej</Button>
         </div>
