@@ -447,15 +447,55 @@ export default function PurchaseForm() {
 
   return (
     <div className="h-screen bg-blue-50 p-1 overflow-hidden relative">
-      {/* Weight Display Table - Upper Right Corner */}
-      <div className="absolute top-4 right-4 z-50">
-        <WeightDisplayTable
-          slipNo={formData.slipNo || "4451"}
-          vehicleNo={formData.vehicleNo || "VRS-128"}
-          entryType="PURCHASE"
-          firstWeight={formData.firstWeight ? parseFloat(formData.firstWeight) : null}
-          secondWeight={formData.secondWeight ? parseFloat(formData.secondWeight) : null}
-        />
+      {/* Weight Display Table - Right Side */}
+      <div className="absolute top-20 right-4 z-50">
+        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72">
+          {/* Header Row */}
+          <div className="grid grid-cols-3 border-b border-gray-400">
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
+              Slip No
+            </div>
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
+              Vehicle No
+            </div>
+            <div className="bg-gray-200 p-2 text-center text-sm font-semibold text-black">
+              Entry Type
+            </div>
+          </div>
+
+          {/* Data Rows */}
+          <div className="grid grid-cols-3 border-b border-gray-400">
+            <div className="border-r border-gray-400 p-2 text-center text-sm text-black bg-white">
+              4451
+            </div>
+            <div className="border-r border-gray-400 p-2 text-center text-sm text-black bg-white">
+              VRS-128
+            </div>
+            <div className="p-2 text-center text-sm text-blue-600 font-semibold bg-white">
+              PURCHASE
+            </div>
+          </div>
+
+          {/* Empty Rows */}
+          {[...Array(8)].map((_, index) => (
+            <div key={index} className="grid grid-cols-3 border-b border-gray-400">
+              <div className="border-r border-gray-400 p-2 text-center text-sm text-black bg-white h-8">
+                
+              </div>
+              <div className="border-r border-gray-400 p-2 text-center text-sm text-black bg-white h-8">
+                
+              </div>
+              <div className="p-2 text-center text-sm text-black bg-white h-8">
+                
+              </div>
+            </div>
+          ))}
+
+          {/* Load Data Button */}
+          <button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 text-sm">
+            Load Data
+          </button>
+        </div>
       </div>
 
       {/* Compact Top Bar */}
