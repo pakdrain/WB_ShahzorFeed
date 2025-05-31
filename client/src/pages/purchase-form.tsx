@@ -40,7 +40,9 @@ export default function PurchaseForm() {
           freight: data.freight || '',
           remarks: data.remarks || '',
           driverName: data.driver_name || '',
-          vendorName: data.vendor_name || '',
+          // Detail table data
+          vendor: data.vendor_name || '',
+          igpNo: data.igp_no || '', // Add IGP number
           poNo: data.po_no || '',
           itemCode: data.item_code || '',
           itemDesc: data.item_desc || '',
@@ -331,13 +333,27 @@ export default function PurchaseForm() {
       let savedWbId;
       
       if (isEditMode && editingWbId) {
-        // Update existing record
+        // Update existing record - combine master and items data
+        const updatePayload = {
+          ...masterPayload,
+          // Items data
+          vehicle_no: formData.vehicleNo || null,
+          vendor_name: formData.vendor || null,
+          po_no: formData.poNo || null,
+          igp_no: formData.igpNo || null,
+          item_code: formData.itemCode || null,
+          item_desc: formData.itemDesc || null,
+          po_qty: formData.poQty ? parseFloat(formData.poQty) : null,
+          igp_qty: formData.igpQty ? parseFloat(formData.igpQty) : null,
+          balance_qty: formData.balanceQty ? parseFloat(formData.balanceQty) : null
+        };
+        
         masterResponse = await fetch(`/api/purchase/update/${editingWbId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(masterPayload),
+          body: JSON.stringify(updatePayload),
         });
         savedWbId = editingWbId;
       } else {

@@ -569,16 +569,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // API endpoint for fetching all first weight records
+  // API endpoint for fetching all first weight records (only records without second weight)
   app.get('/api/purchase/first-weight-records', async (req: Request, res: Response) => {
     try {
       const query = `
-        SELECT wb.wb_id, wb.slip_no, wb.first_weight, wb.second_weight, 
+        SELECT DISTINCT ON (wb.slip_no) wb.wb_id, wb.slip_no, wb.first_weight, wb.second_weight, 
                wip.vehicle_no, wb.creation_date
         FROM wb_weighbridge wb
         LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
-        WHERE wb.first_weight IS NOT NULL
-        ORDER BY wb.creation_date DESC
+        WHERE wb.first_weight IS NOT NULL 
+        AND (wb.second_weight IS NULL OR wb.second_weight = 0)
+        ORDER BY wb.slip_no, wb.creation_date DESC
         LIMIT 20
       `;
       const result = await pool.query(query);
@@ -599,7 +600,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!isNaN(Number(slipNo))) {
         // If slipNo is numeric, search by wb_id
         query = `
-          SELECT wb.*, wip.vehicle_no, wip.vendor_name, wip.po_no, 
+          SELECT wb.*, wip.vehicle_no, wip.vendor_name, wip.po_no, wip.igp_no,
                  wip.item_code, wip.item_desc, wip.po_qty, wip.igp_qty, wip.balance_qty
           FROM wb_weighbridge wb
           LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
@@ -611,7 +612,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // If slipNo is not numeric, search by slip_no
         query = `
-          SELECT wb.*, wip.vehicle_no, wip.vendor_name, wip.po_no, 
+          SELECT wb.*, wip.vehicle_no, wip.vendor_name, wip.po_no, wip.igp_no,
                  wip.item_code, wip.item_desc, wip.po_qty, wip.igp_qty, wip.balance_qty
           FROM wb_weighbridge wb
           LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
@@ -685,11 +686,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           vehicle_no = $2,
           vendor_name = $3,
           po_no = $4,
-          item_code = $5,
-          item_desc = $6,
-          po_qty = $7,
-          igp_qty = $8,
-          balance_qty = $9
+          igp_no = $5,
+          item_code = $6,
+          item_desc = $7,
+          po_qty = $8,
+          igp_qty = $9,
+          balance_qty = $10
         WHERE wb_id = $1
         RETURNING *
       `;
@@ -699,6 +701,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.vehicle_no,
         updateData.vendor_name,
         updateData.po_no,
+        updateData.igp_no,
         updateData.item_code,
         updateData.item_desc,
         updateData.po_qty ? parseFloat(updateData.po_qty) : null,
