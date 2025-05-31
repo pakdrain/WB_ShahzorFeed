@@ -14,7 +14,7 @@ interface CompactWeightIndicatorProps {
   compact?: boolean;
 }
 
-export default function WeightIndicator({ comPort = 'COM3', compact = false }: CompactWeightIndicatorProps) {
+export default function WeightIndicator({ comPort = 'COM6', compact = false }: CompactWeightIndicatorProps) {
   const [weight, setWeight] = useState<string>('0.00');
   const [isConnected, setIsConnected] = useState(false);
   const [unit, setUnit] = useState('kg');

@@ -11,7 +11,9 @@ import {
   currentUnit, 
   isPortConnected, 
   currentComPort, 
-  currentBaudRate 
+  currentBaudRate,
+  updateComPort,
+  updateBaudRate
 } from './weight-state';
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -223,12 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // Weight API endpoints - Import weight service variables
-  let currentWeight = '0.00';
-  let currentUnit = 'kg';
-  let isPortConnected = false;
-  let currentComPort = 'COM3';
-  let currentBaudRate = 9600;
+  // Weight API endpoints use imported variables from weight-state
 
   // Weight data endpoint
   app.get('/api/weight/data', (req, res) => {
@@ -261,8 +258,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update current settings
-      currentComPort = comPort;
-      currentBaudRate = parseInt(baudRate);
+      updateComPort(comPort);
+      updateBaudRate(parseInt(baudRate));
       
       res.json({ 
         success: true, 
