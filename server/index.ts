@@ -9,11 +9,19 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Weight Service Integration
-let currentWeight = '0.00';
-let currentUnit = 'kg';
-let isPortConnected = false;
-let currentComPort = process.env.DEFAULT_COM_PORT || 'COM6';
-let currentBaudRate = 9600;
+import { 
+  currentWeight, 
+  currentUnit, 
+  isPortConnected, 
+  currentComPort, 
+  currentBaudRate,
+  updateWeight,
+  updateUnit,
+  updateConnectionStatus,
+  updateComPort,
+  updateBaudRate
+} from './weight-state';
+
 let serialPort: SerialPort | null = null;
 
 // Initialize serial port connection for weight indicator
@@ -39,34 +47,34 @@ async function connectToWeightScale() {
 
     serialPort.on('open', () => {
       log(`✅ Connected to ${currentComPort} weight indicator`);
-      isPortConnected = true;
+      updateConnectionStatus(true);
     });
 
     serialPort.on('error', (err) => {
       log(`❌ Serial port error: ${err.message}`);
-      isPortConnected = false;
+      updateConnectionStatus(false);
     });
 
     serialPort.on('close', () => {
       log('📡 Serial port closed');
-      isPortConnected = false;
-      currentWeight = '0.00';
-      currentUnit = 'kg';
+      updateConnectionStatus(false);
+      updateWeight('0.00');
+      updateUnit('kg');
     });
 
     // Parse incoming weight data
     parser.on('data', (data) => {
       const weightData = parseWeightData(data);
       if (weightData) {
-        currentWeight = weightData.weight;
-        currentUnit = weightData.unit;
-        log(`📊 Weight: ${currentWeight} ${currentUnit}`);
+        updateWeight(weightData.weight);
+        updateUnit(weightData.unit);
+        log(`📊 Weight: ${weightData.weight} ${weightData.unit}`);
       }
     });
 
   } catch (error: any) {
     log(`❌ Failed to connect to serial port: ${error.message}`);
-    isPortConnected = false;
+    updateConnectionStatus(false);
   }
 }
 

@@ -6,6 +6,13 @@ import { videoStreamService } from "./video-stream";
 import { z } from "zod";
 import pkg from "pg";
 const { Pool } = pkg;
+import { 
+  currentWeight, 
+  currentUnit, 
+  isPortConnected, 
+  currentComPort, 
+  currentBaudRate 
+} from './weight-state';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
