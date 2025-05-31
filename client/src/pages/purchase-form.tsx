@@ -142,6 +142,23 @@ export default function PurchaseForm() {
   const [onlineMode, setOnlineMode] = useState(true);
   const [igpItems, setIgpItems] = useState([]);
 
+  // Function to reset form to clean state
+  const resetFormToInitial = () => {
+    setFormData({
+      ...initialFormData,
+      slipInTime: new Date().toISOString().slice(0, 16),
+      onlineEntry: 'Yes',
+      entryType: 'PURCHASE',
+      creationDate: new Date().toISOString(),
+      lastUpdatedDate: new Date().toISOString(),
+      slipDate: new Date().toISOString()
+    });
+    setIgpItems([]);
+    setIsEditMode(false);
+    setEditingWbId(null);
+    setOnlineMode(true);
+  };
+
   // Get camera data
   const { data: camera } = useQuery({
     queryKey: ['/api/cameras/1'],
@@ -339,7 +356,7 @@ export default function PurchaseForm() {
           // Items data
           vehicle_no: formData.vehicleNo || null,
           vendor_name: formData.vendor || null,
-          po_no: formData.poNo || null,
+          po_no: formData.po_no || null,
           igp_no: formData.igpNo || null,
           item_code: formData.itemCode || null,
           item_desc: formData.itemDesc || null,
@@ -451,30 +468,23 @@ export default function PurchaseForm() {
         const currentSlipNo = parseInt(formData.slipNo);
         const nextSlipNo = (currentSlipNo + 1).toString();
         
-        // Update form with next slip number and clear form fields
-        setFormData({
-          ...initialFormData,
-          slipNo: nextSlipNo,
-          slipInTime: new Date().toISOString().slice(0, 16),
-          onlineEntry: 'Yes',
-          entryType: 'PURCHASE',
-          creationDate: new Date().toISOString(),
-          lastUpdatedDate: new Date().toISOString(),
-          slipDate: new Date().toISOString()
-        });
-        
         if (isEditMode) {
           alert('Record updated successfully!');
-          // Exit edit mode and reset form
-          setIsEditMode(false);
-          setEditingWbId(null);
-          
-          // If second weight was entered, the record should be removed from display table
-          // This will be handled automatically by the query refetch since records with second weight
-          // are filtered out from the first-weight-records endpoint
+          // Reset form to clean state after edit
+          resetFormToInitial();
         } else {
           alert('Purchase data saved successfully and first weight image captured!');
+          // Reset form to clean state and increment slip number for next entry
+          resetFormToInitial();
         }
+        
+        // Auto-increment slip number for next entry regardless of mode
+        setTimeout(() => {
+          setFormData(prev => ({
+            ...prev,
+            slipNo: nextSlipNo
+          }));
+        }, 100);
       } else {
         console.error('Failed to save items, but master data saved');
         alert('Purchase saved, but items data failed to save.');
