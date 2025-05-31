@@ -23,8 +23,12 @@ import {
   updateUnit,
   updateConnectionStatus,
   updateComPort,
-  updateBaudRate
+  updateBaudRate,
+  initializeWeightState
 } from './weight-state';
+
+// Initialize weight state with environment variables
+initializeWeightState();
 
 let serialPort: SerialPort | null = null;
 

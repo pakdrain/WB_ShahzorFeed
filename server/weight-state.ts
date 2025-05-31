@@ -2,10 +2,16 @@
 export let currentWeight = '0.00';
 export let currentUnit = 'kg';
 export let isPortConnected = false;
-export let currentComPort = 'COM6'; // Default value, will be updated on initialization
+export let currentComPort = 'COM6';
 export let currentBaudRate = 9600;
 
 
+
+// Initialize state with environment variables
+export function initializeWeightState() {
+  currentComPort = process.env.DEFAULT_COM_PORT || 'COM6';
+  currentBaudRate = parseInt(process.env.DEFAULT_BAUD_RATE || '9600');
+}
 
 // Functions to update the state
 export function updateWeight(weight: string) {
