@@ -240,6 +240,11 @@ export default function PurchaseForm() {
     }));
   };
 
+  // Reset form to clean state when component mounts (new purchase)
+  useEffect(() => {
+    resetFormToInitial();
+  }, []);
+
   useEffect(() => {
     // Fetch next slip number
     fetch('/api/purchases')
