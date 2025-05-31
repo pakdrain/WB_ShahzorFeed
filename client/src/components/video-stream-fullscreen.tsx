@@ -37,36 +37,29 @@ export default function VideoStreamFullscreen({
   }
 
   return (
-    <div className="w-full h-full bg-black flex items-center justify-center">
-      <div 
-        className="bg-gray-800 border border-gray-600 overflow-hidden rounded"
-        style={{ width: '30px', height: '30px' }}
-      >
-        {streamLoading && (
-          <div className="w-full h-full bg-black flex items-center justify-center">
-            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-          </div>
-        )}
-        
-        <img
-          className="w-full h-full object-cover bg-black"
-          src={`/api/stream/${camera.id}/mjpeg`}
-          alt="Live Camera Feed"
-          onLoad={() => {
-            console.log('MJPEG stream loaded');
-            setStreamLoading(false);
-          }}
-          onError={(e) => {
-            console.error('MJPEG stream error:', e);
-            setStreamLoading(false);
-          }}
-          style={{ 
-            width: '30px',
-            height: '30px',
-            backgroundColor: 'black'
-          }}
-        />
-      </div>
+    <div className="w-full h-full">
+      {streamLoading && (
+        <div className="w-full h-full bg-black flex items-center justify-center">
+          <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+        </div>
+      )}
+      
+      <img
+        className="w-full h-full object-cover"
+        src={`/api/stream/${camera.id}/mjpeg`}
+        alt="Live Camera Feed"
+        onLoad={() => {
+          console.log('MJPEG stream loaded');
+          setStreamLoading(false);
+        }}
+        onError={(e) => {
+          console.error('MJPEG stream error:', e);
+          setStreamLoading(false);
+        }}
+        style={{ 
+          display: streamLoading ? 'none' : 'block'
+        }}
+      />
     </div>
   );
 }
