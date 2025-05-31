@@ -25,11 +25,17 @@ export default function PurchaseForm() {
       if (data) {
         setFormData(prev => ({
           ...prev,
-          slipNo: data.wb_id || data.slip_no,
+          slipNo: data.wb_id || data.slip_no || '',
           vehicleNo: data.vehicle_no || '',
           firstWeight: data.first_weight || '',
-          // Keep second weight empty for new entry
-          secondWeight: ''
+          secondWeight: data.second_weight || '',
+          vendorName: data.vendor_name || '',
+          poNo: data.po_no || '',
+          itemCode: data.item_code || '',
+          itemDesc: data.item_desc || '',
+          poQty: data.po_qty || '',
+          igpQty: data.igp_qty || '',
+          balanceQty: data.balance_qty || ''
         }));
       }
     } catch (error) {
@@ -262,6 +268,13 @@ export default function PurchaseForm() {
   const handleSave = async () => {
     setLoading(true);
     
+    // Validate that first weight is not null/empty when saving
+    if (!formData.firstWeight || formData.firstWeight.trim() === '' || parseFloat(formData.firstWeight) <= 0) {
+      alert('First weight is required and must be greater than 0');
+      setLoading(false);
+      return;
+    }
+    
     // Prepare master data payload
     const masterPayload = {
       slip_no: formData.slipNo || null,
@@ -350,29 +363,31 @@ export default function PurchaseForm() {
         const itemsData = await itemsResponse.json();
         console.log('Items saved:', itemsData);
         
-        // Automatically capture first weight image
-        try {
-          console.log('Capturing first weight image for slip:', formData.slipNo);
-          const captureResponse = await fetch('/api/capture/first-weight', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              slipNo: formData.slipNo,
-              cameraIp: '10.10.10.146',
-              cameraPort: 554
-            }),
-          });
+        // Automatically capture first weight image (only for new entries with first weight but no second weight)
+        if (formData.firstWeight && !formData.secondWeight) {
+          try {
+            console.log('Capturing first weight image for slip:', formData.slipNo);
+            const captureResponse = await fetch('/api/capture/first-weight', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                slipNo: formData.slipNo,
+                cameraIp: '10.10.10.146',
+                cameraPort: 554
+              }),
+            });
 
-          if (captureResponse.ok) {
-            const captureData = await captureResponse.json();
-            console.log('Image captured successfully:', captureData.message);
-          } else {
-            console.log('Image capture failed, but continuing with form submission');
+            if (captureResponse.ok) {
+              const captureData = await captureResponse.json();
+              console.log('Image captured successfully:', captureData.message);
+            } else {
+              console.log('Image capture failed, but continuing with form submission');
+            }
+          } catch (imageError) {
+            console.log('Image capture error, but continuing:', imageError);
           }
-        } catch (imageError) {
-          console.log('Image capture error, but continuing:', imageError);
         }
         
         // Increment slip number for next entry

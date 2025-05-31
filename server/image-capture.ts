@@ -32,6 +32,15 @@ export class ImageCaptureService {
     try {
       await this.ensureDirectoriesExist();
       
+      // Check if image already exists for this slip number
+      const existingImages = await this.getFirstWeightImages();
+      const existingImage = existingImages.find(img => img.includes(`slip_${slipNo}_`));
+      
+      if (existingImage) {
+        log(`📸 Image already exists for slip ${slipNo}, skipping capture`);
+        return path.join(this.baseImagePath, this.firstWeightFolder, existingImage);
+      }
+      
       // Generate filename with slip number and timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const filename = `slip_${slipNo}_${timestamp}.jpg`;
