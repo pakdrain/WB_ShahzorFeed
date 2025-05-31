@@ -440,7 +440,7 @@ export default function PurchaseForm() {
         <div className="flex gap-1 items-center">
           {/* Weight Display - positioned on left side with bolder text */}
           <div className="mr-2">
-            <WeightIndicator comPort="COM3" compact={true} />
+            <WeightIndicator comPort="COM6" compact={true} />
           </div>
           <Button 
             className={`h-6 px-3 text-xs font-medium ${onlineMode ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
