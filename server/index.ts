@@ -4,6 +4,10 @@ import { setupVite, serveStatic, log } from "./vite";
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
 
+// Ensure environment variables are loaded
+import { config } from 'dotenv';
+config();
+
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
