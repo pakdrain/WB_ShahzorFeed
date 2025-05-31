@@ -536,5 +536,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API endpoints for fetching latest master and details data
+  app.get('/api/purchase/latest-master', async (req: Request, res: Response) => {
+    try {
+      const query = 'SELECT * FROM wb_weighbridge ORDER BY creation_date DESC LIMIT 1';
+      const result = await pool.query(query);
+      
+      if (result.rows.length > 0) {
+        res.json(result.rows[0]);
+      } else {
+        res.json(null);
+      }
+    } catch (error: any) {
+      console.error('Error fetching latest master data:', error);
+      res.status(500).json({ error: 'Failed to fetch master data' });
+    }
+  });
+
+  app.get('/api/purchase/latest-details', async (req: Request, res: Response) => {
+    try {
+      const query = 'SELECT * FROM wb_weighbridge_items_purchase ORDER BY wb_item_p_id DESC LIMIT 1';
+      const result = await pool.query(query);
+      
+      if (result.rows.length > 0) {
+        res.json(result.rows[0]);
+      } else {
+        res.json(null);
+      }
+    } catch (error: any) {
+      console.error('Error fetching latest details data:', error);
+      res.status(500).json({ error: 'Failed to fetch details data' });
+    }
+  });
+
   return httpServer;
 }
