@@ -482,10 +482,10 @@ export default function PurchaseForm() {
               Slip No
             </div>
             <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
-              First Weight
+              Vehicle No
             </div>
             <div className="bg-gray-200 p-1 text-center text-xs font-semibold text-black">
-              Second Weight
+              Entry Type
             </div>
           </div>
 
@@ -501,10 +501,10 @@ export default function PurchaseForm() {
                     {record.wb_id || record.slip_no || "---"}
                   </button>
                   <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
-                    {record.first_weight ? `${record.first_weight} kg` : "---"}
+                    {record.vehicle_no || "---"}
                   </div>
-                  <div className="p-1 text-center text-xs text-black bg-white">
-                    {record.second_weight ? `${record.second_weight} kg` : "---"}
+                  <div className="p-1 text-center text-xs text-blue-600 font-semibold bg-white">
+                    PURCHASE
                   </div>
                 </div>
               ))
