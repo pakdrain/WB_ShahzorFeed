@@ -17,30 +17,52 @@ export default function PurchaseForm() {
     refetchInterval: 3000, // Refresh every 3 seconds
   });
 
-  // Function to load data by slip number
+  // Function to load data by slip number for editing
   const loadDataBySlipNo = async (slipNo: string) => {
     try {
       const response = await fetch(`/api/purchase/by-slip/${slipNo}`);
       const data = await response.json();
       if (data) {
+        // Enable edit mode
+        setIsEditMode(true);
+        setEditingWbId(data.wb_id);
+        
+        // Load all the form data
         setFormData(prev => ({
           ...prev,
-          slipNo: data.wb_id || data.slip_no || '',
+          slipNo: data.slip_no || '',
           vehicleNo: data.vehicle_no || '',
           firstWeight: data.first_weight || '',
           secondWeight: data.second_weight || '',
+          netWeight: data.net_weight || '',
+          bardanaWeight: data.bardana_weight || '',
+          grossWeight: data.gross_weight || '',
+          freight: data.freight || '',
+          remarks: data.remarks || '',
+          driverName: data.driver_name || '',
           vendorName: data.vendor_name || '',
           poNo: data.po_no || '',
           itemCode: data.item_code || '',
           itemDesc: data.item_desc || '',
           poQty: data.po_qty || '',
           igpQty: data.igp_qty || '',
-          balanceQty: data.balance_qty || ''
+          balanceQty: data.balance_qty || '',
+          slipInTime: data.slip_in_time || '',
+          slipOutTime: data.slip_out_time || '',
+          entryType: data.entry_type || 'PURCHASE'
         }));
       }
     } catch (error) {
       console.error('Error loading data by slip number:', error);
+      alert('Failed to load record data');
     }
+  };
+
+  // Function to cancel edit mode and return to new entry mode
+  const cancelEdit = () => {
+    setIsEditMode(false);
+    setEditingWbId(null);
+    setFormData(initialFormData);
   };
 
   const initialFormData = {
@@ -113,6 +135,8 @@ export default function PurchaseForm() {
 
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingWbId, setEditingWbId] = useState<number | null>(null);
   const [onlineMode, setOnlineMode] = useState(true);
   const [igpItems, setIgpItems] = useState([]);
 
@@ -303,24 +327,41 @@ export default function PurchaseForm() {
     };
 
     try {
-      // Save master data first
-      const masterResponse = await fetch('/api/purchases', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(masterPayload),
-      });
+      let masterResponse;
+      let savedWbId;
+      
+      if (isEditMode && editingWbId) {
+        // Update existing record
+        masterResponse = await fetch(`/api/purchase/update/${editingWbId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(masterPayload),
+        });
+        savedWbId = editingWbId;
+      } else {
+        // Create new record
+        masterResponse = await fetch('/api/purchases', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(masterPayload),
+        });
+      }
 
       if (!masterResponse.ok) {
         throw new Error(`HTTP error! status: ${masterResponse.status}`);
       }
 
       const masterData = await masterResponse.json();
-      console.log('Master purchase saved:', masterData);
+      console.log('Master purchase saved/updated:', masterData);
       
-      // Get the WB_ID from saved master data
-      const savedWbId = masterData.wb_id;
+      // Get the WB_ID from saved master data for new records
+      if (!isEditMode) {
+        savedWbId = masterData.wb_id;
+      }
       
       // Prepare items data payload - use first IGP item if available, otherwise form data
       const firstIgpItem = igpItems.length > 0 ? igpItems[0] : {};
@@ -513,7 +554,7 @@ export default function PurchaseForm() {
                     className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
                     onClick={() => loadDataBySlipNo(record.wb_id || record.slip_no)}
                   >
-                    {record.wb_id || record.slip_no || "---"}
+                    {record.slip_no || record.wb_id || "---"}
                   </button>
                   <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
                     {record.vehicle_no || "---"}

@@ -593,16 +593,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/purchase/by-slip/:slipNo', async (req: Request, res: Response) => {
     try {
       const { slipNo } = req.params;
-      const query = `
-        SELECT wb.*, wip.vehicle_no, wip.vendor_name, wip.po_no, 
-               wip.item_code, wip.item_desc, wip.po_qty, wip.igp_qty
-        FROM wb_weighbridge wb
-        LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
-        WHERE wb.wb_id = $1 OR wb.slip_no = $1
-        ORDER BY wb.creation_date DESC
-        LIMIT 1
-      `;
-      const result = await pool.query(query, [slipNo]);
+      // First try to find by wb_id (if slipNo is numeric), then by slip_no
+      let query, params;
+      
+      if (!isNaN(Number(slipNo))) {
+        // If slipNo is numeric, search by wb_id
+        query = `
+          SELECT wb.*, wip.vehicle_no, wip.vendor_name, wip.po_no, 
+                 wip.item_code, wip.item_desc, wip.po_qty, wip.igp_qty, wip.balance_qty
+          FROM wb_weighbridge wb
+          LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
+          WHERE wb.wb_id = $1
+          ORDER BY wb.creation_date DESC
+          LIMIT 1
+        `;
+        params = [parseInt(slipNo)];
+      } else {
+        // If slipNo is not numeric, search by slip_no
+        query = `
+          SELECT wb.*, wip.vehicle_no, wip.vendor_name, wip.po_no, 
+                 wip.item_code, wip.item_desc, wip.po_qty, wip.igp_qty, wip.balance_qty
+          FROM wb_weighbridge wb
+          LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
+          WHERE wb.slip_no = $1
+          ORDER BY wb.creation_date DESC
+          LIMIT 1
+        `;
+        params = [slipNo];
+      }
+      
+      const result = await pool.query(query, params);
       
       if (result.rows.length > 0) {
         res.json(result.rows[0]);
@@ -612,6 +632,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Error fetching data by slip number:', error);
       res.status(500).json({ error: 'Failed to fetch data' });
+    }
+  });
+
+  // API endpoint for updating existing purchase records
+  app.put('/api/purchase/update/:wbId', async (req: Request, res: Response) => {
+    try {
+      const { wbId } = req.params;
+      const updateData = req.body;
+      
+      // Update master record
+      const masterUpdateQuery = `
+        UPDATE wb_weighbridge 
+        SET 
+          slip_no = $2,
+          slip_in_time = $3,
+          first_weight = $4,
+          second_weight = $5,
+          net_weight = $6,
+          bardana_weight = $7,
+          gross_weight = $8,
+          freight = $9,
+          remarks = $10,
+          driver_name = $11,
+          slip_out_time = $12,
+          last_updated_date = CURRENT_TIMESTAMP
+        WHERE wb_id = $1
+        RETURNING *
+      `;
+      
+      const masterParams = [
+        parseInt(wbId),
+        updateData.slip_no,
+        updateData.slip_in_time,
+        updateData.first_weight ? parseFloat(updateData.first_weight) : null,
+        updateData.second_weight ? parseFloat(updateData.second_weight) : null,
+        updateData.net_weight ? parseFloat(updateData.net_weight) : null,
+        updateData.bardana_weight ? parseFloat(updateData.bardana_weight) : null,
+        updateData.gross_weight ? parseFloat(updateData.gross_weight) : null,
+        updateData.freight ? parseFloat(updateData.freight) : null,
+        updateData.remarks,
+        updateData.driver_name,
+        updateData.slip_out_time
+      ];
+      
+      const masterResult = await pool.query(masterUpdateQuery, masterParams);
+      
+      // Update items record if it exists
+      const itemsUpdateQuery = `
+        UPDATE wb_weighbridge_items_purchase 
+        SET 
+          vehicle_no = $2,
+          vendor_name = $3,
+          po_no = $4,
+          item_code = $5,
+          item_desc = $6,
+          po_qty = $7,
+          igp_qty = $8,
+          balance_qty = $9
+        WHERE wb_id = $1
+        RETURNING *
+      `;
+      
+      const itemsParams = [
+        parseInt(wbId),
+        updateData.vehicle_no,
+        updateData.vendor_name,
+        updateData.po_no,
+        updateData.item_code,
+        updateData.item_desc,
+        updateData.po_qty ? parseFloat(updateData.po_qty) : null,
+        updateData.igp_qty ? parseFloat(updateData.igp_qty) : null,
+        updateData.balance_qty ? parseFloat(updateData.balance_qty) : null
+      ];
+      
+      await pool.query(itemsUpdateQuery, itemsParams);
+      
+      res.json({ 
+        success: true, 
+        message: 'Record updated successfully',
+        wb_id: parseInt(wbId)
+      });
+      
+    } catch (error: any) {
+      console.error('Error updating purchase record:', error);
+      res.status(500).json({ error: 'Failed to update record' });
     }
   });
 
