@@ -6,16 +6,25 @@ import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
 import StreamControls from "@/components/stream-controls";
 import StreamInfoPanels from "@/components/stream-info-panels";
 import WeightIndicator from "@/components/weight-indicator";
+import WeightDisplayTable from "@/components/weight-display-table";
 import { useStream } from "@/hooks/use-stream";
 import { Card } from "@/components/ui/card";
 
 export default function CameraMonitor() {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [firstWeight, setFirstWeight] = useState<number | null>(null);
+  const [secondWeight, setSecondWeight] = useState<number | null>(null);
 
   // Fetch default camera information
   const { data: camera, isLoading: cameraLoading } = useQuery({
     queryKey: ['/api/cameras/1'],
     refetchInterval: false,
+  });
+
+  // Fetch weight data
+  const { data: weightData } = useQuery({
+    queryKey: ['/api/weight/data'],
+    refetchInterval: 2000, // Update every 2 seconds
   });
 
   // Initialize WebSocket stream connection
@@ -77,7 +86,18 @@ export default function CameraMonitor() {
   }
 
   return (
-    <div className="min-h-screen bg-monitoring-dark overflow-hidden">
+    <div className="min-h-screen bg-monitoring-dark overflow-hidden relative">
+      {/* Weight Display Table - Upper Right Corner */}
+      <div className="absolute top-4 right-4 z-10">
+        <WeightDisplayTable
+          slipNo="4451"
+          vehicleNo="VRS-128"
+          entryType="PURCHASE"
+          firstWeight={firstWeight}
+          secondWeight={secondWeight}
+        />
+      </div>
+
       {/* Weight Region - Full screen with camera embedded inside */}
       <div className="h-full flex flex-col items-center justify-center p-8">
         
