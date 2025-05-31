@@ -15,6 +15,7 @@ import {
   updateComPort,
   updateBaudRate
 } from './weight-state';
+import { imageCaptureService } from './image-capture';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -475,6 +476,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (err) {
       console.error('Error inserting purchase items:', err);
       res.status(500).json({ error: 'Insert error: ' + err.message });
+    }
+  });
+
+  // Image capture endpoints
+  app.post('/api/capture/first-weight', async (req: Request, res: Response) => {
+    try {
+      const { slipNo, cameraIp = '10.10.10.146', cameraPort = 554 } = req.body;
+      
+      if (!slipNo) {
+        return res.status(400).json({ error: 'Slip number is required' });
+      }
+
+      const imagePath = await imageCaptureService.captureFirstWeightImage({
+        slipNo,
+        cameraIp,
+        cameraPort,
+        username: 'admin',
+        password: 'admin123'
+      });
+
+      res.json({ 
+        success: true, 
+        imagePath,
+        message: `Image captured for slip ${slipNo}` 
+      });
+    } catch (error: any) {
+      console.error('Image capture error:', error);
+      res.status(500).json({ 
+        error: 'Failed to capture image',
+        details: error.message 
+      });
+    }
+  });
+
+  app.get('/api/capture/first-weight/images', async (req: Request, res: Response) => {
+    try {
+      const images = await imageCaptureService.getFirstWeightImages();
+      res.json({ images });
+    } catch (error: any) {
+      console.error('Error fetching images:', error);
+      res.status(500).json({ error: 'Failed to fetch images' });
+    }
+  });
+
+  app.delete('/api/capture/first-weight/:filename', async (req: Request, res: Response) => {
+    try {
+      const { filename } = req.params;
+      const success = await imageCaptureService.deleteImage(filename);
+      
+      if (success) {
+        res.json({ success: true, message: 'Image deleted successfully' });
+      } else {
+        res.status(404).json({ error: 'Image not found or could not be deleted' });
+      }
+    } catch (error: any) {
+      console.error('Error deleting image:', error);
+      res.status(500).json({ error: 'Failed to delete image' });
     }
   });
 

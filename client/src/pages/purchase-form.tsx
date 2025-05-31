@@ -323,6 +323,31 @@ export default function PurchaseForm() {
         const itemsData = await itemsResponse.json();
         console.log('Items saved:', itemsData);
         
+        // Automatically capture first weight image
+        try {
+          console.log('Capturing first weight image for slip:', formData.slipNo);
+          const captureResponse = await fetch('/api/capture/first-weight', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              slipNo: formData.slipNo,
+              cameraIp: '10.10.10.146',
+              cameraPort: 554
+            }),
+          });
+
+          if (captureResponse.ok) {
+            const captureData = await captureResponse.json();
+            console.log('Image captured successfully:', captureData.message);
+          } else {
+            console.log('Image capture failed, but continuing with form submission');
+          }
+        } catch (imageError) {
+          console.log('Image capture error, but continuing:', imageError);
+        }
+        
         // Increment slip number for next entry
         const currentSlipNo = parseInt(formData.slipNo);
         const nextSlipNo = (currentSlipNo + 1).toString();
@@ -339,7 +364,7 @@ export default function PurchaseForm() {
           slipDate: new Date().toISOString()
         });
         
-        alert('Purchase and items data saved successfully!');
+        alert('Purchase data saved successfully and first weight image captured!');
       } else {
         console.error('Failed to save items, but master data saved');
         alert('Purchase saved, but items data failed to save.');
