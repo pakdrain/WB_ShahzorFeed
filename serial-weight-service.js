@@ -18,7 +18,7 @@ let serialPort = null;
 async function connectToSerial() {
   try {
     serialPort = new SerialPort({
-      path: 'COM3',
+      path: 'COM6',
       baudRate: 9600,
       dataBits: 8,
       parity: 'none',
@@ -28,7 +28,7 @@ async function connectToSerial() {
     const parser = serialPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
 
     serialPort.on('open', () => {
-      console.log('✅ Connected to COM3 weight indicator');
+      console.log('✅ Connected to COM6 weight indicator');
       isPortConnected = true;
     });
 
@@ -106,7 +106,7 @@ function parseWeightData(rawData) {
 // API Endpoints
 app.post('/api/weight/connect', (req, res) => {
   const { port, baudRate } = req.body;
-  console.log(`🔌 Connecting to ${port || 'COM3'} at ${baudRate || 9600} baud...`);
+  console.log(`🔌 Connecting to ${port || 'COM6'} at ${baudRate || 9600} baud...`);
   
   if (!isPortConnected) {
     connectToSerial();
@@ -114,7 +114,7 @@ app.post('/api/weight/connect', (req, res) => {
   
   res.json({ 
     success: true, 
-    message: `Connecting to ${port || 'COM3'}`,
+    message: `Connecting to ${port || 'COM6'}`,
     connected: isPortConnected 
   });
 });
@@ -142,7 +142,7 @@ app.post('/api/weight/tare', (req, res) => {
 app.get('/api/weight/status', (req, res) => {
   res.json({
     connected: isPortConnected,
-    port: 'COM3',
+    port: 'COM6',
     baudRate: 9600,
     currentWeight,
     currentUnit
@@ -151,7 +151,7 @@ app.get('/api/weight/status', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`🚀 Weight Serial Service running on http://localhost:${PORT}`);
-  console.log(`📡 Attempting to connect to COM3...`);
+  console.log(`📡 Attempting to connect to COM6...`);
   
   // Auto-connect on startup
   setTimeout(() => {
