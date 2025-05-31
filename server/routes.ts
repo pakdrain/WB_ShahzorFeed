@@ -569,5 +569,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API endpoint for fetching all first weight records
+  app.get('/api/purchase/first-weight-records', async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT wb.wb_id, wb.slip_no, wb.first_weight, wb.second_weight, 
+               wip.vehicle_no, wb.creation_date
+        FROM wb_weighbridge wb
+        LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
+        WHERE wb.first_weight IS NOT NULL
+        ORDER BY wb.creation_date DESC
+        LIMIT 20
+      `;
+      const result = await pool.query(query);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('Error fetching first weight records:', error);
+      res.status(500).json({ error: 'Failed to fetch first weight records' });
+    }
+  });
+
+  // API endpoint for fetching data by slip number
+  app.get('/api/purchase/by-slip/:slipNo', async (req: Request, res: Response) => {
+    try {
+      const { slipNo } = req.params;
+      const query = `
+        SELECT wb.*, wip.vehicle_no, wip.vendor_name, wip.po_no, 
+               wip.item_code, wip.item_desc, wip.po_qty, wip.igp_qty
+        FROM wb_weighbridge wb
+        LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
+        WHERE wb.wb_id = $1 OR wb.slip_no = $1
+        ORDER BY wb.creation_date DESC
+        LIMIT 1
+      `;
+      const result = await pool.query(query, [slipNo]);
+      
+      if (result.rows.length > 0) {
+        res.json(result.rows[0]);
+      } else {
+        res.status(404).json({ error: 'Record not found' });
+      }
+    } catch (error: any) {
+      console.error('Error fetching data by slip number:', error);
+      res.status(500).json({ error: 'Failed to fetch data' });
+    }
+  });
+
   return httpServer;
 }

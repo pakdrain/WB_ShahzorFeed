@@ -11,17 +11,31 @@ import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
 import { useQuery } from '@tanstack/react-query';
 
 export default function PurchaseForm() {
-  // Fetch latest master data (for first weight)
-  const { data: latestMaster } = useQuery({
-    queryKey: ['/api/purchase/latest-master'],
+  // Fetch all first weight records
+  const { data: firstWeightRecords } = useQuery({
+    queryKey: ['/api/purchase/first-weight-records'],
     refetchInterval: 3000, // Refresh every 3 seconds
   });
 
-  // Fetch latest details data (for vehicle number)
-  const { data: latestDetails } = useQuery({
-    queryKey: ['/api/purchase/latest-details'],
-    refetchInterval: 3000, // Refresh every 3 seconds
-  });
+  // Function to load data by slip number
+  const loadDataBySlipNo = async (slipNo: string) => {
+    try {
+      const response = await fetch(`/api/purchase/by-slip/${slipNo}`);
+      const data = await response.json();
+      if (data) {
+        setFormData(prev => ({
+          ...prev,
+          slipNo: data.wb_id || data.slip_no,
+          vehicleNo: data.vehicle_no || '',
+          firstWeight: data.first_weight || '',
+          // Keep second weight empty for new entry
+          secondWeight: ''
+        }));
+      }
+    } catch (error) {
+      console.error('Error loading data by slip number:', error);
+    }
+  };
 
   const initialFormData = {
     slipNo: '',
@@ -459,44 +473,61 @@ export default function PurchaseForm() {
 
   return (
     <div className="h-screen bg-blue-50 p-1 overflow-hidden relative">
-      {/* Weight Display Table - Right Side, positioned after bottom bar */}
-      <div className="absolute bottom-4 right-4 z-50">
-        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-60">
+      {/* Weight Display Table - Upper Right Side */}
+      <div className="absolute top-20 right-4 z-50">
+        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72">
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
             <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
               Slip No
             </div>
             <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
-              Vehicle No
+              First Weight
             </div>
             <div className="bg-gray-200 p-1 text-center text-xs font-semibold text-black">
-              Entry Type
+              Second Weight
             </div>
           </div>
 
-          {/* Current Data Row - showing real data from database */}
-          <div className="grid grid-cols-3 border-b border-gray-400">
-            <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
-              {latestMaster?.wb_id || formData.slipNo || "4451"}
-            </div>
-            <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
-              {latestDetails?.vehicle_no || formData.vehicleNo || "VRS-128"}
-            </div>
-            <div className="p-1 text-center text-xs text-blue-600 font-semibold bg-white">
-              PURCHASE
-            </div>
-          </div>
-
-          {/* First Weight Display Row */}
-          <div className="grid grid-cols-1 border-b border-gray-400 bg-blue-50">
-            <div className="p-2 text-center text-sm font-semibold text-blue-800">
-              First Weight: {latestMaster?.first_weight ? `${latestMaster.first_weight} kg` : formData.firstWeight ? `${formData.firstWeight} kg` : '0.00 kg'}
-            </div>
+          {/* Data Rows - showing all first weight records */}
+          <div className="max-h-48 overflow-y-auto">
+            {firstWeightRecords && firstWeightRecords.length > 0 ? (
+              firstWeightRecords.map((record: any, index: number) => (
+                <div key={index} className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50">
+                  <button 
+                    className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
+                    onClick={() => loadDataBySlipNo(record.wb_id || record.slip_no)}
+                  >
+                    {record.wb_id || record.slip_no || "---"}
+                  </button>
+                  <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
+                    {record.first_weight ? `${record.first_weight} kg` : "---"}
+                  </div>
+                  <div className="p-1 text-center text-xs text-black bg-white">
+                    {record.second_weight ? `${record.second_weight} kg` : "---"}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="grid grid-cols-3 border-b border-gray-400">
+                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
+                  No records
+                </div>
+                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
+                  ---
+                </div>
+                <div className="p-1 text-center text-xs text-gray-500 bg-white">
+                  ---
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Load Data Button */}
-          <button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 text-xs">
+          <button 
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 text-xs"
+            onClick={() => window.location.reload()}
+          >
             Load Data
           </button>
         </div>
