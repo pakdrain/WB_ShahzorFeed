@@ -125,7 +125,7 @@ function parseWeightData(rawData: string) {
 // Weight API endpoints
 app.post('/api/weight/connect', (req, res) => {
   const { port, baudRate } = req.body;
-  log(`🔌 Connecting to ${port || 'COM3'} at ${baudRate || 9600} baud...`);
+  log(`🔌 Connecting to ${port || currentComPort} at ${baudRate || 9600} baud...`);
   
   if (!isPortConnected) {
     connectToWeightScale();
@@ -133,7 +133,7 @@ app.post('/api/weight/connect', (req, res) => {
   
   res.json({ 
     success: true, 
-    message: `Connecting to ${port || 'COM3'}`,
+    message: `Connecting to ${port || currentComPort}`,
     connected: isPortConnected 
   });
 });

@@ -242,6 +242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Weight status endpoint
   app.get('/api/weight/status', (req, res) => {
+    console.log('Routes Debug - currentComPort:', currentComPort);
     res.json({
       connected: isPortConnected,
       port: currentComPort,
