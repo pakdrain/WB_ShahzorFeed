@@ -781,7 +781,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LIMIT 10;
       `;
 
-      const result = await db.query(igpQuery, [igpNo]);
+      const result = await pool.query(igpQuery, [igpNo]);
       
       if (result.rows.length > 0) {
         console.log(`Found ${result.rows.length} local IGP records for ${igpNo}`);
