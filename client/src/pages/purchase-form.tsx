@@ -343,11 +343,11 @@ export default function PurchaseForm() {
     const bardanaWeight = parseFloat(formData.bardanaWeight) || 0;
     const supplierWeight = parseFloat(formData.supplierWeight) || 0;
     
-    // Net Weight = First Weight - Second Weight - Bardana Weight
-    const netWeight = firstWeight - secondWeight - bardanaWeight;
+    // Net Weight = First Weight - Second Weight
+    const netWeight = firstWeight - secondWeight;
     
-    // Gross Weight = First Weight - Second Weight (without bardana deduction)
-    const grossWeight = firstWeight - secondWeight;
+    // Gross Weight = First Weight - Second Weight - Bardana Weight
+    const grossWeight = firstWeight - secondWeight - bardanaWeight;
     
     // Supplier Weight - Bardana
     const supplierWeightMinusBardana = supplierWeight - bardanaWeight;
