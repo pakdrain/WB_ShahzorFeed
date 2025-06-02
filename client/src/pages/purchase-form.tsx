@@ -88,6 +88,12 @@ export default function PurchaseForm() {
     setFormData(initialFormData);
   };
 
+  // Function to get current date in YYYY-MM-DD format
+  const getCurrentDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   const initialFormData = {
     slipNo: '',
     slipInTime: '',
@@ -120,7 +126,7 @@ export default function PurchaseForm() {
     noOfBags: '',
     qualityDed: '',
     igpNo: '',
-    igpDate: '',
+    igpDate: getCurrentDate(),
     vehicleNo: '',
     weight: '',
     bags: '',
@@ -1107,7 +1113,17 @@ export default function PurchaseForm() {
                     </div>
                     <div>
                       <Label className="text-xs text-black">IGP Date</Label>
-                      <Input name="igpDate" value={formData.igpDate} onChange={handleChange} className="h-4 text-xs text-black" />
+                      <Input 
+                        name="igpDate" 
+                        value={formData.igpDate} 
+                        onChange={handleChange} 
+                        className="h-4 text-xs text-black" 
+                        type="date"
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-black">Vendor</Label>
+                      <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black" />
                     </div>
                   </div>
 
