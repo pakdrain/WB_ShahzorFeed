@@ -725,5 +725,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // IGP lookup from local database for offline functionality
+  app.get('/api/purchase/igp-lookup/:igpNo', async (req: Request, res: Response) => {
+    try {
+      const igpNo = req.params.igpNo;
+      
+      if (!igpNo) {
+        return res.status(400).json({ error: 'IGP number is required' });
+      }
+
+      console.log('Looking up IGP data locally for:', igpNo);
+
+      // Query local database for IGP data
+      const igpQuery = `
+        SELECT DISTINCT
+          d.igp_no,
+          d.vendor_name,
+          d.po_no,
+          d.item_code,
+          d.item_desc,
+          d.po_qty,
+          d.igp_qty,
+          d.balance_qty,
+          d.vehicle_no
+        FROM wb_purchase_item_details_all d
+        WHERE d.igp_no = $1
+        ORDER BY d.creation_date DESC
+        LIMIT 10;
+      `;
+
+      const result = await db.query(igpQuery, [igpNo]);
+      
+      if (result.rows.length > 0) {
+        console.log(`Found ${result.rows.length} local IGP records for ${igpNo}`);
+        res.json(result.rows);
+      } else {
+        console.log(`No local IGP data found for ${igpNo}`);
+        res.json([]);
+      }
+
+    } catch (error) {
+      console.error('Error looking up IGP data locally:', error);
+      res.status(500).json({ error: 'Failed to lookup IGP data locally' });
+    }
+  });
+
   return httpServer;
 }

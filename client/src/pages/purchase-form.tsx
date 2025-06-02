@@ -345,15 +345,14 @@ export default function PurchaseForm() {
     if (!igpNumber) return;
     
     try {
-      // Always try to fetch IGP data regardless of online/offline mode
-      const response = await fetch(`/api/igp/${igpNumber}`);
-      if (response.ok) {
-        const igpData = await response.json();
-        setIgpItems(igpData);
-        
-        // Auto-populate form fields with IGP data
-        if (igpData.length > 0) {
-          const firstItem = igpData[0];
+      // First try to fetch from local database
+      const localResponse = await fetch(`/api/purchase/igp-lookup/${igpNumber}`);
+      if (localResponse.ok) {
+        const localData = await localResponse.json();
+        if (localData && localData.length > 0) {
+          setIgpItems(localData);
+          // Auto-populate form fields with local IGP data
+          const firstItem = localData[0];
           setFormData(prev => ({
             ...prev,
             vendor: firstItem.vendor_name || prev.vendor,
@@ -364,11 +363,44 @@ export default function PurchaseForm() {
             balanceQty: firstItem.balance_qty?.toString() || prev.balanceQty,
             po_no: firstItem.po_no || prev.po_no
           }));
+          return; // Successfully found local data
         }
+      }
+      
+      // If no local data found, try external API (online mode)
+      try {
+        const response = await fetch(`/api/igp/${igpNumber}`);
+        if (response.ok) {
+          const igpData = await response.json();
+          setIgpItems(igpData);
+          
+          // Auto-populate form fields with external IGP data
+          if (igpData.length > 0) {
+            const firstItem = igpData[0];
+            setFormData(prev => ({
+              ...prev,
+              vendor: firstItem.vendor_name || prev.vendor,
+              itemCode: firstItem.item_code || prev.itemCode,
+              itemDesc: firstItem.item_desc || prev.itemDesc,
+              poQty: firstItem.po_qty?.toString() || prev.poQty,
+              igpQty: firstItem.igp_qty?.toString() || prev.igpQty,
+              balanceQty: firstItem.balance_qty?.toString() || prev.balanceQty,
+              po_no: firstItem.po_no || prev.po_no
+            }));
+          }
+        } else {
+          // External API failed, enable manual entry mode
+          setOnlineMode(false);
+          console.log('External IGP API unavailable, switched to manual entry mode');
+        }
+      } catch (externalError) {
+        // External fetch failed, enable manual entry mode
+        setOnlineMode(false);
+        console.log('External IGP fetch failed, enabling manual entry mode:', externalError);
       }
     } catch (error) {
       console.log('IGP fetch error (continuing with manual entry):', error);
-      // Continue with manual entry - no alert needed for offline mode
+      setOnlineMode(false);
     }
   };
 
@@ -889,7 +921,12 @@ export default function PurchaseForm() {
                   {/* Second Column - IGP Details */}
                   <div className="col-span-4 space-y-2">
                     <div>
-                      <Label className="text-xs text-black font-medium">IGP No</Label>
+                      <div className="flex justify-between items-center">
+                        <Label className="text-xs text-black font-medium">IGP No</Label>
+                        {!onlineMode && (
+                          <span className="text-xs text-orange-600 font-medium">Offline Mode</span>
+                        )}
+                      </div>
                       <Input 
                         name="igpNo" 
                         value={formData.igpNo} 
@@ -900,7 +937,7 @@ export default function PurchaseForm() {
                             fetchIGPData(formData.igpNo);
                           }
                         }}
-                        placeholder="Press Enter to fetch"
+                        placeholder={onlineMode ? "Press Enter to fetch" : "Local data only"}
                       />
                     </div>
                     <div>
