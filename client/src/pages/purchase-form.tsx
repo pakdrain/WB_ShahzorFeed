@@ -875,17 +875,16 @@ export default function PurchaseForm() {
                   {/* Mini Column 4 - Additional fields */}
                   <div className="space-y-1">
                     <div>
-                      <Button onClick={handleSaveItems} className="w-full h-4 bg-green-500 text-xs" disabled={loading}>
-                        {loading ? 'Saving...' : 'Save Items'}
-                      </Button>
-                    </div>
-                    <div>
                       <Label className="text-xs text-black">Quality Deduction</Label>
                       <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black" />
                     </div>
                     <div>
                       <Label className="text-xs text-black">Bag Condition</Label>
                       <Input name="bagCondition" value={formData.bagCondition} onChange={handleChange} className="h-4 text-xs text-black" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-black">No of Bags</Label>
+                      <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-4 text-xs text-black" />
                     </div>
                   </div>
                 </div>
