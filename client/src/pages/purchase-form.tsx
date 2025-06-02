@@ -15,10 +15,17 @@ export default function PurchaseForm() {
   const [location] = useLocation();
   
   // Fetch all first weight records
-  const { data: firstWeightRecords } = useQuery({
+  const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ['/api/purchase/first-weight-records'],
     refetchInterval: 3000, // Refresh every 3 seconds
   });
+
+  // Filter records based on search criteria
+  const filteredRecords = Array.isArray(firstWeightRecords) ? firstWeightRecords.filter((record: any) => {
+    const matchesSlipNo = !searchSlipNo || (record.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
+    const matchesVehicleNo = !searchVehicleNo || (record.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
+    return matchesSlipNo && matchesVehicleNo;
+  }) : [];
 
   // Function to load data by slip number for editing
   const loadDataBySlipNo = async (slipNo: string) => {
@@ -146,7 +153,9 @@ export default function PurchaseForm() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
   const [onlineMode, setOnlineMode] = useState(true);
-  const [igpItems, setIgpItems] = useState([]);
+  const [igpItems, setIgpItems] = useState<any[]>([]);
+  const [searchSlipNo, setSearchSlipNo] = useState('');
+  const [searchVehicleNo, setSearchVehicleNo] = useState('');
 
   // Function to reset form to clean state
   const resetFormToInitial = () => {
@@ -283,7 +292,15 @@ export default function PurchaseForm() {
   }, []);
 
   const resetForm = () => {
-    setFormData(initialFormData);
+    // When Clear button is pressed, clear everything except Slip No
+    const currentSlipNo = formData.slipNo;
+    setFormData({
+      ...initialFormData,
+      slipNo: currentSlipNo
+    });
+    setIgpItems([]);
+    setIsEditMode(false);
+    setEditingWbId(null);
     toggleOnlineMode(true);
   };
 
@@ -441,7 +458,7 @@ export default function PurchaseForm() {
       }
       
       // Prepare items data payload - use first IGP item if available, otherwise form data
-      const firstIgpItem = igpItems.length > 0 ? igpItems[0] : {};
+      const firstIgpItem: any = igpItems.length > 0 ? igpItems[0] : {};
       
       console.log('Form data for items:', formData);
       console.log('IGP items available:', igpItems);
@@ -453,17 +470,17 @@ export default function PurchaseForm() {
         vehicle_no: formData.vehicleNo || null,
         weight_per_bags: formData.wtPerBag ? parseFloat(formData.wtPerBag) : null,
         igp_date: formData.igpDate || null,
-        supplier_weight: formData.superweight ? parseFloat(formData.superweight) : null,
+        supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
         quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
         no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
-        vendor_name: firstIgpItem.vendor_name || formData.vendor || null,
+        vendor_name: firstIgpItem?.vendor_name || formData.vendor || null,
         bag_condition: formData.bagCondition || null,
-        po_no: firstIgpItem.po_no || formData.po_no || null,
-        item_code: firstIgpItem.item_code || formData.itemCode || null,
-        item_desc: firstIgpItem.item_desc || formData.itemDesc || null,
-        po_qty: firstIgpItem.po_qty ? parseFloat(firstIgpItem.po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
-        igp_qty: firstIgpItem.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
-        balance_qty: firstIgpItem.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
+        po_no: firstIgpItem?.po_no || formData.po_no || null,
+        item_code: firstIgpItem?.item_code || formData.itemCode || null,
+        item_desc: firstIgpItem?.item_desc || formData.itemDesc || null,
+        po_qty: firstIgpItem?.po_qty ? parseFloat(firstIgpItem.po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
+        igp_qty: firstIgpItem?.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
+        balance_qty: firstIgpItem?.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
       };
       
       console.log('Items payload being sent:', itemsPayload);
@@ -613,6 +630,34 @@ export default function PurchaseForm() {
       {/* Weight Display Table - Upper Right Side */}
       <div className="absolute top-20 right-4 z-50">
         <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72">
+          {/* Search Row */}
+          <div className="grid grid-cols-3 border-b border-gray-400 bg-blue-50">
+            <div className="border-r border-gray-400 p-1">
+              <Input 
+                placeholder="Search Slip No"
+                value={searchSlipNo}
+                onChange={(e) => setSearchSlipNo(e.target.value)}
+                className="h-5 text-xs"
+              />
+            </div>
+            <div className="border-r border-gray-400 p-1">
+              <Input 
+                placeholder="Search Vehicle"
+                value={searchVehicleNo}
+                onChange={(e) => setSearchVehicleNo(e.target.value)}
+                className="h-5 text-xs"
+              />
+            </div>
+            <div className="p-1">
+              <Button 
+                onClick={() => {setSearchSlipNo(''); setSearchVehicleNo('');}}
+                className="h-5 text-xs bg-gray-500 hover:bg-gray-600 w-full"
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
             <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
@@ -626,10 +671,10 @@ export default function PurchaseForm() {
             </div>
           </div>
 
-          {/* Data Rows - showing all first weight records */}
+          {/* Data Rows - showing filtered records */}
           <div className="max-h-48 overflow-y-auto">
-            {firstWeightRecords && firstWeightRecords.length > 0 ? (
-              firstWeightRecords.map((record: any, index: number) => (
+            {filteredRecords && filteredRecords.length > 0 ? (
+              filteredRecords.map((record: any, index: number) => (
                 <div key={index} className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50">
                   <button 
                     className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
@@ -648,7 +693,7 @@ export default function PurchaseForm() {
             ) : (
               <div className="grid grid-cols-3 border-b border-gray-400">
                 <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
-                  No records
+                  {searchSlipNo || searchVehicleNo ? 'No matches' : 'No records'}
                 </div>
                 <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
                   ---
@@ -873,40 +918,68 @@ export default function PurchaseForm() {
                     </div>
                   </div>
 
-                  {/* Mini Column 3 */}
+                  {/* Mini Column 3 - Vehicle & Weight */}
                   <div className="space-y-1">
                     <div>
                       <Label className="text-xs text-black">Vehicle No</Label>
                       <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black" />
                     </div>
                     <div>
-                      <Label className="text-xs text-black">Supp's Weight</Label>
-                      <Input name="superweight" value={formData.superweight} onChange={handleChange} className="h-4 text-xs text-black" />
+                      <Label className="text-xs text-black">Weight</Label>
+                      <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black" />
                     </div>
                     <div>
-                      <Button className="w-full h-4 bg-yellow-500 text-xs">Deduction +</Button>
+                      <Label className="text-xs text-black">Bags</Label>
+                      <Input name="bags" value={formData.bags} onChange={handleChange} className="h-4 text-xs text-black" />
                     </div>
                   </div>
 
-                  {/* Mini Column 4 - Additional fields */}
+                  {/* Mini Column 4 - Supplier Weight Section */}
                   <div className="space-y-1">
                     <div>
-                      <Label className="text-xs text-black">Quality Deduction</Label>
-                      <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black" />
+                      <Label className="text-xs text-black">Supplier Weight</Label>
+                      <Input name="supplierWeight" value={formData.supplierWeight} onChange={handleChange} className="h-4 text-xs text-black" />
                     </div>
                     <div>
-                      <Label className="text-xs text-black">Bag Condition</Label>
-                      <Input name="bagCondition" value={formData.bagCondition} onChange={handleChange} className="h-4 text-xs text-black" />
+                      <Label className="text-xs text-black">Supp Wt - Bardana</Label>
+                      <Input name="supplierWeightMinusBardana" value={formData.supplierWeightMinusBardana} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
                     </div>
                     <div>
-                      <Label className="text-xs text-black">No of Bags</Label>
-                      <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-4 text-xs text-black" />
+                      <Label className="text-xs text-black">Supp Wt - Out Wt</Label>
+                      <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
                     </div>
                   </div>
                 </div>
 
+                {/* Deduction+ Button */}
+                <div className="mb-2">
+                  <Button className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium">
+                    Deduction+
+                  </Button>
+                </div>
+
+                {/* Weight Calculations Display */}
+                <div className="grid grid-cols-4 gap-2 mb-2 p-2 bg-gray-50 rounded border">
+                  <div className="text-center">
+                    <Label className="text-xs text-black font-semibold">Net Weight</Label>
+                    <div className="text-sm font-bold text-green-700">{formData.netWeight || '0.00'} kg</div>
+                  </div>
+                  <div className="text-center">
+                    <Label className="text-xs text-black font-semibold">Gross Weight</Label>
+                    <div className="text-sm font-bold text-blue-700">{formData.grossWeight || '0.00'} kg</div>
+                  </div>
+                  <div className="text-center">
+                    <Label className="text-xs text-black font-semibold">Supp Wt - Bardana</Label>
+                    <div className="text-sm font-bold text-purple-700">{formData.supplierWeightMinusBardana || '0.00'} kg</div>
+                  </div>
+                  <div className="text-center">
+                    <Label className="text-xs text-black font-semibold">Supp Wt - Out Wt</Label>
+                    <div className="text-sm font-bold text-orange-700">{formData.supplierWeightMinusOutWeight || '0.00'} kg</div>
+                  </div>
+                </div>
+
                 {/* Compact Table with IGP Data */}
-                <div className="border rounded text-xs h-[calc(100%-120px)] overflow-auto">
+                <div className="border rounded text-xs h-[calc(100%-200px)] overflow-auto">
                   <table className="w-full text-center">
                     <thead className="bg-gray-100 sticky top-0">
                       <tr>
