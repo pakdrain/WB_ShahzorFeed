@@ -136,6 +136,9 @@ export default function PurchaseForm() {
     netSupplierWeight: '',
     bagCondition: '',
     bardanaTypeId: '',
+    // New fields for enhanced form
+    supplierWeightMinusBardana: '',
+    supplierWeightMinusOutWeight: '',
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -316,25 +319,38 @@ export default function PurchaseForm() {
     }
   };
 
-  // Calculate net weight automatically
-  const calculateNetWeight = () => {
+  // Calculate weights automatically
+  const calculateWeights = () => {
     const firstWeight = parseFloat(formData.firstWeight) || 0;
     const secondWeight = parseFloat(formData.secondWeight) || 0;
     const bardanaWeight = parseFloat(formData.bardanaWeight) || 0;
+    const supplierWeight = parseFloat(formData.supplierWeight) || 0;
     
     // Net Weight = First Weight - Second Weight - Bardana Weight
     const netWeight = firstWeight - secondWeight - bardanaWeight;
     
+    // Gross Weight = First Weight - Second Weight (without bardana deduction)
+    const grossWeight = firstWeight - secondWeight;
+    
+    // Supplier Weight - Bardana
+    const supplierWeightMinusBardana = supplierWeight - bardanaWeight;
+    
+    // Supplier Weight - Out Weight (assuming out weight is second weight)
+    const supplierWeightMinusOutWeight = supplierWeight - secondWeight;
+    
     setFormData(prev => ({
       ...prev,
-      netWeight: netWeight.toString()
+      netWeight: netWeight.toString(),
+      grossWeight: grossWeight.toString(),
+      supplierWeightMinusBardana: supplierWeightMinusBardana.toString(),
+      supplierWeightMinusOutWeight: supplierWeightMinusOutWeight.toString()
     }));
   };
 
-  // Auto-calculate net weight when values change
+  // Auto-calculate weights when values change
   useEffect(() => {
-    calculateNetWeight();
-  }, [formData.firstWeight, formData.secondWeight, formData.bardanaWeight]);
+    calculateWeights();
+  }, [formData.firstWeight, formData.secondWeight, formData.bardanaWeight, formData.supplierWeight]);
 
   const handleSave = async () => {
     setLoading(true);
