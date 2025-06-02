@@ -126,7 +126,7 @@ export default function PurchaseForm() {
     noOfBags: '',
     qualityDed: '',
     igpNo: '',
-    igpDate: getCurrentDate(),
+    igpDate: '',
     vehicleNo: '',
     weight: '',
     bags: '',
