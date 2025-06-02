@@ -13,6 +13,8 @@ import { Link, useLocation } from 'wouter';
 
 export default function PurchaseForm() {
   const [location] = useLocation();
+  const [searchSlipNo, setSearchSlipNo] = useState('');
+  const [searchVehicleNo, setSearchVehicleNo] = useState('');
   
   // Fetch all first weight records
   const { data: firstWeightRecords = [] } = useQuery({
@@ -154,8 +156,6 @@ export default function PurchaseForm() {
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
   const [onlineMode, setOnlineMode] = useState(true);
   const [igpItems, setIgpItems] = useState<any[]>([]);
-  const [searchSlipNo, setSearchSlipNo] = useState('');
-  const [searchVehicleNo, setSearchVehicleNo] = useState('');
 
   // Function to reset form to clean state
   const resetFormToInitial = () => {
