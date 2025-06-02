@@ -976,8 +976,10 @@ export default function PurchaseForm() {
         <div className="grid grid-cols-12 gap-1 h-full">
           {/* Left Side - Main Form (Columns 1-8) */}
           <div className="col-span-8">
-            {/* Top Row - Form Fields - Compact */}
-            <div className="grid grid-cols-9 gap-1 mb-2">
+            {/* Master Table Section */}
+            <div className="bg-gray-50 p-2 rounded border mb-3">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Master Table</h3>
+              <div className="grid grid-cols-9 gap-1">
               {/* Column 1 - Left Form Fields */}
               <div className="col-span-3 space-y-1">
                 <div>
@@ -1068,10 +1070,13 @@ export default function PurchaseForm() {
                   />
                 </div>
               </div>
+              </div>
             </div>
 
-            {/* Bottom Row - Tabs Section - Compact */}
-            <Tabs defaultValue="purchase" className="h-[calc(100%-120px)]">
+            {/* Details Section */}
+            <div className="bg-blue-50 p-2 rounded border">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Details Table</h3>
+              <Tabs defaultValue="purchase" className="h-[calc(100%-120px)]">
               <TabsList className="h-5">
                 <TabsTrigger value="purchase" className="text-xs">Purchase</TabsTrigger>
                 <TabsTrigger value="sale" className="text-xs">Sale</TabsTrigger>
@@ -1219,8 +1224,13 @@ export default function PurchaseForm() {
                 <div className="text-center p-4 text-xs text-black">Offline tab content here</div>
               </TabsContent>
             </Tabs>
+            </div>
           </div>
 
+          {/* Right Side - Weight Display and Bag Table (Columns 9-12) */}
+          <div className="col-span-4">
+            {/* This section will contain the right side components */}
+          </div>
         </div>
       </div>
     </div>
