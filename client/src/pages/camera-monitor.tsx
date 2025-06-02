@@ -29,6 +29,9 @@ export default function CameraMonitor() {
     refetchInterval: 2000, // Update every 2 seconds
   });
 
+  // Default camera data if API isn't available
+  const cameraData = camera || { id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 };
+
   // Initialize WebSocket stream connection
   const {
     isConnected,
@@ -38,7 +41,7 @@ export default function CameraMonitor() {
     startStream,
     stopStream,
     reconnectStream,
-  } = useStream(camera?.id);
+  } = useStream(cameraData.id);
 
   // Update current time every second
   useEffect(() => {
@@ -51,7 +54,7 @@ export default function CameraMonitor() {
 
   // Auto-start stream immediately when camera is available
   useEffect(() => {
-    if (camera?.id) {
+    if (cameraData.id) {
       // Start stream immediately when camera is loaded
       const timer = setTimeout(() => {
         startStream();
@@ -59,7 +62,7 @@ export default function CameraMonitor() {
 
       return () => clearTimeout(timer);
     }
-  }, [camera?.id, startStream]);
+  }, [cameraData.id, startStream]);
 
   if (cameraLoading) {
     return (
@@ -170,7 +173,7 @@ export default function CameraMonitor() {
         {/* Embedded Camera View - Small size inside weight region */}
         <div className="w-40 h-30 mb-8 border border-monitoring-gray rounded overflow-hidden">
           <VideoStreamFullscreen
-            camera={camera}
+            camera={cameraData}
             isConnected={isConnected}
             isStreaming={isStreaming}
           />
