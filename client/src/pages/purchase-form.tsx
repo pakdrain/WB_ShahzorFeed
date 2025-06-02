@@ -763,7 +763,7 @@ export default function PurchaseForm() {
   };
 
   return (
-    <div className="h-screen bg-blue-50 p-1 overflow-hidden relative">
+    <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
       <div className="absolute top-20 right-4 z-50">
         <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72 mb-4">
@@ -982,15 +982,15 @@ export default function PurchaseForm() {
               <div className="col-span-3 space-y-1">
                 <div>
                   <Label className="text-xs text-black">Slip No</Label>
-                  <Input name="slipNo" value={formData.slipNo} readOnly className="h-5 text-xs text-black" />
+                  <Input name="slipNo" value={formData.slipNo} readOnly className="h-5 text-xs text-black w-20" />
                 </div>
                 <div>
                   <Label className="text-xs text-black">Net Weight</Label>
-                  <Input name="netWeight" value={formData.netWeight} onChange={handleChange} className="h-5 text-xs bg-yellow-200 text-black" />
+                  <Input name="netWeight" value={formData.netWeight} onChange={handleChange} className="h-5 text-xs bg-yellow-200 text-black w-20" />
                 </div>
                 <div>
                   <Label className="text-xs text-black">Freight</Label>
-                  <Input name="freight" value={formData.freight} onChange={handleChange} className="h-5 text-xs text-black" />
+                  <Input name="freight" value={formData.freight} onChange={handleChange} className="h-5 text-xs text-black w-28" />
                 </div>
                 <div>
                   <Label className="text-xs text-black">Remarks</Label>
@@ -1048,13 +1048,15 @@ export default function PurchaseForm() {
                     className="h-5 text-xs text-black placeholder:text-gray-500"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-1">
-                  <Button className="h-5 bg-green-600 text-xs" onClick={captureFirstWeight}>1st WHT</Button>
-                  <Button className="h-5 bg-gray-500 text-xs" onClick={captureSecondWeight}>2nd WHT</Button>
-                </div>
-                <div className="grid grid-cols-2 gap-1">
-                  <Button className="h-5 bg-yellow-500 text-xs" onClick={resetForm}>Clear</Button>
-                  <Button className="h-5 bg-red-500 text-xs">Exit</Button>
+                <div className="mt-4">
+                  <div className="grid grid-cols-2 gap-1 mb-1">
+                    <Button className="h-5 bg-green-600 text-xs" onClick={captureFirstWeight}>1st WHT</Button>
+                    <Button className="h-5 bg-gray-500 text-xs" onClick={captureSecondWeight}>2nd WHT</Button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    <Button className="h-5 bg-yellow-500 text-xs" onClick={resetForm}>Clear</Button>
+                    <Button className="h-5 bg-red-500 text-xs">Exit</Button>
+                  </div>
                 </div>
                 
                 {/* Clean Camera Feed - just the video content */}
@@ -1157,7 +1159,7 @@ export default function PurchaseForm() {
                       <Label className="text-xs text-black">Supp Wt - Out Wt</Label>
                       <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
                     </div>
-                    <div className="mt-2">
+                    <div className="mt-6">
                       <Button 
                         className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
                         onClick={handleDeduction}
