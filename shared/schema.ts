@@ -33,6 +33,18 @@ export const streamStats = pgTable("stream_stats", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+export const deduction = pgTable("deduction", {
+  id: serial("id").primaryKey(),
+  wbId: integer("wb_id").notNull(),
+  bagId: integer("bag_id").notNull(),
+  bags: integer("bags").notNull(),
+  pb: decimal("pb", { precision: 10, scale: 2 }),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }),
+  weight: decimal("weight", { precision: 10, scale: 2 }),
+  total: decimal("total", { precision: 12, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertCameraSchema = createInsertSchema(cameras).omit({
   id: true,
   createdAt: true,
@@ -49,9 +61,16 @@ export const insertStreamStatsSchema = createInsertSchema(streamStats).omit({
   timestamp: true,
 });
 
+export const insertDeductionSchema = createInsertSchema(deduction).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Camera = typeof cameras.$inferSelect;
 export type InsertCamera = z.infer<typeof insertCameraSchema>;
 export type StreamSession = typeof streamSessions.$inferSelect;
 export type InsertStreamSession = z.infer<typeof insertStreamSessionSchema>;
 export type StreamStats = typeof streamStats.$inferSelect;
 export type InsertStreamStats = z.infer<typeof insertStreamStatsSchema>;
+export type Deduction = typeof deduction.$inferSelect;
+export type InsertDeduction = z.infer<typeof insertDeductionSchema>;

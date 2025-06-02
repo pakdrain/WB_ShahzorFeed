@@ -16,6 +16,10 @@ export default function PurchaseForm() {
   const [searchSlipNo, setSearchSlipNo] = useState('');
   const [searchVehicleNo, setSearchVehicleNo] = useState('');
   
+  // Deduction/Bag table state
+  const [bagTableData, setBagTableData] = useState<any[]>([]);
+  const [nextBagId, setNextBagId] = useState(1);
+  
   // Fetch all first weight records
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ['/api/purchase/first-weight-records'],
