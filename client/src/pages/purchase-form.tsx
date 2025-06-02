@@ -630,34 +630,6 @@ export default function PurchaseForm() {
       {/* Weight Display Table - Upper Right Side */}
       <div className="absolute top-20 right-4 z-50">
         <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72">
-          {/* Search Row */}
-          <div className="grid grid-cols-3 border-b border-gray-400 bg-blue-50">
-            <div className="border-r border-gray-400 p-1">
-              <Input 
-                placeholder="Search Slip No"
-                value={searchSlipNo}
-                onChange={(e) => setSearchSlipNo(e.target.value)}
-                className="h-5 text-xs"
-              />
-            </div>
-            <div className="border-r border-gray-400 p-1">
-              <Input 
-                placeholder="Search Vehicle"
-                value={searchVehicleNo}
-                onChange={(e) => setSearchVehicleNo(e.target.value)}
-                className="h-5 text-xs"
-              />
-            </div>
-            <div className="p-1">
-              <Button 
-                onClick={() => {setSearchSlipNo(''); setSearchVehicleNo('');}}
-                className="h-5 text-xs bg-gray-500 hover:bg-gray-600 w-full"
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
-
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
             <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
@@ -668,6 +640,34 @@ export default function PurchaseForm() {
             </div>
             <div className="bg-gray-200 p-1 text-center text-xs font-semibold text-black">
               Entry Type
+            </div>
+          </div>
+
+          {/* Search Row - positioned under headers */}
+          <div className="grid grid-cols-3 border-b border-gray-400 bg-blue-50">
+            <div className="border-r border-gray-400 p-1">
+              <Input 
+                placeholder="Search Slip No"
+                value={searchSlipNo}
+                onChange={(e) => setSearchSlipNo(e.target.value)}
+                className="h-5 text-xs text-black placeholder:text-gray-500 bg-white border-gray-300"
+              />
+            </div>
+            <div className="border-r border-gray-400 p-1">
+              <Input 
+                placeholder="Search Vehicle"
+                value={searchVehicleNo}
+                onChange={(e) => setSearchVehicleNo(e.target.value)}
+                className="h-5 text-xs text-black placeholder:text-gray-500 bg-white border-gray-300"
+              />
+            </div>
+            <div className="p-1">
+              <Button 
+                onClick={() => {setSearchSlipNo(''); setSearchVehicleNo('');}}
+                className="h-5 text-xs bg-gray-500 hover:bg-gray-600 text-white w-full"
+              >
+                Clear
+              </Button>
             </div>
           </div>
 
