@@ -985,10 +985,6 @@ export default function PurchaseForm() {
                       <Label className="text-xs text-black">IGP Date</Label>
                       <Input name="igpDate" value={formData.igpDate} onChange={handleChange} className="h-4 text-xs text-black" />
                     </div>
-                    <div>
-                      <Label className="text-xs text-black">Vendor</Label>
-                      <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
                   </div>
 
                   {/* Mini Column 3 - Vehicle & Weight */}
@@ -1021,14 +1017,12 @@ export default function PurchaseForm() {
                       <Label className="text-xs text-black">Supp Wt - Out Wt</Label>
                       <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
                     </div>
+                    <div className="mt-2">
+                      <Button className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium">
+                        Deduction+
+                      </Button>
+                    </div>
                   </div>
-                </div>
-
-                {/* Deduction+ Button */}
-                <div className="mb-2">
-                  <Button className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium">
-                    Deduction+
-                  </Button>
                 </div>
 
                 {/* Compact Table with IGP Data */}
@@ -1039,28 +1033,32 @@ export default function PurchaseForm() {
                         <th className="border p-1 text-xs text-black">Po No</th>
                         <th className="border p-1 text-xs text-black">Item Code</th>
                         <th className="border p-1 text-xs text-black">Item Description</th>
-                        <th className="border p-1 text-xs text-black">Po Qty</th>
-                        <th className="border p-1 text-xs text-black">IGP Qty</th>
-                        <th className="border p-1 text-xs text-black">Balance Qty</th>
-                        <th className="border p-1 text-xs text-black">Vendor</th>
+                        <th className="border p-1 text-xs text-black">PO Quantity</th>
+                        <th className="border p-1 text-xs text-black">IGP Quantity</th>
+                        <th className="border p-1 text-xs text-black">Balance Quantity</th>
                       </tr>
                     </thead>
                     <tbody>
                       {igpItems.length > 0 ? (
-                        igpItems.map((item: any, index: number) => (
-                          <tr key={index}>
-                            <td className="border p-1 h-4 text-xs text-black">{item.po_no || ''}</td>
-                            <td className="border p-1 h-4 text-xs text-black">{item.item_code || ''}</td>
-                            <td className="border p-1 h-4 text-xs text-black">{item.item_desc || ''}</td>
-                            <td className="border p-1 h-4 text-xs text-black">{item.po_qty || ''}</td>
-                            <td className="border p-1 h-4 text-xs text-black">{item.igp_qty || ''}</td>
-                            <td className="border p-1 h-4 text-xs text-black">{item.balance_qty || ''}</td>
-                            <td className="border p-1 h-4 text-xs text-black">{item.vendor_name || ''}</td>
-                          </tr>
-                        ))
+                        igpItems.map((item: any, index: number) => {
+                          const poQty = parseFloat(item.po_qty) || 0;
+                          const igpQty = parseFloat(item.igp_qty) || 0;
+                          const balanceQty = poQty - igpQty;
+                          
+                          return (
+                            <tr key={index}>
+                              <td className="border p-1 h-4 text-xs text-black">{item.po_no || ''}</td>
+                              <td className="border p-1 h-4 text-xs text-black">{item.item_code || ''}</td>
+                              <td className="border p-1 h-4 text-xs text-black">{item.item_desc || ''}</td>
+                              <td className="border p-1 h-4 text-xs text-black">{poQty.toFixed(2)}</td>
+                              <td className="border p-1 h-4 text-xs text-black">{igpQty.toFixed(2)}</td>
+                              <td className="border p-1 h-4 text-xs text-black">{balanceQty.toFixed(2)}</td>
+                            </tr>
+                          );
+                        })
                       ) : (
                         <tr>
-                          <td className="border p-1 h-4 text-xs text-black" colSpan={7}>No IGP data available</td>
+                          <td className="border p-1 h-4 text-xs text-black" colSpan={6}>No IGP data available</td>
                         </tr>
                       )}
                     </tbody>
