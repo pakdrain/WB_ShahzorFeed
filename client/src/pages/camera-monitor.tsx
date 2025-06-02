@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Camera, Video, Clock } from "lucide-react";
+import { Camera, Video, Clock, FileText } from "lucide-react";
+import { Link } from "wouter";
 import ConnectionStatus from "@/components/connection-status";
 import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
 import StreamControls from "@/components/stream-controls";
@@ -9,6 +10,7 @@ import WeightIndicator from "@/components/weight-indicator";
 import WeightDisplayTable from "@/components/weight-display-table";
 import { useStream } from "@/hooks/use-stream";
 import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default function CameraMonitor() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -87,6 +89,16 @@ export default function CameraMonitor() {
 
   return (
     <div className="min-h-screen bg-monitoring-dark overflow-hidden relative">
+      {/* Purchase Button - Top Left */}
+      <div className="absolute top-8 left-8 z-50">
+        <Link href="/purchase-form">
+          <Button className="bg-monitoring-blue hover:bg-monitoring-blue/90 text-white font-semibold px-6 py-2 rounded-lg shadow-lg">
+            <FileText className="h-5 w-5 mr-2" />
+            Purchase
+          </Button>
+        </Link>
+      </div>
+
       {/* Weight Display Table - Upper Right Corner */}
       <div className="absolute top-8 right-8 z-50">
         <div className="bg-white border-2 border-gray-300 rounded-lg shadow-lg p-4 w-64">
