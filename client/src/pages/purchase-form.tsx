@@ -719,7 +719,7 @@ export default function PurchaseForm() {
       <div className="absolute top-96 right-4 z-50">
         <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80">
           {/* Header Row */}
-          <div className="grid grid-cols-6 border-b border-gray-400">
+          <div className="grid grid-cols-5 border-b border-gray-400">
             <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
               Bag ID
             </div>
@@ -732,45 +732,50 @@ export default function PurchaseForm() {
             <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
               %age
             </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
-              Weight
-            </div>
             <div className="bg-gray-200 p-1 text-center text-xs font-semibold text-black">
-              Action
+              Weight
             </div>
           </div>
 
           {/* Sample Data Rows */}
           <div className="max-h-32 overflow-y-auto">
-            <div className="grid grid-cols-6 border-b border-gray-300">
+            <div className="grid grid-cols-5 border-b border-gray-300">
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">001</div>
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">50</div>
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">25.5</div>
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">12.5</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">1275.0</div>
-              <div className="p-1 text-center">
-                <button className="text-red-600 hover:text-red-800 font-bold text-sm">✕</button>
+              <div className="p-1 text-center text-xs text-black flex justify-between items-center">
+                <span>1275.0</span>
+                <button className="text-red-600 hover:text-red-800 font-bold text-sm ml-2">✖</button>
               </div>
             </div>
-            <div className="grid grid-cols-6 border-b border-gray-300">
+            <div className="grid grid-cols-5 border-b border-gray-300">
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">002</div>
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">30</div>
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">26.0</div>
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">15.2</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">780.0</div>
-              <div className="p-1 text-center">
-                <button className="text-red-600 hover:text-red-800 font-bold text-sm">✕</button>
+              <div className="p-1 text-center text-xs text-black flex justify-between items-center">
+                <span>780.0</span>
+                <button className="text-red-600 hover:text-red-800 font-bold text-sm ml-2">✖</button>
               </div>
             </div>
-            <div className="grid grid-cols-6 border-b border-gray-300">
+            <div className="grid grid-cols-5 border-b border-gray-300">
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">003</div>
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">25</div>
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">24.8</div>
               <div className="border-r border-gray-300 p-1 text-center text-xs text-black">11.8</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">620.0</div>
-              <div className="p-1 text-center">
-                <button className="text-red-600 hover:text-red-800 font-bold text-sm">✕</button>
+              <div className="p-1 text-center text-xs text-black flex justify-between items-center">
+                <span>620.0</span>
+                <button className="text-red-600 hover:text-red-800 font-bold text-sm ml-2">✖</button>
               </div>
+            </div>
+          </div>
+
+          {/* Total Field */}
+          <div className="border-t-2 border-gray-400 bg-gray-100 p-2">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-semibold text-black">Total Weight:</span>
+              <span className="text-xs font-bold text-blue-700">2675.0 kg</span>
             </div>
           </div>
         </div>
