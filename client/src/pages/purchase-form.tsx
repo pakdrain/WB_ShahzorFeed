@@ -717,56 +717,61 @@ export default function PurchaseForm() {
 
       {/* Bag Details Table - Below Weight Display Table */}
       <div className="absolute top-96 right-4 z-50">
-        <div className="bg-white border border-gray-400 shadow-lg w-80">
+        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80">
           {/* Header Row */}
-          <div className="grid grid-cols-5 bg-gray-100">
-            <div className="border border-gray-300 p-1 text-center text-xs font-semibold text-black">
+          <div className="grid grid-cols-6 border-b border-gray-400">
+            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+              Bag ID
+            </div>
+            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
               Bags
             </div>
-            <div className="border border-gray-300 p-1 text-center text-xs font-semibold text-black">
-              P / B
+            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+              P/B
             </div>
-            <div className="border border-gray-300 p-1 text-center text-xs font-semibold text-black">
+            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
               %age
             </div>
-            <div className="border border-gray-300 p-1 text-center text-xs font-semibold text-black">
+            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
               Weight
             </div>
-            <div className="border border-gray-300 p-1 text-center text-xs font-semibold text-black w-6">
-              
+            <div className="bg-gray-200 p-1 text-center text-xs font-semibold text-black">
+              Action
             </div>
           </div>
 
-          {/* Editable Input Rows */}
-          <div className="max-h-40 overflow-y-auto">
-            {[...Array(8)].map((_, index) => (
-              <div key={index} className="grid grid-cols-5">
-                <div className="border border-gray-300 p-0">
-                  <input className="w-full h-6 text-xs text-center border-0 focus:outline-none" placeholder="" />
-                </div>
-                <div className="border border-gray-300 p-0">
-                  <input className="w-full h-6 text-xs text-center border-0 focus:outline-none" placeholder="" />
-                </div>
-                <div className="border border-gray-300 p-0">
-                  <input className="w-full h-6 text-xs text-center border-0 focus:outline-none" placeholder="" />
-                </div>
-                <div className="border border-gray-300 p-0">
-                  <input className="w-full h-6 text-xs text-center border-0 focus:outline-none" placeholder="" />
-                </div>
-                <div className="border border-gray-300 p-0 bg-red-100 flex items-center justify-center w-6">
-                  <button className="text-red-600 hover:text-red-800 font-bold text-sm w-full h-full">✕</button>
-                </div>
+          {/* Sample Data Rows */}
+          <div className="max-h-32 overflow-y-auto">
+            <div className="grid grid-cols-6 border-b border-gray-300">
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">001</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">50</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">25.5</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">12.5</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">1275.0</div>
+              <div className="p-1 text-center">
+                <button className="text-red-600 hover:text-red-800 font-bold text-sm">✕</button>
               </div>
-            ))}
-          </div>
-
-          {/* Total Row */}
-          <div className="grid grid-cols-5 bg-gray-50">
-            <div className="border border-gray-300 p-1 text-xs"></div>
-            <div className="border border-gray-300 p-1 text-xs"></div>
-            <div className="border border-gray-300 p-1 text-xs text-center font-semibold">TOTAL:</div>
-            <div className="border border-gray-300 p-1 text-xs text-center font-semibold">0.00</div>
-            <div className="border border-gray-300 p-1 text-xs w-6"></div>
+            </div>
+            <div className="grid grid-cols-6 border-b border-gray-300">
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">002</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">30</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">26.0</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">15.2</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">780.0</div>
+              <div className="p-1 text-center">
+                <button className="text-red-600 hover:text-red-800 font-bold text-sm">✕</button>
+              </div>
+            </div>
+            <div className="grid grid-cols-6 border-b border-gray-300">
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">003</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">25</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">24.8</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">11.8</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">620.0</div>
+              <div className="p-1 text-center">
+                <button className="text-red-600 hover:text-red-800 font-bold text-sm">✕</button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
