@@ -716,7 +716,7 @@ export default function PurchaseForm() {
       </div>
 
       {/* Bag Details Table - Below Weight Display Table */}
-      <div className="absolute top-80 right-4 z-50">
+      <div className="absolute top-96 right-4 z-50">
         <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80">
           {/* Header Row */}
           <div className="grid grid-cols-5 border-b border-gray-400">
