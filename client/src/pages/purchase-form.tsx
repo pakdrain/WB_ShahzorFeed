@@ -562,12 +562,39 @@ export default function PurchaseForm() {
 
             if (captureResponse.ok) {
               const captureData = await captureResponse.json();
-              console.log('Image captured successfully:', captureData.message);
+              console.log('First weight image captured successfully:', captureData.message);
             } else {
-              console.log('Image capture failed, but continuing with form submission');
+              console.log('First weight image capture failed, but continuing with form submission');
             }
           } catch (imageError) {
-            console.log('Image capture error, but continuing:', imageError);
+            console.log('First weight image capture error, but continuing:', imageError);
+          }
+        }
+
+        // Automatically capture second weight image when second weight is present
+        if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
+          try {
+            console.log('Capturing second weight image for slip:', formData.slipNo);
+            const captureResponse = await fetch('/api/capture/second-weight', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                slipNo: formData.slipNo,
+                cameraIp: '10.10.10.146',
+                cameraPort: 554
+              }),
+            });
+
+            if (captureResponse.ok) {
+              const captureData = await captureResponse.json();
+              console.log('Second weight image captured successfully:', captureData.message);
+            } else {
+              console.log('Second weight image capture failed, but continuing with form submission');
+            }
+          } catch (imageError) {
+            console.log('Second weight image capture error, but continuing:', imageError);
           }
         }
         

@@ -725,6 +725,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Second weight image capture endpoint
+  app.post('/api/capture/second-weight', async (req: Request, res: Response) => {
+    try {
+      const { slipNo, cameraIp, cameraPort } = req.body;
+      
+      if (!slipNo || !cameraIp || !cameraPort) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+
+      const imagePath = await imageCaptureService.captureSecondWeightImage({
+        slipNo: String(slipNo),
+        cameraIp: String(cameraIp),
+        cameraPort: Number(cameraPort)
+      });
+
+      res.json({ 
+        success: true, 
+        imagePath,
+        message: 'Second weight image captured successfully'
+      });
+
+    } catch (error) {
+      console.error('Error capturing second weight image:', error);
+      res.status(500).json({ error: 'Failed to capture second weight image' });
+    }
+  });
+
   // IGP lookup from local database for offline functionality
   app.get('/api/purchase/igp-lookup/:igpNo', async (req: Request, res: Response) => {
     try {
