@@ -777,7 +777,7 @@ export default function PurchaseForm() {
           {/* Total Field */}
           <div className="border-t-2 border-gray-400 bg-gray-100 p-2">
             <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-black">Total Weight:</span>
+              <span className="text-xs font-semibold text-black">Total:</span>
               <Input 
                 value="2675.0"
                 className="h-5 text-xs w-16 text-center font-bold text-blue-700 bg-white border-gray-300"
