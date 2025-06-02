@@ -747,5 +747,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET endpoint for fetching deduction data by WB_ID
+  app.get('/api/deduction/:wbId', async (req, res) => {
+    try {
+      const { wbId } = req.params;
+      
+      const query = `
+        SELECT * FROM deduction 
+        WHERE wb_id = $1 
+        ORDER BY bag_id
+      `;
+      
+      const result = await pool.query(query, [wbId]);
+      
+      console.log(`Fetched ${result.rows.length} deduction records for WB_ID: ${wbId}`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('Error fetching deduction data:', error);
+      res.status(500).json({ error: 'Failed to fetch deduction data' });
+    }
+  });
+
   return httpServer;
 }

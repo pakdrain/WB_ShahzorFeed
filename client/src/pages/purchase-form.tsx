@@ -69,6 +69,11 @@ export default function PurchaseForm() {
           slipOutTime: data.slip_out_time || '',
           entryType: data.entry_type || 'PURCHASE'
         }));
+        
+        // Load existing deduction data for this record
+        if (data.wb_id) {
+          loadDeductionData(data.wb_id);
+        }
       }
     } catch (error) {
       console.error('Error loading data by slip number:', error);
@@ -445,6 +450,28 @@ export default function PurchaseForm() {
     calculateWeights();
   }, [formData.firstWeight, formData.secondWeight, formData.bardanaWeight, formData.supplierWeight]);
 
+  // Load existing deduction data when editing
+  const loadDeductionData = async (wbId: number) => {
+    try {
+      const response = await fetch(`/api/deduction/${wbId}`);
+      if (response.ok) {
+        const deductionData = await response.json();
+        const formattedData = deductionData.map((item: any) => ({
+          bagId: item.bag_id,
+          bags: item.bags,
+          pb: item.pb,
+          percentage: item.percentage,
+          weight: item.weight,
+          total: item.bags * item.pb
+        }));
+        setBagTableData(formattedData);
+        console.log('Loaded existing deduction data:', formattedData);
+      }
+    } catch (error) {
+      console.error('Error loading deduction data:', error);
+    }
+  };
+
   const handleSave = async () => {
     setLoading(true);
     
@@ -598,6 +625,34 @@ export default function PurchaseForm() {
             }
           } catch (imageError) {
             console.log('Image capture error, but continuing:', imageError);
+          }
+        }
+        
+        // Save bag data to deduction table if available
+        if (bagTableData.length > 0) {
+          try {
+            const bagSavePromises = bagTableData.map(item => 
+              fetch('/api/deduction', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  wbId: savedWbId,
+                  bagId: item.bagId,
+                  bags: item.bags,
+                  pb: item.pb,
+                  percentage: item.percentage,
+                  weight: item.weight
+                }),
+              })
+            );
+
+            await Promise.all(bagSavePromises);
+            console.log('Bag data saved successfully to deduction table');
+          } catch (bagError) {
+            console.error('Error saving bag data:', bagError);
+            alert('Warning: Main data saved but bag data failed to save');
           }
         }
         
@@ -843,24 +898,15 @@ export default function PurchaseForm() {
             )}
           </div>
 
-          {/* Total Field and Insert Button */}
+          {/* Total Field */}
           <div className="border-t-2 border-gray-400 bg-gray-100 p-2">
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center">
               <span className="text-xs font-semibold text-black">Total:</span>
               <Input 
                 value={bagTableData.reduce((sum, item) => sum + item.total, 0).toFixed(1)}
                 className="h-5 text-xs w-16 text-center font-bold text-blue-700 bg-white border-gray-300"
                 readOnly
               />
-            </div>
-            <div className="flex justify-center">
-              <Button 
-                className="h-6 px-4 bg-green-600 hover:bg-green-700 text-white text-xs font-medium"
-                onClick={handleInsertBagData}
-                disabled={bagTableData.length === 0}
-              >
-                Insert
-              </Button>
             </div>
           </div>
         </div>
