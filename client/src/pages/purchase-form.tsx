@@ -977,8 +977,7 @@ export default function PurchaseForm() {
           {/* Left Side - Main Form (Columns 1-8) */}
           <div className="col-span-8">
             {/* Master Table Section */}
-            <div className="bg-gray-50 p-2 rounded border mb-3">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Master Table</h3>
+            <div className="bg-blue-50 p-2 rounded border mb-3">
               <div className="grid grid-cols-9 gap-1">
               {/* Column 1 - Left Form Fields */}
               <div className="col-span-3 space-y-1">
@@ -1050,7 +1049,7 @@ export default function PurchaseForm() {
                     className="h-5 text-xs text-black placeholder:text-gray-500"
                   />
                 </div>
-                <div className="mt-4">
+                <div className="mt-6">
                   <div className="grid grid-cols-2 gap-1 mb-1">
                     <Button className="h-5 bg-green-600 text-xs" onClick={captureFirstWeight}>1st WHT</Button>
                     <Button className="h-5 bg-gray-500 text-xs" onClick={captureSecondWeight}>2nd WHT</Button>
@@ -1075,7 +1074,6 @@ export default function PurchaseForm() {
 
             {/* Details Section */}
             <div className="bg-blue-50 p-2 rounded border">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Details Table</h3>
               <Tabs defaultValue="purchase" className="h-[calc(100%-120px)]">
               <TabsList className="h-5">
                 <TabsTrigger value="purchase" className="text-xs">Purchase</TabsTrigger>
