@@ -922,7 +922,7 @@ export default function PurchaseForm() {
                       </div>
                       <div className="w-20">
                         <Label className="text-xs text-black font-medium">Bags</Label>
-                        <Input name="weightBags" value={formData.weightBags} onChange={handleChange} className="h-6 text-xs text-black" />
+                        <Input name="weightPerBags" value={formData.weightPerBags} onChange={handleChange} className="h-6 text-xs text-black" />
                       </div>
                     </div>
                   </div>
@@ -935,11 +935,11 @@ export default function PurchaseForm() {
                     </div>
                     <div>
                       <Label className="text-xs text-black font-medium">Sup. Wht - Bardana</Label>
-                      <Input name="sipWhtBardana" value={formData.sipWhtBardana} onChange={handleChange} className="h-6 text-xs text-black" readOnly />
+                      <Input name="supWtBardana" value={formData.supWtBardana} onChange={handleChange} className="h-6 text-xs text-black" readOnly />
                     </div>
                     <div>
                       <Label className="text-xs text-black font-medium">Sup. Wht - Our Wht</Label>
-                      <Input name="sWhtOurWht" value={formData.sWhtOurWht} onChange={handleChange} className="h-6 text-xs text-black" readOnly />
+                      <Input name="swtsOurWt" value={formData.swtsOurWt} onChange={handleChange} className="h-6 text-xs text-black" readOnly />
                     </div>
                     <div className="pt-2">
                       <Button className="w-full h-8 bg-yellow-500 hover:bg-yellow-600 text-black text-sm font-medium">
@@ -947,6 +947,7 @@ export default function PurchaseForm() {
                       </Button>
                     </div>
                   </div>
+                </div>
 
                 {/* IGP Data Table */}
                 <div className="border rounded text-xs h-[calc(100%-160px)] overflow-auto mt-4">
