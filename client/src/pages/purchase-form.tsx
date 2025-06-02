@@ -627,8 +627,57 @@ export default function PurchaseForm() {
 
   return (
     <div className="h-screen bg-blue-50 p-1 overflow-hidden relative">
-      {/* Weight Display Table - Upper Right Side */}
+      {/* Bag Details Table - Middle Right Side */}
       <div className="absolute top-20 right-4 z-50">
+        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80 mb-4">
+          {/* Header Row */}
+          <div className="grid grid-cols-5 border-b border-gray-400">
+            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+              Bag ID
+            </div>
+            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+              Bags
+            </div>
+            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+              P/B
+            </div>
+            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+              %age
+            </div>
+            <div className="bg-gray-200 p-1 text-center text-xs font-semibold text-black">
+              Weight
+            </div>
+          </div>
+
+          {/* Sample Data Rows */}
+          <div className="max-h-32 overflow-y-auto">
+            <div className="grid grid-cols-5 border-b border-gray-300">
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">001</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">50</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">25.5</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">12.5</div>
+              <div className="p-1 text-center text-xs text-black">1275.0</div>
+            </div>
+            <div className="grid grid-cols-5 border-b border-gray-300">
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">002</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">30</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">26.0</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">15.2</div>
+              <div className="p-1 text-center text-xs text-black">780.0</div>
+            </div>
+            <div className="grid grid-cols-5 border-b border-gray-300">
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">003</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">25</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">24.8</div>
+              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">11.8</div>
+              <div className="p-1 text-center text-xs text-black">620.0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Weight Display Table - Lower Right Side */}
+      <div className="absolute top-72 right-4 z-50">
         <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72">
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
