@@ -958,26 +958,6 @@ export default function PurchaseForm() {
                   </Button>
                 </div>
 
-                {/* Weight Calculations Display */}
-                <div className="grid grid-cols-4 gap-2 mb-2 p-2 bg-gray-50 rounded border">
-                  <div className="text-center">
-                    <Label className="text-xs text-black font-semibold">Net Weight</Label>
-                    <div className="text-sm font-bold text-green-700">{formData.netWeight || '0.00'} kg</div>
-                  </div>
-                  <div className="text-center">
-                    <Label className="text-xs text-black font-semibold">Gross Weight</Label>
-                    <div className="text-sm font-bold text-blue-700">{formData.grossWeight || '0.00'} kg</div>
-                  </div>
-                  <div className="text-center">
-                    <Label className="text-xs text-black font-semibold">Supp Wt - Bardana</Label>
-                    <div className="text-sm font-bold text-purple-700">{formData.supplierWeightMinusBardana || '0.00'} kg</div>
-                  </div>
-                  <div className="text-center">
-                    <Label className="text-xs text-black font-semibold">Supp Wt - Out Wt</Label>
-                    <div className="text-sm font-bold text-orange-700">{formData.supplierWeightMinusOutWeight || '0.00'} kg</div>
-                  </div>
-                </div>
-
                 {/* Compact Table with IGP Data */}
                 <div className="border rounded text-xs h-[calc(100%-200px)] overflow-auto">
                   <table className="w-full text-center">
