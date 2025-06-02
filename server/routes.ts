@@ -765,7 +765,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Query local database for IGP data
       const igpQuery = `
-        SELECT DISTINCT
+        SELECT 
           d.igp_no,
           d.vendor_name,
           d.po_no,
@@ -774,8 +774,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           d.po_qty,
           d.igp_qty,
           d.balance_qty,
-          d.vehicle_no
-        FROM wb_purchase_item_details_all d
+          d.vehicle_no,
+          d.creation_date
+        FROM wb_weighbridge_items_purchase d
         WHERE d.igp_no = $1
         ORDER BY d.creation_date DESC
         LIMIT 10;
