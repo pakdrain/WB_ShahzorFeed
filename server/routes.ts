@@ -725,5 +725,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST endpoint for saving deduction data
+  app.post('/api/deduction', async (req, res) => {
+    try {
+      const { wbId, bagId, bags, pb, percentage, weight } = req.body;
+      
+      const query = `
+        INSERT INTO deduction (wb_id, bag_id, bags, pb, percentage, weight)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *
+      `;
+      
+      const values = [wbId, bagId, bags, pb, percentage, weight];
+      const result = await pool.query(query, values);
+      
+      console.log('Deduction data saved successfully:', result.rows[0]);
+      res.json(result.rows[0]);
+    } catch (error: any) {
+      console.error('Error saving deduction data:', error);
+      res.status(500).json({ error: 'Failed to save deduction data' });
+    }
+  });
+
   return httpServer;
 }
