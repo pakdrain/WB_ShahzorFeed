@@ -14,15 +14,12 @@ export interface CaptureImageOptions {
 export class ImageCaptureService {
   private baseImagePath = './captured_images';
   private firstWeightFolder = 'first_weight';
-  private secondWeightFolder = 'second_weight';
 
   async ensureDirectoriesExist(): Promise<void> {
     try {
       const firstWeightPath = path.join(this.baseImagePath, this.firstWeightFolder);
-      const secondWeightPath = path.join(this.baseImagePath, this.secondWeightFolder);
       await fs.mkdir(firstWeightPath, { recursive: true });
-      await fs.mkdir(secondWeightPath, { recursive: true });
-      log(`📁 Created directories: ${firstWeightPath}, ${secondWeightPath}`);
+      log(`📁 Created directories: ${firstWeightPath}`);
     } catch (error: any) {
       log(`❌ Error creating directories: ${error.message}`);
       throw error;
@@ -46,56 +43,25 @@ export class ImageCaptureService {
       
       // Generate filename with slip number and timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `slip_${slipNo}_first_${timestamp}.jpg`;
+      const filename = `slip_${slipNo}_${timestamp}.jpg`;
       const imagePath = path.join(this.baseImagePath, this.firstWeightFolder, filename);
       
       // Construct RTSP URL
       const rtspUrl = `rtsp://${username}:${password}@${cameraIp}:${cameraPort}/cam/realmonitor?channel=1&subtype=0`;
       
-      log(`📸 Capturing first weight image for slip ${slipNo} from camera ${cameraIp}:${cameraPort}`);
+      log(`📸 Capturing image for slip ${slipNo} from camera ${cameraIp}:${cameraPort}`);
       
       // Use FFmpeg to capture a single frame from RTSP stream
       const success = await this.captureImageWithFFmpeg(rtspUrl, imagePath);
       
       if (success) {
-        log(`✅ First weight image captured successfully: ${filename}`);
+        log(`✅ Image captured successfully: ${filename}`);
         return imagePath;
       } else {
-        throw new Error('Failed to capture first weight image');
+        throw new Error('Failed to capture image');
       }
     } catch (error: any) {
       log(`❌ Error capturing first weight image: ${error.message}`);
-      throw error;
-    }
-  }
-
-  async captureSecondWeightImage(options: CaptureImageOptions): Promise<string> {
-    const { slipNo, cameraIp, cameraPort, username = 'admin', password = 'admin123' } = options;
-    
-    try {
-      await this.ensureDirectoriesExist();
-      
-      // Generate filename with slip number and timestamp
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const filename = `slip_${slipNo}_second_${timestamp}.jpg`;
-      const imagePath = path.join(this.baseImagePath, this.secondWeightFolder, filename);
-      
-      // Construct RTSP URL
-      const rtspUrl = `rtsp://${username}:${password}@${cameraIp}:${cameraPort}/cam/realmonitor?channel=1&subtype=0`;
-      
-      log(`📸 Capturing second weight image for slip ${slipNo} from camera ${cameraIp}:${cameraPort}`);
-      
-      // Use FFmpeg to capture a single frame from RTSP stream
-      const success = await this.captureImageWithFFmpeg(rtspUrl, imagePath);
-      
-      if (success) {
-        log(`✅ Second weight image captured successfully: ${filename}`);
-        return imagePath;
-      } else {
-        throw new Error('Failed to capture second weight image');
-      }
-    } catch (error: any) {
-      log(`❌ Error capturing second weight image: ${error.message}`);
       throw error;
     }
   }
