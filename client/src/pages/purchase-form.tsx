@@ -925,23 +925,23 @@ export default function PurchaseForm() {
                   <div className="col-span-3 space-y-2">
                     <div>
                       <Label className="text-xs text-black font-medium">Bardana Type</Label>
-                      <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-6 text-xs text-black" />
+                      <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-6 text-xs text-black w-32" />
                     </div>
                     <div>
                       <Label className="text-xs text-black font-medium">Weight per Bag</Label>
-                      <Input name="wtPerBag" value={formData.wtPerBag} onChange={handleChange} className="h-6 text-xs text-black" />
+                      <Input name="wtPerBag" value={formData.wtPerBag} onChange={handleChange} className="h-6 text-xs text-black w-24" />
                     </div>
                     <div>
                       <Label className="text-xs text-black font-medium">Number of Bags</Label>
-                      <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-6 text-xs text-black" />
+                      <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-6 text-xs text-black w-24" />
                     </div>
                     <div>
                       <Label className="text-xs text-black font-medium">Bardana Weight</Label>
-                      <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-6 text-xs text-black" />
+                      <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-6 text-xs text-black w-28" />
                     </div>
                     <div>
                       <Label className="text-xs text-black font-medium">Quality Deduction</Label>
-                      <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-6 text-xs text-black" />
+                      <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-6 text-xs text-black w-28" />
                     </div>
                   </div>
 
@@ -958,7 +958,7 @@ export default function PurchaseForm() {
                         name="igpNo" 
                         value={formData.igpNo} 
                         onChange={handleIGPChange} 
-                        className="h-6 text-xs text-black"
+                        className="h-6 text-xs text-black w-36"
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             fetchIGPData(formData.igpNo);
@@ -969,24 +969,24 @@ export default function PurchaseForm() {
                     </div>
                     <div>
                       <Label className="text-xs text-black font-medium">IGP Date</Label>
-                      <Input name="igpDate" value={formData.igpDate} onChange={handleChange} className="h-6 text-xs text-black" type="date" />
+                      <Input name="igpDate" value={formData.igpDate} onChange={handleChange} className="h-6 text-xs text-black w-36" type="date" />
                     </div>
                     <div>
                       <Label className="text-xs text-black font-medium">Vendor</Label>
-                      <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-6 text-xs text-black" />
+                      <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-6 text-xs text-black w-40" />
                     </div>
                     <div>
                       <Label className="text-xs text-black font-medium">Vehicle No</Label>
-                      <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-6 text-xs text-black" />
+                      <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-6 text-xs text-black w-32" />
                     </div>
                     <div className="flex gap-2">
                       <div className="flex-1">
                         <Label className="text-xs text-black font-medium">Weight</Label>
-                        <Input name="weight" value={formData.weight} onChange={handleChange} className="h-6 text-xs text-black" />
+                        <Input name="weight" value={formData.weight} onChange={handleChange} className="h-6 text-xs text-black w-24" />
                       </div>
                       <div className="w-20">
                         <Label className="text-xs text-black font-medium">Bags</Label>
-                        <Input name="weightPerBags" value={formData.weightPerBags} onChange={handleChange} className="h-6 text-xs text-black" />
+                        <Input name="weightPerBags" value={formData.weightPerBags} onChange={handleChange} className="h-6 text-xs text-black w-16" />
                       </div>
                     </div>
                   </div>
