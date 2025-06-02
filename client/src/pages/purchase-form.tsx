@@ -9,8 +9,11 @@ import WeightIndicator from '@/components/weight-indicator';
 import WeightDisplayTable from '@/components/weight-display-table';
 import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
 import { useQuery } from '@tanstack/react-query';
+import { Link, useLocation } from 'wouter';
 
 export default function PurchaseForm() {
+  const [location] = useLocation();
+  
   // Fetch all first weight records
   const { data: firstWeightRecords } = useQuery({
     queryKey: ['/api/purchase/first-weight-records'],
@@ -312,6 +315,26 @@ export default function PurchaseForm() {
       alert('Failed to capture weight reading');
     }
   };
+
+  // Calculate net weight automatically
+  const calculateNetWeight = () => {
+    const firstWeight = parseFloat(formData.firstWeight) || 0;
+    const secondWeight = parseFloat(formData.secondWeight) || 0;
+    const bardanaWeight = parseFloat(formData.bardanaWeight) || 0;
+    
+    // Net Weight = First Weight - Second Weight - Bardana Weight
+    const netWeight = firstWeight - secondWeight - bardanaWeight;
+    
+    setFormData(prev => ({
+      ...prev,
+      netWeight: netWeight.toString()
+    }));
+  };
+
+  // Auto-calculate net weight when values change
+  useEffect(() => {
+    calculateNetWeight();
+  }, [formData.firstWeight, formData.secondWeight, formData.bardanaWeight]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -638,12 +661,16 @@ export default function PurchaseForm() {
         </div>
       )}
 
-      {/* Compact Top Bar */}
+      {/* Navigation Buttons */}
       <div className="flex justify-between items-center bg-white border rounded p-1 mb-1">
         <div className="flex gap-1 text-xs">
-          <Button className="h-6 px-2 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-medium">Purc</Button>
+          <Button className={`h-6 px-2 text-xs font-medium ${location === '/purchase-form' ? 'bg-blue-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}>
+            Purchase
+          </Button>
           <Button className="h-6 px-2 text-xs bg-rose-600 hover:bg-rose-700 text-white font-medium">Sale</Button>
-          <Button className="h-6 px-2 text-xs bg-amber-600 hover:bg-amber-700 text-white font-medium">Edit</Button>
+          <Button className={`h-6 px-2 text-xs font-medium ${isEditMode ? 'bg-yellow-600 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}>
+            {isEditMode ? 'Editing' : 'Offline'}
+          </Button>
           <Button className="h-6 px-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium">First</Button>
           <Button className="h-6 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium">Prev</Button>
           <Button className="h-6 px-2 text-xs bg-cyan-600 hover:bg-cyan-700 text-white font-medium">Next</Button>
