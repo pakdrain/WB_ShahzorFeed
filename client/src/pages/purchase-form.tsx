@@ -233,6 +233,78 @@ export default function PurchaseForm() {
     return new Date(localString).toISOString();
   };
 
+  // Function to handle Deduction+ button click - populate bag table with form data
+  const handleDeduction = () => {
+    const bags = parseInt(formData.noOfBags) || 0;
+    const pb = parseFloat(formData.wtPerBag) || 0;
+    const percentage = parseFloat(formData.qualityDed) || 0;
+    const weight = parseFloat(formData.weight) || 0;
+    
+    if (bags > 0 && pb > 0) {
+      const newBagEntry = {
+        bagId: nextBagId,
+        bags: bags,
+        pb: pb,
+        percentage: percentage,
+        weight: weight,
+        total: bags * pb
+      };
+      
+      setBagTableData(prev => [...prev, newBagEntry]);
+      setNextBagId(prev => prev + 1);
+    } else {
+      alert('Please enter valid values for Bags and Weight Per Bag');
+    }
+  };
+
+  // Function to remove bag entry
+  const removeBagEntry = (bagId: number) => {
+    setBagTableData(prev => prev.filter(item => item.bagId !== bagId));
+  };
+
+  // Function to handle Insert button - save bag data to database
+  const handleInsertBagData = async () => {
+    if (bagTableData.length === 0) {
+      alert('No bag data to insert');
+      return;
+    }
+
+    const wbId = formData.wbId || editingWbId;
+    if (!wbId) {
+      alert('Please save the main form first to get WB ID');
+      return;
+    }
+    
+    const wbIdNumber = typeof wbId === 'string' ? parseInt(wbId) : wbId;
+
+    try {
+      const insertPromises = bagTableData.map(item => 
+        fetch('/api/deduction', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            wbId: wbIdNumber,
+            bagId: item.bagId,
+            bags: item.bags,
+            pb: item.pb,
+            percentage: item.percentage,
+            weight: item.weight
+          }),
+        })
+      );
+
+      await Promise.all(insertPromises);
+      alert('Bag data saved successfully!');
+      setBagTableData([]); // Clear the table after successful insert
+      setNextBagId(1); // Reset bag ID counter
+    } catch (error) {
+      console.error('Error saving bag data:', error);
+      alert('Failed to save bag data');
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     const numericFields = [
@@ -744,49 +816,51 @@ export default function PurchaseForm() {
             </div>
           </div>
 
-          {/* Sample Data Rows */}
+          {/* Dynamic Data Rows */}
           <div className="max-h-32 overflow-y-auto">
-            <div className="grid grid-cols-6 border-b border-gray-300">
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">001</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">50</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">25.5</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">12.5</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">1275.0</div>
-              <div className="p-1 text-center">
-                <button className="text-red-600 hover:text-red-800 font-bold text-sm">×</button>
+            {bagTableData.length === 0 ? (
+              <div className="grid grid-cols-6 border-b border-gray-300">
+                <div className="col-span-6 p-2 text-center text-xs text-gray-500">No bag data available. Click Deduction+ to add data.</div>
               </div>
-            </div>
-            <div className="grid grid-cols-6 border-b border-gray-300">
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">002</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">30</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">26.0</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">15.2</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">780.0</div>
-              <div className="p-1 text-center">
-                <button className="text-red-600 hover:text-red-800 font-bold text-sm">×</button>
-              </div>
-            </div>
-            <div className="grid grid-cols-6 border-b border-gray-300">
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">003</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">25</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">24.8</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">11.8</div>
-              <div className="border-r border-gray-300 p-1 text-center text-xs text-black">620.0</div>
-              <div className="p-1 text-center">
-                <button className="text-red-600 hover:text-red-800 font-bold text-sm">×</button>
-              </div>
-            </div>
+            ) : (
+              bagTableData.map((item, index) => (
+                <div key={item.bagId} className="grid grid-cols-6 border-b border-gray-300">
+                  <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{String(item.bagId).padStart(3, '0')}</div>
+                  <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{item.bags}</div>
+                  <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{item.pb.toFixed(1)}</div>
+                  <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{item.percentage.toFixed(1)}</div>
+                  <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{item.weight.toFixed(1)}</div>
+                  <div className="p-1 text-center">
+                    <button 
+                      className="text-red-600 hover:text-red-800 font-bold text-sm"
+                      onClick={() => removeBagEntry(item.bagId)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
-          {/* Total Field */}
+          {/* Total Field and Insert Button */}
           <div className="border-t-2 border-gray-400 bg-gray-100 p-2">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-2">
               <span className="text-xs font-semibold text-black">Total:</span>
               <Input 
-                value="2675.0"
+                value={bagTableData.reduce((sum, item) => sum + item.total, 0).toFixed(1)}
                 className="h-5 text-xs w-16 text-center font-bold text-blue-700 bg-white border-gray-300"
                 readOnly
               />
+            </div>
+            <div className="flex justify-center">
+              <Button 
+                className="h-6 px-4 bg-green-600 hover:bg-green-700 text-white text-xs font-medium"
+                onClick={handleInsertBagData}
+                disabled={bagTableData.length === 0}
+              >
+                Insert
+              </Button>
             </div>
           </div>
         </div>
@@ -1022,7 +1096,10 @@ export default function PurchaseForm() {
                       <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
                     </div>
                     <div className="mt-2">
-                      <Button className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium">
+                      <Button 
+                        className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
+                        onClick={handleDeduction}
+                      >
                         Deduction+
                       </Button>
                     </div>
