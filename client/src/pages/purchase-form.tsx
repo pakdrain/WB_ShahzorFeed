@@ -1077,7 +1077,7 @@ export default function PurchaseForm() {
               <Tabs defaultValue="purchase" className="h-[calc(100%-120px)]">
               <TabsList className="h-5">
                 <TabsTrigger value="purchase" className="text-xs">Purchase</TabsTrigger>
-                <TabsTrigger value="sale" className="text-xs" onClick={() => setLocation('/sales-form')}>Sale</TabsTrigger>
+                <TabsTrigger value="sale" className="text-xs">Sale</TabsTrigger>
                 <TabsTrigger value="offline" className="text-xs">Offline</TabsTrigger>
               </TabsList>
 
@@ -1215,7 +1215,77 @@ export default function PurchaseForm() {
               </TabsContent>
 
               <TabsContent value="sale">
-                <div className="text-center p-4 text-xs text-black">Sale tab content here</div>
+                <div className="h-full flex flex-col overflow-hidden">
+                  {/* Sales Table Header with proper column widths */}
+                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "60px 60px 150px 100px 80px 120px 60px 60px 80px"}}>
+                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">DC #</div>
+                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">DO #</div>
+                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">Customer Name</div>
+                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">Vehicle No</div>
+                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">Co Date</div>
+                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">Item Description</div>
+                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">DC Qty</div>
+                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">DO Qty</div>
+                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">Branch</div>
+                  </div>
+
+                  {/* Sales Table Body - Scrollable */}
+                  <div className="flex-1 overflow-y-auto bg-gray-200 mb-2">
+                    {Array.from({ length: 15 }, (_, index) => (
+                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "60px 60px 150px 100px 80px 120px 60px 60px 80px"}}>
+                        <div className="bg-white border border-gray-300">
+                          <Input className="h-6 text-xs border-0 rounded-none" />
+                        </div>
+                        <div className="bg-white border border-gray-300">
+                          <Input className="h-6 text-xs border-0 rounded-none" />
+                        </div>
+                        <div className="bg-white border border-gray-300">
+                          <Input className="h-6 text-xs border-0 rounded-none" />
+                        </div>
+                        <div className="bg-white border border-gray-300">
+                          <Input className="h-6 text-xs border-0 rounded-none" />
+                        </div>
+                        <div className="bg-white border border-gray-300">
+                          <Input className="h-6 text-xs border-0 rounded-none" placeholder="DD.MM.YYYY" />
+                        </div>
+                        <div className="bg-white border border-gray-300">
+                          <Input className="h-6 text-xs border-0 rounded-none" />
+                        </div>
+                        <div className="bg-white border border-gray-300">
+                          <Input className="h-6 text-xs border-0 rounded-none text-right" />
+                        </div>
+                        <div className="bg-white border border-gray-300">
+                          <Input className="h-6 text-xs border-0 rounded-none text-right" />
+                        </div>
+                        <div className="bg-white border border-gray-300">
+                          <Input className="h-6 text-xs border-0 rounded-none" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Bottom Summary Section with proper widths */}
+                  <div className="bg-blue-100 border border-gray-400 p-2">
+                    <div className="grid grid-cols-4 gap-3 text-xs">
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs font-semibold text-gray-800 whitespace-nowrap">Weight Per Bags:</Label>
+                        <Input className="h-6 text-xs flex-1" />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs font-semibold text-gray-800 whitespace-nowrap">Total Weight Qty:</Label>
+                        <Input className="h-6 text-xs flex-1" />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs font-semibold text-gray-800 whitespace-nowrap">Total:</Label>
+                        <Input className="h-6 text-xs flex-1" />
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs font-semibold text-gray-800 whitespace-nowrap">Total Feed Bags:</Label>
+                        <Input className="h-6 text-xs flex-1" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </TabsContent>
 
               <TabsContent value="offline">
