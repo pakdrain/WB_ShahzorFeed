@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 
 export default function PurchaseForm() {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [searchSlipNo, setSearchSlipNo] = useState('');
   const [searchVehicleNo, setSearchVehicleNo] = useState('');
   
@@ -1077,7 +1077,7 @@ export default function PurchaseForm() {
               <Tabs defaultValue="purchase" className="h-[calc(100%-120px)]">
               <TabsList className="h-5">
                 <TabsTrigger value="purchase" className="text-xs">Purchase</TabsTrigger>
-                <TabsTrigger value="sale" className="text-xs">Sale</TabsTrigger>
+                <TabsTrigger value="sale" className="text-xs" onClick={() => setLocation('/sales-form')}>Sale</TabsTrigger>
                 <TabsTrigger value="offline" className="text-xs">Offline</TabsTrigger>
               </TabsList>
 
