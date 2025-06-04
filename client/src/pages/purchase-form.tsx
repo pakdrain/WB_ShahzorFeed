@@ -740,33 +740,44 @@ export default function PurchaseForm() {
         if (activeTab === 'sale' && salesData.length > 0) {
           try {
             const validSalesData = salesData.filter(item => 
-              item.doNo || item.customerName || item.vehicleNo || item.itemDescription
+              item.doNo || item.customerName || item.vehicleNo || item.itemDescription || item.dcNo
             );
             
             if (validSalesData.length > 0) {
-              const salesSavePromises = validSalesData.map(item => 
-                fetch('/api/sales/save', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    wbId: savedWbId!,
-                    doId: item.doId,
-                    doNo: item.doNo || null,
-                    customerName: item.customerName || null,
-                    vehicleNo: item.vehicleNo || null,
-                    doDate: item.doDate || null,
-                    itemDescription: item.itemDescription || null,
-                    dcQty: item.dcQty ? parseFloat(item.dcQty) : null,
-                    doQty: item.doQty ? parseFloat(item.doQty) : null,
-                    branch: item.branch || null,
-                  }),
-                })
-              );
+              console.log('Saving sales data to details table:', validSalesData);
               
-              await Promise.all(salesSavePromises);
-              console.log('Sales data saved successfully to sales_details table');
+              const salesPayload = {
+                salesData: validSalesData.map(item => ({
+                  wbId: savedWbId!,
+                  doId: item.doId || null,
+                  dcNo: item.dcNo || null,
+                  doNo: item.doNo || null,
+                  customerName: item.customerName || null,
+                  vehicleNo: item.vehicleNo || null,
+                  doDate: null, // As requested - null for now
+                  itemDescription: item.itemDescription || null,
+                  dcQty: item.dcQty ? parseFloat(item.dcQty) : null,
+                  doQty: item.doQty ? parseFloat(item.doQty) : null,
+                  branch: item.branch || null
+                })),
+                entryType: 'SALE'
+              };
+              
+              const salesResponse = await fetch('/api/sales/save', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(salesPayload),
+              });
+              
+              if (salesResponse.ok) {
+                console.log('Sales detail data saved successfully to database');
+              } else {
+                const errorText = await salesResponse.text();
+                console.error('Failed to save sales detail data:', errorText);
+                alert('Warning: Main data saved but sales detail data failed to save');
+              }
             }
           } catch (salesError) {
             console.error('Error saving sales data:', salesError);
