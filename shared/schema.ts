@@ -45,6 +45,21 @@ export const deduction = pgTable("deduction", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const salesDetails = pgTable("sales_details", {
+  id: serial("id").primaryKey(),
+  wbId: integer("wb_id").notNull(),
+  doId: text("do_id").notNull(),
+  doNo: text("do_no"),
+  customerName: text("customer_name"),
+  vehicleNo: text("vehicle_no"),
+  doDate: text("do_date"),
+  itemDescription: text("item_description"),
+  dcQty: decimal("dc_qty", { precision: 10, scale: 2 }),
+  doQty: decimal("do_qty", { precision: 10, scale: 2 }),
+  branch: text("branch"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertCameraSchema = createInsertSchema(cameras).omit({
   id: true,
   createdAt: true,
@@ -66,6 +81,11 @@ export const insertDeductionSchema = createInsertSchema(deduction).omit({
   createdAt: true,
 });
 
+export const insertSalesDetailsSchema = createInsertSchema(salesDetails).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type Camera = typeof cameras.$inferSelect;
 export type InsertCamera = z.infer<typeof insertCameraSchema>;
 export type StreamSession = typeof streamSessions.$inferSelect;
@@ -74,3 +94,5 @@ export type StreamStats = typeof streamStats.$inferSelect;
 export type InsertStreamStats = z.infer<typeof insertStreamStatsSchema>;
 export type Deduction = typeof deduction.$inferSelect;
 export type InsertDeduction = z.infer<typeof insertDeductionSchema>;
+export type SalesDetails = typeof salesDetails.$inferSelect;
+export type InsertSalesDetails = z.infer<typeof insertSalesDetailsSchema>;

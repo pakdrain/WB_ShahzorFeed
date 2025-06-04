@@ -18,6 +18,21 @@ export default function PurchaseForm() {
   
   // Deduction/Bag table state
   const [bagTableData, setBagTableData] = useState<any[]>([]);
+  
+  // Sales data state
+  const [salesData, setSalesData] = useState<any[]>(
+    Array.from({ length: 15 }, (_, index) => ({
+      doId: `DO${String(index + 1).padStart(3, '0')}`,
+      doNo: '',
+      customerName: '',
+      vehicleNo: '',
+      doDate: '',
+      itemDescription: '',
+      dcQty: '',
+      doQty: '',
+      branch: ''
+    }))
+  );
   const [nextBagId, setNextBagId] = useState(1);
   
   // Fetch all first weight records
