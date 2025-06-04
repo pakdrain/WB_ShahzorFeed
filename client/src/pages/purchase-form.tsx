@@ -596,33 +596,46 @@ export default function PurchaseForm() {
       
       // For Sales entries, save sales data to details table with proper column mappings
       if (activeTab === 'sale') {
-        // Save sales data from the sales form to details table
-        for (const salesRow of salesData) {
-          if (salesRow.customerName || salesRow.vehicleNo || salesRow.itemDescription) {
-            const salesItemPayload = {
-              wb_id: savedWbId!,
-              do_id: salesRow.doId || null, // Auto-generated maximum number
-              customer_name: salesRow.customerName || null,
-              vehicle_no: salesRow.vehicleNo || null,
-              do_date: null, // As requested - null for now
-              item_description: salesRow.itemDescription || null,
-              dc_qty: salesRow.dcQty ? parseFloat(salesRow.dcQty) : null,
-              do_qty: salesRow.doQty ? parseFloat(salesRow.doQty) : null,
-              branch: salesRow.branch || null
+        // Filter valid sales rows (at least one field filled)
+        const validSalesRows = salesData.filter(row => 
+          row.customerName || row.vehicleNo || row.itemDescription || row.dcNo || row.doNo
+        );
+        
+        if (validSalesRows.length > 0) {
+          try {
+            // Save sales data using the dedicated sales endpoint
+            const salesPayload = {
+              salesData: validSalesRows.map(row => ({
+                wbId: savedWbId!,
+                doId: row.doId || null,
+                dcNo: row.dcNo || null,
+                doNo: row.doNo || null,
+                customerName: row.customerName || null,
+                vehicleNo: row.vehicleNo || null,
+                doDate: null, // As requested - null for now
+                itemDescription: row.itemDescription || null,
+                dcQty: row.dcQty ? parseFloat(row.dcQty) : null,
+                doQty: row.doQty ? parseFloat(row.doQty) : null,
+                branch: row.branch || null
+              })),
+              entryType: 'SALE'
             };
             
-            // Save each sales row to details table
-            const salesResponse = await fetch('/api/purchase-items', {
+            const salesResponse = await fetch('/api/sales/save', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify(salesItemPayload),
+              body: JSON.stringify(salesPayload),
             });
             
-            if (!salesResponse.ok) {
-              console.error('Failed to save sales row:', salesRow);
+            if (salesResponse.ok) {
+              console.log('Sales detail data saved successfully to database');
+            } else {
+              console.error('Failed to save sales detail data');
             }
+          } catch (salesError) {
+            console.error('Error saving sales detail data:', salesError);
           }
         }
       } else {
