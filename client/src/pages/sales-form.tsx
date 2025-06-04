@@ -6,11 +6,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 
 interface SalesRowData {
+  doId: string;
   dcNo: string;
   doNo: string;
   customerName: string;
   vehicleNo: string;
-  coDate: string;
+  doDate: string;
   itemDescription: string;
   dcQty: string;
   doQty: string;
@@ -23,11 +24,12 @@ export default function SalesForm() {
   
   const [salesData, setSalesData] = useState<SalesRowData[]>([
     {
+      doId: 'DO001',
       dcNo: '',
       doNo: '',
       customerName: '',
       vehicleNo: '',
-      coDate: '',
+      doDate: '',
       itemDescription: '',
       dcQty: '',
       doQty: '',
@@ -42,12 +44,14 @@ export default function SalesForm() {
   };
 
   const addRow = () => {
+    const nextDoId = `DO${String(salesData.length + 1).padStart(3, '0')}`;
     setSalesData([...salesData, {
+      doId: nextDoId,
       dcNo: '',
       doNo: '',
       customerName: '',
       vehicleNo: '',
-      coDate: '',
+      doDate: '',
       itemDescription: '',
       dcQty: '',
       doQty: '',
@@ -94,7 +98,7 @@ export default function SalesForm() {
   const handleSave = () => {
     const validData = salesData.filter(row => 
       row.dcNo || row.doNo || row.customerName || row.vehicleNo || 
-      row.coDate || row.itemDescription || row.dcQty || row.doQty || row.branch
+      row.doDate || row.itemDescription || row.dcQty || row.doQty || row.branch
     );
     
     if (validData.length > 0) {
@@ -145,7 +149,7 @@ export default function SalesForm() {
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO #</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Customer Name</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Vehicle No</div>
-          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Co Date</div>
+          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO Date</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Item Description</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DC Qty</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO Qty</div>
@@ -190,8 +194,8 @@ export default function SalesForm() {
               </div>
               <div className="bg-white border border-gray-300 p-1">
                 <Input
-                  value={row.coDate}
-                  onChange={(e) => handleRowChange(index, 'coDate', e.target.value)}
+                  value={row.doDate}
+                  onChange={(e) => handleRowChange(index, 'doDate', e.target.value)}
                   className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0"
                   placeholder="DD.MM.YYYY"
                 />
