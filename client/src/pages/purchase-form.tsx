@@ -972,8 +972,8 @@ export default function PurchaseForm() {
         </div>
       </div>
 
-      {/* Bag Details Table - Below Weight Display Table (hide when Sales tab is active) */}
-      {activeTab !== 'sale' && (
+      {/* Bag Details Table - Below Weight Display Table (hide when Sales form is active) */}
+      {selectedForm === 'purchase' && (
         <div className="absolute top-96 right-4 z-50">
           <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80">
           {/* Header Row */}
