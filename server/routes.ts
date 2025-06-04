@@ -747,6 +747,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST endpoint for saving sales data
+  app.post('/api/sales', async (req, res) => {
+    try {
+      const { wbId, doId, doNo, customerName, vehicleNo, doDate, itemDescription, dcQty, doQty, branch } = req.body;
+      
+      const query = `
+        INSERT INTO sales_details (wb_id, do_id, do_no, customer_name, vehicle_no, do_date, item_description, dc_qty, do_qty, branch)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING *
+      `;
+      
+      const values = [wbId, doId, doNo, customerName, vehicleNo, doDate, itemDescription, dcQty, doQty, branch];
+      const result = await pool.query(query, values);
+      
+      console.log('Sales data saved successfully:', result.rows[0]);
+      res.json(result.rows[0]);
+    } catch (error: any) {
+      console.error('Error saving sales data:', error);
+      res.status(500).json({ error: 'Failed to save sales data' });
+    }
+  });
+
+  // GET endpoint for fetching sales data by WB_ID
+  app.get('/api/sales/by-wb/:wbId', async (req, res) => {
+    try {
+      const { wbId } = req.params;
+      
+      const query = 'SELECT * FROM sales_details WHERE wb_id = $1 ORDER BY id';
+      const result = await pool.query(query, [parseInt(wbId)]);
+      
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('Error fetching sales data:', error);
+      res.status(500).json({ error: 'Failed to fetch sales data' });
+    }
+  });
+
+  // GET endpoint for generating next DO ID
+  app.get('/api/sales/next-do-id', async (req, res) => {
+    try {
+      const query = 'SELECT do_id FROM sales_details ORDER BY id DESC LIMIT 1';
+      const result = await pool.query(query);
+      
+      let nextDoId = 'DO001';
+      if (result.rows.length > 0 && result.rows[0].do_id) {
+        const currentNumber = parseInt(result.rows[0].do_id.replace('DO', ''));
+        const nextNumber = currentNumber + 1;
+        nextDoId = `DO${String(nextNumber).padStart(3, '0')}`;
+      }
+      
+      res.json({ nextDoId });
+    } catch (error: any) {
+      console.error('Error generating next DO ID:', error);
+      res.status(500).json({ error: 'Failed to generate next DO ID' });
+    }
+  });
+
   // GET endpoint for fetching deduction data by WB_ID
   app.get('/api/deduction/:wbId', async (req, res) => {
     try {

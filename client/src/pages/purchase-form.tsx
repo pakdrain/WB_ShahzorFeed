@@ -585,7 +585,7 @@ export default function PurchaseForm() {
       // Get the WB_ID from saved master data for new records
       if (!isEditMode) {
         savedWbId = masterData.wb_id;
-      } else {
+      } else if (editingWbId) {
         savedWbId = editingWbId;
       }
       
@@ -667,7 +667,7 @@ export default function PurchaseForm() {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  wbId: savedWbId,
+                  wbId: savedWbId!,
                   bagId: item.bagId,
                   bags: item.bags,
                   pb: item.pb,
@@ -682,6 +682,44 @@ export default function PurchaseForm() {
           } catch (bagError) {
             console.error('Error saving bag data:', bagError);
             alert('Warning: Main data saved but bag data failed to save');
+          }
+        }
+        
+        // Save sales data when entry type is Sales
+        if (formData.entryType === 'SALES' && salesData.length > 0) {
+          try {
+            const validSalesData = salesData.filter(item => 
+              item.doNo || item.customerName || item.vehicleNo
+            );
+            
+            if (validSalesData.length > 0) {
+              const salesSavePromises = validSalesData.map(item => 
+                fetch('/api/sales', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    wbId: savedWbId!,
+                    doId: item.doId,
+                    doNo: item.doNo || null,
+                    customerName: item.customerName || null,
+                    vehicleNo: item.vehicleNo || null,
+                    doDate: item.doDate || null,
+                    itemDescription: item.itemDescription || null,
+                    dcQty: item.dcQty ? parseFloat(item.dcQty) : null,
+                    doQty: item.doQty ? parseFloat(item.doQty) : null,
+                    branch: item.branch || null,
+                  }),
+                })
+              );
+              
+              await Promise.all(salesSavePromises);
+              console.log('Sales data saved successfully to sales_details table');
+            }
+          } catch (salesError) {
+            console.error('Error saving sales data:', salesError);
+            alert('Warning: Main data saved but sales data failed to save');
           }
         }
         
