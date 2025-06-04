@@ -27,16 +27,16 @@ export function addSalesRoute(app: Express) {
         
         // Generate auto-incremented DO ID as maximum number
         const maxDoIdResult = await pool.query(
-          'SELECT COALESCE(MAX(do_id), 0) as max_do_id FROM wb_details WHERE do_id IS NOT NULL'
+          'SELECT COALESCE(MAX(do_id), 0) as max_do_id FROM wb_weighbridge_items_purchase WHERE do_id IS NOT NULL'
         );
         const maxDoId = maxDoIdResult.rows[0]?.max_do_id || 0;
         
-        // Save to wb_details table with proper column mappings
+        // Save to wb_weighbridge_items_purchase table with proper column mappings
         const insertQuery = `
-          INSERT INTO wb_details (
+          INSERT INTO wb_weighbridge_items_purchase (
             wb_id, do_id, customer_name, vehicle_no, do_date, 
-            item_description, dc_qty, do_qty, branch, po_no, igp_no
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            item_desc, po_qty, igp_qty, do_no, igp_no
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
           RETURNING *
         `;
         
@@ -47,9 +47,8 @@ export function addSalesRoute(app: Express) {
           item.vehicleNo || null,
           null, // As requested - null for now
           item.itemDescription || null,
-          item.dcQty || null,
-          item.doQty || null,
-          item.branch || null,
+          item.doQty ? parseFloat(item.doQty) : null,
+          item.dcQty ? parseFloat(item.dcQty) : null,
           item.doNo || null,
           item.dcNo || null
         ];
