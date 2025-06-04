@@ -1279,10 +1279,10 @@ export default function PurchaseForm() {
               </TabsContent>
 
               <TabsContent value="sale">
-                <div className="h-full flex flex-col overflow-hidden">
+                <div className="h-full flex flex-col" style={{minWidth: "1400px"}}>
 
-                  {/* Sales Table Header with increased column widths */}
-                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "90px 80px 80px 180px 120px 100px 150px 80px 80px 100px", minWidth: "1060px"}}>
+                  {/* Sales Table Header with maximized column widths */}
+                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "100px 100px 100px 200px 140px 120px 180px 100px 100px 120px", width: "1360px"}}>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO ID</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DC #</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO #</div>
@@ -1298,7 +1298,7 @@ export default function PurchaseForm() {
                   {/* Sales Table Body - Scrollable */}
                   <div className="flex-1 overflow-y-auto bg-gray-200 mb-2">
                     {salesData.map((row, index) => (
-                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "90px 80px 80px 180px 120px 100px 150px 80px 80px 100px", minWidth: "1060px"}}>
+                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "100px 100px 100px 200px 140px 120px 180px 100px 100px 120px", width: "1360px"}}>
                         <div className="bg-white border border-gray-300 p-1">
                           <div className="h-6 flex items-center text-xs text-black font-medium px-2">
                             {row.doId}
