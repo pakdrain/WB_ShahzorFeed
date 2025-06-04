@@ -978,40 +978,6 @@ export default function PurchaseForm() {
           >
             Load Data
           </button>
-
-          {/* Navigation Buttons - Purchase, Sales, Offline */}
-          <div className="grid grid-cols-3 gap-1 mt-2">
-            <button 
-              className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
-                selectedForm === 'purchase' 
-                  ? 'bg-blue-600 text-white border-blue-600' 
-                  : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
-              }`}
-              onClick={() => setSelectedForm('purchase')}
-            >
-              Purchase
-            </button>
-            <button 
-              className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
-                selectedForm === 'sales' 
-                  ? 'bg-green-600 text-white border-green-600' 
-                  : 'bg-white text-green-600 border-green-600 hover:bg-green-50'
-              }`}
-              onClick={() => setSelectedForm('sales')}
-            >
-              Sales
-            </button>
-            <button 
-              className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
-                selectedForm === 'offline' 
-                  ? 'bg-gray-600 text-white border-gray-600' 
-                  : 'bg-white text-gray-600 border-gray-600 hover:bg-gray-50'
-              }`}
-              onClick={() => setSelectedForm('offline')}
-            >
-              Offline
-            </button>
-          </div>
         </div>
       </div>
 
@@ -1243,6 +1209,40 @@ export default function PurchaseForm() {
                 </div>
               </div>
               </div>
+            </div>
+
+            {/* Navigation Buttons - Purchase, Sales, Offline */}
+            <div className="grid grid-cols-3 gap-1 mb-2">
+              <button 
+                className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
+                  selectedForm === 'purchase' 
+                    ? 'bg-blue-600 text-white border-blue-600' 
+                    : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
+                }`}
+                onClick={() => setSelectedForm('purchase')}
+              >
+                Purchase
+              </button>
+              <button 
+                className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
+                  selectedForm === 'sales' 
+                    ? 'bg-green-600 text-white border-green-600' 
+                    : 'bg-white text-green-600 border-green-600 hover:bg-green-50'
+                }`}
+                onClick={() => setSelectedForm('sales')}
+              >
+                Sales
+              </button>
+              <button 
+                className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
+                  selectedForm === 'offline' 
+                    ? 'bg-gray-600 text-white border-gray-600' 
+                    : 'bg-white text-gray-600 border-gray-600 hover:bg-gray-50'
+                }`}
+                onClick={() => setSelectedForm('offline')}
+              >
+                Offline
+              </button>
             </div>
 
             {/* Details Section */}
