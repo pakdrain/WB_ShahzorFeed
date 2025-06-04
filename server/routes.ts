@@ -748,6 +748,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // POST endpoint for saving sales data into existing purchase tables
+  app.post('/api/sales/save', async (req: Request, res: Response) => {
+    try {
+      const { salesData, entryType } = req.body;
+
+      if (!salesData || !Array.isArray(salesData)) {
+        return res.status(400).json({ error: 'Invalid sales data' });
+      }
+
+      console.log('Saving sales data:', salesData);
+
+      const savedRecords = [];
+
+      for (const saleItem of salesData) {
+        // Generate next WB ID
+        const wbIdResult = await pool.query('SELECT COALESCE(MAX(wb_id), 0) + 1 as next_id FROM wb_weighbridge');
+        const nextWbId = wbIdResult.rows[0].next_id;
+
+        // Generate next Slip No with 'S' prefix for sales
+        const slipResult = await pool.query('SELECT COALESCE(MAX(CAST(SUBSTRING(slip_no FROM 2) AS INTEGER)), 0) + 1 as next_slip FROM wb_weighbridge WHERE slip_no LIKE \'S%\'');
+        const nextSlipNo = `S${String(slipResult.rows[0].next_slip).padStart(3, '0')}`;
+
+        // Insert into wb_weighbridge (Master table) with Sales entry type
+        const masterInsertQuery = `
+          INSERT INTO wb_weighbridge (
+            wb_id, slip_no, slip_in_time, entry_type, creation_date, last_updated_date,
+            slip_date, company_id, branch_id, created_by, last_updated_by
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        `;
+
+        const masterValues = [
+          nextWbId,
+          nextSlipNo,
+          new Date().toISOString(),
+          'Sales', // Set entry type as Sales
+          new Date().toISOString(),
+          new Date().toISOString(),
+          new Date().toISOString(),
+          1, // default company_id
+          1, // default branch_id
+          1, // default created_by
+          1  // default last_updated_by
+        ];
+
+        await pool.query(masterInsertQuery, masterValues);
+
+        // Insert into wb_details table mapping sales fields to existing columns
+        const detailsInsertQuery = `
+          INSERT INTO wb_details (
+            wb_id, vehicle_no, vendor_name, po_no, item_desc, po_qty, igp_qty
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `;
+
+        const detailsValues = [
+          nextWbId,
+          saleItem.vehicleNo || null,
+          saleItem.customerName || null, // Map customer name to vendor_name
+          saleItem.doNo || null,        // Map DO# to po_no
+          saleItem.itemDescription || null, // Map item description to item_desc
+          saleItem.doQty ? parseFloat(saleItem.doQty) : null, // Map DO Qty to po_qty
+          saleItem.dcQty ? parseFloat(saleItem.dcQty) : null  // Map DC Qty to igp_qty
+        ];
+
+        await pool.query(detailsInsertQuery, detailsValues);
+
+        savedRecords.push({
+          wbId: nextWbId,
+          slipNo: nextSlipNo,
+          entryType: 'Sales',
+          doId: saleItem.doId
+        });
+      }
+
+      console.log('Sales data saved successfully:', savedRecords);
+
+      res.json({ 
+        success: true,
+        message: 'Sales data saved successfully to Purchase tables',
+        savedRecords: savedRecords
+      });
+
+    } catch (error: any) {
+      console.error('Error saving sales data:', error);
+      res.status(500).json({ error: 'Failed to save sales data' });
+    }
+  });
   app.post('/api/sales/save', async (req, res) => {
     try {
       const { salesData, entryType } = req.body;

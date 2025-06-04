@@ -15,6 +15,7 @@ export default function PurchaseForm() {
   const [location, setLocation] = useLocation();
   const [searchSlipNo, setSearchSlipNo] = useState('');
   const [searchVehicleNo, setSearchVehicleNo] = useState('');
+  const [activeTab, setActiveTab] = useState('purchase');
   
   // Deduction/Bag table state
   const [bagTableData, setBagTableData] = useState<any[]>([]);
@@ -1135,7 +1136,7 @@ export default function PurchaseForm() {
 
             {/* Details Section */}
             <div className="bg-blue-50 p-2 rounded border">
-              <Tabs defaultValue="purchase" className="h-[calc(100%-120px)]">
+              <Tabs defaultValue="purchase" className="h-[calc(100%-120px)]" onValueChange={(value) => setActiveTab(value)}>
               <TabsList className="h-5">
                 <TabsTrigger value="purchase" className="text-xs">Purchase</TabsTrigger>
                 <TabsTrigger value="sale" className="text-xs">Sale</TabsTrigger>
@@ -1277,74 +1278,183 @@ export default function PurchaseForm() {
 
               <TabsContent value="sale">
                 <div className="h-full flex flex-col overflow-hidden">
+                  {/* Sales Controls */}
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        className="h-6 text-xs bg-blue-600 hover:bg-blue-700"
+                        onClick={() => {
+                          const newSalesData = [...salesData];
+                          newSalesData.push({
+                            doId: `DO${String(salesData.length + 1).padStart(3, '0')}`,
+                            dcNo: '',
+                            doNo: '',
+                            customerName: '',
+                            vehicleNo: '',
+                            doDate: '',
+                            itemDescription: '',
+                            dcQty: '',
+                            doQty: '',
+                            branch: ''
+                          });
+                          setSalesData(newSalesData);
+                        }}
+                      >
+                        Add Row
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="h-6 text-xs bg-green-600 hover:bg-green-700"
+                        onClick={async () => {
+                          // Save sales data to existing purchase tables
+                          const validSalesData = salesData.filter(item => 
+                            item.doNo || item.customerName || item.vehicleNo || item.itemDescription
+                          );
+                          
+                          if (validSalesData.length === 0) {
+                            alert('Please enter at least one row of sales data');
+                            return;
+                          }
+
+                          try {
+                            const response = await fetch('/api/sales/save', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                              },
+                              body: JSON.stringify({
+                                salesData: validSalesData,
+                                entryType: 'Sales'
+                              }),
+                            });
+
+                            if (response.ok) {
+                              alert('Sales data saved successfully to Purchase tables!');
+                              // Reset form
+                              setSalesData(Array.from({ length: 15 }, (_, index) => ({
+                                doId: `DO${String(index + 1).padStart(3, '0')}`,
+                                dcNo: '',
+                                doNo: '',
+                                customerName: '',
+                                vehicleNo: '',
+                                doDate: '',
+                                itemDescription: '',
+                                dcQty: '',
+                                doQty: '',
+                                branch: ''
+                              })));
+                            } else {
+                              alert('Failed to save sales data');
+                            }
+                          } catch (error) {
+                            console.error('Error saving sales data:', error);
+                            alert('Error saving sales data');
+                          }
+                        }}
+                      >
+                        Save Sales Data
+                      </Button>
+                    </div>
+                  </div>
+
                   {/* Sales Table Header with proper column widths */}
-                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "60px 60px 150px 100px 80px 120px 60px 60px 80px"}}>
-                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">DC #</div>
-                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">DO #</div>
-                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">Customer Name</div>
-                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">Vehicle No</div>
-                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">Co Date</div>
-                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">Item Description</div>
-                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">DC Qty</div>
-                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">DO Qty</div>
-                    <div className="bg-blue-200 p-1 text-center border border-gray-400 text-gray-800">Branch</div>
+                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "80px 60px 60px 150px 100px 80px 120px 60px 60px 80px"}}>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO ID</div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DC #</div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO #</div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Customer Name</div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Vehicle No</div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO Date</div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Item Description</div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DC Qty</div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO Qty</div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Branch</div>
                   </div>
 
                   {/* Sales Table Body - Scrollable */}
                   <div className="flex-1 overflow-y-auto bg-gray-200 mb-2">
-                    {Array.from({ length: 15 }, (_, index) => (
-                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "60px 60px 150px 100px 80px 120px 60px 60px 80px"}}>
-                        <div className="bg-white border border-gray-300">
-                          <Input className="h-6 text-xs border-0 rounded-none" />
+                    {salesData.map((row, index) => (
+                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "80px 60px 60px 150px 100px 80px 120px 60px 60px 80px"}}>
+                        <div className="bg-white border border-gray-300 p-1">
+                          <div className="h-6 flex items-center text-xs text-black font-medium px-2">
+                            {row.doId}
+                          </div>
                         </div>
-                        <div className="bg-white border border-gray-300">
-                          <Input className="h-6 text-xs border-0 rounded-none" />
+                        <div className="bg-white border border-gray-300 p-1">
+                          <Input 
+                            value={row.dcNo || ''}
+                            onChange={(e) => handleSalesDataChange(index, 'dcNo', e.target.value)}
+                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
+                            placeholder="DC#"
+                          />
                         </div>
-                        <div className="bg-white border border-gray-300">
-                          <Input className="h-6 text-xs border-0 rounded-none" />
+                        <div className="bg-white border border-gray-300 p-1">
+                          <Input 
+                            value={row.doNo || ''}
+                            onChange={(e) => handleSalesDataChange(index, 'doNo', e.target.value)}
+                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
+                            placeholder="DO#"
+                          />
                         </div>
-                        <div className="bg-white border border-gray-300">
-                          <Input className="h-6 text-xs border-0 rounded-none" />
+                        <div className="bg-white border border-gray-300 p-1">
+                          <Input 
+                            value={row.customerName || ''}
+                            onChange={(e) => handleSalesDataChange(index, 'customerName', e.target.value)}
+                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
+                            placeholder="Customer"
+                          />
                         </div>
-                        <div className="bg-white border border-gray-300">
-                          <Input className="h-6 text-xs border-0 rounded-none" placeholder="DD.MM.YYYY" />
+                        <div className="bg-white border border-gray-300 p-1">
+                          <Input 
+                            value={row.vehicleNo || ''}
+                            onChange={(e) => handleSalesDataChange(index, 'vehicleNo', e.target.value)}
+                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
+                            placeholder="Vehicle"
+                          />
                         </div>
-                        <div className="bg-white border border-gray-300">
-                          <Input className="h-6 text-xs border-0 rounded-none" />
+                        <div className="bg-white border border-gray-300 p-1">
+                          <Input 
+                            value={row.doDate || ''}
+                            onChange={(e) => handleSalesDataChange(index, 'doDate', e.target.value)}
+                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
+                            placeholder="DD.MM.YYYY"
+                          />
                         </div>
-                        <div className="bg-white border border-gray-300">
-                          <Input className="h-6 text-xs border-0 rounded-none text-right" />
+                        <div className="bg-white border border-gray-300 p-1">
+                          <Input 
+                            value={row.itemDescription || ''}
+                            onChange={(e) => handleSalesDataChange(index, 'itemDescription', e.target.value)}
+                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
+                            placeholder="Item"
+                          />
                         </div>
-                        <div className="bg-white border border-gray-300">
-                          <Input className="h-6 text-xs border-0 rounded-none text-right" />
+                        <div className="bg-white border border-gray-300 p-1">
+                          <Input 
+                            value={row.dcQty || ''}
+                            onChange={(e) => handleSalesDataChange(index, 'dcQty', e.target.value)}
+                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 text-right bg-white"
+                            placeholder="0"
+                          />
                         </div>
-                        <div className="bg-white border border-gray-300">
-                          <Input className="h-6 text-xs border-0 rounded-none" />
+                        <div className="bg-white border border-gray-300 p-1">
+                          <Input 
+                            value={row.doQty || ''}
+                            onChange={(e) => handleSalesDataChange(index, 'doQty', e.target.value)}
+                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 text-right bg-white"
+                            placeholder="0"
+                          />
+                        </div>
+                        <div className="bg-white border border-gray-300 p-1">
+                          <Input 
+                            value={row.branch || ''}
+                            onChange={(e) => handleSalesDataChange(index, 'branch', e.target.value)}
+                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
+                            placeholder="Branch"
+                          />
                         </div>
                       </div>
                     ))}
-                  </div>
-
-                  {/* Bottom Summary Section with proper widths */}
-                  <div className="bg-blue-100 border border-gray-400 p-2">
-                    <div className="grid grid-cols-4 gap-3 text-xs">
-                      <div className="flex items-center gap-1">
-                        <Label className="text-xs font-semibold text-gray-800 whitespace-nowrap">Weight Per Bags:</Label>
-                        <Input className="h-6 text-xs flex-1" />
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Label className="text-xs font-semibold text-gray-800 whitespace-nowrap">Total Weight Qty:</Label>
-                        <Input className="h-6 text-xs flex-1" />
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Label className="text-xs font-semibold text-gray-800 whitespace-nowrap">Total:</Label>
-                        <Input className="h-6 text-xs flex-1" />
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Label className="text-xs font-semibold text-gray-800 whitespace-nowrap">Total Feed Bags:</Label>
-                        <Input className="h-6 text-xs flex-1" />
-                      </div>
-                    </div>
                   </div>
                 </div>
               </TabsContent>
