@@ -144,7 +144,8 @@ export default function SalesForm() {
       <div className="flex-1 overflow-hidden flex flex-col border border-gray-300">
         
         {/* Table Header */}
-        <div className="grid grid-cols-9 gap-px bg-gray-300 text-xs font-semibold">
+        <div className="grid grid-cols-10 gap-px bg-gray-300 text-xs font-semibold min-w-[1200px]">
+          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO ID</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DC #</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO #</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Customer Name</div>
@@ -157,9 +158,14 @@ export default function SalesForm() {
         </div>
 
         {/* Table Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto bg-gray-200">
+        <div className="flex-1 overflow-y-auto bg-gray-200 overflow-x-auto">
           {salesData.map((row, index) => (
-            <div key={index} className="grid grid-cols-9 gap-px text-xs">
+            <div key={index} className="grid grid-cols-10 gap-px text-xs min-w-[1200px]">
+              <div className="bg-white border border-gray-300 p-1">
+                <div className="h-6 flex items-center text-xs text-black font-medium px-2">
+                  {row.doId}
+                </div>
+              </div>
               <div className="bg-white border border-gray-300 p-1">
                 <Input
                   value={row.dcNo}

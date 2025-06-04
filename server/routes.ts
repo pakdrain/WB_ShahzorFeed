@@ -770,7 +770,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Insert details for each sales row
       const detailsResults = [];
       for (const row of salesData) {
-        if (row.dcNo || row.doNo || row.customerName || row.vehicleNo || row.coDate || row.itemDescription || row.dcQty || row.doQty || row.branch) {
+        if (row.dcNo || row.doNo || row.customerName || row.vehicleNo || row.doDate || row.itemDescription || row.dcQty || row.doQty || row.branch) {
           const detailsQuery = `
             INSERT INTO wb_details (wb_id, vehicle_no, vendor_name, item_desc, po_qty, igp_qty, balance_qty)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
