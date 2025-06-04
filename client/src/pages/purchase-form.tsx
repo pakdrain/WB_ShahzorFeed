@@ -595,7 +595,7 @@ export default function PurchaseForm() {
         savedWbId = editingWbId;
       }
       
-      // For Sales entries, save sales data to details table with proper column mappings
+      // For Sales entries, save sales data to details table using standard purchase items API
       if (selectedForm === 'sales') {
         // Filter valid sales rows (at least one field filled)
         const validSalesRows = salesData.filter(row => 
@@ -604,39 +604,43 @@ export default function PurchaseForm() {
         
         if (validSalesRows.length > 0) {
           try {
-            // Save sales data using the dedicated sales endpoint
-            // Map sales form fields to database columns in wb_weighbridge_items_purchase
-            const salesPayload = {
-              salesData: validSalesRows.map(row => ({
-                wb_id: savedWbId!, // Foreign key to master table
-                // do_id will be auto-generated as maximum number by backend
-                customer_name: row.customerName || null, // Customer Name field
-                vehicle_no: row.vehicleNo || null, // Vehicle No field
-                do_date: null, // As requested - null for now
-                item_description: row.itemDescription || null, // Item Description field
-                // Additional fields from Sales form for completeness
-                dc_no: row.dcNo || null, // DC # field
-                do_no: row.doNo || null, // DO # field
-                dc_qty: row.dcQty ? parseFloat(row.dcQty) : null, // DC Qty field
-                do_qty: row.doQty ? parseFloat(row.doQty) : null, // DO Qty field
-                branch: row.branch || null // Branch field
-              })),
-              entryType: 'SALE'
-            };
-            
-            const salesResponse = await fetch('/api/sales/save', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(salesPayload),
-            });
-            
-            if (salesResponse.ok) {
-              console.log('Sales detail data saved successfully to database');
-            } else {
-              console.error('Failed to save sales detail data');
+            // Save each sales row as separate items using the standard purchase items API
+            for (const row of validSalesRows) {
+              const salesItemPayload = {
+                wb_id: savedWbId!,
+                baradana_type: null,
+                igp_no: row.dcNo || null, // Map DC # to igp_no field
+                vehicle_no: row.vehicleNo || null,
+                weight_per_bags: null,
+                igp_date: null,
+                supplier_weight: null,
+                quality_deduction: null,
+                no_of_bags: null,
+                vendor_name: row.customerName || null, // Map Customer Name to vendor_name field
+                bag_condition: null,
+                po_no: row.doNo || null, // Map DO # to po_no field
+                item_code: null,
+                item_desc: row.itemDescription || null,
+                po_qty: row.doQty ? parseFloat(row.doQty) : null, // Map DO Qty to po_qty
+                igp_qty: row.dcQty ? parseFloat(row.dcQty) : null, // Map DC Qty to igp_qty
+                balance_qty: null
+              };
+              
+              const salesItemResponse = await fetch('/api/purchase-items', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(salesItemPayload),
+              });
+              
+              if (salesItemResponse.ok) {
+                console.log('Sales item saved to Details table:', row);
+              } else {
+                console.error('Failed to save sales item to Details table:', row);
+              }
             }
+            console.log('All sales detail data saved successfully to Details table');
           } catch (salesError) {
             console.error('Error saving sales detail data:', salesError);
           }
