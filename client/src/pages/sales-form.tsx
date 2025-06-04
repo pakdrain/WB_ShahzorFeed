@@ -74,7 +74,6 @@ export default function SalesForm() {
       }
       
       return response.json();
-      return response;
     },
     onSuccess: () => {
       toast({
