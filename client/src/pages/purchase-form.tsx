@@ -978,6 +978,40 @@ export default function PurchaseForm() {
           >
             Load Data
           </button>
+
+          {/* Navigation Buttons - Purchase, Sales, Offline */}
+          <div className="grid grid-cols-3 gap-1 mt-2">
+            <button 
+              className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
+                selectedForm === 'purchase' 
+                  ? 'bg-blue-600 text-white border-blue-600' 
+                  : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
+              }`}
+              onClick={() => setSelectedForm('purchase')}
+            >
+              Purchase
+            </button>
+            <button 
+              className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
+                selectedForm === 'sales' 
+                  ? 'bg-green-600 text-white border-green-600' 
+                  : 'bg-white text-green-600 border-green-600 hover:bg-green-50'
+              }`}
+              onClick={() => setSelectedForm('sales')}
+            >
+              Sales
+            </button>
+            <button 
+              className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
+                selectedForm === 'offline' 
+                  ? 'bg-gray-600 text-white border-gray-600' 
+                  : 'bg-white text-gray-600 border-gray-600 hover:bg-gray-50'
+              }`}
+              onClick={() => setSelectedForm('offline')}
+            >
+              Offline
+            </button>
+          </div>
         </div>
       </div>
 
@@ -1563,6 +1597,78 @@ export default function PurchaseForm() {
                     </div>
                   </div>
 
+                </div>
+              )}
+
+              {/* Show Offline Form when selectedForm is 'offline' */}
+              {selectedForm === 'offline' && (
+                <div className="mt-1">
+                  <div className="bg-gray-100 p-4 rounded border">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Offline Entry Mode</h3>
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs text-black">Offline Entry ID</Label>
+                          <Input 
+                            name="offlineEntryId" 
+                            value={formData.offlineEntry} 
+                            onChange={handleChange} 
+                            className="h-6 text-xs text-black" 
+                            placeholder="Auto-generated"
+                            readOnly
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-black">Entry Date</Label>
+                          <Input 
+                            name="offlineEntryDate" 
+                            value={formData.creationDate} 
+                            onChange={handleChange} 
+                            className="h-6 text-xs text-black" 
+                            type="date"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-black">Manual Entry Reason</Label>
+                          <textarea 
+                            name="offlineReason" 
+                            className="w-full h-16 text-xs border border-gray-300 rounded px-2 py-1 resize-none" 
+                            placeholder="Reason for offline entry..."
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs text-black">Created By</Label>
+                          <Input 
+                            name="createdBy" 
+                            value={formData.createdBy} 
+                            onChange={handleChange} 
+                            className="h-6 text-xs text-black" 
+                            placeholder="Enter user name"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-black">Verification Status</Label>
+                          <Select name="verificationStatus" value="Pending" onValueChange={(value) => setFormData(prev => ({...prev, verificationStatus: value}))}>
+                            <SelectTrigger className="h-6 text-xs text-black">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Pending">Pending</SelectItem>
+                              <SelectItem value="Verified">Verified</SelectItem>
+                              <SelectItem value="Rejected">Rejected</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
+                          <p className="text-xs text-yellow-800">
+                            <strong>Note:</strong> Offline entries require manual verification before processing.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
