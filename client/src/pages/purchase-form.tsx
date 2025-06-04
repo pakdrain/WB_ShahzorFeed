@@ -16,6 +16,7 @@ export default function PurchaseForm() {
   const [searchSlipNo, setSearchSlipNo] = useState('');
   const [searchVehicleNo, setSearchVehicleNo] = useState('');
   const [activeTab, setActiveTab] = useState('purchase');
+  const [selectedForm, setSelectedForm] = useState('purchase'); // Controls which form section is shown
   
   // Deduction/Bag table state
   const [bagTableData, setBagTableData] = useState<any[]>([]);
@@ -1049,10 +1050,18 @@ export default function PurchaseForm() {
       {/* Navigation Buttons */}
       <div className="flex justify-between items-center bg-white border rounded p-1 mb-1">
         <div className="flex gap-1 text-xs">
-          <Button className={`h-6 px-2 text-xs font-medium ${location === '/purchase-form' ? 'bg-blue-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}>
+          <Button 
+            className={`h-6 px-2 text-xs font-medium ${selectedForm === 'purchase' ? 'bg-blue-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
+            onClick={() => setSelectedForm('purchase')}
+          >
             Purchase
           </Button>
-          <Button className="h-6 px-2 text-xs bg-rose-600 hover:bg-rose-700 text-white font-medium">Sale</Button>
+          <Button 
+            className={`h-6 px-2 text-xs font-medium ${selectedForm === 'sales' ? 'bg-rose-700 text-white' : 'bg-rose-600 hover:bg-rose-700 text-white'}`}
+            onClick={() => setSelectedForm('sales')}
+          >
+            Sale
+          </Button>
           <Button className={`h-6 px-2 text-xs font-medium ${isEditMode ? 'bg-yellow-600 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}>
             {isEditMode ? 'Editing' : 'Offline'}
           </Button>
@@ -1195,14 +1204,9 @@ export default function PurchaseForm() {
 
             {/* Details Section */}
             <div className="bg-blue-50 p-2 rounded border">
-              <Tabs defaultValue="purchase" className="h-[calc(100%-120px)]" onValueChange={(value) => setActiveTab(value)}>
-              <TabsList className="h-5">
-                <TabsTrigger value="purchase" className="text-xs">Purchase</TabsTrigger>
-                <TabsTrigger value="sale" className="text-xs">Sale</TabsTrigger>
-                <TabsTrigger value="offline" className="text-xs">Offline</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="purchase" className="mt-1">
+              {/* Show Purchase Form when selectedForm is 'purchase' */}
+              {selectedForm === 'purchase' && (
+                <div className="mt-1">
                 <div className="grid grid-cols-4 gap-1 text-xs mb-2">
                   {/* Mini Column 1 */}
                   <div className="space-y-1">
@@ -1333,9 +1337,11 @@ export default function PurchaseForm() {
                     </tbody>
                   </table>
                 </div>
-              </TabsContent>
+                </div>
+              )}
 
-              <TabsContent value="sale">
+              {/* Show Sales Form when selectedForm is 'sales' */}
+              {selectedForm === 'sales' && (
                 <div className="h-full flex flex-col">
 
                   {/* Sales Table Header - exact match to image */}
@@ -1549,12 +1555,7 @@ export default function PurchaseForm() {
                   </div>
 
                 </div>
-              </TabsContent>
-
-              <TabsContent value="offline">
-                <div className="text-center p-4 text-xs text-black">Offline tab content here</div>
-              </TabsContent>
-            </Tabs>
+              )}
             </div>
           </div>
 
