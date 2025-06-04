@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 interface SalesRowData {
   dcNo: string;
@@ -16,179 +18,219 @@ interface SalesRowData {
 }
 
 export default function SalesForm() {
-  const [salesData, setSalesData] = useState<SalesRowData[]>(
-    Array.from({ length: 15 }, () => ({
-      dcNo: "",
-      doNo: "",
-      customerName: "",
-      vehicleNo: "",
-      coDate: "",
-      itemDescription: "",
-      dcQty: "",
-      doQty: "",
-      branch: ""
-    }))
-  );
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  const [salesData, setSalesData] = useState<SalesRowData[]>([
+    {
+      dcNo: '',
+      doNo: '',
+      customerName: '',
+      vehicleNo: '',
+      coDate: '',
+      itemDescription: '',
+      dcQty: '',
+      doQty: '',
+      branch: ''
+    }
+  ]);
 
-  const [summaryData, setSummaryData] = useState({
-    weightPerBags: "",
-    totalWeightQty: "",
-    total: "",
-    totalFeedBags: ""
-  });
-
-  const handleRowChange = (rowIndex: number, field: keyof SalesRowData, value: string) => {
-    const newSalesData = [...salesData];
-    newSalesData[rowIndex][field] = value;
-    setSalesData(newSalesData);
+  const handleRowChange = (index: number, field: keyof SalesRowData, value: string) => {
+    const newData = [...salesData];
+    newData[index] = { ...newData[index], [field]: value };
+    setSalesData(newData);
   };
 
-  const handleSummaryChange = (field: string, value: string) => {
-    setSummaryData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const addRow = () => {
+    setSalesData([...salesData, {
+      dcNo: '',
+      doNo: '',
+      customerName: '',
+      vehicleNo: '',
+      coDate: '',
+      itemDescription: '',
+      dcQty: '',
+      doQty: '',
+      branch: ''
+    }]);
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: SalesRowData[]) => {
+      // Save sales data to existing purchase/master tables
+      const response = await fetch('/api/sales/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          salesData: data,
+          entryType: 'Sales'
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save sales data');
+      }
+      
+      return response.json();
+      return response;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Sales data saved successfully"
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/purchases'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save sales data",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleSave = () => {
+    const validData = salesData.filter(row => 
+      row.dcNo || row.doNo || row.customerName || row.vehicleNo || 
+      row.coDate || row.itemDescription || row.dcQty || row.doQty || row.branch
+    );
+    
+    if (validData.length > 0) {
+      saveMutation.mutate(validData);
+    } else {
+      toast({
+        title: "Warning",
+        description: "Please enter at least one row of data",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
-    <div className="h-screen bg-gray-100 p-2 overflow-hidden">
-      <div className="bg-white p-2 rounded border h-full overflow-hidden flex flex-col">
+    <div className="h-full flex flex-col bg-blue-50 p-2">
+      {/* Header Controls */}
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex gap-2">
+          <Button 
+            onClick={addRow}
+            className="h-6 text-xs bg-green-600 hover:bg-green-700"
+          >
+            Add Row
+          </Button>
+          <Button 
+            onClick={handleSave}
+            disabled={saveMutation.isPending}
+            className="h-6 text-xs bg-blue-600 hover:bg-blue-700"
+          >
+            {saveMutation.isPending ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
         
-        {/* Header Tabs */}
-        <div className="flex mb-2">
-          <div className="flex border-b">
-            <div className="px-4 py-1 bg-blue-200 border border-gray-400 text-xs font-medium">Purchase</div>
-            <div className="px-4 py-1 bg-blue-500 text-white border border-gray-400 text-xs font-medium">Sale</div>
-            <div className="px-4 py-1 bg-blue-200 border border-gray-400 text-xs font-medium">Offline</div>
-          </div>
+        {/* Type Indicator */}
+        <div className="flex gap-1">
+          <div className="px-4 py-1 bg-blue-200 border border-gray-400 text-xs font-medium text-black">Purchase</div>
+          <div className="px-4 py-1 bg-blue-500 text-white border border-gray-400 text-xs font-medium">Sale</div>
+          <div className="px-4 py-1 bg-blue-200 border border-gray-400 text-xs font-medium text-black">Offline</div>
+        </div>
+      </div>
+
+      {/* Main Table Container */}
+      <div className="flex-1 overflow-hidden flex flex-col border border-gray-300">
+        
+        {/* Table Header */}
+        <div className="grid grid-cols-9 gap-px bg-gray-300 text-xs font-semibold">
+          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DC #</div>
+          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO #</div>
+          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Customer Name</div>
+          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Vehicle No</div>
+          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Co Date</div>
+          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Item Description</div>
+          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DC Qty</div>
+          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO Qty</div>
+          <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Branch</div>
         </div>
 
-        {/* Main Table Container */}
-        <div className="flex-1 overflow-hidden flex flex-col">
-          
-          {/* Table Header */}
-          <div className="grid grid-cols-9 gap-px bg-gray-300 text-xs font-semibold">
-            <div className="bg-blue-100 p-1 text-center border border-gray-400">DC #</div>
-            <div className="bg-blue-100 p-1 text-center border border-gray-400">DO #</div>
-            <div className="bg-blue-100 p-1 text-center border border-gray-400">Customer Name</div>
-            <div className="bg-blue-100 p-1 text-center border border-gray-400">Vehicle No</div>
-            <div className="bg-blue-100 p-1 text-center border border-gray-400">Co Date</div>
-            <div className="bg-blue-100 p-1 text-center border border-gray-400">Item Description</div>
-            <div className="bg-blue-100 p-1 text-center border border-gray-400">DC Qty</div>
-            <div className="bg-blue-100 p-1 text-center border border-gray-400">DO Qty</div>
-            <div className="bg-blue-100 p-1 text-center border border-gray-400">Branch</div>
-          </div>
-
-          {/* Table Body - Scrollable */}
-          <div className="flex-1 overflow-y-auto bg-gray-200">
-            {salesData.map((row, index) => (
-              <div key={index} className="grid grid-cols-9 gap-px text-xs">
-                <div className="bg-white border border-gray-300">
-                  <Input
-                    value={row.doId}
-                    readOnly
-                    className="h-6 text-xs border-0 rounded-none bg-gray-100"
-                  />
-                </div>
-                <div className="bg-white border border-gray-300">
-                  <Input
-                    value={row.doNo}
-                    onChange={(e) => handleRowChange(index, 'doNo', e.target.value)}
-                    className="h-6 text-xs border-0 rounded-none"
-                  />
-                </div>
-                <div className="bg-white border border-gray-300">
-                  <Input
-                    value={row.customerName}
-                    onChange={(e) => handleRowChange(index, 'customerName', e.target.value)}
-                    className="h-6 text-xs border-0 rounded-none"
-                  />
-                </div>
-                <div className="bg-white border border-gray-300">
-                  <Input
-                    value={row.vehicleNo}
-                    onChange={(e) => handleRowChange(index, 'vehicleNo', e.target.value)}
-                    className="h-6 text-xs border-0 rounded-none"
-                  />
-                </div>
-                <div className="bg-white border border-gray-300">
-                  <Input
-                    value={row.coDate}
-                    onChange={(e) => handleRowChange(index, 'coDate', e.target.value)}
-                    className="h-6 text-xs border-0 rounded-none"
-                    placeholder="DD.MM.YYYY"
-                  />
-                </div>
-                <div className="bg-white border border-gray-300">
-                  <Input
-                    value={row.itemDescription}
-                    onChange={(e) => handleRowChange(index, 'itemDescription', e.target.value)}
-                    className="h-6 text-xs border-0 rounded-none"
-                  />
-                </div>
-                <div className="bg-white border border-gray-300">
-                  <Input
-                    value={row.dcQty}
-                    onChange={(e) => handleRowChange(index, 'dcQty', e.target.value)}
-                    className="h-6 text-xs border-0 rounded-none text-right"
-                  />
-                </div>
-                <div className="bg-white border border-gray-300">
-                  <Input
-                    value={row.doQty}
-                    onChange={(e) => handleRowChange(index, 'doQty', e.target.value)}
-                    className="h-6 text-xs border-0 rounded-none text-right"
-                  />
-                </div>
-                <div className="bg-white border border-gray-300">
-                  <Input
-                    value={row.branch}
-                    onChange={(e) => handleRowChange(index, 'branch', e.target.value)}
-                    className="h-6 text-xs border-0 rounded-none"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom Summary Section */}
-          <div className="bg-blue-100 border-t border-gray-400 p-2">
-            <div className="grid grid-cols-4 gap-4 text-xs">
-              <div className="flex items-center gap-2">
-                <Label className="text-xs font-medium">Weight Per Bags:</Label>
+        {/* Table Body - Scrollable */}
+        <div className="flex-1 overflow-y-auto bg-gray-200">
+          {salesData.map((row, index) => (
+            <div key={index} className="grid grid-cols-9 gap-px text-xs">
+              <div className="bg-white border border-gray-300 p-1">
                 <Input
-                  value={summaryData.weightPerBags}
-                  onChange={(e) => handleSummaryChange('weightPerBags', e.target.value)}
-                  className="h-6 text-xs flex-1"
+                  value={row.dcNo}
+                  onChange={(e) => handleRowChange(index, 'dcNo', e.target.value)}
+                  className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0"
+                  placeholder="DC#"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs font-medium">Total Weight Qty:</Label>
+              <div className="bg-white border border-gray-300 p-1">
                 <Input
-                  value={summaryData.totalWeightQty}
-                  onChange={(e) => handleSummaryChange('totalWeightQty', e.target.value)}
-                  className="h-6 text-xs flex-1"
+                  value={row.doNo}
+                  onChange={(e) => handleRowChange(index, 'doNo', e.target.value)}
+                  className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0"
+                  placeholder="DO#"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs font-medium">Total:</Label>
+              <div className="bg-white border border-gray-300 p-1">
                 <Input
-                  value={summaryData.total}
-                  onChange={(e) => handleSummaryChange('total', e.target.value)}
-                  className="h-6 text-xs flex-1"
+                  value={row.customerName}
+                  onChange={(e) => handleRowChange(index, 'customerName', e.target.value)}
+                  className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0"
+                  placeholder="Customer"
                 />
               </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-xs font-medium">Total Feed Bags:</Label>
+              <div className="bg-white border border-gray-300 p-1">
                 <Input
-                  value={summaryData.totalFeedBags}
-                  onChange={(e) => handleSummaryChange('totalFeedBags', e.target.value)}
-                  className="h-6 text-xs flex-1"
+                  value={row.vehicleNo}
+                  onChange={(e) => handleRowChange(index, 'vehicleNo', e.target.value)}
+                  className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0"
+                  placeholder="Vehicle"
+                />
+              </div>
+              <div className="bg-white border border-gray-300 p-1">
+                <Input
+                  value={row.coDate}
+                  onChange={(e) => handleRowChange(index, 'coDate', e.target.value)}
+                  className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0"
+                  placeholder="DD.MM.YYYY"
+                />
+              </div>
+              <div className="bg-white border border-gray-300 p-1">
+                <Input
+                  value={row.itemDescription}
+                  onChange={(e) => handleRowChange(index, 'itemDescription', e.target.value)}
+                  className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0"
+                  placeholder="Item"
+                />
+              </div>
+              <div className="bg-white border border-gray-300 p-1">
+                <Input
+                  value={row.dcQty}
+                  onChange={(e) => handleRowChange(index, 'dcQty', e.target.value)}
+                  className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0"
+                  placeholder="DC Qty"
+                />
+              </div>
+              <div className="bg-white border border-gray-300 p-1">
+                <Input
+                  value={row.doQty}
+                  onChange={(e) => handleRowChange(index, 'doQty', e.target.value)}
+                  className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0"
+                  placeholder="DO Qty"
+                />
+              </div>
+              <div className="bg-white border border-gray-300 p-1">
+                <Input
+                  value={row.branch}
+                  onChange={(e) => handleRowChange(index, 'branch', e.target.value)}
+                  className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0"
+                  placeholder="Branch"
                 />
               </div>
             </div>
-          </div>
-
+          ))}
         </div>
       </div>
     </div>

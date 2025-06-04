@@ -747,22 +747,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // POST endpoint for saving sales data
-  app.post('/api/sales', async (req, res) => {
+  // POST endpoint for saving sales data into existing purchase tables
+  app.post('/api/sales/save', async (req, res) => {
     try {
-      const { wbId, doId, doNo, customerName, vehicleNo, doDate, itemDescription, dcQty, doQty, branch } = req.body;
+      const { salesData, entryType } = req.body;
       
-      const query = `
-        INSERT INTO sales_details (wb_id, do_id, do_no, customer_name, vehicle_no, do_date, item_description, dc_qty, do_qty, branch)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      // Generate new WB_ID for the sales entry
+      const wbId = await generateWBID();
+      const currentTime = new Date().toISOString();
+      
+      // Insert master record with "Sales" entry type
+      const masterQuery = `
+        INSERT INTO wb_weighbridge (wb_id, slip_no, slip_in_time, entry_type)
+        VALUES ($1, $2, $3, $4)
         RETURNING *
       `;
       
-      const values = [wbId, doId, doNo, customerName, vehicleNo, doDate, itemDescription, dcQty, doQty, branch];
-      const result = await pool.query(query, values);
+      const slipNo = `S${wbId.toString().padStart(3, '0')}`;
+      const masterValues = [wbId, slipNo, currentTime, 'Sales'];
+      const masterResult = await pool.query(masterQuery, masterValues);
       
-      console.log('Sales data saved successfully:', result.rows[0]);
-      res.json(result.rows[0]);
+      // Insert details for each sales row
+      const detailsResults = [];
+      for (const row of salesData) {
+        if (row.dcNo || row.doNo || row.customerName || row.vehicleNo || row.coDate || row.itemDescription || row.dcQty || row.doQty || row.branch) {
+          const detailsQuery = `
+            INSERT INTO wb_details (wb_id, vehicle_no, vendor_name, item_desc, po_qty, igp_qty, balance_qty)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *
+          `;
+          
+          const detailsValues = [
+            wbId,
+            row.vehicleNo || '',
+            row.customerName || '',
+            row.itemDescription || '',
+            parseFloat(row.dcQty) || 0,
+            parseFloat(row.doQty) || 0,
+            (parseFloat(row.dcQty) || 0) - (parseFloat(row.doQty) || 0)
+          ];
+          
+          const detailsResult = await pool.query(detailsQuery, detailsValues);
+          detailsResults.push(detailsResult.rows[0]);
+        }
+      }
+      
+      console.log('Sales data saved to existing tables successfully');
+      res.json({
+        master: masterResult.rows[0],
+        details: detailsResults,
+        message: 'Sales data saved successfully'
+      });
     } catch (error: any) {
       console.error('Error saving sales data:', error);
       res.status(500).json({ error: 'Failed to save sales data' });
