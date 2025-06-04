@@ -686,16 +686,16 @@ export default function PurchaseForm() {
           }
         }
         
-        // Save sales data when entry type is Sales
-        if (formData.entryType === 'SALES' && salesData.length > 0) {
+        // Save sales data when active tab is sale
+        if (activeTab === 'sale' && salesData.length > 0) {
           try {
             const validSalesData = salesData.filter(item => 
-              item.doNo || item.customerName || item.vehicleNo
+              item.doNo || item.customerName || item.vehicleNo || item.itemDescription
             );
             
             if (validSalesData.length > 0) {
               const salesSavePromises = validSalesData.map(item => 
-                fetch('/api/sales', {
+                fetch('/api/sales/save', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -914,9 +914,10 @@ export default function PurchaseForm() {
         </div>
       </div>
 
-      {/* Bag Details Table - Below Weight Display Table */}
-      <div className="absolute top-96 right-4 z-50">
-        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80">
+      {/* Bag Details Table - Below Weight Display Table (hide when Sales tab is active) */}
+      {activeTab !== 'sale' && (
+        <div className="absolute top-96 right-4 z-50">
+          <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80">
           {/* Header Row */}
           <div className="grid grid-cols-6 border-b border-gray-400">
             <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
@@ -978,7 +979,8 @@ export default function PurchaseForm() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       {/* Edit Mode Indicator */}
       {isEditMode && (
@@ -1278,85 +1280,6 @@ export default function PurchaseForm() {
 
               <TabsContent value="sale">
                 <div className="h-full flex flex-col overflow-hidden">
-                  {/* Sales Controls */}
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex gap-2">
-                      <Button 
-                        size="sm" 
-                        className="h-6 text-xs bg-blue-600 hover:bg-blue-700"
-                        onClick={() => {
-                          const newSalesData = [...salesData];
-                          newSalesData.push({
-                            doId: `DO${String(salesData.length + 1).padStart(3, '0')}`,
-                            dcNo: '',
-                            doNo: '',
-                            customerName: '',
-                            vehicleNo: '',
-                            doDate: '',
-                            itemDescription: '',
-                            dcQty: '',
-                            doQty: '',
-                            branch: ''
-                          });
-                          setSalesData(newSalesData);
-                        }}
-                      >
-                        Add Row
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="h-6 text-xs bg-green-600 hover:bg-green-700"
-                        onClick={async () => {
-                          // Save sales data to existing purchase tables
-                          const validSalesData = salesData.filter(item => 
-                            item.doNo || item.customerName || item.vehicleNo || item.itemDescription
-                          );
-                          
-                          if (validSalesData.length === 0) {
-                            alert('Please enter at least one row of sales data');
-                            return;
-                          }
-
-                          try {
-                            const response = await fetch('/api/sales/save', {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                              },
-                              body: JSON.stringify({
-                                salesData: validSalesData,
-                                entryType: 'Sales'
-                              }),
-                            });
-
-                            if (response.ok) {
-                              alert('Sales data saved successfully to Purchase tables!');
-                              // Reset form
-                              setSalesData(Array.from({ length: 15 }, (_, index) => ({
-                                doId: `DO${String(index + 1).padStart(3, '0')}`,
-                                dcNo: '',
-                                doNo: '',
-                                customerName: '',
-                                vehicleNo: '',
-                                doDate: '',
-                                itemDescription: '',
-                                dcQty: '',
-                                doQty: '',
-                                branch: ''
-                              })));
-                            } else {
-                              alert('Failed to save sales data');
-                            }
-                          } catch (error) {
-                            console.error('Error saving sales data:', error);
-                            alert('Error saving sales data');
-                          }
-                        }}
-                      >
-                        Save Sales Data
-                      </Button>
-                    </div>
-                  </div>
 
                   {/* Sales Table Header with proper column widths */}
                   <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "80px 60px 60px 150px 100px 80px 120px 60px 60px 80px"}}>
@@ -1387,6 +1310,7 @@ export default function PurchaseForm() {
                             onChange={(e) => handleSalesDataChange(index, 'dcNo', e.target.value)}
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="DC#"
+                            autoComplete="off"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1395,6 +1319,7 @@ export default function PurchaseForm() {
                             onChange={(e) => handleSalesDataChange(index, 'doNo', e.target.value)}
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="DO#"
+                            autoComplete="off"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1403,6 +1328,7 @@ export default function PurchaseForm() {
                             onChange={(e) => handleSalesDataChange(index, 'customerName', e.target.value)}
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="Customer"
+                            autoComplete="off"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1411,6 +1337,7 @@ export default function PurchaseForm() {
                             onChange={(e) => handleSalesDataChange(index, 'vehicleNo', e.target.value)}
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="Vehicle"
+                            autoComplete="off"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1419,6 +1346,7 @@ export default function PurchaseForm() {
                             onChange={(e) => handleSalesDataChange(index, 'doDate', e.target.value)}
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="DD.MM.YYYY"
+                            autoComplete="off"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1427,6 +1355,7 @@ export default function PurchaseForm() {
                             onChange={(e) => handleSalesDataChange(index, 'itemDescription', e.target.value)}
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="Item"
+                            autoComplete="off"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1435,6 +1364,7 @@ export default function PurchaseForm() {
                             onChange={(e) => handleSalesDataChange(index, 'dcQty', e.target.value)}
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 text-right bg-white"
                             placeholder="0"
+                            autoComplete="off"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1443,6 +1373,7 @@ export default function PurchaseForm() {
                             onChange={(e) => handleSalesDataChange(index, 'doQty', e.target.value)}
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 text-right bg-white"
                             placeholder="0"
+                            autoComplete="off"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1451,6 +1382,7 @@ export default function PurchaseForm() {
                             onChange={(e) => handleSalesDataChange(index, 'branch', e.target.value)}
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="Branch"
+                            autoComplete="off"
                           />
                         </div>
                       </div>
