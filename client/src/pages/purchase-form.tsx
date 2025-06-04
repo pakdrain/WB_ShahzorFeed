@@ -20,15 +20,16 @@ export default function PurchaseForm() {
   // Deduction/Bag table state
   const [bagTableData, setBagTableData] = useState<any[]>([]);
   
-  // Sales data state
+  // Sales data state - mapped to database columns
   const [salesData, setSalesData] = useState<any[]>(
     Array.from({ length: 8 }, (_, index) => ({
-      doId: `DO${String(index + 1).padStart(3, '0')}`,
+      doId: '', // Will be auto-generated as maximum number
+      dcNo: '',
       doNo: '',
-      customerName: '',
-      vehicleNo: '',
-      doDate: '',
-      itemDescription: '',
+      customerName: '', // Maps to customer_name
+      vehicleNo: '', // Maps to vehicle_no
+      doDate: '', // Maps to do_date (will be null for now)
+      itemDescription: '', // Maps to item_description
       dcQty: '',
       doQty: '',
       branch: ''
@@ -510,6 +511,9 @@ export default function PurchaseForm() {
       return;
     }
     
+    // Determine entry type based on active tab
+    const currentEntryType = activeTab === 'sale' ? 'SALE' : 'PURCHASE';
+    
     // Prepare master data payload
     const masterPayload = {
       slip_no: formData.slipNo || null,
@@ -531,7 +535,7 @@ export default function PurchaseForm() {
       last_updated_by: formData.lastUpdatedBy ? parseInt(formData.lastUpdatedBy, 10) : null,
       last_updated_date: formData.lastUpdatedDate || null,
       manual_dc_no: formData.manualDcNo || null,
-      entry_type: formData.entryType || null,
+      entry_type: currentEntryType,
       slip_out_time: formatISODate(formData.slipOutTime),
       status: formData.status || null,
       slip_date: formData.slipDate || null,
@@ -590,60 +594,93 @@ export default function PurchaseForm() {
         savedWbId = editingWbId;
       }
       
-      // Prepare items data payload - use first IGP item if available, otherwise form data
-      const firstIgpItem: any = igpItems.length > 0 ? igpItems[0] : {};
-      
-      console.log('Form data for items:', formData);
-      console.log('IGP items available:', igpItems);
-      
-      const itemsPayload = {
-        wb_id: savedWbId!,
-        baradana_type: formData.bardanaType || null,
-        igp_no: formData.igpNo || null,
-        vehicle_no: formData.vehicleNo || null,
-        weight_per_bags: formData.wtPerBag ? parseFloat(formData.wtPerBag) : null,
-        igp_date: formData.igpDate || null,
-        supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
-        quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
-        no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
-        vendor_name: firstIgpItem?.vendor_name || formData.vendor || null,
-        bag_condition: formData.bagCondition || null,
-        po_no: firstIgpItem?.po_no || formData.po_no || null,
-        item_code: firstIgpItem?.item_code || formData.itemCode || null,
-        item_desc: firstIgpItem?.item_desc || formData.itemDesc || null,
-        po_qty: firstIgpItem?.po_qty ? parseFloat(firstIgpItem.po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
-        igp_qty: firstIgpItem?.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
-        balance_qty: firstIgpItem?.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
-      };
-      
-      console.log('Items payload being sent:', itemsPayload);
-      
-      // Save items data
-      const itemsResponse = await fetch('/api/purchase-items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(itemsPayload),
-      });
-
-      if (itemsResponse.ok) {
-        const itemsData = await itemsResponse.json();
-        console.log('Items saved:', itemsData);
-        
-        // Automatically capture first weight image (only for new entries with first weight but no second weight)
-        if (formData.firstWeight && !formData.secondWeight) {
-          try {
-            console.log('Capturing first weight image for slip:', formData.slipNo);
-            const captureResponse = await fetch('/api/capture/first-weight', {
+      // For Sales entries, save sales data to details table with proper column mappings
+      if (activeTab === 'sale') {
+        // Save sales data from the sales form to details table
+        for (const salesRow of salesData) {
+          if (salesRow.customerName || salesRow.vehicleNo || salesRow.itemDescription) {
+            const salesItemPayload = {
+              wb_id: savedWbId!,
+              do_id: salesRow.doId || null, // Auto-generated maximum number
+              customer_name: salesRow.customerName || null,
+              vehicle_no: salesRow.vehicleNo || null,
+              do_date: null, // As requested - null for now
+              item_description: salesRow.itemDescription || null,
+              dc_qty: salesRow.dcQty ? parseFloat(salesRow.dcQty) : null,
+              do_qty: salesRow.doQty ? parseFloat(salesRow.doQty) : null,
+              branch: salesRow.branch || null
+            };
+            
+            // Save each sales row to details table
+            const salesResponse = await fetch('/api/purchase-items', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({
-                slipNo: formData.slipNo,
-                cameraIp: '10.10.10.146',
-                cameraPort: 554
+              body: JSON.stringify(salesItemPayload),
+            });
+            
+            if (!salesResponse.ok) {
+              console.error('Failed to save sales row:', salesRow);
+            }
+          }
+        }
+      } else {
+        // Prepare items data payload for Purchase entries - use first IGP item if available, otherwise form data
+        const firstIgpItem: any = igpItems.length > 0 ? igpItems[0] : {};
+        
+        console.log('Form data for items:', formData);
+        console.log('IGP items available:', igpItems);
+        
+        const itemsPayload = {
+          wb_id: savedWbId!,
+          baradana_type: formData.bardanaType || null,
+          igp_no: formData.igpNo || null,
+          vehicle_no: formData.vehicleNo || null,
+          weight_per_bags: formData.wtPerBag ? parseFloat(formData.wtPerBag) : null,
+          igp_date: formData.igpDate || null,
+          supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
+          quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
+          no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
+          vendor_name: firstIgpItem?.vendor_name || formData.vendor || null,
+          bag_condition: formData.bagCondition || null,
+          po_no: firstIgpItem?.po_no || formData.po_no || null,
+          item_code: firstIgpItem?.item_code || formData.itemCode || null,
+          item_desc: firstIgpItem?.item_desc || formData.itemDesc || null,
+          po_qty: firstIgpItem?.po_qty ? parseFloat(firstIgpItem.po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
+          igp_qty: firstIgpItem?.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
+          balance_qty: firstIgpItem?.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
+        };
+        
+        console.log('Items payload being sent:', itemsPayload);
+        
+        // Save items data for Purchase entries
+        const itemsResponse = await fetch('/api/purchase-items', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(itemsPayload),
+        });
+
+        if (!itemsResponse.ok) {
+          console.error('Failed to save purchase items');
+        }
+      }
+        
+      // Automatically capture first weight image (only for new entries with first weight but no second weight)
+      if (formData.firstWeight && !formData.secondWeight) {
+        try {
+          console.log('Capturing first weight image for slip:', formData.slipNo);
+          const captureResponse = await fetch('/api/capture/first-weight', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              slipNo: formData.slipNo,
+              cameraIp: '10.10.10.146',
+              cameraPort: 554
               }),
             });
 
@@ -745,10 +782,6 @@ export default function PurchaseForm() {
             slipNo: nextSlipNo
           }));
         }, 100);
-      } else {
-        console.error('Failed to save items, but master data saved');
-        alert('Purchase saved, but items data failed to save.');
-      }
       
     } catch (err) {
       alert('Failed to save purchase.');
