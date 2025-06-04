@@ -1279,37 +1279,31 @@ export default function PurchaseForm() {
               </TabsContent>
 
               <TabsContent value="sale">
-                <div className="h-full flex flex-col" style={{minWidth: "1400px"}}>
+                <div className="h-full flex flex-col">
 
-                  {/* Sales Table Header with maximized column widths */}
-                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "100px 100px 100px 200px 140px 120px 180px 100px 100px 120px", width: "1360px"}}>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO ID</div>
+                  {/* Sales Table Header - exact match to image */}
+                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "100px 100px 240px 140px 120px 180px 100px 100px 140px", width: "1220px"}}>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DC #</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO #</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Customer Name</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Vehicle No</div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO Date</div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Do Date</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Item Description</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DC Qty</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO Qty</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Branch</div>
                   </div>
 
-                  {/* Sales Table Body - Scrollable */}
-                  <div className="flex-1 overflow-y-auto bg-gray-200 mb-2">
-                    {salesData.map((row, index) => (
-                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "100px 100px 100px 200px 140px 120px 180px 100px 100px 120px", width: "1360px"}}>
+                  {/* Sales Table Body - Fixed height with 8 rows */}
+                  <div className="bg-gray-200 mb-4" style={{height: "240px"}}>
+                    {[...Array(8)].map((_, index) => (
+                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "100px 100px 240px 140px 120px 180px 100px 100px 140px", width: "1220px", height: "30px"}}>
                         <div className="bg-white border border-gray-300 p-1">
-                          <div className="h-6 flex items-center text-xs text-black font-medium px-2">
-                            {row.doId}
-                          </div>
-                        </div>
-                        <div className="bg-white border border-gray-300 p-1">
-                          <Input 
-                            value={row.dcNo || ''}
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.dcNo || ''}
                             onChange={(e) => handleSalesDataChange(index, 'dcNo', e.target.value)}
-                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
-                            placeholder="DC#"
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -1318,11 +1312,11 @@ export default function PurchaseForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <Input 
-                            value={row.doNo || ''}
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.doNo || ''}
                             onChange={(e) => handleSalesDataChange(index, 'doNo', e.target.value)}
-                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
-                            placeholder="DO#"
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -1331,11 +1325,11 @@ export default function PurchaseForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <Input 
-                            value={row.customerName || ''}
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.customerName || ''}
                             onChange={(e) => handleSalesDataChange(index, 'customerName', e.target.value)}
-                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
-                            placeholder="Customer"
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -1344,11 +1338,11 @@ export default function PurchaseForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <Input 
-                            value={row.vehicleNo || ''}
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.vehicleNo || ''}
                             onChange={(e) => handleSalesDataChange(index, 'vehicleNo', e.target.value)}
-                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
-                            placeholder="Vehicle"
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -1357,10 +1351,11 @@ export default function PurchaseForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <Input 
-                            value={row.doDate || ''}
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.doDate || ''}
                             onChange={(e) => handleSalesDataChange(index, 'doDate', e.target.value)}
-                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="DD.MM.YYYY"
                             autoComplete="off"
                             autoCorrect="off"
@@ -1370,11 +1365,11 @@ export default function PurchaseForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <Input 
-                            value={row.itemDescription || ''}
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.itemDescription || ''}
                             onChange={(e) => handleSalesDataChange(index, 'itemDescription', e.target.value)}
-                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
-                            placeholder="Item"
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -1383,11 +1378,11 @@ export default function PurchaseForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <Input 
-                            value={row.dcQty || ''}
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
+                            value={salesData[index]?.dcQty || ''}
                             onChange={(e) => handleSalesDataChange(index, 'dcQty', e.target.value)}
-                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 text-right bg-white"
-                            placeholder="0"
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -1396,11 +1391,11 @@ export default function PurchaseForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <Input 
-                            value={row.doQty || ''}
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
+                            value={salesData[index]?.doQty || ''}
                             onChange={(e) => handleSalesDataChange(index, 'doQty', e.target.value)}
-                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 text-right bg-white"
-                            placeholder="0"
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -1409,11 +1404,11 @@ export default function PurchaseForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <Input 
-                            value={row.branch || ''}
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.branch || ''}
                             onChange={(e) => handleSalesDataChange(index, 'branch', e.target.value)}
-                            className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
-                            placeholder="Branch"
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -1424,6 +1419,78 @@ export default function PurchaseForm() {
                       </div>
                     ))}
                   </div>
+
+                  {/* Total Row */}
+                  <div className="grid gap-px text-xs font-semibold mb-4" style={{gridTemplateColumns: "100px 100px 240px 140px 120px 180px 100px 100px 140px", width: "1220px", height: "30px"}}>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                    <div className="bg-gray-200 border border-gray-400 p-1 flex items-center justify-end">
+                      <span className="text-black">Total:</span>
+                    </div>
+                    <div className="bg-white border border-gray-400 p-1">
+                      <input
+                        type="text"
+                        className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
+                        readOnly
+                        value={salesData.reduce((sum, row) => sum + (parseFloat(row.dcQty) || 0), 0)}
+                      />
+                    </div>
+                    <div className="bg-white border border-gray-400 p-1">
+                      <input
+                        type="text"
+                        className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
+                        readOnly
+                        value={salesData.reduce((sum, row) => sum + (parseFloat(row.doQty) || 0), 0)}
+                      />
+                    </div>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                  </div>
+
+                  {/* Bottom section with Weight Per Bags, Total Weight Dill, and Total Feed Bags */}
+                  <div className="bg-gray-100 p-4 flex justify-between items-center border border-gray-300" style={{width: "1220px"}}>
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-black">Weight Per Bags:</label>
+                      <input
+                        type="text"
+                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-form-type="other"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-black">Total Weight Dill:</label>
+                      <input
+                        type="text"
+                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-form-type="other"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-black">Total Feed Bags:</label>
+                      <input
+                        type="text"
+                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-form-type="other"
+                      />
+                    </div>
+                  </div>
+
                 </div>
               </TabsContent>
 
