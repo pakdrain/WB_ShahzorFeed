@@ -1122,7 +1122,7 @@ export default function PurchaseForm() {
                 </div>
                 
                 {/* Clean Camera Feed - just the video content */}
-                <div className="mt-2 h-16 w-full overflow-hidden">
+                <div className="mt-2 h-24 w-full overflow-hidden">
                   <VideoStreamFullscreen
                     camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
                     isConnected={true}
