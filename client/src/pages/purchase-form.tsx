@@ -22,7 +22,7 @@ export default function PurchaseForm() {
   
   // Sales data state
   const [salesData, setSalesData] = useState<any[]>(
-    Array.from({ length: 15 }, (_, index) => ({
+    Array.from({ length: 8 }, (_, index) => ({
       doId: `DO${String(index + 1).padStart(3, '0')}`,
       doNo: '',
       customerName: '',
@@ -1281,8 +1281,8 @@ export default function PurchaseForm() {
               <TabsContent value="sale">
                 <div className="h-full flex flex-col overflow-hidden">
 
-                  {/* Sales Table Header with proper column widths */}
-                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "80px 60px 60px 150px 100px 80px 120px 60px 60px 80px"}}>
+                  {/* Sales Table Header with increased column widths */}
+                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "90px 80px 80px 180px 120px 100px 150px 80px 80px 100px", minWidth: "1060px"}}>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO ID</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DC #</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO #</div>
@@ -1298,7 +1298,7 @@ export default function PurchaseForm() {
                   {/* Sales Table Body - Scrollable */}
                   <div className="flex-1 overflow-y-auto bg-gray-200 mb-2">
                     {salesData.map((row, index) => (
-                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "80px 60px 60px 150px 100px 80px 120px 60px 60px 80px"}}>
+                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "90px 80px 80px 180px 120px 100px 150px 80px 80px 100px", minWidth: "1060px"}}>
                         <div className="bg-white border border-gray-300 p-1">
                           <div className="h-6 flex items-center text-xs text-black font-medium px-2">
                             {row.doId}
@@ -1311,6 +1311,10 @@ export default function PurchaseForm() {
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="DC#"
                             autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1320,6 +1324,10 @@ export default function PurchaseForm() {
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="DO#"
                             autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1329,6 +1337,10 @@ export default function PurchaseForm() {
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="Customer"
                             autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1338,6 +1350,10 @@ export default function PurchaseForm() {
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="Vehicle"
                             autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1347,6 +1363,10 @@ export default function PurchaseForm() {
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="DD.MM.YYYY"
                             autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1356,6 +1376,10 @@ export default function PurchaseForm() {
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="Item"
                             autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1365,6 +1389,10 @@ export default function PurchaseForm() {
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 text-right bg-white"
                             placeholder="0"
                             autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1374,6 +1402,10 @@ export default function PurchaseForm() {
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 text-right bg-white"
                             placeholder="0"
                             autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
@@ -1383,6 +1415,10 @@ export default function PurchaseForm() {
                             className="h-6 text-xs text-black placeholder:text-gray-500 border-0 rounded-none focus:ring-0 bg-white"
                             placeholder="Branch"
                             autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
                           />
                         </div>
                       </div>
