@@ -85,9 +85,9 @@ export default function SalesForm() {
               <div key={index} className="grid grid-cols-9 gap-px text-xs">
                 <div className="bg-white border border-gray-300">
                   <Input
-                    value={row.dcNo}
-                    onChange={(e) => handleRowChange(index, 'dcNo', e.target.value)}
-                    className="h-6 text-xs border-0 rounded-none"
+                    value={row.doId}
+                    readOnly
+                    className="h-6 text-xs border-0 rounded-none bg-gray-100"
                   />
                 </div>
                 <div className="bg-white border border-gray-300">

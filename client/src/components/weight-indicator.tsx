@@ -106,8 +106,8 @@ export default function WeightIndicator({ comPort = 'COM6', compact = false }: C
     return (
       <div className="flex items-center bg-gradient-to-r from-orange-500 to-red-600 rounded px-4 py-1 text-white text-sm font-mono border border-gray-300 shadow-sm">
         <Scale className="w-4 h-4 mr-1" />
-        <span className="font-black text-base">{formatWeight(weight)}</span>
-        <span className="ml-1 text-xs font-bold">{unit.toUpperCase()}</span>
+        <span className="font-black text-xl">{formatWeight(weight)}</span>
+        <span className="ml-1 text-sm font-bold">{unit.toUpperCase()}</span>
         {isConnected ? (
           <Wifi className="w-4 h-4 ml-2 text-green-300" />
         ) : (
