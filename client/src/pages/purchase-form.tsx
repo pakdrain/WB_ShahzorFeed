@@ -1211,35 +1211,38 @@ export default function PurchaseForm() {
               </div>
             </div>
 
-            {/* Navigation Buttons - Purchase, Sales, Offline */}
-            <div className="grid grid-cols-3 gap-1 mb-2">
+            {/* Navigation Tabs - Purchase, Sales, Offline */}
+            <div className="flex border-b border-gray-300 mb-0">
               <button 
-                className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
+                className={`px-6 py-2 text-xs font-medium border-t border-l border-r transition-colors ${
                   selectedForm === 'purchase' 
-                    ? 'bg-blue-600 text-white border-blue-600' 
-                    : 'bg-white text-blue-600 border-blue-600 hover:bg-blue-50'
+                    ? 'bg-blue-50 text-blue-700 border-gray-300 border-b-blue-50 relative' 
+                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
                 }`}
                 onClick={() => setSelectedForm('purchase')}
+                style={selectedForm === 'purchase' ? { marginBottom: '-1px', zIndex: 1 } : {}}
               >
                 Purchase
               </button>
               <button 
-                className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
+                className={`px-6 py-2 text-xs font-medium border-t border-l border-r transition-colors ${
                   selectedForm === 'sales' 
-                    ? 'bg-green-600 text-white border-green-600' 
-                    : 'bg-white text-green-600 border-green-600 hover:bg-green-50'
+                    ? 'bg-blue-50 text-blue-700 border-gray-300 border-b-blue-50 relative' 
+                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
                 }`}
                 onClick={() => setSelectedForm('sales')}
+                style={selectedForm === 'sales' ? { marginBottom: '-1px', zIndex: 1 } : {}}
               >
                 Sales
               </button>
               <button 
-                className={`py-2 px-2 text-xs font-bold border-2 transition-colors ${
+                className={`px-6 py-2 text-xs font-medium border-t border-l border-r transition-colors ${
                   selectedForm === 'offline' 
-                    ? 'bg-gray-600 text-white border-gray-600' 
-                    : 'bg-white text-gray-600 border-gray-600 hover:bg-gray-50'
+                    ? 'bg-blue-50 text-blue-700 border-gray-300 border-b-blue-50 relative' 
+                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
                 }`}
                 onClick={() => setSelectedForm('offline')}
+                style={selectedForm === 'offline' ? { marginBottom: '-1px', zIndex: 1 } : {}}
               >
                 Offline
               </button>
