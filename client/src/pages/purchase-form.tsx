@@ -623,7 +623,10 @@ export default function PurchaseForm() {
                 item_desc: row.itemDescription || null,
                 po_qty: row.doQty ? parseFloat(row.doQty) : null, // Map DO Qty to po_qty
                 igp_qty: row.dcQty ? parseFloat(row.dcQty) : null, // Map DC Qty to igp_qty
-                balance_qty: null
+                balance_qty: null,
+                customer_name: row.customerName || null, // Additional customer_name field
+                do_no: row.doNo || null, // Additional do_no field
+                do_qty: row.doQty ? parseFloat(row.doQty) : null // Additional do_qty field
               };
               
               const salesItemResponse = await fetch('/api/purchase-items', {
