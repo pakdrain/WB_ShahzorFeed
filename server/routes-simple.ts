@@ -21,7 +21,7 @@ export function addSalesRoute(app: Express) {
       const results = [];
       
       for (const item of salesData) {
-        if (!item.customerName && !item.vehicleNo && !item.itemDescription && !item.dcNo && !item.doNo) {
+        if (!item.customer_name && !item.vehicle_no && !item.item_description && !item.dc_no && !item.do_no) {
           continue; // Skip empty rows
         }
         
@@ -35,22 +35,23 @@ export function addSalesRoute(app: Express) {
         const insertQuery = `
           INSERT INTO wb_weighbridge_items_purchase (
             wb_id, do_id, customer_name, vehicle_no, do_date, 
-            item_desc, po_qty, igp_qty, do_no, igp_no
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            item_desc, do_qty, dc_qty, do_no, dc_no, branch
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
           RETURNING *
         `;
         
         const values = [
-          item.wbId,
+          item.wb_id,
           maxDoId + 1, // Auto-generated maximum number
-          item.customerName || null,
-          item.vehicleNo || null,
-          null, // As requested - null for now
-          item.itemDescription || null,
-          item.doQty ? parseFloat(item.doQty) : null,
-          item.dcQty ? parseFloat(item.dcQty) : null,
-          item.doNo || null,
-          item.dcNo || null
+          item.customer_name || null,
+          item.vehicle_no || null,
+          item.do_date || null, // As requested - null for now
+          item.item_description || null,
+          item.do_qty ? parseFloat(item.do_qty) : null,
+          item.dc_qty ? parseFloat(item.dc_qty) : null,
+          item.do_no || null,
+          item.dc_no || null,
+          item.branch || null
         ];
         
         const insertResult = await pool.query(insertQuery, values);

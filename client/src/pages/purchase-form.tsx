@@ -512,8 +512,8 @@ export default function PurchaseForm() {
       return;
     }
     
-    // Determine entry type based on active tab
-    const currentEntryType = activeTab === 'sale' ? 'SALE' : 'PURCHASE';
+    // Determine entry type based on selected form
+    const currentEntryType = selectedForm === 'sales' ? 'SALE' : 'PURCHASE';
     
     // Prepare master data payload
     const masterPayload = {
@@ -596,7 +596,7 @@ export default function PurchaseForm() {
       }
       
       // For Sales entries, save sales data to details table with proper column mappings
-      if (activeTab === 'sale') {
+      if (selectedForm === 'sales') {
         // Filter valid sales rows (at least one field filled)
         const validSalesRows = salesData.filter(row => 
           row.customerName || row.vehicleNo || row.itemDescription || row.dcNo || row.doNo
@@ -605,19 +605,21 @@ export default function PurchaseForm() {
         if (validSalesRows.length > 0) {
           try {
             // Save sales data using the dedicated sales endpoint
+            // Map sales form fields to database columns in wb_weighbridge_items_purchase
             const salesPayload = {
               salesData: validSalesRows.map(row => ({
-                wbId: savedWbId!,
-                doId: row.doId || null,
-                dcNo: row.dcNo || null,
-                doNo: row.doNo || null,
-                customerName: row.customerName || null,
-                vehicleNo: row.vehicleNo || null,
-                doDate: null, // As requested - null for now
-                itemDescription: row.itemDescription || null,
-                dcQty: row.dcQty ? parseFloat(row.dcQty) : null,
-                doQty: row.doQty ? parseFloat(row.doQty) : null,
-                branch: row.branch || null
+                wb_id: savedWbId!, // Foreign key to master table
+                // do_id will be auto-generated as maximum number by backend
+                customer_name: row.customerName || null, // Customer Name field
+                vehicle_no: row.vehicleNo || null, // Vehicle No field
+                do_date: null, // As requested - null for now
+                item_description: row.itemDescription || null, // Item Description field
+                // Additional fields from Sales form for completeness
+                dc_no: row.dcNo || null, // DC # field
+                do_no: row.doNo || null, // DO # field
+                dc_qty: row.dcQty ? parseFloat(row.dcQty) : null, // DC Qty field
+                do_qty: row.doQty ? parseFloat(row.doQty) : null, // DO Qty field
+                branch: row.branch || null // Branch field
               })),
               entryType: 'SALE'
             };
