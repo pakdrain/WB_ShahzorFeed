@@ -34,6 +34,12 @@ export default function PurchaseForm() {
     }))
   );
   const [nextBagId, setNextBagId] = useState(1);
+
+  const handleSalesDataChange = (index: number, field: string, value: string) => {
+    const newData = [...salesData];
+    newData[index] = { ...newData[index], [field]: value };
+    setSalesData(newData);
+  };
   
   // Fetch all first weight records
   const { data: firstWeightRecords = [] } = useQuery({
@@ -531,8 +537,8 @@ export default function PurchaseForm() {
     };
 
     try {
-      let masterResponse;
-      let savedWbId;
+      let masterResponse: any;
+      let savedWbId: number;
       
       if (isEditMode && editingWbId) {
         // Update existing record - combine master and items data
@@ -579,6 +585,8 @@ export default function PurchaseForm() {
       // Get the WB_ID from saved master data for new records
       if (!isEditMode) {
         savedWbId = masterData.wb_id;
+      } else {
+        savedWbId = editingWbId;
       }
       
       // Prepare items data payload - use first IGP item if available, otherwise form data
@@ -588,7 +596,7 @@ export default function PurchaseForm() {
       console.log('IGP items available:', igpItems);
       
       const itemsPayload = {
-        wb_id: savedWbId,
+        wb_id: savedWbId!,
         baradana_type: formData.bardanaType || null,
         igp_no: formData.igpNo || null,
         vehicle_no: formData.vehicleNo || null,
