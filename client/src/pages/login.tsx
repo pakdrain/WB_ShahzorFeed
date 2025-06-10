@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,11 +11,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Eye, EyeOff, Scale, Users, LogIn, UserPlus } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { loginSchema, registerSchema, type LoginData, type RegisterData } from "@/shared/schema";
+import { z } from "zod";
+
+// Define schemas locally to avoid import issues
+const loginSchema = z.object({
+  userName: z.string().min(1, "Username is required"),
+  userPassword: z.string().min(1, "Password is required"),
+});
+
+const registerSchema = z.object({
+  userName: z.string().min(3, "Username must be at least 3 characters").max(50, "Username too long"),
+  userPassword: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(1, "Please confirm your password"),
+}).refine((data) => data.userPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type LoginData = z.infer<typeof loginSchema>;
+type RegisterData = z.infer<typeof registerSchema>;
 
 export default function Login() {
   const [, setLocation] = useLocation();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
@@ -41,7 +60,7 @@ export default function Login() {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (data: LoginData) => {
-      const response = await apiRequest("/api/auth/login", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -50,8 +69,8 @@ export default function Login() {
     },
     onSuccess: (data) => {
       if (data.success) {
-        // Store user info in localStorage
-        localStorage.setItem("user", JSON.stringify(data.user));
+        // Use auth context to login
+        login(data.user);
         // Redirect to purchase form
         setLocation("/purchase-form");
       }
@@ -61,7 +80,7 @@ export default function Login() {
   // Registration mutation
   const registerMutation = useMutation({
     mutationFn: async (data: RegisterData) => {
-      const response = await apiRequest("/api/auth/register", {
+      const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
