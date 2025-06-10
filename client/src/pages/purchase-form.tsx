@@ -951,8 +951,10 @@ export default function PurchaseForm() {
                   <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
                     {record.vehicle_no || "---"}
                   </div>
-                  <div className="p-1 text-center text-xs text-blue-600 font-semibold bg-white">
-                    PURCHASE
+                  <div className={`p-1 text-center text-xs font-semibold bg-white ${
+                    record.entry_type === 'SALE' ? 'text-green-600' : 'text-blue-600'
+                  }`}>
+                    {record.entry_type || 'PURCHASE'}
                   </div>
                 </div>
               ))
