@@ -74,21 +74,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Username already exists' });
       }
       
-      // Get the next user_id and user_no
-      const userIdResult = await pool.query(
-        'SELECT COALESCE(MAX(user_id), 0) + 1 as next_user_id FROM users'
-      );
-      const nextUserId = userIdResult.rows[0].next_user_id;
-      
+      // Get the next user_no
       const userNoResult = await pool.query(
         'SELECT COALESCE(MAX(user_no), 0) + 1 as next_user_no FROM users'
       );
       const nextUserNo = userNoResult.rows[0].next_user_no;
       
-      // Insert new user with all required fields
+      // Insert new user - let user_id auto-increment
       const insertResult = await pool.query(
-        'INSERT INTO users (user_id, user_no, user_name, user_password, user_creation_date) VALUES ($1, $2, $3, $4, $5) RETURNING user_id, user_no, user_name',
-        [nextUserId, nextUserNo, validatedData.userName, validatedData.userPassword, new Date()]
+        'INSERT INTO users (user_no, user_name, user_password, user_creation_date) VALUES ($1, $2, $3, $4) RETURNING user_id, user_no, user_name',
+        [nextUserNo, validatedData.userName, validatedData.userPassword, new Date()]
       );
       
       const newUser = insertResult.rows[0];
