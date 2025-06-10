@@ -579,22 +579,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/purchase/first-weight-records', async (req: Request, res: Response) => {
     try {
       const query = `
-        SELECT DISTINCT ON (wb.slip_no) 
-               wb.wb_id, 
-               wb.slip_no, 
-               wb.first_weight, 
-               wb.second_weight, 
-               COALESCE(wip.vehicle_no, sd.vehicle_no) as vehicle_no,
-               CASE 
-                 WHEN sd.wb_id IS NOT NULL THEN 'SALE'
-                 ELSE 'PURCHASE'
-               END as entry_type,
-               wb.creation_date, 
-               wb.online_entry, 
-               wb.offline_entry
+        SELECT DISTINCT ON (wb.slip_no) wb.wb_id, wb.slip_no, wb.first_weight, wb.second_weight, 
+               wip.vehicle_no, wb.creation_date, wb.online_entry, wb.offline_entry
         FROM wb_weighbridge wb
         LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
-        LEFT JOIN sales_details sd ON wb.wb_id = sd.wb_id
         WHERE wb.first_weight IS NOT NULL 
         AND wb.first_weight > 0
         AND (wb.second_weight IS NULL OR wb.second_weight = 0)

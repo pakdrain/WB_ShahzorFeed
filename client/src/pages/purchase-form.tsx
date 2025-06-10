@@ -45,7 +45,7 @@ export default function PurchaseForm() {
   };
   
   // Fetch all first weight records
-  const { data: firstWeightRecords = [], isLoading: recordsLoading, error: recordsError } = useQuery({
+  const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ['/api/purchase/first-weight-records'],
     refetchInterval: 3000, // Refresh every 3 seconds
   });
@@ -56,8 +56,6 @@ export default function PurchaseForm() {
     const matchesVehicleNo = !searchVehicleNo || (record.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
     return matchesSlipNo && matchesVehicleNo;
   }) : [];
-
-
 
   // Function to load data by slip number for editing
   const loadDataBySlipNo = async (slipNo: string) => {
@@ -941,47 +939,27 @@ export default function PurchaseForm() {
 
           {/* Data Rows - showing filtered records */}
           <div className="max-h-48 overflow-y-auto">
-            {recordsLoading ? (
-              <div className="grid grid-cols-3 border-b border-gray-400">
-                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
-                  Loading...
-                </div>
-                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
-                  ---
-                </div>
-                <div className="p-1 text-center text-xs text-gray-500 bg-white">
-                  ---
-                </div>
-              </div>
-            ) : firstWeightRecords && Array.isArray(firstWeightRecords) && firstWeightRecords.length > 0 ? (
-              firstWeightRecords
-                .filter((record: any) => {
-                  const matchesSlipNo = !searchSlipNo || (record.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
-                  const matchesVehicleNo = !searchVehicleNo || (record.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
-                  return matchesSlipNo && matchesVehicleNo;
-                })
-                .map((record: any, index: number) => (
-                  <div key={`${record.wb_id}-${record.slip_no}`} className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50">
-                    <button 
-                      className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
-                      onClick={() => loadDataBySlipNo(record.wb_id || record.slip_no)}
-                    >
-                      {record.slip_no || record.wb_id || "---"}
-                    </button>
-                    <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
-                      {record.vehicle_no || "---"}
-                    </div>
-                    <div className={`p-1 text-center text-xs font-semibold bg-white ${
-                      record.entry_type === 'SALE' ? 'text-green-600' : 'text-blue-600'
-                    }`}>
-                      {record.entry_type || 'PURCHASE'}
-                    </div>
+            {filteredRecords && filteredRecords.length > 0 ? (
+              filteredRecords.map((record: any, index: number) => (
+                <div key={index} className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50">
+                  <button 
+                    className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
+                    onClick={() => loadDataBySlipNo(record.wb_id || record.slip_no)}
+                  >
+                    {record.slip_no || record.wb_id || "---"}
+                  </button>
+                  <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
+                    {record.vehicle_no || "---"}
                   </div>
-                ))
+                  <div className="p-1 text-center text-xs text-blue-600 font-semibold bg-white">
+                    PURCHASE
+                  </div>
+                </div>
+              ))
             ) : (
               <div className="grid grid-cols-3 border-b border-gray-400">
                 <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
-                  {searchSlipNo || searchVehicleNo ? 'No matches found' : 'No records available'}
+                  {searchSlipNo || searchVehicleNo ? 'No matches' : 'No records'}
                 </div>
                 <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
                   ---
