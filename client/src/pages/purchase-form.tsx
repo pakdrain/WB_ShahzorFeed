@@ -45,7 +45,7 @@ export default function PurchaseForm() {
   };
   
   // Fetch all first weight records
-  const { data: firstWeightRecords = [] } = useQuery({
+  const { data: firstWeightRecords = [], isLoading: recordsLoading, error: recordsError } = useQuery({
     queryKey: ['/api/purchase/first-weight-records'],
     refetchInterval: 3000, // Refresh every 3 seconds
   });
@@ -58,10 +58,18 @@ export default function PurchaseForm() {
   }) : [];
 
   // Debug logging
-  console.log('firstWeightRecords:', firstWeightRecords);
+  console.log('=== MASTER TABLE DEBUG ===');
+  console.log('recordsLoading:', recordsLoading);
+  console.log('recordsError:', recordsError);
+  console.log('firstWeightRecords raw:', firstWeightRecords);
+  console.log('firstWeightRecords type:', typeof firstWeightRecords);
+  console.log('firstWeightRecords isArray:', Array.isArray(firstWeightRecords));
+  console.log('firstWeightRecords length:', firstWeightRecords?.length);
   console.log('filteredRecords:', filteredRecords);
+  console.log('filteredRecords length:', filteredRecords?.length);
   console.log('searchSlipNo:', searchSlipNo);
   console.log('searchVehicleNo:', searchVehicleNo);
+  console.log('=== END DEBUG ===');
 
   // Function to load data by slip number for editing
   const loadDataBySlipNo = async (slipNo: string) => {
