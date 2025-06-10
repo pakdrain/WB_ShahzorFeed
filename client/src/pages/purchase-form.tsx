@@ -57,19 +57,7 @@ export default function PurchaseForm() {
     return matchesSlipNo && matchesVehicleNo;
   }) : [];
 
-  // Debug logging
-  console.log('=== MASTER TABLE DEBUG ===');
-  console.log('recordsLoading:', recordsLoading);
-  console.log('recordsError:', recordsError);
-  console.log('firstWeightRecords raw:', firstWeightRecords);
-  console.log('firstWeightRecords type:', typeof firstWeightRecords);
-  console.log('firstWeightRecords isArray:', Array.isArray(firstWeightRecords));
-  console.log('firstWeightRecords length:', firstWeightRecords?.length);
-  console.log('filteredRecords:', filteredRecords);
-  console.log('filteredRecords length:', filteredRecords?.length);
-  console.log('searchSlipNo:', searchSlipNo);
-  console.log('searchVehicleNo:', searchVehicleNo);
-  console.log('=== END DEBUG ===');
+
 
   // Function to load data by slip number for editing
   const loadDataBySlipNo = async (slipNo: string) => {
@@ -953,29 +941,47 @@ export default function PurchaseForm() {
 
           {/* Data Rows - showing filtered records */}
           <div className="max-h-48 overflow-y-auto">
-            {filteredRecords && filteredRecords.length > 0 ? (
-              filteredRecords.map((record: any, index: number) => (
-                <div key={index} className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50">
-                  <button 
-                    className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
-                    onClick={() => loadDataBySlipNo(record.wb_id || record.slip_no)}
-                  >
-                    {record.slip_no || record.wb_id || "---"}
-                  </button>
-                  <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
-                    {record.vehicle_no || "---"}
-                  </div>
-                  <div className={`p-1 text-center text-xs font-semibold bg-white ${
-                    record.entry_type === 'SALE' ? 'text-green-600' : 'text-blue-600'
-                  }`}>
-                    {record.entry_type || 'PURCHASE'}
-                  </div>
+            {recordsLoading ? (
+              <div className="grid grid-cols-3 border-b border-gray-400">
+                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
+                  Loading...
                 </div>
-              ))
+                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
+                  ---
+                </div>
+                <div className="p-1 text-center text-xs text-gray-500 bg-white">
+                  ---
+                </div>
+              </div>
+            ) : firstWeightRecords && Array.isArray(firstWeightRecords) && firstWeightRecords.length > 0 ? (
+              firstWeightRecords
+                .filter((record: any) => {
+                  const matchesSlipNo = !searchSlipNo || (record.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
+                  const matchesVehicleNo = !searchVehicleNo || (record.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
+                  return matchesSlipNo && matchesVehicleNo;
+                })
+                .map((record: any, index: number) => (
+                  <div key={`${record.wb_id}-${record.slip_no}`} className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50">
+                    <button 
+                      className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
+                      onClick={() => loadDataBySlipNo(record.wb_id || record.slip_no)}
+                    >
+                      {record.slip_no || record.wb_id || "---"}
+                    </button>
+                    <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
+                      {record.vehicle_no || "---"}
+                    </div>
+                    <div className={`p-1 text-center text-xs font-semibold bg-white ${
+                      record.entry_type === 'SALE' ? 'text-green-600' : 'text-blue-600'
+                    }`}>
+                      {record.entry_type || 'PURCHASE'}
+                    </div>
+                  </div>
+                ))
             ) : (
               <div className="grid grid-cols-3 border-b border-gray-400">
                 <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
-                  {searchSlipNo || searchVehicleNo ? 'No matches' : 'No records'}
+                  {searchSlipNo || searchVehicleNo ? 'No matches found' : 'No records available'}
                 </div>
                 <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
                   ---
