@@ -1254,8 +1254,47 @@ export default function PurchaseForm() {
               </button>
             </div>
 
-            {/* Details Section */}
+            {/* Details Section - Table showing latest entries */}
             <div className="bg-blue-50 p-2 rounded border">
+              <div className="mb-2">
+                <h3 className="text-sm font-semibold text-gray-700">Recent Details Entries</h3>
+              </div>
+              
+              {/* Details Table */}
+              <div className="bg-white border border-gray-300 rounded">
+                {/* Table Header */}
+                <div className="grid grid-cols-8 border-b border-gray-300 bg-gray-100">
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">WB ID</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">Customer</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">Vehicle No</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">Item Desc</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">DC No</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">DO No</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">DC Qty</div>
+                  <div className="p-1 text-xs font-semibold text-center">DO Qty</div>
+                </div>
+                
+                {/* Table Rows */}
+                {latestDetails.length > 0 ? (
+                  latestDetails.map((detail: any, index: number) => (
+                    <div key={detail.wb_item_p_id || index} className="grid grid-cols-8 border-b border-gray-200 hover:bg-gray-50">
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.wb_id || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.customer_name || detail.vendor_name || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.vehicle_no || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.item_desc || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.igp_no || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.do_no || detail.po_no || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.igp_qty || '-'}</div>
+                      <div className="p-1 text-xs text-center">{detail.do_qty || detail.po_qty || '-'}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="grid grid-cols-8 p-4">
+                    <div className="col-span-8 text-center text-xs text-gray-500">No details entries found</div>
+                  </div>
+                )}
+              </div>
+
               {/* Show Purchase Form when selectedForm is 'purchase' */}
               {selectedForm === 'purchase' && (
                 <div className="mt-1">
