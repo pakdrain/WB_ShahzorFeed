@@ -57,6 +57,12 @@ export default function PurchaseForm() {
     return matchesSlipNo && matchesVehicleNo;
   }) : [];
 
+  // Debug logging
+  console.log('firstWeightRecords:', firstWeightRecords);
+  console.log('filteredRecords:', filteredRecords);
+  console.log('searchSlipNo:', searchSlipNo);
+  console.log('searchVehicleNo:', searchVehicleNo);
+
   // Function to load data by slip number for editing
   const loadDataBySlipNo = async (slipNo: string) => {
     try {
