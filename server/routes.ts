@@ -561,14 +561,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/purchase/latest-details', async (req: Request, res: Response) => {
     try {
-      const query = 'SELECT * FROM wb_weighbridge_items_purchase ORDER BY wb_item_p_id DESC LIMIT 1';
+      const query = 'SELECT * FROM wb_weighbridge_items_purchase ORDER BY wb_item_p_id DESC LIMIT 10';
       const result = await pool.query(query);
       
-      if (result.rows.length > 0) {
-        res.json(result.rows[0]);
-      } else {
-        res.json(null);
-      }
+      res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching latest details data:', error);
       res.status(500).json({ error: 'Failed to fetch details data' });

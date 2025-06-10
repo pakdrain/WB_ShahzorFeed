@@ -50,6 +50,12 @@ export default function PurchaseForm() {
     refetchInterval: 3000, // Refresh every 3 seconds
   });
 
+  // Fetch latest details data
+  const { data: latestDetails = [], refetch: refetchDetails } = useQuery({
+    queryKey: ['/api/purchase/latest-details'],
+    refetchInterval: 3000, // Refresh every 3 seconds
+  });
+
   // Filter records based on search criteria
   const filteredRecords = Array.isArray(firstWeightRecords) ? firstWeightRecords.filter((record: any) => {
     const matchesSlipNo = !searchSlipNo || (record.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
