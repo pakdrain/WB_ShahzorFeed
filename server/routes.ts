@@ -147,6 +147,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Logout route
+  app.post('/api/auth/logout', async (req: Request, res: Response) => {
+    try {
+      req.session.destroy((err: any) => {
+        if (err) {
+          console.error('Logout error:', err);
+          return res.status(500).json({ error: 'Logout failed' });
+        }
+        res.clearCookie('connect.sid');
+        res.json({ success: true, message: 'Logged out successfully' });
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      res.status(500).json({ error: 'Logout failed' });
+    }
+  });
+
   // Check if users table exists and create if it doesn't
   app.post('/api/auth/init-db', async (req, res) => {
     try {
