@@ -74,7 +74,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const existingUser = await pool.query(
-        'SELECT * FROM users WHERE userName = $1',
+        'SELECT * FROM users WHERE user_name = $1',
         [userName]
       );
 
@@ -83,7 +83,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       await pool.query(
-        'INSERT INTO users (userName, userPassword) VALUES ($1, $2)',
+        'INSERT INTO users (user_name, user_password) VALUES ($1, $2)',
         [userName, userPassword]
       );
 
@@ -110,7 +110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userResult = await pool.query(
-        'SELECT * FROM users WHERE userName = $1 AND userPassword = $2',
+        'SELECT * FROM users WHERE user_name = $1 AND user_password = $2',
         [userName, userPassword]
       );
 
@@ -149,8 +149,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await pool.query(`
         CREATE TABLE IF NOT EXISTS users (
-          userName VARCHAR(1000),
-          userPassword VARCHAR(1000)
+          user_id SERIAL PRIMARY KEY,
+          user_no INTEGER,
+          user_creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          user_name VARCHAR(1000) UNIQUE,
+          user_password VARCHAR(1000)
         );
       `);
 

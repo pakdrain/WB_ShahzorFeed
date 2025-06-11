@@ -14,25 +14,29 @@ import PurchaseForm from "@/pages/purchase-form";
 import SalesForm from "@/pages/sales-form";
 import NotFound from "@/pages/not-found";
 
+function ProtectedApp() {
+  return (
+    <ProtectedRoute>
+      <Sidebar />
+      <div className="lg:ml-64">
+        <Switch>
+          <Route path="/" component={CameraMonitor} />
+          <Route path="/settings" component={CameraSettings} />
+          <Route path="/weighbridge-settings" component={WeighbridgeSettings} />
+          <Route path="/purchase-form" component={PurchaseForm} />
+          <Route path="/sales-form" component={SalesForm} />
+          <Route component={NotFound} />
+        </Switch>
+      </div>
+    </ProtectedRoute>
+  );
+}
+
 function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
-      <Route path="/">
-        <ProtectedRoute>
-          <Sidebar />
-          <div className="lg:ml-64">
-            <Switch>
-              <Route path="/" component={CameraMonitor} />
-              <Route path="/settings" component={CameraSettings} />
-              <Route path="/weighbridge-settings" component={WeighbridgeSettings} />
-              <Route path="/purchase-form" component={PurchaseForm} />
-              <Route path="/sales-form" component={SalesForm} />
-              <Route component={NotFound} />
-            </Switch>
-          </div>
-        </ProtectedRoute>
-      </Route>
+      <Route component={ProtectedApp} />
     </Switch>
   );
 }

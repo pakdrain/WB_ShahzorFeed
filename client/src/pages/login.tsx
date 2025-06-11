@@ -65,6 +65,9 @@ export default function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+      if (!response.ok) {
+        throw new Error("Login failed");
+      }
       return response.json();
     },
     onSuccess: (data) => {
@@ -74,6 +77,9 @@ export default function Login() {
         // Redirect to purchase form
         setLocation("/purchase-form");
       }
+    },
+    onError: (error) => {
+      console.error("Login error:", error);
     },
   });
 
@@ -85,16 +91,22 @@ export default function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+      if (!response.ok) {
+        throw new Error("Registration failed");
+      }
       return response.json();
     },
     onSuccess: (data) => {
       if (data.success) {
-        // Auto-login after successful registration
-        loginMutation.mutate({
-          userName: registerForm.getValues("userName"),
-          userPassword: registerForm.getValues("userPassword"),
-        });
+        // Reset form and switch to login tab
+        registerForm.reset();
+        setActiveTab("login");
+        // Pre-fill the login form with the registered username
+        loginForm.setValue("userName", registerForm.getValues("userName"));
       }
+    },
+    onError: (error) => {
+      console.error("Registration error:", error);
     },
   });
 
