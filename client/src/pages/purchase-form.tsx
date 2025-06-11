@@ -1243,9 +1243,9 @@ export default function PurchaseForm() {
               {/* Show Purchase Form when selectedForm is 'purchase' */}
               {selectedForm === 'purchase' && (
                 <div className="mt-1">
-                <div className="grid grid-cols-4 gap-1 text-xs mb-2">
-                  {/* Mini Column 1 */}
-                  <div className="space-y-1">
+                  <div className="grid grid-cols-4 gap-1 text-xs mb-2">
+                    {/* Mini Column 1 */}
+                    <div className="space-y-1">
                     <div>
                       <Label className="text-xs text-black">Bardana Type</Label>
                       <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-4 text-xs text-black" />
