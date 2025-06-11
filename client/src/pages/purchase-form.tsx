@@ -207,30 +207,26 @@ export default function PurchaseForm() {
   const [onlineMode, setOnlineMode] = useState(true);
   const [igpItems, setIgpItems] = useState<any[]>([]);
 
-  // Function to reset form to clean state
-  const resetFormToInitial = () => {
-    setFormData({
-      ...initialFormData,
-      slipInTime: new Date().toISOString().slice(0, 16),
-      onlineEntry: 'Yes',
-      entryType: 'PURCHASE',
-      creationDate: new Date().toISOString(),
-      lastUpdatedDate: new Date().toISOString(),
-      slipDate: new Date().toISOString()
-    });
-    setIgpItems([]);
-    setIsEditMode(false);
-    setEditingWbId(null);
-    setOnlineMode(true);
-  };
+  // Auto-calculate formulas when relevant fields change
+  useEffect(() => {
+    const supplierWeight = parseFloat(formData.supplierWeight) || 0;
+    const bardanaWeight = parseFloat(formData.bardanaWeight) || 0;
+    const outWeight = parseFloat(formData.weight) || 0;
 
-  // Get camera data
-  const { data: camera } = useQuery({
-    queryKey: ['/api/cameras/1'],
-    enabled: true,
-  });
+    // Formula: Supp Wt - Bardana
+    const supplierWeightMinusBardana = supplierWeight - bardanaWeight;
+    
+    // Formula: Supp Wt - Out Wt = Supplier Weight - Out Weight - Bardana
+    const supplierWeightMinusOutWeight = supplierWeight - outWeight - bardanaWeight;
 
-  // IGP Data fetch function
+    setFormData(prev => ({
+      ...prev,
+      supplierWeightMinusBardana: supplierWeightMinusBardana.toFixed(2),
+      supplierWeightMinusOutWeight: supplierWeightMinusOutWeight.toFixed(2)
+    }));
+  }, [formData.supplierWeight, formData.bardanaWeight, formData.weight]);
+
+  // IGP Data Fetching Function
   const fetchIgpData = async () => {
     if (!formData.igpNo) {
       alert('Please enter IGP No');
@@ -260,16 +256,42 @@ export default function PurchaseForm() {
           wtPerBag: firstItem.wtperbag ? String(firstItem.wtperbag) : '',
         }));
         setIgpItems(items);
+        console.log('IGP data fetched successfully:', items);
       } else {
         alert('No data found for this IGP No.');
         setIgpItems([]);
       }
     } catch (error) {
       console.error('Error fetching IGP data:', error);
-      alert('Failed to fetch IGP data');
+      alert('Failed to fetch IGP data. Please check the IGP number and try again.');
       setIgpItems([]);
     }
   };
+
+  // Function to reset form to clean state
+  const resetFormToInitial = () => {
+    setFormData({
+      ...initialFormData,
+      slipInTime: new Date().toISOString().slice(0, 16),
+      onlineEntry: 'Yes',
+      entryType: 'PURCHASE',
+      creationDate: new Date().toISOString(),
+      lastUpdatedDate: new Date().toISOString(),
+      slipDate: new Date().toISOString()
+    });
+    setIgpItems([]);
+    setIsEditMode(false);
+    setEditingWbId(null);
+    setOnlineMode(true);
+  };
+
+  // Get camera data
+  const { data: camera } = useQuery({
+    queryKey: ['/api/cameras/1'],
+    enabled: true,
+  });
+
+
 
   const formatDatetimeLocal = (isoString: string) => {
     if (!isoString) return '';
@@ -489,8 +511,9 @@ export default function PurchaseForm() {
     // Supplier Weight - Bardana
     const supplierWeightMinusBardana = supplierWeight - bardanaWeight;
     
-    // Supplier Weight - Out Weight (assuming out weight is second weight)
-    const supplierWeightMinusOutWeight = supplierWeight - secondWeight;
+    // Supplier Weight - Out Weight = Supplier Weight - Supp Wt - Bardana
+    const suppWtMinusBardana = parseFloat(formData.supplierWeightMinusBardana) || 0;
+    const supplierWeightMinusOutWeight = supplierWeight - suppWtMinusBardana;
     
     setFormData(prev => ({
       ...prev,
@@ -541,6 +564,18 @@ export default function PurchaseForm() {
     // Determine entry type based on selected form
     const currentEntryType = selectedForm === 'sales' ? 'SALE' : 'PURCHASE';
     
+    // Check if a record with this slip number already exists
+    let existingRecord = null;
+    try {
+      const checkResponse = await fetch(`/api/purchase/by-slip/${formData.slipNo}`);
+      if (checkResponse.ok) {
+        existingRecord = await checkResponse.json();
+        console.log('Found existing record:', existingRecord);
+      }
+    } catch (error) {
+      console.log('No existing record found for slip:', formData.slipNo);
+    }
+    
     // Prepare master data payload
     const masterPayload = {
       slip_no: formData.slipNo || null,
@@ -572,7 +607,9 @@ export default function PurchaseForm() {
       let masterResponse: any;
       let savedWbId: number;
       
-      if (isEditMode && editingWbId) {
+      // If we found an existing record or we're in edit mode, update it
+      if ((existingRecord && existingRecord.wb_id) || (isEditMode && editingWbId)) {
+        const updateWbId = existingRecord ? existingRecord.wb_id : editingWbId!;
         // Update existing record - combine master and items data
         const updatePayload = {
           ...masterPayload,
@@ -588,14 +625,20 @@ export default function PurchaseForm() {
           balance_qty: formData.balanceQty ? parseFloat(formData.balanceQty) : null
         };
         
-        masterResponse = await fetch(`/api/purchase/update/${editingWbId}`, {
+        masterResponse = await fetch(`/api/purchase/update/${updateWbId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(updatePayload),
         });
-        savedWbId = editingWbId;
+        savedWbId = updateWbId;
+        
+        // Set edit mode if updating existing record found by slip number
+        if (existingRecord && !isEditMode) {
+          setIsEditMode(true);
+          setEditingWbId(existingRecord.wb_id);
+        }
       } else {
         // Create new record
         masterResponse = await fetch('/api/purchases', {
@@ -633,7 +676,7 @@ export default function PurchaseForm() {
             // Save each sales row as separate items using the standard purchase items API
             for (const row of validSalesRows) {
               const salesItemPayload = {
-                wb_id: savedWbId!,
+                wb_id: savedWbId,
                 baradana_type: null,
                 igp_no: row.dcNo || null, // Map DC # to igp_no field
                 vehicle_no: row.vehicleNo || null,
@@ -690,6 +733,7 @@ export default function PurchaseForm() {
           igp_date: formData.igpDate || null,
           supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
           quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
+          bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null, // New Bardana Wht field
           no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
           vendor_name: firstIgpItem?.vendor_name || formData.vendor || null,
           bag_condition: formData.bagCondition || null,
@@ -1242,136 +1286,156 @@ export default function PurchaseForm() {
               {/* Show Purchase Form when selectedForm is 'purchase' */}
               {selectedForm === 'purchase' && (
                 <div className="mt-1">
-                <div className="grid grid-cols-4 gap-1 text-xs mb-2">
-                  {/* Mini Column 1 */}
-                  <div className="space-y-1">
-                    <div>
-                      <Label className="text-xs text-black">Bardana Type</Label>
-                      <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-4 text-xs text-black" />
+                  <div className="grid grid-cols-4 gap-1 text-xs mb-2">
+                    {/* Mini Column 1 */}
+                    <div className="space-y-1">
+                      <div>
+                        <Label className="text-xs text-black">Bardana Type</Label>
+                        <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Wt Per Bag</Label>
+                        <Input name="wtPerBag" value={formData.wtPerBag} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">No Of Bags</Label>
+                        <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-xs text-black">Wt Per Bag</Label>
-                      <Input name="wtPerBag" value={formData.wtPerBag} onChange={handleChange} className="h-4 text-xs text-black" />
+
+                    {/* Mini Column 2 */}
+                    <div className="space-y-1">
+                      <div>
+                        <Label className="text-xs text-black">IGP No</Label>
+                        <Input 
+                          name="igpNo" 
+                          value={formData.igpNo} 
+                          onChange={handleChange} 
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              fetchIgpData();
+                            }
+                          }}
+                          className="h-4 text-xs text-black" 
+                          placeholder="Press Enter to fetch"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">IGP Date</Label>
+                        <Input 
+                          name="igpDate" 
+                          value={formData.igpDate} 
+                          onChange={handleChange} 
+                          className="h-4 text-xs text-black" 
+                          type="date"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Vendor</Label>
+                        <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-xs text-black">No Of Bags</Label>
-                      <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-4 text-xs text-black" />
+
+                    {/* Mini Column 3 - Vehicle & Weight */}
+                    <div className="space-y-1">
+                      <div>
+                        <Label className="text-xs text-black">Vehicle No</Label>
+                        <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Weight</Label>
+                        <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Bags</Label>
+                        <Input name="bags" value={formData.bags} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                    </div>
+
+                    {/* Mini Column 4 - Supplier Weight Section */}
+                    <div className="space-y-1">
+                      <div>
+                        <Label className="text-xs text-black">Supplier Weight</Label>
+                        <Input name="supplierWeight" value={formData.supplierWeight} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Supp Wt - Bardana</Label>
+                        <Input name="supplierWeightMinusBardana" value={formData.supplierWeightMinusBardana} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Supp Wt - Out Wt</Label>
+                        <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Mini Column 2 */}
-                  <div className="space-y-1">
-                    <div>
-                      <Label className="text-xs text-black">IGP No</Label>
-                      <Input 
-                        name="igpNo" 
-                        value={formData.igpNo} 
-                        onChange={handleChange} 
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            fetchIgpData();
-                          }
-                        }}
-                        className="h-4 text-xs text-black" 
-                        placeholder="Press Enter to fetch"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">IGP Date</Label>
-                      <Input 
-                        name="igpDate" 
-                        value={formData.igpDate} 
-                        onChange={handleChange} 
-                        className="h-4 text-xs text-black" 
-                        type="date"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Vendor</Label>
-                      <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black" />
+                  {/* Second Row - New columns as shown in the image */}
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    <div></div> {/* Empty space for alignment */}
+                    <div></div> {/* Empty space for alignment */}
+                    <div></div> {/* Empty space for alignment */}
+                    
+                    {/* Mini Column 4 - Second Row with Bardana Wht and Quality Ded */}
+                    <div className="grid grid-cols-2 gap-1">
+                      <div>
+                        <Label className="text-xs text-black">Bardana Wht</Label>
+                        <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Quality Ded</Label>
+                        <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Mini Column 3 - Vehicle & Weight */}
-                  <div className="space-y-1">
-                    <div>
-                      <Label className="text-xs text-black">Vehicle No</Label>
-                      <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Weight</Label>
-                      <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Bags</Label>
-                      <Input name="bags" value={formData.bags} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
+                  <div className="mt-6">
+                    <Button 
+                      className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
+                      onClick={handleDeduction}
+                    >
+                      Deduction+
+                    </Button>
                   </div>
 
-                  {/* Mini Column 4 - Supplier Weight Section */}
-                  <div className="space-y-1">
-                    <div>
-                      <Label className="text-xs text-black">Supplier Weight</Label>
-                      <Input name="supplierWeight" value={formData.supplierWeight} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Supp Wt - Bardana</Label>
-                      <Input name="bardanaWeight" value={formData.bardanaWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Supp Wt - Out Wt</Label>
-                      <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
-                    </div>
-                    <div className="mt-6">
-                      <Button 
-                        className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
-                        onClick={handleDeduction}
-                      >
-                        Deduction+
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Compact Table with IGP Data */}
-                <div className="border rounded text-xs h-[calc(100%-200px)] overflow-auto">
-                  <table className="w-full text-center">
-                    <thead className="bg-gray-100 sticky top-0">
-                      <tr>
-                        <th className="border p-1 text-xs text-black">Po No</th>
-                        <th className="border p-1 text-xs text-black">Item Code</th>
-                        <th className="border p-1 text-xs text-black">Item Description</th>
-                        <th className="border p-1 text-xs text-black">PO Quantity</th>
-                        <th className="border p-1 text-xs text-black">IGP Quantity</th>
-                        <th className="border p-1 text-xs text-black">Balance Quantity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {igpItems.length > 0 ? (
-                        igpItems.map((item: any, index: number) => {
-                          const poQty = parseFloat(item.po_qty) || 0;
-                          const igpQty = parseFloat(item.igp_qty) || 0;
-                          const balanceQty = poQty - igpQty;
-                          
-                          return (
-                            <tr key={index}>
-                              <td className="border p-1 h-4 text-xs text-black">{item.po_no || ''}</td>
-                              <td className="border p-1 h-4 text-xs text-black">{item.item_code || ''}</td>
-                              <td className="border p-1 h-4 text-xs text-black">{item.item_desc || ''}</td>
-                              <td className="border p-1 h-4 text-xs text-black">{poQty.toFixed(2)}</td>
-                              <td className="border p-1 h-4 text-xs text-black">{igpQty.toFixed(2)}</td>
-                              <td className="border p-1 h-4 text-xs text-black">{balanceQty.toFixed(2)}</td>
-                            </tr>
-                          );
-                        })
-                      ) : (
+                  {/* Compact Table with IGP Data */}
+                  <div className="border rounded text-xs h-[calc(100%-200px)] overflow-auto">
+                    <table className="w-full text-center">
+                      <thead className="bg-gray-100 sticky top-0">
                         <tr>
-                          <td className="border p-1 h-4 text-xs text-black" colSpan={6}>No IGP data available</td>
+                          <th className="border p-1 text-xs text-black">Po No</th>
+                          <th className="border p-1 text-xs text-black">Item Code</th>
+                          <th className="border p-1 text-xs text-black">Item Description</th>
+                          <th className="border p-1 text-xs text-black">PO Quantity</th>
+                          <th className="border p-1 text-xs text-black">IGP Quantity</th>
+                          <th className="border p-1 text-xs text-black">Balance Quantity</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {igpItems.length > 0 ? (
+                          igpItems.map((item: any, index: number) => {
+                            const poQty = parseFloat(item.po_qty) || 0;
+                            const igpQty = parseFloat(item.igp_qty) || 0;
+                            const balanceQty = poQty - igpQty;
+                            
+                            return (
+                              <tr key={index}>
+                                <td className="border p-1 h-4 text-xs text-black">{item.po_no || ''}</td>
+                                <td className="border p-1 h-4 text-xs text-black">{item.item_code || ''}</td>
+                                <td className="border p-1 h-4 text-xs text-black">{item.item_desc || ''}</td>
+                                <td className="border p-1 h-4 text-xs text-black">{poQty.toFixed(2)}</td>
+                                <td className="border p-1 h-4 text-xs text-black">{igpQty.toFixed(2)}</td>
+                                <td className="border p-1 h-4 text-xs text-black">{balanceQty.toFixed(2)}</td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td className="border p-1 h-4 text-xs text-black" colSpan={6}>No IGP data available</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
@@ -1591,12 +1655,22 @@ export default function PurchaseForm() {
 
                 </div>
               )}
-            </div>
-          </div>
 
-          {/* Right Side - Weight Display and Bag Table (Columns 9-12) */}
-          <div className="col-span-4">
-            {/* This section will contain the right side components */}
+              {/* Show Sales Form when selectedForm is 'sales' */}
+              {selectedForm === 'sales' && (
+                <div className="h-full flex flex-col">
+                  {/* Sales form content will go here */}
+                  <div className="text-center p-4">
+                    <p>Sales form functionality coming soon</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Side - Weight Display and Bag Table (Columns 9-12) */}
+            <div className="col-span-4">
+              {/* This section will contain the right side components */}
+            </div>
           </div>
         </div>
       </div>
