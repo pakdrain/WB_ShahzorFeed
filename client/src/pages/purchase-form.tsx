@@ -207,6 +207,25 @@ export default function PurchaseForm() {
   const [onlineMode, setOnlineMode] = useState(true);
   const [igpItems, setIgpItems] = useState<any[]>([]);
 
+  // Auto-calculate formulas when relevant fields change
+  useEffect(() => {
+    const supplierWeight = parseFloat(formData.supplierWeight) || 0;
+    const bardanaWeight = parseFloat(formData.bardanaWeight) || 0;
+    const outWeight = parseFloat(formData.weight) || 0;
+
+    // Formula: Supp Wt - Bardana
+    const supplierWeightMinusBardana = supplierWeight - bardanaWeight;
+    
+    // Formula: Supp Wt - Out Wt = Supplier Weight - Out Weight - Bardana
+    const supplierWeightMinusOutWeight = supplierWeight - outWeight - bardanaWeight;
+
+    setFormData(prev => ({
+      ...prev,
+      supplierWeightMinusBardana: supplierWeightMinusBardana.toFixed(2),
+      supplierWeightMinusOutWeight: supplierWeightMinusOutWeight.toFixed(2)
+    }));
+  }, [formData.supplierWeight, formData.bardanaWeight, formData.weight]);
+
   // Function to reset form to clean state
   const resetFormToInitial = () => {
     setFormData({
@@ -691,6 +710,7 @@ export default function PurchaseForm() {
           igp_date: formData.igpDate || null,
           supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
           quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
+          bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null, // New Bardana Wht field
           no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
           vendor_name: firstIgpItem?.vendor_name || formData.vendor || null,
           bag_condition: formData.bagCondition || null,
