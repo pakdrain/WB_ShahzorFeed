@@ -619,10 +619,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/purchase/first-weight-records', async (req: Request, res: Response) => {
     try {
       const query = `
-        SELECT wb_id, slip_no, entry_type, first_weight, second_weight
-        FROM wb_weighbridge 
-        WHERE first_weight IS NOT NULL 
-        ORDER BY wb_id DESC 
+        SELECT w.wb_id, w.slip_no, w.entry_type, w.first_weight, w.second_weight, p.vehicle_no
+        FROM wb_weighbridge w
+        LEFT JOIN wb_weighbridge_items_purchase p ON w.wb_id = p.wb_id
+        WHERE w.first_weight IS NOT NULL 
+        ORDER BY w.wb_id DESC 
         LIMIT 20
       `;
       const result = await pool.query(query);
