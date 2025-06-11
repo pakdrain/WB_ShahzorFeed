@@ -58,66 +58,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register video streaming routes
   videoStreamService.registerRoutes(app);
 
+  // Create users table if it doesn't exist (simplified structure)
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        userName VARCHAR(255) UNIQUE NOT NULL,
+        userPassword VARCHAR(255) NOT NULL
+      )
+    `);
+    console.log('✅ Users table ensured in local database');
+  } catch (error) {
+    console.error('❌ Error creating users table:', error);
+  }
+
   // Authentication routes
   // User registration endpoint
   app.post('/api/auth/register', async (req, res) => {
     try {
-      const validatedData = registerSchema.parse(req.body);
+      const { userName, userPassword, confirmPassword } = req.body;
+      
+      // Basic validation
+      if (!userName || !userPassword || !confirmPassword) {
+        return res.status(400).json({ error: 'All fields are required' });
+      }
+      
+      if (userPassword !== confirmPassword) {
+        return res.status(400).json({ error: 'Passwords do not match' });
+      }
       
       // Check if username already exists
       const existingUser = await pool.query(
-        'SELECT user_id FROM users WHERE user_name = $1',
-        [validatedData.userName]
+        'SELECT id FROM users WHERE userName = $1',
+        [userName]
       );
       
       if (existingUser.rows.length > 0) {
         return res.status(400).json({ error: 'Username already exists' });
       }
       
-      // Get the next user_no
-      const userNoResult = await pool.query(
-        'SELECT COALESCE(MAX(user_no), 0) + 1 as next_user_no FROM users'
-      );
-      const nextUserNo = userNoResult.rows[0].next_user_no;
-      
-      // Insert new user - let user_id auto-increment
+      // Insert new user
       const insertResult = await pool.query(
-        'INSERT INTO users (user_no, user_name, user_password, user_creation_date) VALUES ($1, $2, $3, $4) RETURNING user_id, user_no, user_name',
-        [nextUserNo, validatedData.userName, validatedData.userPassword, new Date()]
+        'INSERT INTO users (userName, userPassword) VALUES ($1, $2) RETURNING id, userName',
+        [userName, userPassword]
       );
       
       const newUser = insertResult.rows[0];
+      console.log('✅ User registered successfully:', newUser.userName);
+      
       res.status(201).json({
         success: true,
         message: 'User registered successfully',
         user: {
-          userId: newUser.user_id,
-          userNo: newUser.user_no,
-          userName: newUser.user_name
+          userId: newUser.id,
+          userName: newUser.userName
         }
       });
       
     } catch (error: any) {
-      console.error('Registration error:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ 
-          error: 'Validation failed', 
-          details: error.errors 
-        });
-      }
-      res.status(500).json({ error: 'Registration failed' });
+      console.error('❌ Registration error:', error);
+      res.status(500).json({ error: 'Registration failed: ' + error.message });
     }
   });
 
   // User login endpoint
   app.post('/api/auth/login', async (req, res) => {
     try {
-      const validatedData = loginSchema.parse(req.body);
+      const { userName, userPassword } = req.body;
+      
+      // Basic validation
+      if (!userName || !userPassword) {
+        return res.status(400).json({ error: 'Username and password are required' });
+      }
       
       // Find user by username and password
       const userResult = await pool.query(
-        'SELECT user_id, user_no, user_name FROM users WHERE user_name = $1 AND user_password = $2',
-        [validatedData.userName, validatedData.userPassword]
+        'SELECT id, userName FROM users WHERE userName = $1 AND userPassword = $2',
+        [userName, userPassword]
       );
       
       if (userResult.rows.length === 0) {
@@ -125,41 +142,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const user = userResult.rows[0];
+      console.log('✅ User logged in successfully:', user.userName);
+      
       res.json({
         success: true,
         message: 'Login successful',
         user: {
-          userId: user.user_id,
-          userNo: user.user_no,
-          userName: user.user_name
+          userId: user.id,
+          userName: user.userName
         }
       });
       
     } catch (error: any) {
-      console.error('Login error:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ 
-          error: 'Validation failed', 
-          details: error.errors 
-        });
-      }
-      res.status(500).json({ error: 'Login failed' });
+      console.error('❌ Login error:', error);
+      res.status(500).json({ error: 'Login failed: ' + error.message });
     }
   });
 
-  // Logout route
+  // User logout endpoint
   app.post('/api/auth/logout', async (req: Request, res: Response) => {
     try {
-      req.session.destroy((err: any) => {
-        if (err) {
-          console.error('Logout error:', err);
-          return res.status(500).json({ error: 'Logout failed' });
-        }
-        res.clearCookie('connect.sid');
-        res.json({ success: true, message: 'Logged out successfully' });
+      res.json({
+        success: true,
+        message: 'Logout successful'
       });
-    } catch (error) {
-      console.error('Logout error:', error);
+    } catch (error: any) {
+      console.error('❌ Logout error:', error);
       res.status(500).json({ error: 'Logout failed' });
     }
   });
