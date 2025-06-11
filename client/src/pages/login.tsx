@@ -91,10 +91,11 @@ export default function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+      const result = await response.json();
       if (!response.ok) {
-        throw new Error("Registration failed");
+        throw new Error(result.error || "Registration failed");
       }
-      return response.json();
+      return result;
     },
     onSuccess: (data) => {
       if (data.success) {
@@ -102,7 +103,7 @@ export default function Login() {
         registerForm.reset();
         setActiveTab("login");
         // Pre-fill the login form with the registered username
-        loginForm.setValue("userName", registerForm.getValues("userName"));
+        loginForm.setValue("userName", data.user.userName);
       }
     },
     onError: (error) => {
@@ -119,7 +120,8 @@ export default function Login() {
   };
 
   const isLoading = loginMutation.isPending || registerMutation.isPending;
-  const error = loginMutation.error || registerMutation.error;
+  const loginError = loginMutation.error;
+  const registerError = registerMutation.error;
 
   return (
     <div className="min-h-screen bg-monitoring-dark flex items-center justify-center p-4">
@@ -135,13 +137,11 @@ export default function Login() {
           <p className="text-gray-400">Industrial Weight Management Platform</p>
         </div>
 
-        {/* Error Alert */}
-        {error && (
+        {/* Global Error Alert */}
+        {(loginError || registerError) && (
           <Alert className="mb-6 border-monitoring-red bg-monitoring-red/10">
             <AlertDescription className="text-monitoring-red">
-              {error instanceof Error 
-                ? error.message 
-                : "An error occurred. Please try again."}
+              {(loginError || registerError)?.message || "An error occurred. Please try again."}
             </AlertDescription>
           </Alert>
         )}
@@ -235,6 +235,15 @@ export default function Login() {
                     )}
                   </div>
 
+                  {/* Login Error Display */}
+                  {loginError && (
+                    <div className="p-3 rounded-md bg-red-900/50 border border-red-700">
+                      <p className="text-sm text-red-200">
+                        {loginError.message}
+                      </p>
+                    </div>
+                  )}
+
                   <Button 
                     type="submit" 
                     className="w-full bg-monitoring-blue hover:bg-monitoring-blue/90 text-white"
@@ -325,6 +334,15 @@ export default function Login() {
                       </p>
                     )}
                   </div>
+
+                  {/* Registration Error Display */}
+                  {registerError && (
+                    <div className="p-3 rounded-md bg-red-900/50 border border-red-700">
+                      <p className="text-sm text-red-200">
+                        {registerError.message}
+                      </p>
+                    </div>
+                  )}
 
                   <Button 
                     type="submit" 
