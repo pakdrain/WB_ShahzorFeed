@@ -66,7 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if username already exists
       const existingUser = await pool.query(
-        'SELECT user_id FROM users WHERE user_name = $1',
+        'SELECT user_name FROM users WHERE user_name = $1',
         [validatedData.userName]
       );
       
@@ -74,16 +74,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Username already exists' });
       }
       
-      // Get the next user_no
-      const userNoResult = await pool.query(
-        'SELECT COALESCE(MAX(user_no), 0) + 1 as next_user_no FROM users'
-      );
-      const nextUserNo = userNoResult.rows[0].next_user_no;
-      
-      // Insert new user - let user_id auto-increment
+      // Insert new user with only userName and userPassword
       const insertResult = await pool.query(
-        'INSERT INTO users (user_no, user_name, user_password, user_creation_date) VALUES ($1, $2, $3, $4) RETURNING user_id, user_no, user_name',
-        [nextUserNo, validatedData.userName, validatedData.userPassword, new Date()]
+        'INSERT INTO users (user_name, user_password) VALUES ($1, $2) RETURNING user_name',
+        [validatedData.userName, validatedData.userPassword]
       );
       
       const newUser = insertResult.rows[0];
@@ -91,8 +85,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: 'User registered successfully',
         user: {
-          userId: newUser.user_id,
-          userNo: newUser.user_no,
           userName: newUser.user_name
         }
       });
@@ -116,7 +108,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Find user by username and password
       const userResult = await pool.query(
-        'SELECT user_id, user_no, user_name FROM users WHERE user_name = $1 AND user_password = $2',
+        'SELECT user_name FROM users WHERE user_name = $1 AND user_password = $2',
         [validatedData.userName, validatedData.userPassword]
       );
       
@@ -129,8 +121,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: 'Login successful',
         user: {
-          userId: user.user_id,
-          userNo: user.user_no,
           userName: user.user_name
         }
       });

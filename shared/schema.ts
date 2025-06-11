@@ -61,11 +61,8 @@ export const salesDetails = pgTable("sales_details", {
 });
 
 export const users = pgTable("users", {
-  userId: serial("user_id").primaryKey(),
-  userNo: integer("user_no").notNull().unique(),
   userName: text("user_name").notNull().unique(),
   userPassword: text("user_password").notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertCameraSchema = createInsertSchema(cameras).omit({
@@ -94,11 +91,7 @@ export const insertSalesDetailsSchema = createInsertSchema(salesDetails).omit({
   createdAt: true,
 });
 
-export const insertUserSchema = createInsertSchema(users).omit({
-  userId: true,
-  userNo: true,
-  createdAt: true,
-});
+export const insertUserSchema = createInsertSchema(users);
 
 export const loginSchema = z.object({
   userName: z.string().min(1, "Username is required"),

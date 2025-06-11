@@ -2,8 +2,6 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useLocation } from "wouter";
 
 interface User {
-  userId: number;
-  userNo: number;
   userName: string;
 }
 
