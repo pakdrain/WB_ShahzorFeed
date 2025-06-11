@@ -195,6 +195,9 @@ export default function PurchaseForm() {
     manualIgpNo: '',
     igpId: '',
     vendorId: '',
+    weightPerBags: '',
+    supWeightWithoutBardana: '',
+    netSupplierWeight: '',
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -879,13 +882,13 @@ export default function PurchaseForm() {
       vendor_id: formData.vendorId ? parseInt(formData.vendorId, 10) : null,
       vendor_name: formData.vendorName || null,
       no_of_bags: formData.noOfBags ? parseFloat(formData.noOfBags) : null,
-      weight_per_bags: formData.weightPerBags ? parseFloat(formData.weightPerBags) : null,
+      weight_per_bags: formData.wtPerBag ? parseFloat(formData.wtPerBag) : null,
       bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
       igp_date: formData.igpDate || null,
       quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
       supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
-      sup_weight_wthout_bardana: formData.supWeightWithoutBardana ? parseFloat(formData.supWeightWithoutBardana) : null,
-      net_supplier_weight: formData.netSupplierWeight ? parseFloat(formData.netSupplierWeight) : null,
+      sup_weight_wthout_bardana: formData.supplierWeightMinusBardana ? parseFloat(formData.supplierWeightMinusBardana) : null,
+      net_supplier_weight: formData.supplierWeightMinusOutWeight ? parseFloat(formData.supplierWeightMinusOutWeight) : null,
       bag_condition: formData.bagCondition || null,
       bardana_type_id: formData.bardanaTypeId ? parseInt(formData.bardanaTypeId, 10) : null,
     };
@@ -1313,7 +1316,7 @@ export default function PurchaseForm() {
                     </div>
                     <div>
                       <Label className="text-xs text-black">Supp Wt - Bardana</Label>
-                      <Input name="supplierWeightMinusBardana" value={formData.supplierWeightMinusBardana} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
+                      <Input name="bardanaWeight" value={formData.bardanaWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
                     </div>
                     <div>
                       <Label className="text-xs text-black">Supp Wt - Out Wt</Label>
