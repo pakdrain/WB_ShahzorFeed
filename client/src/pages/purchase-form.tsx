@@ -246,6 +246,7 @@ export default function PurchaseForm() {
           vehicleNo: firstItem.vehicle_no || '',
           bardanaWeight: firstItem.bardana_qty ? String(firstItem.bardana_qty) : '',
           bardanaType: firstItem.bardanatype || '',
+          wtPerBag: firstItem.wtperbag ? String(firstItem.wtperbag) : '',
         }));
         setIgpItems(items);
       } else {
@@ -346,12 +347,25 @@ export default function PurchaseForm() {
     const numericFields = [
       'firstWeight', 'secondWeight', 'netWeight',
       'bardanaWeight', 'grossWeight', 'freight',
-      'companyId', 'branchId', 'createdBy', 'lastUpdatedBy'
+      'companyId', 'branchId', 'createdBy', 'lastUpdatedBy',
+      'wtPerBag', 'noOfBags'
     ];
 
     if (numericFields.includes(name)) {
       if (value === '' || /^\d*\.?\d*$/.test(value)) {
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setFormData(prev => {
+          const newData = { ...prev, [name]: value };
+          
+          // Auto-calculate bardana weight when wtPerBag or noOfBags changes
+          if (name === 'wtPerBag' || name === 'noOfBags') {
+            const wtPerBag = parseFloat(name === 'wtPerBag' ? value : prev.wtPerBag) || 0;
+            const noOfBags = parseFloat(name === 'noOfBags' ? value : prev.noOfBags) || 0;
+            const calculatedBardanaWeight = wtPerBag * noOfBags;
+            newData.bardanaWeight = calculatedBardanaWeight > 0 ? String(calculatedBardanaWeight) : '';
+          }
+          
+          return newData;
+        });
       }
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
