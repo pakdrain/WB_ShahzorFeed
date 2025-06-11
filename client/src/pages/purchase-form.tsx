@@ -1246,152 +1246,153 @@ export default function PurchaseForm() {
                   <div className="grid grid-cols-4 gap-1 text-xs mb-2">
                     {/* Mini Column 1 */}
                     <div className="space-y-1">
-                    <div>
-                      <Label className="text-xs text-black">Bardana Type</Label>
-                      <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-4 text-xs text-black" />
+                      <div>
+                        <Label className="text-xs text-black">Bardana Type</Label>
+                        <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Wt Per Bag</Label>
+                        <Input name="wtPerBag" value={formData.wtPerBag} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">No Of Bags</Label>
+                        <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-xs text-black">Wt Per Bag</Label>
-                      <Input name="wtPerBag" value={formData.wtPerBag} onChange={handleChange} className="h-4 text-xs text-black" />
+
+                    {/* Mini Column 2 */}
+                    <div className="space-y-1">
+                      <div>
+                        <Label className="text-xs text-black">IGP No</Label>
+                        <Input 
+                          name="igpNo" 
+                          value={formData.igpNo} 
+                          onChange={handleChange} 
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              fetchIgpData();
+                            }
+                          }}
+                          className="h-4 text-xs text-black" 
+                          placeholder="Press Enter to fetch"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">IGP Date</Label>
+                        <Input 
+                          name="igpDate" 
+                          value={formData.igpDate} 
+                          onChange={handleChange} 
+                          className="h-4 text-xs text-black" 
+                          type="date"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Vendor</Label>
+                        <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
                     </div>
-                    <div>
-                      <Label className="text-xs text-black">No Of Bags</Label>
-                      <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-4 text-xs text-black" />
+
+                    {/* Mini Column 3 - Vehicle & Weight */}
+                    <div className="space-y-1">
+                      <div>
+                        <Label className="text-xs text-black">Vehicle No</Label>
+                        <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Weight</Label>
+                        <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Bags</Label>
+                        <Input name="bags" value={formData.bags} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                    </div>
+
+                    {/* Mini Column 4 - Supplier Weight Section */}
+                    <div className="space-y-1">
+                      <div>
+                        <Label className="text-xs text-black">Supplier Weight</Label>
+                        <Input name="supplierWeight" value={formData.supplierWeight} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Supp Wt - Bardana</Label>
+                        <Input name="supplierWeightMinusBardana" value={formData.supplierWeightMinusBardana} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Supp Wt - Out Wt</Label>
+                        <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Mini Column 2 */}
-                  <div className="space-y-1">
-                    <div>
-                      <Label className="text-xs text-black">IGP No</Label>
-                      <Input 
-                        name="igpNo" 
-                        value={formData.igpNo} 
-                        onChange={handleChange} 
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            fetchIgpData();
-                          }
-                        }}
-                        className="h-4 text-xs text-black" 
-                        placeholder="Press Enter to fetch"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">IGP Date</Label>
-                      <Input 
-                        name="igpDate" 
-                        value={formData.igpDate} 
-                        onChange={handleChange} 
-                        className="h-4 text-xs text-black" 
-                        type="date"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Vendor</Label>
-                      <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black" />
+                  {/* Second Row - New columns as shown in the image */}
+                  <div className="grid grid-cols-4 gap-2 mt-2">
+                    <div></div> {/* Empty space for alignment */}
+                    <div></div> {/* Empty space for alignment */}
+                    <div></div> {/* Empty space for alignment */}
+                    
+                    {/* Mini Column 4 - Second Row with Bardana Wht and Quality Ded */}
+                    <div className="grid grid-cols-2 gap-1">
+                      <div>
+                        <Label className="text-xs text-black">Bardana Wht</Label>
+                        <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-black">Quality Ded</Label>
+                        <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black" />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Mini Column 3 - Vehicle & Weight */}
-                  <div className="space-y-1">
-                    <div>
-                      <Label className="text-xs text-black">Vehicle No</Label>
-                      <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Weight</Label>
-                      <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Bags</Label>
-                      <Input name="bags" value={formData.bags} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
+                  <div className="mt-6">
+                    <Button 
+                      className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
+                      onClick={handleDeduction}
+                    >
+                      Deduction+
+                    </Button>
                   </div>
 
-                  {/* Mini Column 4 - Supplier Weight Section */}
-                  <div className="space-y-1">
-                    <div>
-                      <Label className="text-xs text-black">Supplier Weight</Label>
-                      <Input name="supplierWeight" value={formData.supplierWeight} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Supp Wt - Bardana</Label>
-                      <Input name="supplierWeightMinusBardana" value={formData.supplierWeightMinusBardana} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Supp Wt - Out Wt</Label>
-                      <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Second Row - New columns as shown in the image */}
-                <div className="grid grid-cols-4 gap-2 mt-2">
-                  <div></div> {/* Empty space for alignment */}
-                  <div></div> {/* Empty space for alignment */}
-                  <div></div> {/* Empty space for alignment */}
-                  
-                  {/* Mini Column 4 - Second Row with Bardana Wht and Quality Ded */}
-                  <div className="grid grid-cols-2 gap-1">
-                    <div>
-                      <Label className="text-xs text-black">Bardana Wht</Label>
-                      <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-black">Quality Ded</Label>
-                      <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <Button 
-                    className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
-                    onClick={handleDeduction}
-                  >
-                    Deduction+
-                  </Button>
-                </div>
-
-                {/* Compact Table with IGP Data */}
-                <div className="border rounded text-xs h-[calc(100%-200px)] overflow-auto">
-                  <table className="w-full text-center">
-                    <thead className="bg-gray-100 sticky top-0">
-                      <tr>
-                        <th className="border p-1 text-xs text-black">Po No</th>
-                        <th className="border p-1 text-xs text-black">Item Code</th>
-                        <th className="border p-1 text-xs text-black">Item Description</th>
-                        <th className="border p-1 text-xs text-black">PO Quantity</th>
-                        <th className="border p-1 text-xs text-black">IGP Quantity</th>
-                        <th className="border p-1 text-xs text-black">Balance Quantity</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {igpItems.length > 0 ? (
-                        igpItems.map((item: any, index: number) => {
-                          const poQty = parseFloat(item.po_qty) || 0;
-                          const igpQty = parseFloat(item.igp_qty) || 0;
-                          const balanceQty = poQty - igpQty;
-                          
-                          return (
-                            <tr key={index}>
-                              <td className="border p-1 h-4 text-xs text-black">{item.po_no || ''}</td>
-                              <td className="border p-1 h-4 text-xs text-black">{item.item_code || ''}</td>
-                              <td className="border p-1 h-4 text-xs text-black">{item.item_desc || ''}</td>
-                              <td className="border p-1 h-4 text-xs text-black">{poQty.toFixed(2)}</td>
-                              <td className="border p-1 h-4 text-xs text-black">{igpQty.toFixed(2)}</td>
-                              <td className="border p-1 h-4 text-xs text-black">{balanceQty.toFixed(2)}</td>
-                            </tr>
-                          );
-                        })
-                      ) : (
+                  {/* Compact Table with IGP Data */}
+                  <div className="border rounded text-xs h-[calc(100%-200px)] overflow-auto">
+                    <table className="w-full text-center">
+                      <thead className="bg-gray-100 sticky top-0">
                         <tr>
-                          <td className="border p-1 h-4 text-xs text-black" colSpan={6}>No IGP data available</td>
+                          <th className="border p-1 text-xs text-black">Po No</th>
+                          <th className="border p-1 text-xs text-black">Item Code</th>
+                          <th className="border p-1 text-xs text-black">Item Description</th>
+                          <th className="border p-1 text-xs text-black">PO Quantity</th>
+                          <th className="border p-1 text-xs text-black">IGP Quantity</th>
+                          <th className="border p-1 text-xs text-black">Balance Quantity</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {igpItems.length > 0 ? (
+                          igpItems.map((item: any, index: number) => {
+                            const poQty = parseFloat(item.po_qty) || 0;
+                            const igpQty = parseFloat(item.igp_qty) || 0;
+                            const balanceQty = poQty - igpQty;
+                            
+                            return (
+                              <tr key={index}>
+                                <td className="border p-1 h-4 text-xs text-black">{item.po_no || ''}</td>
+                                <td className="border p-1 h-4 text-xs text-black">{item.item_code || ''}</td>
+                                <td className="border p-1 h-4 text-xs text-black">{item.item_desc || ''}</td>
+                                <td className="border p-1 h-4 text-xs text-black">{poQty.toFixed(2)}</td>
+                                <td className="border p-1 h-4 text-xs text-black">{igpQty.toFixed(2)}</td>
+                                <td className="border p-1 h-4 text-xs text-black">{balanceQty.toFixed(2)}</td>
+                              </tr>
+                            );
+                          })
+                        ) : (
+                          <tr>
+                            <td className="border p-1 h-4 text-xs text-black" colSpan={6}>No IGP data available</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
 
@@ -1609,6 +1610,16 @@ export default function PurchaseForm() {
                     </div>
                   </div>
 
+                </div>
+              )}
+
+              {/* Show Sales Form when selectedForm is 'sales' */}
+              {selectedForm === 'sales' && (
+                <div className="h-full flex flex-col">
+                  {/* Sales form content will go here */}
+                  <div className="text-center p-4">
+                    <p>Sales form functionality coming soon</p>
+                  </div>
                 </div>
               )}
             </div>
