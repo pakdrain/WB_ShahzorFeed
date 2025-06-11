@@ -1,7 +1,8 @@
 // Test script to verify database connection
 // Run this with: node test-connection.js
 
-const { Pool } = require('pg');
+import pg from 'pg';
+const { Pool } = pg;
 
 // Update these credentials to match your local PostgreSQL setup
 const pool = new Pool({
@@ -44,12 +45,12 @@ async function testConnection() {
         console.log(`  - ${row.column_name}: ${row.data_type}`);
       });
       
-      // Test insert (will be removed)
+      // Test insert with simple 2-column structure
       try {
         const testInsert = await client.query(`
-          INSERT INTO users (user_no, user_name, user_password, user_creation_date) 
-          VALUES (999, 'test_connection', 'test123', NOW()) 
-          RETURNING user_id, user_name;
+          INSERT INTO users (user_name, user_password) 
+          VALUES ('test_connection', 'test123') 
+          RETURNING user_name;
         `);
         console.log('✅ Insert test successful:', testInsert.rows[0]);
         
@@ -59,6 +60,8 @@ async function testConnection() {
         
       } catch (insertError) {
         console.log('❌ Insert test failed:', insertError.message);
+        console.log('This might be because the table structure is different');
+        console.log('Expected table structure: users (user_name, user_password)');
       }
       
     } else {

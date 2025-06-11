@@ -1,123 +1,122 @@
-# Local Setup Guide for Weighbridge Authentication System
+# Complete Local Setup Guide - Weighbridge Authentication System
 
-## Prerequisites
+**IMPORTANT**: This system must be run on your local machine to connect to your local PostgreSQL database. Replit cannot access your local database.
 
-1. **Node.js** (version 18 or higher)
-2. **PostgreSQL** (with your existing database)
-3. **Git** (to clone the repository)
+## Step 1: Download Project Files to Your Local Machine
 
-## Step 1: Download the Project
+1. Download all files from this Replit project
+2. Create a new folder on your local machine: `C:\weighbridge-auth` (or your preferred location)
+3. Copy all project files to this folder
 
-1. Download all project files to your local machine
-2. Extract to a folder (e.g., `weighbridge-system`)
+## Step 2: Set Up Your Database
 
-## Step 2: Database Configuration
-
-Make sure your PostgreSQL database has the correct users table structure:
+Run this SQL script in your PostgreSQL database (WB) to create the simple 2-column users table:
 
 ```sql
-CREATE TABLE users (
-    user_id  bigint NOT NULL DEFAULT nextval('users_user_id_seq'),
-    user_no  numeric(20,6),
-    user_name character varying(2000) COLLATE pg_catalog."default",
-    user_password character varying(2000) COLLATE pg_catalog."default",
-    user_creation_date timestamp without time zone
-);
+-- Drop existing users table if it exists
+DROP TABLE IF EXISTS users CASCADE;
 
--- Create sequence for user_id
-CREATE SEQUENCE IF NOT EXISTS users_user_id_seq OWNED BY users.user_id;
-SELECT setval('users_user_id_seq', COALESCE(MAX(user_id), 0) + 1, false) FROM users;
+-- Create simple users table with only 2 columns
+CREATE TABLE users (
+    user_name character varying(255) NOT NULL,
+    user_password character varying(255) NOT NULL,
+    CONSTRAINT users_pkey PRIMARY KEY (user_name)
+);
 ```
 
-## Step 3: Environment Configuration
+## Step 3: Create Environment File
 
-1. Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
+Create a `.env` file in your project root with these exact settings:
 
-2. Update `.env` with your local database credentials:
-   ```
-   PGHOST=localhost
-   PGPORT=5432
-   PGUSER=postgres
-   PGPASSWORD=your_actual_password
-   PGDATABASE=WB
-   DATABASE_URL=postgresql://postgres:your_actual_password@localhost:5432/WB
-   PORT=5000
-   NODE_ENV=development
-   ```
+```
+PGHOST=localhost
+PGPORT=5432
+PGUSER=postgres
+PGPASSWORD=@1122
+PGDATABASE=WB
+DATABASE_URL=postgresql://postgres:@1122@localhost:5432/WB
+PORT=5000
+NODE_ENV=development
+```
 
-## Step 4: Install Dependencies
+## Step 4: Install Node.js Dependencies
+
+Open Command Prompt in your project folder and run:
 
 ```bash
 npm install
 ```
 
-## Step 5: Run the Application
+## Step 5: Test Database Connection
+
+Run the test script to verify everything works:
+
+```bash
+node test-connection.js
+```
+
+You should see:
+- ✅ Database connection successful!
+- ✅ Users table exists
+- ✅ Insert test successful
+- ✅ Test record cleaned up
+
+## Step 6: Start the Application
 
 ```bash
 npm run dev
 ```
 
-## Step 6: Access the Application
+Open your browser to: `http://localhost:5000`
 
-Open your browser and go to: `http://localhost:5000`
+## Step 7: Test Registration and Login
+
+1. **Register a new user**:
+   - Go to the Register tab
+   - Enter username and password
+   - Click "Create Account"
+   - Data will be inserted into your local users table
+
+2. **Login**:
+   - Go to the Login tab
+   - Enter your credentials
+   - Click "Sign In"
+   - You'll be redirected to the purchase form
+
+## How It Works
+
+The authentication system now:
+- **Registration**: Inserts `userName` and `userPassword` into your local users table
+- **Login**: Queries your local users table to verify credentials
+- **Sessions**: Stores user information in browser localStorage
+- **Protection**: Blocks access to purchase form until logged in
+- **Logout**: Clears session and redirects to login
+
+## Database Operations
+
+**Registration SQL**:
+```sql
+INSERT INTO users (user_name, user_password) VALUES ('username', 'password');
+```
+
+**Login SQL**:
+```sql
+SELECT user_name FROM users WHERE user_name = 'username' AND user_password = 'password';
+```
 
 ## Troubleshooting
 
-### Database Connection Issues
+**Database Connection Failed**:
+- Ensure PostgreSQL service is running
+- Verify password is `@1122`
+- Check database name is `WB`
 
-1. **Check PostgreSQL Service**: Ensure PostgreSQL is running on your local machine
-2. **Verify Credentials**: Make sure username, password, and database name are correct
-3. **Check Port**: Default PostgreSQL port is 5432
-4. **Database Permissions**: Ensure your user has read/write access to the database
+**Registration/Login Not Working**:
+- Check browser console for errors
+- Verify the users table was created correctly
+- Test database connection with the test script
 
-### Authentication Issues
+**Port Already in Use**:
+- Change PORT in .env file to 3000 or 8000
 
-1. **Clear Browser Cache**: Clear localStorage and cookies
-2. **Check Console**: Open browser DevTools and check for JavaScript errors
-3. **Verify API**: Test endpoints manually:
-   ```bash
-   # Test registration
-   curl -X POST http://localhost:5000/api/auth/register \
-     -H "Content-Type: application/json" \
-     -d '{"userName": "testuser", "userPassword": "password123", "confirmPassword": "password123"}'
-   
-   # Test login
-   curl -X POST http://localhost:5000/api/auth/login \
-     -H "Content-Type: application/json" \
-     -d '{"userName": "testuser", "userPassword": "password123"}'
-   ```
-
-## Features Included
-
-- User Registration with validation
-- User Login with session management
-- Protected Routes (Purchase Form access)
-- Beautiful UI with modern design
-- Database integration with your existing PostgreSQL setup
-- Logout functionality
-- User information display in sidebar
-
-## File Structure
-
-```
-weighbridge-system/
-├── client/                 # Frontend React application
-│   └── src/
-│       ├── components/     # UI components
-│       ├── pages/         # Application pages
-│       └── lib/           # Authentication logic
-├── server/                # Backend Express server
-│   ├── routes.ts          # API routes including auth
-│   └── index.ts           # Server entry point
-├── shared/                # Shared schemas and types
-└── .env                   # Environment configuration
-```
-
-## Security Notes
-
-- Passwords are currently stored as plain text as per your database schema
-- For production, consider implementing password hashing
-- Ensure PostgreSQL is properly secured if exposing to network
+This setup works exactly like your purchase form insertion - same database, same connection pattern, but specifically designed for your 2-column users table structure.
