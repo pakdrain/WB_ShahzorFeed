@@ -1326,34 +1326,32 @@ export default function PurchaseForm() {
                   </div>
                 </div>
 
-                    <div className="mt-6">
-                      <Button 
-                        className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
-                        onClick={handleDeduction}
-                      >
-                        Deduction+
-                      </Button>
+                {/* Second Row - New columns as shown in the image */}
+                <div className="grid grid-cols-4 gap-2 mt-2">
+                  <div></div> {/* Empty space for alignment */}
+                  <div></div> {/* Empty space for alignment */}
+                  <div></div> {/* Empty space for alignment */}
+                  
+                  {/* Mini Column 4 - Second Row with Bardana Wht and Quality Ded */}
+                  <div className="grid grid-cols-2 gap-1">
+                    <div>
+                      <Label className="text-xs text-black">Bardana Wht</Label>
+                      <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-4 text-xs text-black" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-black">Quality Ded</Label>
+                      <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black" />
                     </div>
                   </div>
+                </div>
 
-                  {/* Second Row - New columns as shown in the image */}
-                  <div className="grid grid-cols-4 gap-2 mt-2">
-                    <div></div> {/* Empty space for alignment */}
-                    <div></div> {/* Empty space for alignment */}
-                    <div></div> {/* Empty space for alignment */}
-                    
-                    {/* Mini Column 4 - Second Row with Bardana Wht and Quality Ded */}
-                    <div className="grid grid-cols-2 gap-1">
-                      <div>
-                        <Label className="text-xs text-black">Bardana Wht</Label>
-                        <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-4 text-xs text-black" />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-black">Quality Ded</Label>
-                        <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black" />
-                      </div>
-                    </div>
-                  </div>
+                <div className="mt-6">
+                  <Button 
+                    className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
+                    onClick={handleDeduction}
+                  >
+                    Deduction+
+                  </Button>
                 </div>
 
                 {/* Compact Table with IGP Data */}
