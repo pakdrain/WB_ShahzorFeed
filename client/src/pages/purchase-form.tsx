@@ -62,41 +62,47 @@ export default function PurchaseForm() {
     try {
       const response = await fetch(`/api/purchase/by-slip/${slipNo}`);
       const data = await response.json();
-      if (data) {
+      if (data && data.master) {
+        const master = data.master;
+        const details = data.details && data.details.length > 0 ? data.details[0] : {};
+        
         // Enable edit mode
         setIsEditMode(true);
-        setEditingWbId(data.wb_id);
+        setEditingWbId(master.wb_id);
         
         // Load all the form data including detail table data
         setFormData(prev => ({
           ...prev,
-          slipNo: data.slip_no || '',
-          vehicleNo: data.vehicle_no || '',
-          firstWeight: data.first_weight || '',
-          secondWeight: data.second_weight || '',
-          netWeight: data.net_weight || '',
-          bardanaWeight: data.bardana_weight || '',
-          grossWeight: data.gross_weight || '',
-          freight: data.freight || '',
-          remarks: data.remarks || '',
-          driverName: data.driver_name || '',
+          slipNo: master.slip_no || '',
+          vehicleNo: details.vehicle_no || '',
+          firstWeight: master.first_weight ? String(master.first_weight) : '',
+          secondWeight: master.second_weight ? String(master.second_weight) : '',
+          netWeight: master.net_weight ? String(master.net_weight) : '',
+          bardanaWeight: master.bardana_weight ? String(master.bardana_weight) : '',
+          grossWeight: master.gross_weight ? String(master.gross_weight) : '',
+          freight: master.freight ? String(master.freight) : '',
+          remarks: master.remarks || '',
+          driverName: master.driver_name || '',
           // Detail table data
-          vendor: data.vendor_name || '',
-          igpNo: data.igp_no || '', // Add IGP number
-          poNo: data.po_no || '',
-          itemCode: data.item_code || '',
-          itemDesc: data.item_desc || '',
-          poQty: data.po_qty || '',
-          igpQty: data.igp_qty || '',
-          balanceQty: data.balance_qty || '',
-          slipInTime: data.slip_in_time || '',
-          slipOutTime: data.slip_out_time || '',
-          entryType: data.entry_type || 'PURCHASE'
+          vendor: details.vendor_name || '',
+          igpNo: details.igp_no || '',
+          poNo: details.po_no || '',
+          itemCode: details.item_code || '',
+          itemDesc: details.item_desc || '',
+          poQty: details.po_qty ? String(details.po_qty) : '',
+          igpQty: details.igp_qty ? String(details.igp_qty) : '',
+          balanceQty: details.balance_qty ? String(details.balance_qty) : '',
+          bardanaType: details.bardana_type || '',
+          wtPerBag: details.weight_per_bags ? String(details.weight_per_bags) : '',
+          noOfBags: details.no_of_bags ? String(details.no_of_bags) : '',
+          slipInTime: master.slip_in_time ? formatDatetimeLocal(master.slip_in_time) : '',
+          slipOutTime: master.slip_out_time ? formatDatetimeLocal(master.slip_out_time) : '',
+          entryType: master.entry_type || 'PURCHASE'
         }));
         
         // Load existing deduction data for this record
-        if (data.wb_id) {
-          loadDeductionData(data.wb_id);
+        if (master.wb_id) {
+          loadDeductionData(master.wb_id);
         }
       }
     } catch (error) {
