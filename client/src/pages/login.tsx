@@ -137,14 +137,7 @@ export default function Login() {
           <p className="text-gray-400">Industrial Weight Management Platform</p>
         </div>
 
-        {/* Global Error Alert */}
-        {(loginError || registerError) && (
-          <Alert className="mb-6 border-monitoring-red bg-monitoring-red/10">
-            <AlertDescription className="text-monitoring-red">
-              {(loginError || registerError)?.message || "An error occurred. Please try again."}
-            </AlertDescription>
-          </Alert>
-        )}
+
 
         {/* Auth Forms */}
         <Card className="bg-monitoring-slate border-monitoring-gray">
