@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { streamService } from "./stream-service";
@@ -28,7 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // PostgreSQL connection setup
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL || `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || '@1122'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'WB'}`,
+    connectionString: process.env.DATABASE_URL || postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || '@1122'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'WB'},
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   });
 
@@ -160,7 +160,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Database initialization failed' });
     }
   });
-  
   // Test camera connection
   app.post("/api/cameras/test", async (req, res) => {
     try {
@@ -246,7 +245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json(stats);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error getting stream stats:", error);
       res.status(500).json({ message: "Internal server error" });
     }
@@ -295,7 +294,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({ 
         success: true, 
-        message: `Connected to ${currentComPort}`,
+        message: Connected to ${currentComPort},
         port: currentComPort,
         baudRate: currentBaudRate,
         connected: true
@@ -304,7 +303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       res.status(500).json({ 
         success: false, 
-        message: `Failed to connect to ${currentComPort}: ${error.message}`,
+        message: Failed to connect to ${currentComPort}: ${error.message},
         port: currentComPort,
         connected: false
       });
@@ -510,7 +509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(query, values);
       console.log('Purchase items saved successfully:', result.rows[0]);
       res.json(result.rows[0]);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error inserting purchase items:', err);
       res.status(500).json({ error: 'Insert error: ' + err.message });
     }
@@ -536,7 +535,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ 
         success: true, 
         imagePath,
-        message: `Image captured for slip ${slipNo}` 
+        message: Image captured for slip ${slipNo} 
       });
     } catch (error: any) {
       console.error('Image capture error:', error);
@@ -553,10 +552,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ images });
     } catch (error: any) {
       console.error('Error fetching images:', error);
-      res.status(500).json({ 
-        error: 'Failed to fetch images',
-        details: error.message 
-      });
+      res.status(500).json({ error: 'Failed to fetch images' });
     }
   });
 
@@ -568,66 +564,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (success) {
         res.json({ success: true, message: 'Image deleted successfully' });
       } else {
-        res.status(404).json({ error: 'Image not found' });
+        res.status(404).json({ error: 'Image not found or could not be deleted' });
       }
     } catch (error: any) {
       console.error('Error deleting image:', error);
-      res.status(500).json({ 
-        error: 'Failed to delete image',
-        details: error.message 
-      });
+      res.status(500).json({ error: 'Failed to delete image' });
     }
   });
 
-  // GET latest master record
+  // API endpoints for fetching latest master and details data
   app.get('/api/purchase/latest-master', async (req: Request, res: Response) => {
     try {
-      const query = 'SELECT * FROM wb_weighbridge ORDER BY wb_id DESC LIMIT 1';
+      const query = 'SELECT * FROM wb_weighbridge ORDER BY creation_date DESC LIMIT 1';
       const result = await pool.query(query);
       
-      if (result.rows.length === 0) {
-        return res.status(404).json({ message: 'No master records found' });
+      if (result.rows.length > 0) {
+        res.json(result.rows[0]);
+      } else {
+        res.json(null);
       }
-      
-      console.log(`Fetched latest master record: WB_ID ${result.rows[0].wb_id}`);
-      res.json(result.rows[0]);
     } catch (error: any) {
-      console.error('Error fetching latest master record:', error);
-      res.status(500).json({ error: 'Failed to fetch latest master record' });
+      console.error('Error fetching latest master data:', error);
+      res.status(500).json({ error: 'Failed to fetch master data' });
     }
   });
 
-  // GET latest details record
   app.get('/api/purchase/latest-details', async (req: Request, res: Response) => {
     try {
-      const query = 'SELECT * FROM wb_weighbridge_items_purchase ORDER BY id DESC LIMIT 1';
+      const query = 'SELECT * FROM wb_weighbridge_items_purchase ORDER BY wb_item_p_id DESC LIMIT 1';
       const result = await pool.query(query);
       
-      if (result.rows.length === 0) {
-        return res.status(404).json({ message: 'No detail records found' });
+      if (result.rows.length > 0) {
+        res.json(result.rows[0]);
+      } else {
+        res.json(null);
       }
-      
-      console.log(`Fetched latest detail record: ID ${result.rows[0].id}`);
-      res.json(result.rows[0]);
     } catch (error: any) {
-      console.error('Error fetching latest detail record:', error);
-      res.status(500).json({ error: 'Failed to fetch latest detail record' });
+      console.error('Error fetching latest details data:', error);
+      res.status(500).json({ error: 'Failed to fetch details data' });
     }
   });
 
-  // GET first weight records
+  // API endpoint for fetching all first weight records (online and offline entries without second weight)
   app.get('/api/purchase/first-weight-records', async (req: Request, res: Response) => {
     try {
       const query = `
-        SELECT wb_id, slip_no, entry_type, first_weight, second_weight
-        FROM wb_weighbridge 
-        WHERE first_weight IS NOT NULL 
-        ORDER BY wb_id DESC 
+        SELECT DISTINCT ON (wb.slip_no) wb.wb_id, wb.slip_no, wb.first_weight, wb.second_weight, 
+               wip.vehicle_no, wb.creation_date, wb.online_entry, wb.offline_entry
+        FROM wb_weighbridge wb
+        LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
+        WHERE wb.first_weight IS NOT NULL 
+        AND wb.first_weight > 0
+        AND (wb.second_weight IS NULL OR wb.second_weight = 0)
+        AND (wb.online_entry = 'Yes' OR wb.offline_entry = 'Yes')
+        ORDER BY wb.slip_no, wb.creation_date DESC
         LIMIT 20
       `;
       const result = await pool.query(query);
-      
-      console.log(`Fetched ${result.rows.length} first weight records`);
       res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching first weight records:', error);
@@ -635,55 +628,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET purchase by slip number
+  // API endpoint for fetching data by slip number
   app.get('/api/purchase/by-slip/:slipNo', async (req: Request, res: Response) => {
     try {
       const { slipNo } = req.params;
+      // First try to find by wb_id (if slipNo is numeric), then by slip_no
+      let query, params;
       
-      const masterQuery = 'SELECT * FROM wb_weighbridge WHERE slip_no = $1';
-      const masterResult = await pool.query(masterQuery, [slipNo]);
-      
-      if (masterResult.rows.length === 0) {
-        return res.status(404).json({ message: 'No record found for this slip number' });
+      if (!isNaN(Number(slipNo))) {
+        // If slipNo is numeric, search by wb_id
+        query = `
+          SELECT wb.*, wip.vehicle_no, wip.vendor_name, wip.po_no, wip.igp_no,
+                 wip.item_code, wip.item_desc, wip.po_qty, wip.igp_qty, wip.balance_qty
+          FROM wb_weighbridge wb
+          LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
+          WHERE wb.wb_id = $1
+          ORDER BY wb.creation_date DESC
+          LIMIT 1
+        `;
+        params = [parseInt(slipNo)];
+      } else {
+        // If slipNo is not numeric, search by slip_no
+        query = `
+          SELECT wb.*, wip.vehicle_no, wip.vendor_name, wip.po_no, wip.igp_no,
+                 wip.item_code, wip.item_desc, wip.po_qty, wip.igp_qty, wip.balance_qty
+          FROM wb_weighbridge wb
+          LEFT JOIN wb_weighbridge_items_purchase wip ON wb.wb_id = wip.wb_id
+          WHERE wb.slip_no = $1
+          ORDER BY wb.creation_date DESC
+          LIMIT 1
+        `;
+        params = [slipNo];
       }
       
-      const master = masterResult.rows[0];
+      const result = await pool.query(query, params);
       
-      const detailsQuery = 'SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1';
-      const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
-      
-      console.log(`Fetched purchase record for slip ${slipNo}`);
-      res.json({
-        master,
-        details: detailsResult.rows
-      });
+      if (result.rows.length > 0) {
+        res.json(result.rows[0]);
+      } else {
+        res.status(404).json({ error: 'Record not found' });
+      }
     } catch (error: any) {
-      console.error('Error fetching purchase by slip number:', error);
-      res.status(500).json({ error: 'Failed to fetch purchase record' });
+      console.error('Error fetching data by slip number:', error);
+      res.status(500).json({ error: 'Failed to fetch data' });
     }
   });
 
-  // PUT update purchase record
+  // API endpoint for updating existing purchase records
   app.put('/api/purchase/update/:wbId', async (req: Request, res: Response) => {
     try {
       const { wbId } = req.params;
       const updateData = req.body;
       
-      const {
-        slip_no = null,
-        slip_in_time = null,
-        first_weight = null,
-        second_weight = null,
-        net_weight = null,
-        bardana_weight = null,
-        gross_weight = null,
-        freight = null,
-        remarks = null,
-        driver_name = null,
-        slip_out_time = null
-      } = updateData;
-
-      const query = `
+      // Update master record
+      const masterUpdateQuery = `
         UPDATE wb_weighbridge 
         SET 
           slip_no = $2,
@@ -699,44 +697,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
           slip_out_time = $12,
           last_updated_date = CURRENT_TIMESTAMP
         WHERE wb_id = $1
-        RETURNING *;
+        RETURNING *
       `;
-
-      const values = [
-        wbId,
-        slip_no,
-        slip_in_time,
-        parseFloat(first_weight) || null,
-        parseFloat(second_weight) || null,
-        parseFloat(net_weight) || null,
-        parseFloat(bardana_weight) || null,
-        parseFloat(gross_weight) || null,
-        parseFloat(freight) || null,
-        remarks,
-        driver_name,
-        slip_out_time
-      ];
-
-      const result = await pool.query(query, values);
       
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: 'Purchase record not found' });
-      }
-
-      // Also update the details table
-      const {
-        vehicle_no = null,
-        vendor_name = null,
-        po_no = null,
-        igp_no = null,
-        item_code = null,
-        item_desc = null,
-        po_qty = null,
-        igp_qty = null,
-        balance_qty = null
-      } = updateData;
-
-      const detailsQuery = `
+      const masterParams = [
+        parseInt(wbId),
+        updateData.slip_no,
+        updateData.slip_in_time,
+        updateData.first_weight ? parseFloat(updateData.first_weight) : null,
+        updateData.second_weight ? parseFloat(updateData.second_weight) : null,
+        updateData.net_weight ? parseFloat(updateData.net_weight) : null,
+        updateData.bardana_weight ? parseFloat(updateData.bardana_weight) : null,
+        updateData.gross_weight ? parseFloat(updateData.gross_weight) : null,
+        updateData.freight ? parseFloat(updateData.freight) : null,
+        updateData.remarks,
+        updateData.driver_name,
+        updateData.slip_out_time
+      ];
+      
+      const masterResult = await pool.query(masterUpdateQuery, masterParams);
+      
+      // Update items record if it exists
+      const itemsUpdateQuery = `
         UPDATE wb_weighbridge_items_purchase 
         SET 
           vehicle_no = $2,
@@ -749,150 +731,208 @@ export async function registerRoutes(app: Express): Promise<Server> {
           igp_qty = $9,
           balance_qty = $10
         WHERE wb_id = $1
-        RETURNING *;
+        RETURNING *
       `;
-
-      const detailsValues = [
-        wbId,
-        vehicle_no,
-        vendor_name,
-        po_no,
-        igp_no,
-        item_code,
-        item_desc,
-        parseFloat(po_qty) || null,
-        parseFloat(igp_qty) || null,
-        parseFloat(balance_qty) || null
+      
+      const itemsParams = [
+        parseInt(wbId),
+        updateData.vehicle_no,
+        updateData.vendor_name,
+        updateData.po_no,
+        updateData.igp_no,
+        updateData.item_code,
+        updateData.item_desc,
+        updateData.po_qty ? parseFloat(updateData.po_qty) : null,
+        updateData.igp_qty ? parseFloat(updateData.igp_qty) : null,
+        updateData.balance_qty ? parseFloat(updateData.balance_qty) : null
       ];
-
-      await pool.query(detailsQuery, detailsValues);
-
-      console.log(`Updated purchase record: WB_ID ${wbId}`);
-      res.json(result.rows[0]);
+      
+      await pool.query(itemsUpdateQuery, itemsParams);
+      
+      res.json({ 
+        success: true, 
+        message: 'Record updated successfully',
+        wb_id: parseInt(wbId)
+      });
+      
     } catch (error: any) {
       console.error('Error updating purchase record:', error);
-      res.status(500).json({ error: 'Failed to update purchase record' });
+      res.status(500).json({ error: 'Failed to update record' });
     }
   });
 
-  // Sales endpoints
+  // POST endpoint for saving deduction data
+  app.post('/api/deduction', async (req, res) => {
+    try {
+      const { wbId, bagId, bags, pb, percentage, weight } = req.body;
+      
+      const query = `
+        INSERT INTO deduction (wb_id, bag_id, bags, pb, percentage, weight)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING *
+      `;
+      
+      const values = [wbId, bagId, bags, pb, percentage, weight];
+      const result = await pool.query(query, values);
+      
+      console.log('Deduction data saved successfully:', result.rows[0]);
+      res.json(result.rows[0]);
+    } catch (error: any) {
+      console.error('Error saving deduction data:', error);
+      res.status(500).json({ error: 'Failed to save deduction data' });
+    }
+  });
+
+  // POST endpoint for saving sales data into existing purchase tables
   app.post('/api/sales/save', async (req: Request, res: Response) => {
     try {
       const { salesData, entryType } = req.body;
-      
-      if (!salesData || !entryType) {
-        return res.status(400).json({ error: 'Sales data and entry type are required' });
+
+      if (!salesData || !Array.isArray(salesData)) {
+        return res.status(400).json({ error: 'Invalid sales data' });
       }
 
-      const {
-        do_id,
-        do_date,
-        customer_name,
-        customer_address,
-        customer_phone,
-        vehicle_no,
-        driver_name,
-        driver_phone,
-        item_code,
-        item_desc,
-        do_qty,
-        unit_price,
-        total_amount,
-        payment_terms,
-        delivery_terms,
-        remarks,
-        first_weight,
-        second_weight,
-        net_weight,
-        tare_weight,
-        gross_weight,
-        slip_no,
-        slip_date,
-        slip_time,
-        weighbridge_operator,
-        quality_remarks,
-        moisture_content,
-        foreign_matter,
-        broken_grains,
-        total_deduction,
-        final_weight,
-        rate_per_kg,
-        total_value
-      } = salesData;
+      console.log('Saving sales data:', salesData);
 
-      const query = `
-        INSERT INTO sales_details (
-          do_id, do_date, customer_name, customer_address, customer_phone,
-          vehicle_no, driver_name, driver_phone, item_code, item_desc,
-          do_qty, unit_price, total_amount, payment_terms, delivery_terms,
-          remarks, first_weight, second_weight, net_weight, tare_weight,
-          gross_weight, slip_no, slip_date, slip_time, weighbridge_operator,
-          quality_remarks, moisture_content, foreign_matter, broken_grains,
-          total_deduction, final_weight, rate_per_kg, total_value, entry_type,
-          created_date
-        )
-        VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-          $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-          $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-          $31, $32, $33, $34, CURRENT_TIMESTAMP
-        )
-        RETURNING *;
+      const savedRecords = [];
+
+      for (const saleItem of salesData) {
+        // Generate next WB ID
+        const wbIdResult = await pool.query('SELECT COALESCE(MAX(wb_id), 0) + 1 as next_id FROM wb_weighbridge');
+        const nextWbId = wbIdResult.rows[0].next_id;
+
+        // Generate next Slip No with 'S' prefix for sales
+        const slipResult = await pool.query('SELECT COALESCE(MAX(CAST(SUBSTRING(slip_no FROM 2) AS INTEGER)), 0) + 1 as next_slip FROM wb_weighbridge WHERE slip_no LIKE \'S%\'');
+        const nextSlipNo = S${String(slipResult.rows[0].next_slip).padStart(3, '0')};
+
+        // Insert into wb_weighbridge (Master table) with Sales entry type
+        const masterInsertQuery = `
+          INSERT INTO wb_weighbridge (
+            wb_id, slip_no, slip_in_time, entry_type, creation_date, last_updated_date,
+            slip_date, company_id, branch_id, created_by, last_updated_by
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        `;
+
+        const masterValues = [
+          nextWbId,
+          nextSlipNo,
+          new Date().toISOString(),
+          'Sales', // Set entry type as Sales
+          new Date().toISOString(),
+          new Date().toISOString(),
+          new Date().toISOString(),
+          1, // default company_id
+          1, // default branch_id
+          1, // default created_by
+          1  // default last_updated_by
+        ];
+
+        await pool.query(masterInsertQuery, masterValues);
+
+        // Insert into wb_details table mapping sales fields to existing columns
+        const detailsInsertQuery = `
+          INSERT INTO wb_details (
+            wb_id, vehicle_no, vendor_name, po_no, item_desc, po_qty, igp_qty
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `;
+
+        const detailsValues = [
+          nextWbId,
+          saleItem.vehicleNo || null,
+          saleItem.customerName || null, // Map customer name to vendor_name
+          saleItem.doNo || null,        // Map DO# to po_no
+          saleItem.itemDescription || null, // Map item description to item_desc
+          saleItem.doQty ? parseFloat(saleItem.doQty) : null, // Map DO Qty to po_qty
+          saleItem.dcQty ? parseFloat(saleItem.dcQty) : null  // Map DC Qty to igp_qty
+        ];
+
+        await pool.query(detailsInsertQuery, detailsValues);
+
+        savedRecords.push({
+          wbId: nextWbId,
+          slipNo: nextSlipNo,
+          entryType: 'Sales',
+          doId: saleItem.doId
+        });
+      }
+
+      console.log('Sales data saved successfully:', savedRecords);
+
+      res.json({ 
+        success: true,
+        message: 'Sales data saved successfully to Purchase tables',
+        savedRecords: savedRecords
+      });
+
+    } catch (error: any) {
+      console.error('Error saving sales data:', error);
+      res.status(500).json({ error: 'Failed to save sales data' });
+    }
+  });
+  app.post('/api/sales/save', async (req, res) => {
+    try {
+      const { salesData, entryType } = req.body;
+      
+      // Generate new WB_ID for the sales entry
+      const wbId = await generateWBID();
+      const currentTime = new Date().toISOString();
+      
+      // Insert master record with "Sales" entry type
+      const masterQuery = `
+        INSERT INTO wb_weighbridge (wb_id, slip_no, slip_in_time, entry_type)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
       `;
-
-      const values = [
-        do_id,
-        do_date,
-        customer_name,
-        customer_address,
-        customer_phone,
-        vehicle_no,
-        driver_name,
-        driver_phone,
-        item_code,
-        item_desc,
-        parseFloat(do_qty) || null,
-        parseFloat(unit_price) || null,
-        parseFloat(total_amount) || null,
-        payment_terms,
-        delivery_terms,
-        remarks,
-        parseFloat(first_weight) || null,
-        parseFloat(second_weight) || null,
-        parseFloat(net_weight) || null,
-        parseFloat(tare_weight) || null,
-        parseFloat(gross_weight) || null,
-        slip_no,
-        slip_date,
-        slip_time,
-        weighbridge_operator,
-        quality_remarks,
-        parseFloat(moisture_content) || null,
-        parseFloat(foreign_matter) || null,
-        parseFloat(broken_grains) || null,
-        parseFloat(total_deduction) || null,
-        parseFloat(final_weight) || null,
-        parseFloat(rate_per_kg) || null,
-        parseFloat(total_value) || null,
-        entryType
-      ];
-
-      const result = await pool.query(query, values);
-      console.log('Sales data saved successfully:', result.rows[0]);
-      res.json(result.rows[0]);
+      
+      const slipNo = S${wbId.toString().padStart(3, '0')};
+      const masterValues = [wbId, slipNo, currentTime, 'Sales'];
+      const masterResult = await pool.query(masterQuery, masterValues);
+      
+      // Insert details for each sales row
+      const detailsResults = [];
+      for (const row of salesData) {
+        if (row.dcNo || row.doNo || row.customerName || row.vehicleNo || row.doDate || row.itemDescription || row.dcQty || row.doQty || row.branch) {
+          const detailsQuery = `
+            INSERT INTO wb_details (wb_id, vehicle_no, vendor_name, item_desc, po_qty, igp_qty, balance_qty)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *
+          `;
+          
+          const detailsValues = [
+            wbId,
+            row.vehicleNo || '',
+            row.customerName || '',
+            row.itemDescription || '',
+            parseFloat(row.dcQty) || 0,
+            parseFloat(row.doQty) || 0,
+            (parseFloat(row.dcQty) || 0) - (parseFloat(row.doQty) || 0)
+          ];
+          
+          const detailsResult = await pool.query(detailsQuery, detailsValues);
+          detailsResults.push(detailsResult.rows[0]);
+        }
+      }
+      
+      console.log('Sales data saved to existing tables successfully');
+      res.json({
+        master: masterResult.rows[0],
+        details: detailsResults,
+        message: 'Sales data saved successfully'
+      });
     } catch (error: any) {
       console.error('Error saving sales data:', error);
       res.status(500).json({ error: 'Failed to save sales data' });
     }
   });
 
-  // GET all sales data
-  app.get('/api/sales', async (req: Request, res: Response) => {
+  // GET endpoint for fetching sales data by WB_ID
+  app.get('/api/sales/by-wb/:wbId', async (req, res) => {
     try {
-      const query = 'SELECT * FROM sales_details ORDER BY id DESC';
-      const result = await pool.query(query);
+      const { wbId } = req.params;
       
-      console.log(`Fetched ${result.rows.length} sales records`);
+      const query = 'SELECT * FROM sales_details WHERE wb_id = $1 ORDER BY id';
+      const result = await pool.query(query, [parseInt(wbId)]);
+      
       res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching sales data:', error);
@@ -910,7 +950,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (result.rows.length > 0 && result.rows[0].do_id) {
         const currentNumber = parseInt(result.rows[0].do_id.replace('DO', ''));
         const nextNumber = currentNumber + 1;
-        nextDoId = `DO${String(nextNumber).padStart(3, '0')}`;
+        nextDoId = DO${String(nextNumber).padStart(3, '0')};
       }
       
       res.json({ nextDoId });
@@ -933,7 +973,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await pool.query(query, [wbId]);
       
-      console.log(`Fetched ${result.rows.length} deduction records for WB_ID: ${wbId}`);
+      console.log(Fetched ${result.rows.length} deduction records for WB_ID: ${wbId});
       res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching deduction data:', error);
