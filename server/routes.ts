@@ -58,19 +58,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register video streaming routes
   videoStreamService.registerRoutes(app);
 
-  // Create users table if it doesn't exist (simplified structure)
-  try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        userName VARCHAR(255) UNIQUE NOT NULL,
-        userPassword VARCHAR(255) NOT NULL
-      )
-    `);
-    console.log('✅ Users table ensured in local database');
-  } catch (error) {
-    console.error('❌ Error creating users table:', error);
-  }
+  // Users table already exists in your database with user_name and user_password columns
+  console.log('✅ Using existing users table in local database');
 
   // Authentication routes
   // User registration endpoint
@@ -89,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if username already exists
       const existingUser = await pool.query(
-        'SELECT id FROM users WHERE userName = $1',
+        'SELECT user_id FROM users WHERE user_name = $1',
         [userName]
       );
       
@@ -97,21 +86,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Username already exists' });
       }
       
-      // Insert new user
+      // Get the next user_no
+      const userNoResult = await pool.query(
+        'SELECT COALESCE(MAX(user_no), 0) + 1 as next_user_no FROM users'
+      );
+      const nextUserNo = userNoResult.rows[0].next_user_no;
+      
+      // Insert new user into existing users table structure
       const insertResult = await pool.query(
-        'INSERT INTO users (userName, userPassword) VALUES ($1, $2) RETURNING id, userName',
-        [userName, userPassword]
+        'INSERT INTO users (user_no, user_name, user_password, user_creation_date) VALUES ($1, $2, $3, $4) RETURNING user_id, user_name',
+        [nextUserNo, userName, userPassword, new Date()]
       );
       
       const newUser = insertResult.rows[0];
-      console.log('✅ User registered successfully:', newUser.userName);
+      console.log('✅ User registered successfully:', newUser.user_name);
       
       res.status(201).json({
         success: true,
         message: 'User registered successfully',
         user: {
-          userId: newUser.id,
-          userName: newUser.userName
+          userId: newUser.user_id,
+          userName: newUser.user_name
         }
       });
       
@@ -133,7 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Find user by username and password
       const userResult = await pool.query(
-        'SELECT id, userName FROM users WHERE userName = $1 AND userPassword = $2',
+        'SELECT user_id, user_name FROM users WHERE user_name = $1 AND user_password = $2',
         [userName, userPassword]
       );
       
@@ -142,14 +137,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const user = userResult.rows[0];
-      console.log('✅ User logged in successfully:', user.userName);
+      console.log('✅ User logged in successfully:', user.user_name);
       
       res.json({
         success: true,
         message: 'Login successful',
         user: {
-          userId: user.id,
-          userName: user.userName
+          userId: user.user_id,
+          userName: user.user_name
         }
       });
       
