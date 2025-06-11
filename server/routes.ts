@@ -831,7 +831,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-  // Sales data insert route - Fixed to match actual database structure
+  // Sales data insert route - Fixed to match exact purchase route structure
   app.post('/api/sales/save', async (req, res) => {
     try {
       const { salesData, entryType } = req.body;
@@ -847,19 +847,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Generate new WB_ID using same method as purchase route
         const WB_ID = await generateWBID();
         
-        // Insert into wb_weighbridge table using correct column structure
+        // Use exact same query structure as working purchase route
         const query = `
           INSERT INTO wb_weighbridge (
-            wb_id, slip_no, vehicle_no, online_entry, offline_entry, creation_date
+            wb_id, slip_no, first_weight, second_weight,
+            online_entry, offline_entry, creation_date
           )
-          VALUES ($1, $2, $3, $4, $5, $6)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
           RETURNING *;
         `;
         
         const values = [
           WB_ID,
           `SALE_${WB_ID}`,
-          saleItem.vehicleNo || null,
+          null, // No first weight for sales
+          null, // No second weight for sales
           'Yes', // Mark as online entry
           null,  // No offline entry
           new Date().toISOString()
