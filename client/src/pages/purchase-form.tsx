@@ -226,30 +226,7 @@ export default function PurchaseForm() {
     }));
   }, [formData.supplierWeight, formData.bardanaWeight, formData.weight]);
 
-  // Function to reset form to clean state
-  const resetFormToInitial = () => {
-    setFormData({
-      ...initialFormData,
-      slipInTime: new Date().toISOString().slice(0, 16),
-      onlineEntry: 'Yes',
-      entryType: 'PURCHASE',
-      creationDate: new Date().toISOString(),
-      lastUpdatedDate: new Date().toISOString(),
-      slipDate: new Date().toISOString()
-    });
-    setIgpItems([]);
-    setIsEditMode(false);
-    setEditingWbId(null);
-    setOnlineMode(true);
-  };
-
-  // Get camera data
-  const { data: camera } = useQuery({
-    queryKey: ['/api/cameras/1'],
-    enabled: true,
-  });
-
-  // IGP Data fetch function
+  // IGP Data Fetching Function
   const fetchIgpData = async () => {
     if (!formData.igpNo) {
       alert('Please enter IGP No');
@@ -279,16 +256,42 @@ export default function PurchaseForm() {
           wtPerBag: firstItem.wtperbag ? String(firstItem.wtperbag) : '',
         }));
         setIgpItems(items);
+        console.log('IGP data fetched successfully:', items);
       } else {
         alert('No data found for this IGP No.');
         setIgpItems([]);
       }
     } catch (error) {
       console.error('Error fetching IGP data:', error);
-      alert('Failed to fetch IGP data');
+      alert('Failed to fetch IGP data. Please check the IGP number and try again.');
       setIgpItems([]);
     }
   };
+
+  // Function to reset form to clean state
+  const resetFormToInitial = () => {
+    setFormData({
+      ...initialFormData,
+      slipInTime: new Date().toISOString().slice(0, 16),
+      onlineEntry: 'Yes',
+      entryType: 'PURCHASE',
+      creationDate: new Date().toISOString(),
+      lastUpdatedDate: new Date().toISOString(),
+      slipDate: new Date().toISOString()
+    });
+    setIgpItems([]);
+    setIsEditMode(false);
+    setEditingWbId(null);
+    setOnlineMode(true);
+  };
+
+  // Get camera data
+  const { data: camera } = useQuery({
+    queryKey: ['/api/cameras/1'],
+    enabled: true,
+  });
+
+
 
   const formatDatetimeLocal = (isoString: string) => {
     if (!isoString) return '';
@@ -561,6 +564,18 @@ export default function PurchaseForm() {
     // Determine entry type based on selected form
     const currentEntryType = selectedForm === 'sales' ? 'SALE' : 'PURCHASE';
     
+    // Check if a record with this slip number already exists
+    let existingRecord = null;
+    try {
+      const checkResponse = await fetch(`/api/purchase/by-slip/${formData.slipNo}`);
+      if (checkResponse.ok) {
+        existingRecord = await checkResponse.json();
+        console.log('Found existing record:', existingRecord);
+      }
+    } catch (error) {
+      console.log('No existing record found for slip:', formData.slipNo);
+    }
+    
     // Prepare master data payload
     const masterPayload = {
       slip_no: formData.slipNo || null,
@@ -592,7 +607,9 @@ export default function PurchaseForm() {
       let masterResponse: any;
       let savedWbId: number;
       
-      if (isEditMode && editingWbId) {
+      // If we found an existing record or we're in edit mode, update it
+      if ((existingRecord && existingRecord.wb_id) || (isEditMode && editingWbId)) {
+        const updateWbId = existingRecord ? existingRecord.wb_id : editingWbId;
         // Update existing record - combine master and items data
         const updatePayload = {
           ...masterPayload,
