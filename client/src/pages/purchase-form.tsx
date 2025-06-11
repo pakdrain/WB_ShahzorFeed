@@ -609,7 +609,7 @@ export default function PurchaseForm() {
       
       // If we found an existing record or we're in edit mode, update it
       if ((existingRecord && existingRecord.wb_id) || (isEditMode && editingWbId)) {
-        const updateWbId = existingRecord ? existingRecord.wb_id : editingWbId;
+        const updateWbId = existingRecord ? existingRecord.wb_id : editingWbId!;
         // Update existing record - combine master and items data
         const updatePayload = {
           ...masterPayload,
@@ -625,14 +625,20 @@ export default function PurchaseForm() {
           balance_qty: formData.balanceQty ? parseFloat(formData.balanceQty) : null
         };
         
-        masterResponse = await fetch(`/api/purchase/update/${editingWbId}`, {
+        masterResponse = await fetch(`/api/purchase/update/${updateWbId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(updatePayload),
         });
-        savedWbId = editingWbId;
+        savedWbId = updateWbId;
+        
+        // Set edit mode if updating existing record found by slip number
+        if (existingRecord && !isEditMode) {
+          setIsEditMode(true);
+          setEditingWbId(existingRecord.wb_id);
+        }
       } else {
         // Create new record
         masterResponse = await fetch('/api/purchases', {
@@ -670,7 +676,7 @@ export default function PurchaseForm() {
             // Save each sales row as separate items using the standard purchase items API
             for (const row of validSalesRows) {
               const salesItemPayload = {
-                wb_id: savedWbId!,
+                wb_id: savedWbId,
                 baradana_type: null,
                 igp_no: row.dcNo || null, // Map DC # to igp_no field
                 vehicle_no: row.vehicleNo || null,
