@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Home, Settings, Video, Menu, X, Scale, FileText } from 'lucide-react';
+import { Home, Settings, Video, Menu, X, Scale, FileText, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/auth';
 
 const navigation = [
   { name: 'Home', href: '/', icon: Home },
@@ -14,6 +15,12 @@ const navigation = [
 export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
+  const { user, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <>
@@ -67,9 +74,34 @@ export default function Sidebar() {
             })}
           </nav>
 
-          {/* Footer */}
-          <div className="p-4 border-t border-monitoring-gray">
-            <div className="text-xs text-gray-400 text-center">
+          {/* User Info & Logout */}
+          <div className="p-4 border-t border-monitoring-gray space-y-3">
+            {/* User Info */}
+            <div className="flex items-center space-x-3 px-2">
+              <div className="flex items-center justify-center w-8 h-8 bg-monitoring-blue rounded-full">
+                <User className="h-4 w-4 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">
+                  {user?.userName || 'User'}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Authenticated
+                </p>
+              </div>
+            </div>
+
+            {/* Logout Button */}
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="w-full justify-start text-left h-10 px-2 text-gray-300 hover:bg-red-600 hover:text-white"
+            >
+              <LogOut className="mr-3 h-4 w-4" />
+              Logout
+            </Button>
+
+            <div className="text-xs text-gray-400 text-center pt-2">
               Live Camera Monitoring System
             </div>
           </div>

@@ -20,6 +20,7 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/">
         <ProtectedRoute>
+          <Sidebar />
           <div className="lg:ml-64">
             <Switch>
               <Route path="/" component={CameraMonitor} />
