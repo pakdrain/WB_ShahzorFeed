@@ -1,0 +1,20 @@
+# Copy this content to create a .env file in your project root
+# Update the database credentials to match your local PostgreSQL setup
+
+# Database Configuration - Update these values for your local setup
+PGHOST=localhost
+PGPORT=5432
+PGUSER=postgres
+PGPASSWORD=your_postgres_password_here
+PGDATABASE=WB
+DATABASE_URL=postgresql://postgres:your_postgres_password_here@localhost:5432/WB
+
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+
+# Camera Configuration (optional)
+CAMERA_IP=10.10.10.146
+CAMERA_PORT=554
+CAMERA_USERNAME=admin
+CAMERA_PASSWORD=admin123
