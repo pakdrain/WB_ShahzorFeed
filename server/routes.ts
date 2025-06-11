@@ -16,6 +16,12 @@ import {
   updateBaudRate
 } from './weight-state';
 import { imageCaptureService } from './image-capture';
+import { 
+  registerSchema, 
+  loginSchema, 
+  type RegisterData, 
+  type LoginData 
+} from '../shared/schema';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -51,6 +57,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register video streaming routes
   videoStreamService.registerRoutes(app);
+
+  // Authentication routes
+  // User registration endpoint
+  app.post('/api/auth/register', async (req, res) => {
+    try {
+      const validatedData = registerSchema.parse(req.body);
+      
+      // Check if username already exists
+      const existingUser = await pool.query(
+        'SELECT user_id FROM users WHERE user_name = $1',
+        [validatedData.userName]
+      );
+      
+      if (existingUser.rows.length > 0) {
+        return res.status(400).json({ error: 'Username already exists' });
+      }
+      
+      // Get the next user_no (max + 1)
+      const userNoResult = await pool.query(
+        'SELECT COALESCE(MAX(user_no), 0) + 1 as next_user_no FROM users'
+      );
+      const nextUserNo = userNoResult.rows[0].next_user_no;
+      
+      // Insert new user (password stored as plain text as requested)
+      const insertResult = await pool.query(
+        'INSERT INTO users (user_no, user_name, user_password) VALUES ($1, $2, $3) RETURNING user_id, user_no, user_name',
+        [nextUserNo, validatedData.userName, validatedData.userPassword]
+      );
+      
+      const newUser = insertResult.rows[0];
+      res.status(201).json({
+        success: true,
+        message: 'User registered successfully',
+        user: {
+          userId: newUser.user_id,
+          userNo: newUser.user_no,
+          userName: newUser.user_name
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          error: 'Validation failed', 
+          details: error.errors 
+        });
+      }
+      res.status(500).json({ error: 'Registration failed' });
+    }
+  });
+
+  // User login endpoint
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const validatedData = loginSchema.parse(req.body);
+      
+      // Find user by username and password
+      const userResult = await pool.query(
+        'SELECT user_id, user_no, user_name FROM users WHERE user_name = $1 AND user_password = $2',
+        [validatedData.userName, validatedData.userPassword]
+      );
+      
+      if (userResult.rows.length === 0) {
+        return res.status(401).json({ error: 'Invalid username or password' });
+      }
+      
+      const user = userResult.rows[0];
+      res.json({
+        success: true,
+        message: 'Login successful',
+        user: {
+          userId: user.user_id,
+          userNo: user.user_no,
+          userName: user.user_name
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('Login error:', error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ 
+          error: 'Validation failed', 
+          details: error.errors 
+        });
+      }
+      res.status(500).json({ error: 'Login failed' });
+    }
+  });
+
+  // Check if users table exists and create if it doesn't
+  app.post('/api/auth/init-db', async (req, res) => {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          user_id SERIAL PRIMARY KEY,
+          user_no INTEGER NOT NULL UNIQUE,
+          user_name TEXT NOT NULL UNIQUE,
+          user_password TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      res.json({ success: true, message: 'Users table initialized' });
+    } catch (error: any) {
+      console.error('Database initialization error:', error);
+      res.status(500).json({ error: 'Database initialization failed' });
+    }
+  });
 
   // Get default camera (Camera 01) - Put this BEFORE the parameterized route
   app.get("/api/cameras/default", async (req, res) => {
@@ -561,10 +676,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/purchase/latest-details', async (req: Request, res: Response) => {
     try {
-      const query = 'SELECT * FROM wb_weighbridge_items_purchase ORDER BY wb_item_p_id DESC LIMIT 10';
+      const query = 'SELECT * FROM wb_weighbridge_items_purchase ORDER BY wb_item_p_id DESC LIMIT 1';
       const result = await pool.query(query);
       
-      res.json(result.rows);
+      if (result.rows.length > 0) {
+        res.json(result.rows[0]);
+      } else {
+        res.json(null);
+      }
     } catch (error: any) {
       console.error('Error fetching latest details data:', error);
       res.status(500).json({ error: 'Failed to fetch details data' });
