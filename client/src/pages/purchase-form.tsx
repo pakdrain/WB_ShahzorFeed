@@ -489,8 +489,9 @@ export default function PurchaseForm() {
     // Supplier Weight - Bardana
     const supplierWeightMinusBardana = supplierWeight - bardanaWeight;
     
-    // Supplier Weight - Out Weight (assuming out weight is second weight)
-    const supplierWeightMinusOutWeight = supplierWeight - secondWeight;
+    // Supplier Weight - Out Weight = Supplier Weight - Supp Wt - Bardana
+    const suppWtMinusBardana = parseFloat(formData.supplierWeightMinusBardana) || 0;
+    const supplierWeightMinusOutWeight = supplierWeight - suppWtMinusBardana;
     
     setFormData(prev => ({
       ...prev,
@@ -1316,21 +1317,41 @@ export default function PurchaseForm() {
                     </div>
                     <div>
                       <Label className="text-xs text-black">Supp Wt - Bardana</Label>
-                      <Input name="bardanaWeight" value={formData.bardanaWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
+                      <Input name="supplierWeightMinusBardana" value={formData.supplierWeightMinusBardana} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
                     </div>
                     <div>
                       <Label className="text-xs text-black">Supp Wt - Out Wt</Label>
                       <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
                     </div>
-                    <div className="mt-6">
-                      <Button 
-                        className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
-                        onClick={handleDeduction}
-                      >
-                        Deduction+
-                      </Button>
+                  </div>
+                </div>
+
+                {/* Second Row - New columns as shown in the image */}
+                <div className="grid grid-cols-4 gap-2 mt-2">
+                  <div></div> {/* Empty space for alignment */}
+                  <div></div> {/* Empty space for alignment */}
+                  <div></div> {/* Empty space for alignment */}
+                  
+                  {/* Mini Column 4 - Second Row with Bardana Wht and Quality Ded */}
+                  <div className="grid grid-cols-2 gap-1">
+                    <div>
+                      <Label className="text-xs text-black">Bardana Wht</Label>
+                      <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-4 text-xs text-black" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-black">Quality Ded</Label>
+                      <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black" />
                     </div>
                   </div>
+                </div>
+
+                <div className="mt-6">
+                  <Button 
+                    className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
+                    onClick={handleDeduction}
+                  >
+                    Deduction+
+                  </Button>
                 </div>
 
                 {/* Compact Table with IGP Data */}
@@ -1371,7 +1392,6 @@ export default function PurchaseForm() {
                       )}
                     </tbody>
                   </table>
-                </div>
                 </div>
               )}
 
@@ -1592,11 +1612,11 @@ export default function PurchaseForm() {
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Right Side - Weight Display and Bag Table (Columns 9-12) */}
-          <div className="col-span-4">
-            {/* This section will contain the right side components */}
+            {/* Right Side - Weight Display and Bag Table (Columns 9-12) */}
+            <div className="col-span-4">
+              {/* This section will contain the right side components */}
+            </div>
           </div>
         </div>
       </div>
