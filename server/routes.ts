@@ -458,7 +458,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         igp_date = null,
         supplier_weight = null,
         quality_deduction = null,
-        bardana_weight = null,
         no_of_bags = null,
         vendor_name = null,
         bag_condition = null,
@@ -476,11 +475,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const query = `
         INSERT INTO wb_weighbridge_items_purchase (
           wb_id, bardana_type, igp_no, vehicle_no, weight_per_bags, igp_date,
-          supplier_weight, quality_deduction, bardana_weight, no_of_bags, vendor_name, bag_condition,
+          supplier_weight, quality_deduction, no_of_bags, vendor_name, bag_condition,
           po_no, item_code, item_desc, po_qty, igp_qty, balance_qty, customer_name, do_no, do_qty
         )
         VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
         )
         RETURNING *;
       `;
@@ -494,7 +493,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         igp_date,
         supplier_weight ? parseFloat(supplier_weight) : null,
         quality_deduction ? parseFloat(quality_deduction) : null,
-        bardana_weight ? parseFloat(bardana_weight) : null,
         no_of_bags ? parseInt(no_of_bags) : null,
         vendor_name,
         bag_condition,
