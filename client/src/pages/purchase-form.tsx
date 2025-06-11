@@ -245,6 +245,7 @@ export default function PurchaseForm() {
           vendor: firstItem.vendor_name || '',
           vehicleNo: firstItem.vehicle_no || '',
           bardanaWeight: firstItem.bardana_qty ? String(firstItem.bardana_qty) : '',
+          bardanaType: firstItem.bardanatype || '',
         }));
         setIgpItems(items);
       } else {
