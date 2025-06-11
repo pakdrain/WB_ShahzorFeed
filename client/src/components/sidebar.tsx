@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Home, Settings, Video, Menu, X, Scale, FileText, LogOut, User } from 'lucide-react';
+import { Home, Settings, Video, Menu, X, Scale, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/auth';
 
 const navigation = [
   { name: 'Home', href: '/', icon: Home },
@@ -15,7 +14,6 @@ const navigation = [
 export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
-  const { user, logout } = useAuth();
 
   return (
     <>
@@ -69,33 +67,10 @@ export default function Sidebar() {
             })}
           </nav>
 
-          {/* User Info & Logout */}
-          <div className="p-4 border-t border-monitoring-gray space-y-3">
-            {user && (
-              <div className="flex items-center space-x-3 p-3 bg-monitoring-gray/50 rounded-lg">
-                <User className="h-5 w-5 text-monitoring-blue" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-white truncate">
-                    {user.userName}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    User #{user.userNo}
-                  </p>
-                </div>
-              </div>
-            )}
-            
-            <Button
-              variant="ghost"
-              onClick={logout}
-              className="w-full justify-start text-gray-300 hover:bg-red-600/20 hover:text-red-400"
-            >
-              <LogOut className="mr-3 h-4 w-4" />
-              Logout
-            </Button>
-            
+          {/* Footer */}
+          <div className="p-4 border-t border-monitoring-gray">
             <div className="text-xs text-gray-400 text-center">
-              Weighbridge Management System
+              Live Camera Monitoring System
             </div>
           </div>
         </div>

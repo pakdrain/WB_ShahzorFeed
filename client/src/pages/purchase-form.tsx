@@ -50,6 +50,12 @@ export default function PurchaseForm() {
     refetchInterval: 3000, // Refresh every 3 seconds
   });
 
+  // Fetch latest details data
+  const { data: latestDetails = [], refetch: refetchDetails } = useQuery({
+    queryKey: ['/api/purchase/latest-details'],
+    refetchInterval: 3000, // Refresh every 3 seconds
+  });
+
   // Filter records based on search criteria
   const filteredRecords = Array.isArray(firstWeightRecords) ? firstWeightRecords.filter((record: any) => {
     const matchesSlipNo = !searchSlipNo || (record.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
@@ -1211,8 +1217,84 @@ export default function PurchaseForm() {
               </div>
             </div>
 
-            {/* Details Section */}
+            {/* Navigation Tabs - Purchase, Sales, Offline */}
+            <div className="flex border-b border-gray-300 mb-0">
+              <button 
+                className={`px-6 py-2 text-xs font-medium border-t border-l border-r transition-colors ${
+                  selectedForm === 'purchase' 
+                    ? 'bg-blue-50 text-blue-700 border-gray-300 border-b-blue-50 relative' 
+                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
+                }`}
+                onClick={() => setSelectedForm('purchase')}
+                style={selectedForm === 'purchase' ? { marginBottom: '-1px', zIndex: 1 } : {}}
+              >
+                Purchase
+              </button>
+              <button 
+                className={`px-6 py-2 text-xs font-medium border-t border-l border-r transition-colors ${
+                  selectedForm === 'sales' 
+                    ? 'bg-blue-50 text-blue-700 border-gray-300 border-b-blue-50 relative' 
+                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
+                }`}
+                onClick={() => setSelectedForm('sales')}
+                style={selectedForm === 'sales' ? { marginBottom: '-1px', zIndex: 1 } : {}}
+              >
+                Sales
+              </button>
+              <button 
+                className={`px-6 py-2 text-xs font-medium border-t border-l border-r transition-colors ${
+                  selectedForm === 'offline' 
+                    ? 'bg-blue-50 text-blue-700 border-gray-300 border-b-blue-50 relative' 
+                    : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'
+                }`}
+                onClick={() => setSelectedForm('offline')}
+                style={selectedForm === 'offline' ? { marginBottom: '-1px', zIndex: 1 } : {}}
+              >
+                Offline
+              </button>
+            </div>
+
+            {/* Details Section - Table showing latest entries */}
             <div className="bg-blue-50 p-2 rounded border">
+              <div className="mb-2">
+                <h3 className="text-sm font-semibold text-gray-700">Recent Details Entries</h3>
+              </div>
+              
+              {/* Details Table */}
+              <div className="bg-white border border-gray-300 rounded">
+                {/* Table Header */}
+                <div className="grid grid-cols-8 border-b border-gray-300 bg-gray-100">
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">WB ID</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">Customer</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">Vehicle No</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">Item Desc</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">DC No</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">DO No</div>
+                  <div className="p-1 text-xs font-semibold text-center border-r border-gray-300">DC Qty</div>
+                  <div className="p-1 text-xs font-semibold text-center">DO Qty</div>
+                </div>
+                
+                {/* Table Rows */}
+                {latestDetails.length > 0 ? (
+                  latestDetails.map((detail: any, index: number) => (
+                    <div key={detail.wb_item_p_id || index} className="grid grid-cols-8 border-b border-gray-200 hover:bg-gray-50">
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.wb_id || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.customer_name || detail.vendor_name || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.vehicle_no || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.item_desc || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.igp_no || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.do_no || detail.po_no || '-'}</div>
+                      <div className="p-1 text-xs text-center border-r border-gray-200">{detail.igp_qty || '-'}</div>
+                      <div className="p-1 text-xs text-center">{detail.do_qty || detail.po_qty || '-'}</div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="grid grid-cols-8 p-4">
+                    <div className="col-span-8 text-center text-xs text-gray-500">No details entries found</div>
+                  </div>
+                )}
+              </div>
+
               {/* Show Purchase Form when selectedForm is 'purchase' */}
               {selectedForm === 'purchase' && (
                 <div className="mt-1">
@@ -1563,6 +1645,78 @@ export default function PurchaseForm() {
                     </div>
                   </div>
 
+                </div>
+              )}
+
+              {/* Show Offline Form when selectedForm is 'offline' */}
+              {selectedForm === 'offline' && (
+                <div className="mt-1">
+                  <div className="bg-gray-100 p-4 rounded border">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">Offline Entry Mode</h3>
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs text-black">Offline Entry ID</Label>
+                          <Input 
+                            name="offlineEntryId" 
+                            value={formData.offlineEntry} 
+                            onChange={handleChange} 
+                            className="h-6 text-xs text-black" 
+                            placeholder="Auto-generated"
+                            readOnly
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-black">Entry Date</Label>
+                          <Input 
+                            name="offlineEntryDate" 
+                            value={formData.creationDate} 
+                            onChange={handleChange} 
+                            className="h-6 text-xs text-black" 
+                            type="date"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-black">Manual Entry Reason</Label>
+                          <textarea 
+                            name="offlineReason" 
+                            className="w-full h-16 text-xs border border-gray-300 rounded px-2 py-1 resize-none" 
+                            placeholder="Reason for offline entry..."
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div>
+                          <Label className="text-xs text-black">Created By</Label>
+                          <Input 
+                            name="createdBy" 
+                            value={formData.createdBy} 
+                            onChange={handleChange} 
+                            className="h-6 text-xs text-black" 
+                            placeholder="Enter user name"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-black">Verification Status</Label>
+                          <Select name="verificationStatus" value="Pending" onValueChange={(value) => setFormData(prev => ({...prev, verificationStatus: value}))}>
+                            <SelectTrigger className="h-6 text-xs text-black">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Pending">Pending</SelectItem>
+                              <SelectItem value="Verified">Verified</SelectItem>
+                              <SelectItem value="Rejected">Rejected</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="bg-yellow-50 p-2 rounded border border-yellow-200">
+                          <p className="text-xs text-yellow-800">
+                            <strong>Note:</strong> Offline entries require manual verification before processing.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

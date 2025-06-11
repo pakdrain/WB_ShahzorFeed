@@ -16,12 +16,6 @@ import {
   updateBaudRate
 } from './weight-state';
 import { imageCaptureService } from './image-capture';
-import { 
-  registerSchema, 
-  loginSchema, 
-  type RegisterData, 
-  type LoginData 
-} from '../shared/schema';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -57,122 +51,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register video streaming routes
   videoStreamService.registerRoutes(app);
-
-  // Authentication routes
-  // User registration endpoint
-  app.post('/api/auth/register', async (req, res) => {
-    try {
-      const validatedData = registerSchema.parse(req.body);
-      
-      // Check if username already exists
-      const existingUser = await pool.query(
-        'SELECT user_name FROM users WHERE user_name = $1',
-        [validatedData.userName]
-      );
-      
-      if (existingUser.rows.length > 0) {
-        return res.status(400).json({ error: 'Username already exists' });
-      }
-      
-      // Insert new user with only userName and userPassword
-      const insertResult = await pool.query(
-        'INSERT INTO users (user_name, user_password) VALUES ($1, $2) RETURNING user_name',
-        [validatedData.userName, validatedData.userPassword]
-      );
-      
-      const newUser = insertResult.rows[0];
-      res.status(201).json({
-        success: true,
-        message: 'User registered successfully',
-        user: {
-          userName: newUser.user_name
-        }
-      });
-      
-    } catch (error: any) {
-      console.error('Registration error:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ 
-          error: 'Validation failed', 
-          details: error.errors 
-        });
-      }
-      res.status(500).json({ error: 'Registration failed' });
-    }
-  });
-
-  // User login endpoint
-  app.post('/api/auth/login', async (req, res) => {
-    try {
-      const validatedData = loginSchema.parse(req.body);
-      
-      // Find user by username and password
-      const userResult = await pool.query(
-        'SELECT user_name FROM users WHERE user_name = $1 AND user_password = $2',
-        [validatedData.userName, validatedData.userPassword]
-      );
-      
-      if (userResult.rows.length === 0) {
-        return res.status(401).json({ error: 'Invalid username or password' });
-      }
-      
-      const user = userResult.rows[0];
-      res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          userName: user.user_name
-        }
-      });
-      
-    } catch (error: any) {
-      console.error('Login error:', error);
-      if (error.name === 'ZodError') {
-        return res.status(400).json({ 
-          error: 'Validation failed', 
-          details: error.errors 
-        });
-      }
-      res.status(500).json({ error: 'Login failed' });
-    }
-  });
-
-  // Logout route
-  app.post('/api/auth/logout', async (req: Request, res: Response) => {
-    try {
-      req.session.destroy((err: any) => {
-        if (err) {
-          console.error('Logout error:', err);
-          return res.status(500).json({ error: 'Logout failed' });
-        }
-        res.clearCookie('connect.sid');
-        res.json({ success: true, message: 'Logged out successfully' });
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-      res.status(500).json({ error: 'Logout failed' });
-    }
-  });
-
-  // Check if users table exists and create if it doesn't
-  app.post('/api/auth/init-db', async (req, res) => {
-    try {
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS users (
-          user_id SERIAL PRIMARY KEY,
-          user_no INTEGER NOT NULL UNIQUE,
-          user_name TEXT NOT NULL UNIQUE,
-          user_password TEXT NOT NULL,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-      
-      res.json({ success: true, message: 'Users table initialized' });
-    } catch (error: any) {
-      console.error('Database initialization error:', error);
-      res.status(500).json({ error: 'Database initialization failed' });
-    }
-  });
 
   // Get default camera (Camera 01) - Put this BEFORE the parameterized route
   app.get("/api/cameras/default", async (req, res) => {
@@ -441,7 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // POST to insert a new purchase - Fixed to match actual database structure
+  // POST to insert a new purchase
   app.post('/api/purchases', async (req, res) => {
     const purchaseData = req.body;
     console.log('Incoming purchase data:', purchaseData);
@@ -449,43 +327,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const WB_ID = await generateWBID();
 
-      // Destructure and prepare values based on actual database structure
+      // Destructure and prepare values
       const {
         slip_no = null,
+        slip_in_time = null,
         first_weight = null,
         second_weight = null,
-        vehicle_no = null,
-        online_entry = 'Yes',
+        net_weight = null,
+        bardana_weight = null,
+        gross_weight = null,
+        freight = null,
+        remarks = null,
+        driver_name = null,
+        company_id = null,
+        branch_id = null,
+        online_entry = null,
         offline_entry = null,
-        creation_date = new Date().toISOString()
+        created_by = null,
+        creation_date = null,
+        last_updated_by = null,
+        last_updated_date = null,
+        manual_dc_no = null,
+        entry_type = null,
+        slip_out_time = null,
+        status = null,
+        slip_date = null,
       } = purchaseData;
 
-      // Query using exact database structure from working records
+      // Convert online/offline entries to string
+      const onlineEntryStr = online_entry !== null ? String(online_entry) : null;
+      const offlineEntryStr = offline_entry !== null ? String(offline_entry) : null;
+
       const query = `
         INSERT INTO wb_weighbridge (
-          wb_id, slip_no, first_weight, second_weight,
-          online_entry, offline_entry, creation_date
+          wb_id, slip_no, slip_in_time, first_weight, second_weight, net_weight,
+          bardana_weight, gross_weight, freight, remarks, driver_name, company_id,
+          branch_id, online_entry, offline_entry, created_by, creation_date,
+          last_updated_by, last_updated_date, manual_dc_no, entry_type,
+          slip_out_time, status, slip_date
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        VALUES (
+          $1, $2, $3, $4, $5, $6,
+          $7, $8, $9, $10, $11, $12,
+          $13, $14, $15, $16, $17,
+          $18, $19, $20, $21,
+          $22, $23, $24
+        )
         RETURNING *;
       `;
 
       const values = [
         WB_ID,
         slip_no,
-        first_weight ? parseFloat(first_weight) : null,
-        second_weight ? parseFloat(second_weight) : null,
-        online_entry,
-        offline_entry,
-        creation_date
+        slip_in_time,
+        first_weight,
+        second_weight,
+        net_weight,
+        bardana_weight,
+        gross_weight,
+        freight,
+        remarks,
+        driver_name,
+        company_id,
+        branch_id,
+        onlineEntryStr,
+        offlineEntryStr,
+        created_by,
+        creation_date,
+        last_updated_by,
+        last_updated_date,
+        manual_dc_no,
+        entry_type,
+        slip_out_time,
+        status,
+        slip_date,
       ];
 
       const result = await pool.query(query, values);
-      console.log('✅ Purchase saved successfully:', result.rows[0]);
+      console.log('Purchase saved successfully:', result.rows[0]);
       res.json(result.rows[0]);
     } catch (err) {
-      console.error('❌ Error inserting purchase:', err);
-      res.status(500).json({ error: 'Failed to save purchase: ' + err.message });
+      console.error('Error inserting purchase:', err);
+      res.status(500).json({ error: 'Insert error' });
     }
   });
 
@@ -638,14 +561,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/purchase/latest-details', async (req: Request, res: Response) => {
     try {
-      const query = 'SELECT * FROM wb_weighbridge_items_purchase ORDER BY wb_item_p_id DESC LIMIT 1';
+      const query = 'SELECT * FROM wb_weighbridge_items_purchase ORDER BY wb_item_p_id DESC LIMIT 10';
       const result = await pool.query(query);
       
-      if (result.rows.length > 0) {
-        res.json(result.rows[0]);
-      } else {
-        res.json(null);
-      }
+      res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching latest details data:', error);
       res.status(500).json({ error: 'Failed to fetch details data' });
@@ -830,57 +749,145 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // POST endpoint for saving sales data into existing purchase tables
+  app.post('/api/sales/save', async (req: Request, res: Response) => {
+    try {
+      const { salesData, entryType } = req.body;
 
-  // Sales data insert route - Fixed to match exact purchase route structure
+      if (!salesData || !Array.isArray(salesData)) {
+        return res.status(400).json({ error: 'Invalid sales data' });
+      }
+
+      console.log('Saving sales data:', salesData);
+
+      const savedRecords = [];
+
+      for (const saleItem of salesData) {
+        // Generate next WB ID
+        const wbIdResult = await pool.query('SELECT COALESCE(MAX(wb_id), 0) + 1 as next_id FROM wb_weighbridge');
+        const nextWbId = wbIdResult.rows[0].next_id;
+
+        // Generate next Slip No with 'S' prefix for sales
+        const slipResult = await pool.query('SELECT COALESCE(MAX(CAST(SUBSTRING(slip_no FROM 2) AS INTEGER)), 0) + 1 as next_slip FROM wb_weighbridge WHERE slip_no LIKE \'S%\'');
+        const nextSlipNo = `S${String(slipResult.rows[0].next_slip).padStart(3, '0')}`;
+
+        // Insert into wb_weighbridge (Master table) with Sales entry type
+        const masterInsertQuery = `
+          INSERT INTO wb_weighbridge (
+            wb_id, slip_no, slip_in_time, entry_type, creation_date, last_updated_date,
+            slip_date, company_id, branch_id, created_by, last_updated_by
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        `;
+
+        const masterValues = [
+          nextWbId,
+          nextSlipNo,
+          new Date().toISOString(),
+          'Sales', // Set entry type as Sales
+          new Date().toISOString(),
+          new Date().toISOString(),
+          new Date().toISOString(),
+          1, // default company_id
+          1, // default branch_id
+          1, // default created_by
+          1  // default last_updated_by
+        ];
+
+        await pool.query(masterInsertQuery, masterValues);
+
+        // Insert into wb_details table mapping sales fields to existing columns
+        const detailsInsertQuery = `
+          INSERT INTO wb_details (
+            wb_id, vehicle_no, vendor_name, po_no, item_desc, po_qty, igp_qty
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `;
+
+        const detailsValues = [
+          nextWbId,
+          saleItem.vehicleNo || null,
+          saleItem.customerName || null, // Map customer name to vendor_name
+          saleItem.doNo || null,        // Map DO# to po_no
+          saleItem.itemDescription || null, // Map item description to item_desc
+          saleItem.doQty ? parseFloat(saleItem.doQty) : null, // Map DO Qty to po_qty
+          saleItem.dcQty ? parseFloat(saleItem.dcQty) : null  // Map DC Qty to igp_qty
+        ];
+
+        await pool.query(detailsInsertQuery, detailsValues);
+
+        savedRecords.push({
+          wbId: nextWbId,
+          slipNo: nextSlipNo,
+          entryType: 'Sales',
+          doId: saleItem.doId
+        });
+      }
+
+      console.log('Sales data saved successfully:', savedRecords);
+
+      res.json({ 
+        success: true,
+        message: 'Sales data saved successfully to Purchase tables',
+        savedRecords: savedRecords
+      });
+
+    } catch (error: any) {
+      console.error('Error saving sales data:', error);
+      res.status(500).json({ error: 'Failed to save sales data' });
+    }
+  });
   app.post('/api/sales/save', async (req, res) => {
     try {
       const { salesData, entryType } = req.body;
       
-      if (!salesData || !Array.isArray(salesData)) {
-        return res.status(400).json({ error: 'Sales data is required and must be an array' });
+      // Generate new WB_ID for the sales entry
+      const wbId = await generateWBID();
+      const currentTime = new Date().toISOString();
+      
+      // Insert master record with "Sales" entry type
+      const masterQuery = `
+        INSERT INTO wb_weighbridge (wb_id, slip_no, slip_in_time, entry_type)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *
+      `;
+      
+      const slipNo = `S${wbId.toString().padStart(3, '0')}`;
+      const masterValues = [wbId, slipNo, currentTime, 'Sales'];
+      const masterResult = await pool.query(masterQuery, masterValues);
+      
+      // Insert details for each sales row
+      const detailsResults = [];
+      for (const row of salesData) {
+        if (row.dcNo || row.doNo || row.customerName || row.vehicleNo || row.doDate || row.itemDescription || row.dcQty || row.doQty || row.branch) {
+          const detailsQuery = `
+            INSERT INTO wb_details (wb_id, vehicle_no, vendor_name, item_desc, po_qty, igp_qty, balance_qty)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING *
+          `;
+          
+          const detailsValues = [
+            wbId,
+            row.vehicleNo || '',
+            row.customerName || '',
+            row.itemDescription || '',
+            parseFloat(row.dcQty) || 0,
+            parseFloat(row.doQty) || 0,
+            (parseFloat(row.dcQty) || 0) - (parseFloat(row.doQty) || 0)
+          ];
+          
+          const detailsResult = await pool.query(detailsQuery, detailsValues);
+          detailsResults.push(detailsResult.rows[0]);
+        }
       }
       
-      console.log('Saving sales data:', salesData);
-      const savedRecords = [];
-      
-      for (const saleItem of salesData) {
-        // Generate new WB_ID using same method as purchase route
-        const WB_ID = await generateWBID();
-        
-        // Use exact same query structure as working purchase route
-        const query = `
-          INSERT INTO wb_weighbridge (
-            wb_id, slip_no, first_weight, second_weight,
-            online_entry, offline_entry, creation_date
-          )
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
-          RETURNING *;
-        `;
-        
-        const values = [
-          WB_ID,
-          `SALE_${WB_ID}`,
-          null, // No first weight for sales
-          null, // No second weight for sales
-          'Yes', // Mark as online entry
-          null,  // No offline entry
-          new Date().toISOString()
-        ];
-        
-        const result = await pool.query(query, values);
-        savedRecords.push(result.rows[0]);
-      }
-      
-      console.log('✅ Sales data saved successfully:', savedRecords.length, 'records');
+      console.log('Sales data saved to existing tables successfully');
       res.json({
-        success: true,
-        message: 'Sales data saved successfully',
-        savedRecords: savedRecords
+        master: masterResult.rows[0],
+        details: detailsResults,
+        message: 'Sales data saved successfully'
       });
-      
     } catch (error: any) {
-      console.error('❌ Error saving sales data:', error);
-      res.status(500).json({ error: 'Failed to save sales data: ' + error.message });
+      console.error('Error saving sales data:', error);
+      res.status(500).json({ error: 'Failed to save sales data' });
     }
   });
 

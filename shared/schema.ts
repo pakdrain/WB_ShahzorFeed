@@ -60,11 +60,6 @@ export const salesDetails = pgTable("sales_details", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const users = pgTable("users", {
-  userName: text("user_name").notNull().unique(),
-  userPassword: text("user_password").notNull(),
-});
-
 export const insertCameraSchema = createInsertSchema(cameras).omit({
   id: true,
   createdAt: true,
@@ -91,22 +86,6 @@ export const insertSalesDetailsSchema = createInsertSchema(salesDetails).omit({
   createdAt: true,
 });
 
-export const insertUserSchema = createInsertSchema(users);
-
-export const loginSchema = z.object({
-  userName: z.string().min(1, "Username is required"),
-  userPassword: z.string().min(1, "Password is required"),
-});
-
-export const registerSchema = z.object({
-  userName: z.string().min(3, "Username must be at least 3 characters").max(50, "Username too long"),
-  userPassword: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string().min(1, "Please confirm your password"),
-}).refine((data) => data.userPassword === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
 export type Camera = typeof cameras.$inferSelect;
 export type InsertCamera = z.infer<typeof insertCameraSchema>;
 export type StreamSession = typeof streamSessions.$inferSelect;
@@ -117,7 +96,3 @@ export type Deduction = typeof deduction.$inferSelect;
 export type InsertDeduction = z.infer<typeof insertDeductionSchema>;
 export type SalesDetails = typeof salesDetails.$inferSelect;
 export type InsertSalesDetails = z.infer<typeof insertSalesDetailsSchema>;
-export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type LoginData = z.infer<typeof loginSchema>;
-export type RegisterData = z.infer<typeof registerSchema>;
