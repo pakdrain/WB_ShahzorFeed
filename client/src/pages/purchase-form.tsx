@@ -723,46 +723,49 @@ export default function PurchaseForm() {
           }
         }
       } else {
-        // Prepare items data payload for Purchase entries - use first IGP item if available, otherwise form data
-        const firstIgpItem: any = igpItems.length > 0 ? igpItems[0] : {};
-        
-        console.log('Form data for items:', formData);
-        console.log('IGP items available:', igpItems);
-        
-        const itemsPayload = {
-          wb_id: savedWbId!,
-          baradana_type: formData.bardanaType || null,
-          igp_no: formData.igpNo || null,
-          vehicle_no: formData.vehicleNo || null,
-          weight_per_bags: formData.wtPerBag ? parseFloat(formData.wtPerBag) : null,
-          igp_date: formData.igpDate || null,
-          supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
-          quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
-          bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null, // New Bardana Wht field
-          no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
-          vendor_name: firstIgpItem?.vendor_name || formData.vendor || null,
-          bag_condition: formData.bagCondition || null,
-          po_no: firstIgpItem?.po_no || formData.po_no || null,
-          item_code: firstIgpItem?.item_code || formData.itemCode || null,
-          item_desc: firstIgpItem?.item_desc || formData.itemDesc || null,
-          po_qty: firstIgpItem?.po_qty ? parseFloat(firstIgpItem.po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
-          igp_qty: firstIgpItem?.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
-          balance_qty: firstIgpItem?.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
-        };
-        
-        console.log('Items payload being sent:', itemsPayload);
-        
-        // Save items data for Purchase entries
-        const itemsResponse = await fetch('/api/purchase-items', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(itemsPayload),
-        });
+        // Only save items data for new Purchase entries (not for updates)
+        if (!isEditMode && !existingRecord) {
+          // Prepare items data payload for Purchase entries - use first IGP item if available, otherwise form data
+          const firstIgpItem: any = igpItems.length > 0 ? igpItems[0] : {};
+          
+          console.log('Form data for items:', formData);
+          console.log('IGP items available:', igpItems);
+          
+          const itemsPayload = {
+            wb_id: savedWbId!,
+            baradana_type: formData.bardanaType || null,
+            igp_no: formData.igpNo || null,
+            vehicle_no: formData.vehicleNo || null,
+            weight_per_bags: formData.wtPerBag ? parseFloat(formData.wtPerBag) : null,
+            igp_date: formData.igpDate || null,
+            supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
+            quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
+            bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null, // New Bardana Wht field
+            no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
+            vendor_name: firstIgpItem?.vendor_name || formData.vendor || null,
+            bag_condition: formData.bagCondition || null,
+            po_no: firstIgpItem?.po_no || formData.po_no || null,
+            item_code: firstIgpItem?.item_code || formData.itemCode || null,
+            item_desc: firstIgpItem?.item_desc || formData.itemDesc || null,
+            po_qty: firstIgpItem?.po_qty ? parseFloat(firstIgpItem.po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
+            igp_qty: firstIgpItem?.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
+            balance_qty: firstIgpItem?.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
+          };
+          
+          console.log('Items payload being sent:', itemsPayload);
+          
+          // Save items data for Purchase entries
+          const itemsResponse = await fetch('/api/purchase-items', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(itemsPayload),
+          });
 
-        if (!itemsResponse.ok) {
-          console.error('Failed to save purchase items');
+          if (!itemsResponse.ok) {
+            console.error('Failed to save purchase items');
+          }
         }
       }
         
