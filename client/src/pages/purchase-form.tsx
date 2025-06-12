@@ -576,25 +576,25 @@ export default function PurchaseForm() {
       console.log('No existing record found for slip:', formData.slipNo);
     }
     
-    // Prepare master data payload
+    // Prepare master data payload with safe parsing
     const masterPayload = {
       slip_no: formData.slipNo || null,
       slip_in_time: formatISODate(formData.slipInTime),
-      first_weight: formData.firstWeight ? parseFloat(formData.firstWeight) : null,
-      second_weight: formData.secondWeight ? parseFloat(formData.secondWeight) : null,
-      net_weight: formData.netWeight ? parseFloat(formData.netWeight) : null,
-      bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
-      gross_weight: formData.grossWeight ? parseFloat(formData.grossWeight) : null,
-      freight: formData.freight ? parseFloat(formData.freight) : null,
+      first_weight: (formData.firstWeight && formData.firstWeight !== 'undefined' && formData.firstWeight.trim() !== '') ? parseFloat(formData.firstWeight) : null,
+      second_weight: (formData.secondWeight && formData.secondWeight !== 'undefined' && formData.secondWeight.trim() !== '') ? parseFloat(formData.secondWeight) : null,
+      net_weight: (formData.netWeight && formData.netWeight !== 'undefined' && formData.netWeight.trim() !== '') ? parseFloat(formData.netWeight) : null,
+      bardana_weight: (formData.bardanaWeight && formData.bardanaWeight !== 'undefined' && formData.bardanaWeight.trim() !== '') ? parseFloat(formData.bardanaWeight) : null,
+      gross_weight: (formData.grossWeight && formData.grossWeight !== 'undefined' && formData.grossWeight.trim() !== '') ? parseFloat(formData.grossWeight) : null,
+      freight: (formData.freight && formData.freight !== 'undefined' && formData.freight.trim() !== '') ? parseFloat(formData.freight) : null,
       remarks: formData.remarks || null,
       driver_name: formData.driverName || null,
-      company_id: formData.companyId ? parseInt(formData.companyId, 10) : null,
-      branch_id: formData.branchId ? parseInt(formData.branchId, 10) : null,
+      company_id: (formData.companyId && formData.companyId !== 'undefined' && formData.companyId.trim() !== '') ? parseInt(formData.companyId, 10) : null,
+      branch_id: (formData.branchId && formData.branchId !== 'undefined' && formData.branchId.trim() !== '') ? parseInt(formData.branchId, 10) : null,
       online_entry: formData.onlineEntry || null,
       offline_entry: formData.offlineEntry || null,
-      created_by: formData.createdBy ? parseInt(formData.createdBy, 10) : null,
+      created_by: (formData.createdBy && formData.createdBy !== 'undefined' && formData.createdBy.trim() !== '') ? parseInt(formData.createdBy, 10) : null,
       creation_date: formData.creationDate || null,
-      last_updated_by: formData.lastUpdatedBy ? parseInt(formData.lastUpdatedBy, 10) : null,
+      last_updated_by: (formData.lastUpdatedBy && formData.lastUpdatedBy !== 'undefined' && formData.lastUpdatedBy.trim() !== '') ? parseInt(formData.lastUpdatedBy, 10) : null,
       last_updated_date: formData.lastUpdatedDate || null,
       manual_dc_no: formData.manualDcNo || null,
       entry_type: currentEntryType,
@@ -620,10 +620,12 @@ export default function PurchaseForm() {
           igp_no: formData.igpNo || null,
           item_code: formData.itemCode || null,
           item_desc: formData.itemDesc || null,
-          po_qty: formData.poQty ? parseFloat(formData.poQty) : null,
-          igp_qty: formData.igpQty ? parseFloat(formData.igpQty) : null,
-          balance_qty: formData.balanceQty ? parseFloat(formData.balanceQty) : null
+          po_qty: (formData.poQty && formData.poQty !== 'undefined' && formData.poQty.trim() !== '') ? parseFloat(formData.poQty) : null,
+          igp_qty: (formData.igpQty && formData.igpQty !== 'undefined' && formData.igpQty.trim() !== '') ? parseFloat(formData.igpQty) : null,
+          balance_qty: (formData.balanceQty && formData.balanceQty !== 'undefined' && formData.balanceQty.trim() !== '') ? parseFloat(formData.balanceQty) : null
         };
+        
+        console.log('Update payload being sent:', updatePayload);
         
         masterResponse = await fetch(`/api/purchase/update/${updateWbId}`, {
           method: 'PUT',
