@@ -875,15 +875,17 @@ export default function PurchaseForm() {
           alert('Record updated successfully!');
           // Reset form to clean state after edit
           resetFormToInitial();
-          // Remove from display table after saving second weight
-          if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
-            // Refresh the first weight records to remove the completed entry
-            window.location.reload();
-          }
         } else {
           alert('Purchase data saved successfully and first weight image captured!');
           // Reset form to clean state and increment slip number for next entry
           resetFormToInitial();
+        }
+        
+        // If second weight was entered, refresh to remove from display table
+        if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
         }
         
         // Auto-increment slip number for next entry regardless of mode
@@ -1288,54 +1290,63 @@ export default function PurchaseForm() {
               </div>
             </div>
 
+            {/* Top buttons row - above details section */}
+            <div className="flex gap-2 mb-2">
+              <Button 
+                className={`h-6 text-xs px-3 ${selectedForm === 'purchase' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                onClick={() => setSelectedForm('purchase')}
+              >
+                Purchase
+              </Button>
+              <Button 
+                className={`h-6 text-xs px-3 ${selectedForm === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                onClick={() => setSelectedForm('sales')}
+              >
+                Sales
+              </Button>
+              <Button 
+                className={`h-6 text-xs px-3 ${selectedForm === 'offline' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                onClick={() => setSelectedForm('offline')}
+              >
+                Offline
+              </Button>
+            </div>
+
             {/* Details Section */}
             <div className="bg-blue-50 p-2 rounded border">
-              {/* Top buttons row */}
-              <div className="flex gap-2 mb-2">
-                <Button 
-                  className={`h-6 text-xs px-3 ${selectedForm === 'purchase' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-                  onClick={() => setSelectedForm('purchase')}
-                >
-                  Purchase
-                </Button>
-                <Button 
-                  className={`h-6 text-xs px-3 ${selectedForm === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-                  onClick={() => setSelectedForm('sales')}
-                >
-                  Sales
-                </Button>
-                <Button 
-                  className={`h-6 text-xs px-3 ${selectedForm === 'offline' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-                  onClick={() => setSelectedForm('offline')}
-                >
-                  Offline
-                </Button>
-              </div>
               
               {/* Show Purchase Form when selectedForm is 'purchase' */}
               {selectedForm === 'purchase' && (
                 <div className="mt-1">
-                  <div className="grid grid-cols-4 gap-1 text-xs mb-2">
-                    {/* Mini Column 1 */}
-                    <div className="space-y-1">
-                      <div>
-                        <Label className="text-xs text-black">Bardana Type</Label>
-                        <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-4 text-xs text-black" />
+                  <div className="grid grid-cols-3 gap-4 text-xs">
+                    {/* First Column */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-16">Bardana Type</span>
+                        <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
                       </div>
-                      <div>
-                        <Label className="text-xs text-black">Wt Per Bag</Label>
-                        <Input name="wtPerBag" value={formData.wtPerBag} onChange={handleChange} className="h-4 text-xs text-black" />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-16">Wt per Bag</span>
+                        <Input name="wtPerBag" value={formData.wtPerBag} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
                       </div>
-                      <div>
-                        <Label className="text-xs text-black">No Of Bags</Label>
-                        <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-4 text-xs text-black" />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-16">No of Bags</span>
+                        <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-16">Bardana Weight</span>
+                        <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-16">Quality</span>
+                        <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
                       </div>
                     </div>
 
-                    {/* Mini Column 2 */}
-                    <div className="space-y-1">
-                      <div>
-                        <Label className="text-xs text-black">IGP No</Label>
+                    {/* Second Column */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-16">IGP No</span>
                         <Input 
                           name="igpNo" 
                           value={formData.igpNo} 
@@ -1345,80 +1356,56 @@ export default function PurchaseForm() {
                               fetchIgpData();
                             }
                           }}
-                          className="h-4 text-xs text-black" 
+                          className="h-4 text-xs text-black flex-1" 
                           placeholder="Press Enter to fetch"
                         />
                       </div>
-                      <div>
-                        <Label className="text-xs text-black">IGP Date</Label>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-16">IGP Date</span>
                         <Input 
                           name="igpDate" 
                           value={formData.igpDate} 
                           onChange={handleChange} 
-                          className="h-4 text-xs text-black" 
+                          className="h-4 text-xs text-black flex-1" 
                           type="date"
                         />
                       </div>
-                      <div>
-                        <Label className="text-xs text-black">Vendor</Label>
-                        <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black" />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-16">Vendor</span>
+                        <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-16">Vehicle No</span>
+                        <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-16">Weight</span>
+                        <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black w-20" />
+                        <span className="text-xs text-black ml-2">Bags</span>
+                        <Input name="bags" value={formData.bags} onChange={handleChange} className="h-4 text-xs text-black w-20" />
+                        <input type="checkbox" className="w-3 h-3 ml-1" />
+                        <span className="text-xs text-black">%</span>
                       </div>
                     </div>
 
-                    {/* Mini Column 3 - Vehicle & Weight */}
-                    <div className="space-y-1">
-                      <div>
-                        <Label className="text-xs text-black">Vehicle No</Label>
-                        <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black" />
+                    {/* Third Column */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-20">Supplier Weight</span>
+                        <Input name="supplierWeight" value={formData.supplierWeight} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
                       </div>
-                      <div>
-                        <Label className="text-xs text-black">Weight</Label>
-                        <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black w-full" />
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-20">Supp Wt - Bardana</span>
+                        <Input name="supplierWeightMinusBardana" value={formData.supplierWeightMinusBardana} readOnly className="h-4 text-xs text-gray-600 bg-gray-100 flex-1" />
                       </div>
-                      <div>
-                        <Label className="text-xs text-black">Bags</Label>
-                        <div className="flex items-center gap-1">
-                          <Input name="bags" value={formData.bags} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
-                          <div className="flex items-center gap-1">
-                            <input type="checkbox" className="w-3 h-3" />
-                            <span className="text-xs text-black">%</span>
-                          </div>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-20">Supp Wt - Out Wt</span>
+                        <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100 flex-1" />
                       </div>
-                    </div>
-
-                    {/* Mini Column 4 - Supplier Weight Section */}
-                    <div className="space-y-1">
-                      <div>
-                        <Label className="text-xs text-black">Supplier Weight</Label>
-                        <Input name="supplierWeight" value={formData.supplierWeight} onChange={handleChange} className="h-4 text-xs text-black" />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-black">Supp Wt - Bardana</Label>
-                        <Input name="supplierWeightMinusBardana" value={formData.supplierWeightMinusBardana} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-black">Supp Wt - Out Wt</Label>
-                        <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Second Row - New columns as shown in the image */}
-                  <div className="grid grid-cols-4 gap-2 mt-2">
-                    <div></div> {/* Empty space for alignment */}
-                    <div></div> {/* Empty space for alignment */}
-                    <div></div> {/* Empty space for alignment */}
-                    
-                    {/* Mini Column 4 - Second Row with Bardana Wht and Quality Ded */}
-                    <div className="grid grid-cols-2 gap-1">
-                      <div>
-                        <Label className="text-xs text-black">Bardana Wht</Label>
-                        <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-4 text-xs text-black" />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-black">Quality Ded</Label>
-                        <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black" />
+                      <div className="mt-2">
+                        <Button className="h-6 px-2 bg-green-600 hover:bg-green-700 text-white text-xs">
+                          Deduction +
+                        </Button>
                       </div>
                     </div>
                   </div>
