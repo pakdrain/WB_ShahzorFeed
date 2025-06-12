@@ -1032,9 +1032,9 @@ export default function PurchaseForm() {
                 <div key={index} className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50">
                   <button 
                     className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
-                    onClick={() => loadDataBySlipNo(record.wb_id || record.slip_no)}
+                    onClick={() => loadDataBySlipNo(record.slip_no)}
                   >
-                    {record.slip_no || record.wb_id || "---"}
+                    {record.slip_no || "---"}
                   </button>
                   <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
                     {record.vehicle_no || "---"}
