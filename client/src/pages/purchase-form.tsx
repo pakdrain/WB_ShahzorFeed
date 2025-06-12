@@ -60,8 +60,11 @@ export default function PurchaseForm() {
   // Function to load data by wb_id for editing
   const loadDataByWbId = async (wbId: number) => {
     try {
+      console.log('loadDataByWbId called with wbId:', wbId);
       const response = await fetch(`/api/purchase/by-wbid/${wbId}`);
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
       if (data && data.master) {
         const master = data.master;
         const details = data.details && data.details.length > 0 ? data.details[0] : {};
@@ -662,8 +665,16 @@ export default function PurchaseForm() {
       let savedWbId: number = 0;
       
       // If we found an existing record or we're in edit mode, update it
-      if ((existingRecord && existingRecord.wb_id) || (isEditMode && editingWbId)) {
-        const updateWbId = existingRecord ? existingRecord.wb_id : editingWbId!;
+      if ((existingRecord && existingRecord.master && existingRecord.master.wb_id) || (isEditMode && editingWbId)) {
+        const updateWbId = (existingRecord && existingRecord.master) ? existingRecord.master.wb_id : editingWbId;
+        
+        if (!updateWbId) {
+          throw new Error('No valid wb_id found for update operation');
+        }
+        
+        console.log('Updating record with wb_id:', updateWbId);
+        console.log('Edit mode:', isEditMode, 'editingWbId:', editingWbId);
+        
         // Update existing record - combine master and items data
         const updatePayload = {
           ...masterPayload,
@@ -1086,7 +1097,15 @@ export default function PurchaseForm() {
                 <div key={index} className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50">
                   <button 
                     className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
-                    onClick={() => loadDataByWbId(record.wb_id)}
+                    onClick={() => {
+                      console.log('Clicked record:', record);
+                      console.log('wb_id:', record.wb_id);
+                      if (record.wb_id) {
+                        loadDataByWbId(record.wb_id);
+                      } else {
+                        alert('No wb_id found for this record');
+                      }
+                    }}
                   >
                     {record.slip_no || "---"}
                   </button>
