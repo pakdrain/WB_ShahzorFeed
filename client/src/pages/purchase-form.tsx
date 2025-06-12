@@ -651,7 +651,10 @@ export default function PurchaseForm() {
       }
 
       if (!masterResponse.ok) {
-        throw new Error(`HTTP error! status: ${masterResponse.status}`);
+        const errorData = await masterResponse.json().catch(() => ({}));
+        const errorMessage = errorData.details || errorData.error || `HTTP error! status: ${masterResponse.status}`;
+        console.error('Server error response:', errorData);
+        throw new Error(errorMessage);
       }
 
       const masterData = await masterResponse.json();
@@ -896,9 +899,10 @@ export default function PurchaseForm() {
           }));
         }, 100);
       
-    } catch (err) {
-      alert('Failed to save purchase.');
-      console.error(err);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to save purchase.';
+      alert(errorMessage);
+      console.error('Save error:', err);
     } finally {
       setLoading(false);
     }
