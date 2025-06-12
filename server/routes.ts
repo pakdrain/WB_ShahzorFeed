@@ -709,12 +709,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         wbId,
         slip_no,
         slip_in_time,
-        parseFloat(first_weight) || null,
-        parseFloat(second_weight) || null,
-        parseFloat(net_weight) || null,
-        parseFloat(bardana_weight) || null,
-        parseFloat(gross_weight) || null,
-        parseFloat(freight) || null,
+        first_weight ? parseFloat(first_weight) : null,
+        second_weight ? parseFloat(second_weight) : null,
+        net_weight ? parseFloat(net_weight) : null,
+        bardana_weight ? parseFloat(bardana_weight) : null,
+        gross_weight ? parseFloat(gross_weight) : null,
+        freight ? parseFloat(freight) : null,
         remarks,
         driver_name,
         slip_out_time
@@ -739,19 +739,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         balance_qty = null
       } = updateData;
 
+      // Use upsert (INSERT ... ON CONFLICT) to handle cases where details record doesn't exist
       const detailsQuery = `
-        UPDATE wb_weighbridge_items_purchase 
-        SET 
-          vehicle_no = $2,
-          vendor_name = $3,
-          po_no = $4,
-          igp_no = $5,
-          item_code = $6,
-          item_desc = $7,
-          po_qty = $8,
-          igp_qty = $9,
-          balance_qty = $10
-        WHERE wb_id = $1
+        INSERT INTO wb_weighbridge_items_purchase (
+          wb_id, vehicle_no, vendor_name, po_no, igp_no, item_code, item_desc, po_qty, igp_qty, balance_qty
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        ON CONFLICT (wb_id) DO UPDATE SET
+          vehicle_no = EXCLUDED.vehicle_no,
+          vendor_name = EXCLUDED.vendor_name,
+          po_no = EXCLUDED.po_no,
+          igp_no = EXCLUDED.igp_no,
+          item_code = EXCLUDED.item_code,
+          item_desc = EXCLUDED.item_desc,
+          po_qty = EXCLUDED.po_qty,
+          igp_qty = EXCLUDED.igp_qty,
+          balance_qty = EXCLUDED.balance_qty
         RETURNING *;
       `;
 
@@ -763,9 +765,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         igp_no,
         item_code,
         item_desc,
-        parseFloat(po_qty) || null,
-        parseFloat(igp_qty) || null,
-        parseFloat(balance_qty) || null
+        po_qty ? parseFloat(po_qty) : null,
+        igp_qty ? parseFloat(igp_qty) : null,
+        balance_qty ? parseFloat(balance_qty) : null
       ];
 
       await pool.query(detailsQuery, detailsValues);
