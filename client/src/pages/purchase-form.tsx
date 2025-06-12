@@ -605,7 +605,7 @@ export default function PurchaseForm() {
 
     try {
       let masterResponse: any;
-      let savedWbId: number;
+      let savedWbId: number = 0;
       
       // If we found an existing record or we're in edit mode, update it
       if ((existingRecord && existingRecord.wb_id) || (isEditMode && editingWbId)) {
@@ -662,6 +662,8 @@ export default function PurchaseForm() {
         savedWbId = masterData.wb_id;
       } else if (editingWbId) {
         savedWbId = editingWbId;
+      } else {
+        savedWbId = masterData.wb_id || 0;
       }
       
       // For Sales entries, save sales data to details table using standard purchase items API
@@ -873,6 +875,11 @@ export default function PurchaseForm() {
           alert('Record updated successfully!');
           // Reset form to clean state after edit
           resetFormToInitial();
+          // Remove from display table after saving second weight
+          if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
+            // Refresh the first weight records to remove the completed entry
+            window.location.reload();
+          }
         } else {
           alert('Purchase data saved successfully and first weight image captured!');
           // Reset form to clean state and increment slip number for next entry
@@ -1283,6 +1290,28 @@ export default function PurchaseForm() {
 
             {/* Details Section */}
             <div className="bg-blue-50 p-2 rounded border">
+              {/* Top buttons row */}
+              <div className="flex gap-2 mb-2">
+                <Button 
+                  className={`h-6 text-xs px-3 ${selectedForm === 'purchase' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                  onClick={() => setSelectedForm('purchase')}
+                >
+                  Purchase
+                </Button>
+                <Button 
+                  className={`h-6 text-xs px-3 ${selectedForm === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                  onClick={() => setSelectedForm('sales')}
+                >
+                  Sales
+                </Button>
+                <Button 
+                  className={`h-6 text-xs px-3 ${selectedForm === 'offline' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                  onClick={() => setSelectedForm('offline')}
+                >
+                  Offline
+                </Button>
+              </div>
+              
               {/* Show Purchase Form when selectedForm is 'purchase' */}
               {selectedForm === 'purchase' && (
                 <div className="mt-1">
@@ -1344,11 +1373,17 @@ export default function PurchaseForm() {
                       </div>
                       <div>
                         <Label className="text-xs text-black">Weight</Label>
-                        <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black" />
+                        <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black w-full" />
                       </div>
                       <div>
                         <Label className="text-xs text-black">Bags</Label>
-                        <Input name="bags" value={formData.bags} onChange={handleChange} className="h-4 text-xs text-black" />
+                        <div className="flex items-center gap-1">
+                          <Input name="bags" value={formData.bags} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                          <div className="flex items-center gap-1">
+                            <input type="checkbox" className="w-3 h-3" />
+                            <span className="text-xs text-black">%</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
