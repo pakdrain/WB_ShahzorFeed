@@ -100,7 +100,8 @@ export default function PurchaseForm() {
           noOfBags: details.no_of_bags ? String(details.no_of_bags) : '',
           slipInTime: master.slip_in_time ? formatDatetimeLocal(master.slip_in_time) : '',
           slipOutTime: master.slip_out_time ? formatDatetimeLocal(master.slip_out_time) : '',
-          entryType: master.entry_type || 'PURCHASE'
+          entryType: master.entry_type || 'PURCHASE',
+          branch: master.branch_id ? String(master.branch_id) : ''
         }));
         
         // Load existing deduction data for this record
