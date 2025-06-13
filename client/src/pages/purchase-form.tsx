@@ -365,6 +365,18 @@ export default function PurchaseForm() {
     }));
   }, [formData.supplierWeight, formData.bardanaWeight, formData.weight]);
 
+  // Auto-fetch IGP data when IGP number is available in edit mode
+  useEffect(() => {
+    if (isEditMode && formData.igpNo && formData.igpNo.trim() !== '') {
+      // Add a delay to ensure form is fully loaded
+      const timer = setTimeout(() => {
+        fetchIgpData();
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isEditMode, formData.igpNo]);
+
   // IGP Data Fetching Function
   const fetchIgpData = async () => {
     if (!formData.igpNo) {
