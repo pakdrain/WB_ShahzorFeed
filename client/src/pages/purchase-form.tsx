@@ -228,22 +228,51 @@ export default function PurchaseForm() {
       <head>
         <title>Weighbridge Slip - ${formData.slipNo}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
-          .header { text-align: center; margin-bottom: 20px; }
-          .slip-section { border: 1px solid #000; margin-bottom: 20px; padding: 15px; page-break-after: always; }
-          .slip-section:last-child { page-break-after: auto; }
-          .company-name { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
-          .slip-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; }
-          .two-column { display: flex; justify-content: space-between; margin-bottom: 10px; }
-          .left-section, .right-section { width: 45%; }
-          .commodity-section { margin: 15px 0; }
-          .weights-section { margin: 15px 0; }
-          .signatures { margin-top: 40px; display: flex; justify-content: space-between; }
-          .signature-line { border-bottom: 1px solid #000; width: 150px; text-align: center; }
-          @media print { body { margin: 0; } .slip-section { page-break-after: always; } }
+          body { font-family: Arial, sans-serif; margin: 10px; font-size: 10px; }
+          .page-container { height: 100vh; display: flex; flex-direction: column; }
+          .header { text-align: center; margin-bottom: 10px; }
+          .slip-section { 
+            border: 2px solid #000; 
+            margin-bottom: 10px; 
+            padding: 10px; 
+            height: 30vh;
+            box-sizing: border-box;
+          }
+          .company-name { font-size: 14px; font-weight: bold; margin-bottom: 3px; }
+          .slip-title { font-size: 12px; font-weight: bold; margin-bottom: 8px; }
+          .two-column { display: flex; justify-content: space-between; margin-bottom: 5px; }
+          .left-section, .right-section { 
+            width: 45%; 
+            border: 1px solid #666; 
+            padding: 5px; 
+            border-radius: 3px;
+          }
+          .commodity-section { 
+            margin: 8px 0; 
+            border: 1px solid #666; 
+            padding: 5px; 
+            border-radius: 3px;
+          }
+          .weights-section { margin: 8px 0; }
+          .signatures { margin-top: 15px; display: flex; justify-content: space-between; }
+          .signature-line { border-bottom: 1px solid #000; width: 80px; text-align: center; font-size: 8px; }
+          .image-container { 
+            border: 2px solid #333; 
+            padding: 3px; 
+            margin: 5px 0; 
+            text-align: center; 
+            height: 60px;
+            border-radius: 3px;
+          }
+          @media print { 
+            body { margin: 0; } 
+            .slip-section { page-break-inside: avoid; }
+            .page-container { page-break-after: auto; }
+          }
         </style>
       </head>
       <body>
+        <div class="page-container">
         <!-- Head Office Copy -->
         <div class="slip-section">
           <div class="header">
@@ -377,6 +406,7 @@ export default function PurchaseForm() {
               <div>Production Manager:</div>
             </div>
           </div>
+        </div>
         </div>
       </body>
       </html>
@@ -841,10 +871,13 @@ export default function PurchaseForm() {
       const response = await fetch('/api/weight/data');
       const weightData = await response.json();
       
-      // Update the secondWeight field with current weight reading
+      const currentTime = new Date().toISOString();
+      
+      // Update the secondWeight field with current weight reading and set slip_out_time
       setFormData(prev => ({
         ...prev,
-        secondWeight: weightData.weight
+        secondWeight: weightData.weight,
+        slipOutTime: currentTime.slice(0, 16) // Format for datetime-local input
       }));
     } catch (error) {
       console.error('Error fetching weight data:', error);
