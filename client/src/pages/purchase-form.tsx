@@ -393,6 +393,7 @@ export default function PurchaseForm() {
           bardanaWeight: firstItem.bardana_qty ? String(firstItem.bardana_qty) : '',
           bardanaType: firstItem.bardanatype || '',
           wtPerBag: firstItem.wtperbag ? String(firstItem.wtperbag) : '',
+          igpDate: firstItem.igp_date || '',
         }));
         setIgpItems(items);
         console.log('IGP data fetched successfully:', items);
@@ -1544,8 +1545,13 @@ export default function PurchaseForm() {
                           name="igpDate" 
                           value={formData.igpDate} 
                           onChange={handleChange} 
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              fetchIgpData();
+                            }
+                          }}
                           className="h-4 text-xs text-black flex-1" 
-                          type="date"
+                          placeholder="Press Enter to fetch"
                         />
                       </div>
                       <div className="flex items-center gap-2">
