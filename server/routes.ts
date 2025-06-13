@@ -1079,6 +1079,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // PUT endpoint to convert offline entry to online
+  app.put('/api/purchase/convert-to-online/:wbId', async (req: Request, res: Response) => {
+    try {
+      const { wbId } = req.params;
+      
+      // Update the wb_weighbridge record to set online_entry = true
+      const updateQuery = `
+        UPDATE wb_weighbridge 
+        SET online_entry = true, last_updated_date = NOW()
+        WHERE wb_id = $1
+        RETURNING *
+      `;
+      
+      const result = await pool.query(updateQuery, [parseInt(wbId)]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Record not found' });
+      }
+      
+      console.log(`Converted wb_id ${wbId} from offline to online`);
+      res.json({ message: 'Entry converted to online successfully', record: result.rows[0] });
+    } catch (error: any) {
+      console.error('Error converting entry to online:', error);
+      res.status(500).json({ error: 'Failed to convert entry to online' });
+    }
+  });
+
   // GET endpoint for generating next DO ID
   app.get('/api/sales/next-do-id', async (req, res) => {
     try {

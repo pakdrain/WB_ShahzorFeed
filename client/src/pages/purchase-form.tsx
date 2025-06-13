@@ -819,10 +819,25 @@ export default function PurchaseForm() {
     }));
   };
 
-  // Reset form to clean state when component mounts (new purchase)
+  // Handle URL parameters for edit mode
   useEffect(() => {
-    resetFormToInitial();
-  }, []);
+    const urlParams = new URLSearchParams(window.location.search);
+    const editWbId = urlParams.get('edit');
+    const offlineEditSlip = urlParams.get('offline_edit');
+    
+    if (editWbId) {
+      // Load record for editing by wb_id
+      loadDataByWbId(parseInt(editWbId));
+    } else if (offlineEditSlip) {
+      // Load offline record for editing by slip number
+      loadDataBySlipNo(offlineEditSlip);
+      // Set offline mode for offline entries
+      toggleOnlineMode(false);
+    } else {
+      // Reset form to clean state for new purchase
+      resetFormToInitial();
+    }
+  }, [location]);
 
   useEffect(() => {
     // Fetch next slip number
@@ -1032,6 +1047,19 @@ export default function PurchaseForm() {
         
         if (!updateWbId) {
           throw new Error('No valid wb_id found for update operation');
+        }
+        
+        // If this is an offline entry being converted to online, update the status
+        if (isEditMode && formData.onlineEntry === 'Yes' && updateWbId) {
+          try {
+            await fetch(`/api/purchase/convert-to-online/${updateWbId}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+            });
+            console.log('Entry converted from offline to online');
+          } catch (error) {
+            console.error('Error converting to online:', error);
+          }
         }
         
         console.log('Updating record with wb_id:', updateWbId);
