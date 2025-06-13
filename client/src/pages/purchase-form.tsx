@@ -296,14 +296,28 @@ export default function PurchaseForm() {
           </div>
 
           <div class="commodity-section">
-            <div><strong>Commodity</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>GROSS WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.firstWeight || '0'}</div>
-            <div style="margin-top: 5px;">${formData.itemCode || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.itemDesc || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>TARE WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.secondWeight || '0'}</div>
-            <div style="margin-top: 5px;"><strong>QUANTITY</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.noOfBags || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>WITH BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.grossWeight || '0'}</div>
-            <div style="margin-top: 5px;"><strong>BAG CONDITION</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bagCondition || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaWeight || '0'}</div>
-            <div style="margin-top: 5px;"><strong>BAG TYPE</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaType || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>QUALITY DEDUCTION</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.qualityDeduction || '0'}</div>
-            <div style="margin-top: 5px;"><strong>AVG. WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.wtPerBag || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>NET WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.netWeight || '0'}</div>
-            <div style="margin-top: 5px;"><strong>REMARKS</strong></div>
-            <div style="margin-top: 5px;">${formData.remarks || ''}</div>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="width: 50%; vertical-align: top;">
+                  <div><strong>Commodity</strong></div>
+                  <div style="margin-top: 8px;">${formData.itemCode || ''} &nbsp;&nbsp;&nbsp;&nbsp; ${formData.itemDesc || ''}</div>
+                  <div style="margin-top: 8px;"><strong>QUANTITY</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.noOfBags || ''}</div>
+                  <div style="margin-top: 8px;"><strong>BAG CONDITION</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.bagCondition || ''}</div>
+                  <div style="margin-top: 8px;"><strong>BAG TYPE</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaType || ''}</div>
+                  <div style="margin-top: 8px;"><strong>AVG. WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.wtPerBag || ''}</div>
+                  <div style="margin-top: 8px;"><strong>REMARKS</strong></div>
+                  <div style="margin-top: 4px;">${formData.remarks || ''}</div>
+                </td>
+                <td style="width: 50%; vertical-align: top; padding-left: 20px;">
+                  <div><strong>GROSS WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.firstWeight || '0'}</div>
+                  <div style="margin-top: 8px;"><strong>TARE WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.secondWeight || '0'}</div>
+                  <div style="margin-top: 8px;"><strong>WITH BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.grossWeight || '0'}</div>
+                  <div style="margin-top: 8px;"><strong>BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaWeight || '0'}</div>
+                  <div style="margin-top: 8px;"><strong>QUALITY DEDUCTION</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.qualityDeduction || '0'}</div>
+                  <div style="margin-top: 8px;"><strong>NET WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.netWeight || '0'}</div>
+                </td>
+              </tr>
+            </table>
           </div>
 
           <div class="signatures">
@@ -344,14 +358,29 @@ export default function PurchaseForm() {
           </div>
 
           <div class="commodity-section">
-            <div><strong>Commodity</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>GROSS WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.firstWeight || '0'}</div>
-            <div style="margin-top: 5px;">${formData.itemCode || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.itemDesc || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>TARE WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.secondWeight || '0'}</div>
-            <div style="margin-top: 5px;"><strong>QUANTITY</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.noOfBags || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>WITH BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.grossWeight || '0'}</div>
-            <div style="margin-top: 5px;"><strong>BAG CONDITION</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bagCondition || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaWeight || '0'}</div>
-            <div style="margin-top: 5px;"><strong>BAG TYPE</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaType || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>QUALITY DEDUCTION</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.qualityDeduction || '0'}</div>
-            <div style="margin-top: 5px;"><strong>AVG. WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.wtPerBag || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>NET WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.netWeight || '0'}</div>
-            <div style="margin-top: 5px;"><strong>REMARKS</strong></div>
-            <div style="margin-top: 5px;">${formData.remarks || ''}</div>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="width: 50%; vertical-align: top;">
+                  <div><strong>Commodity</strong></div>
+                  <div style="margin-top: 8px;">${formData.itemCode || ''} &nbsp;&nbsp;&nbsp;&nbsp; ${formData.itemDesc || ''}</div>
+                  <div style="margin-top: 8px;"><strong>QUANTITY</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.noOfBags || ''}</div>
+                  <div style="margin-top: 8px;"><strong>BAG CONDITION</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.bagCondition || ''}</div>
+                  <div style="margin-top: 8px;"><strong>BAG TYPE</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaType || ''}</div>
+                  <div style="margin-top: 8px;"><strong>AVG. WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.wtPerBag || ''}</div>
+                  <div style="margin-top: 8px;"><strong>REMARKS</strong></div>
+                  <div style="margin-top: 4px;">${formData.remarks || ''}</div>
+                </td>
+                <td style="width: 50%; vertical-align: top; padding-left: 20px;">
+                  <div><strong>GROSS WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.firstWeight || '0'}</div>
+                  <div style="margin-top: 8px;"><strong>TARE WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.secondWeight || '0'}</div>
+                  <div style="margin-top: 8px;"><strong>WITH BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.grossWeight || '0'}</div>
+                  <div style="margin-top: 8px;"><strong>BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaWeight || '0'}</div>
+                  <div style="margin-top: 8px;"><strong>QUALITY DEDUCTION</strong> &nbsp;&nbsp;&nbsp;&nbsp; ${formData.qualityDeduction || '0'}</div>
+                  <div style="margin-top: 8px;"><strong>NET WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.netWeight || '0'}</div>
+                </td>
+              </tr>
+            </table>
+          </div>
           </div>
 
           <div class="signatures">

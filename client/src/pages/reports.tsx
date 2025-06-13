@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -69,8 +70,8 @@ export default function Reports() {
   }, [selectedBranch, refetchPurchase, refetchSales]);
 
   const handleEdit = (wbId: number) => {
-    // Navigate to purchase form with edit mode
-    window.location.href = `/purchase-form?edit=${wbId}`;
+    // Navigate to purchase form with edit mode using wouter
+    setLocation(`/purchase-form?edit=${wbId}`);
   };
 
   const handlePrintRecord = async (record: PurchaseRecord | SaleRecord) => {
@@ -633,47 +634,48 @@ export default function Reports() {
 
         {/* Purchase Tab */}
         <TabsContent value="purchase" className="space-y-4">
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-4 border-b">
-              <h2 className="text-lg font-semibold">Purchase Entries</h2>
+          <div className="bg-white rounded-lg shadow border-2 border-black">
+            <div className="p-4 border-b-2 border-black">
+              <h2 className="text-lg font-semibold text-black">Purchase Entries</h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm border-collapse">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left">Slip No</th>
-                    <th className="px-4 py-2 text-left">Vehicle In Time</th>
-                    <th className="px-4 py-2 text-left">Vehicle Out Time</th>
-                    <th className="px-4 py-2 text-left">Entry Type</th>
-                    <th className="px-4 py-2 text-left">Vehicle No</th>
-                    <th className="px-4 py-2 text-left">Vendor</th>
-                    <th className="px-4 py-2 text-left">Actions</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Slip No</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle In Time</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle Out Time</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Vendor</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {purchaseRecords.map((record: PurchaseRecord) => (
-                    <tr key={record.wb_id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-2">{record.slip_no}</td>
-                      <td className="px-4 py-2">
+                    <tr key={record.wb_id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 border border-black text-black">{record.slip_no}</td>
+                      <td className="px-4 py-2 border border-black text-black">
                         {record.slip_in_time ? new Date(record.slip_in_time).toLocaleString() : '---'}
                       </td>
-                      <td className="px-4 py-2">
+                      <td className="px-4 py-2 border border-black text-black">
                         {record.slip_out_time ? new Date(record.slip_out_time).toLocaleString() : '---'}
                       </td>
-                      <td className="px-4 py-2">
-                        <span className={`px-2 py-1 rounded text-xs ${
+                      <td className="px-4 py-2 border border-black text-black">
+                        <span className={`px-2 py-1 rounded text-xs border border-black ${
                           record.online_entry ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
                         }`}>
                           {record.online_entry ? 'Online' : 'Offline'}
                         </span>
                       </td>
-                      <td className="px-4 py-2">{record.vehicle_no || '---'}</td>
-                      <td className="px-4 py-2">{record.vendor_name || '---'}</td>
-                      <td className="px-4 py-2">
+                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
+                      <td className="px-4 py-2 border border-black">
                         <div className="flex gap-2">
                           <Button 
                             size="sm" 
                             variant="outline"
+                            className="border-black text-black hover:bg-gray-100"
                             onClick={() => handleEdit(record.wb_id)}
                           >
                             Edit
@@ -681,6 +683,7 @@ export default function Reports() {
                           <Button 
                             size="sm" 
                             variant="outline"
+                            className="border-black text-black hover:bg-gray-100"
                             onClick={() => handlePrintRecord(record)}
                           >
                             Print
