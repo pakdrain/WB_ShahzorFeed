@@ -42,7 +42,7 @@ export default function Reports() {
   const { data: purchaseRecords = [], refetch: refetchPurchase } = useQuery({
     queryKey: ['/api/purchases', selectedBranch],
     queryFn: async () => {
-      const url = selectedBranch 
+      const url = (selectedBranch && selectedBranch !== 'all') 
         ? `/api/purchases?branch_id=${selectedBranch}` 
         : '/api/purchases';
       const response = await fetch(url);
@@ -54,7 +54,7 @@ export default function Reports() {
   const { data: salesRecords = [], refetch: refetchSales } = useQuery({
     queryKey: ['/api/sales', selectedBranch],
     queryFn: async () => {
-      const url = selectedBranch 
+      const url = (selectedBranch && selectedBranch !== 'all') 
         ? `/api/sales?branch_id=${selectedBranch}` 
         : '/api/sales';
       const response = await fetch(url);
@@ -219,7 +219,7 @@ export default function Reports() {
               <SelectValue placeholder="All Branches" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Branches</SelectItem>
+              <SelectItem value="all">All Branches</SelectItem>
               {Array.isArray(branches) && branches.map((branch: any) => (
                 <SelectItem key={branch.branch_id} value={branch.branch_id.toString()}>
                   {branch.branch_name}
