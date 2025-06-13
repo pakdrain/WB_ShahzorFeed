@@ -33,6 +33,7 @@ interface SaleRecord {
 export default function Reports() {
   const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [activeTab, setActiveTab] = useState('purchase');
+  const [location, setLocation] = useLocation();
 
   // Fetch branches
   const { data: branches = [] } = useQuery({
@@ -605,13 +606,13 @@ export default function Reports() {
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
       <div className="mb-4">
-        <h1 className="text-2xl font-bold mb-4">Reports</h1>
+        <h1 className="text-2xl font-bold mb-4 text-black">Reports</h1>
         
         {/* Branch Selection */}
         <div className="mb-4 flex items-center gap-4">
-          <label className="text-sm font-medium">Filter by Branch:</label>
+          <label className="text-sm font-medium text-black">Filter by Branch:</label>
           <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-48 border-black">
               <SelectValue placeholder="All Branches" />
             </SelectTrigger>
             <SelectContent>
@@ -705,45 +706,46 @@ export default function Reports() {
 
         {/* Sale Tab */}
         <TabsContent value="sale" className="space-y-4">
-          <div className="bg-white rounded-lg shadow">
-            <div className="p-4 border-b">
-              <h2 className="text-lg font-semibold">Sale Entries</h2>
+          <div className="bg-white rounded-lg shadow border-2 border-black">
+            <div className="p-4 border-b-2 border-black">
+              <h2 className="text-lg font-semibold text-black">Sale Entries</h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm border-collapse">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left">Slip No</th>
-                    <th className="px-4 py-2 text-left">Vehicle In Time</th>
-                    <th className="px-4 py-2 text-left">Vehicle Out Time</th>
-                    <th className="px-4 py-2 text-left">Entry Type</th>
-                    <th className="px-4 py-2 text-left">Vehicle No</th>
-                    <th className="px-4 py-2 text-left">Customer</th>
-                    <th className="px-4 py-2 text-left">Actions</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Slip No</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle In Time</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle Out Time</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Customer</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {salesRecords.map((record: SaleRecord) => (
-                    <tr key={record.wb_id} className="border-b hover:bg-gray-50">
-                      <td className="px-4 py-2">{record.slip_no}</td>
-                      <td className="px-4 py-2">
+                    <tr key={record.wb_id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 border border-black text-black">{record.slip_no}</td>
+                      <td className="px-4 py-2 border border-black text-black">
                         {record.slip_in_time ? new Date(record.slip_in_time).toLocaleString() : '---'}
                       </td>
-                      <td className="px-4 py-2">
+                      <td className="px-4 py-2 border border-black text-black">
                         {record.slip_out_time ? new Date(record.slip_out_time).toLocaleString() : '---'}
                       </td>
-                      <td className="px-4 py-2">
-                        <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">
+                      <td className="px-4 py-2 border border-black text-black">
+                        <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 border border-black">
                           Sale
                         </span>
                       </td>
-                      <td className="px-4 py-2">{record.vehicle_no || '---'}</td>
-                      <td className="px-4 py-2">{record.customer_name || '---'}</td>
-                      <td className="px-4 py-2">
+                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.customer_name || '---'}</td>
+                      <td className="px-4 py-2 border border-black">
                         <div className="flex gap-2">
                           <Button 
                             size="sm" 
                             variant="outline"
+                            className="border-black text-black hover:bg-gray-100"
                             onClick={() => handleEdit(record.wb_id)}
                           >
                             Edit
@@ -751,6 +753,7 @@ export default function Reports() {
                           <Button 
                             size="sm" 
                             variant="outline"
+                            className="border-black text-black hover:bg-gray-100"
                             onClick={() => handlePrintRecord(record)}
                           >
                             Print

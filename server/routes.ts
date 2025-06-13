@@ -971,14 +971,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { branch_id } = req.query;
       let query = `
-        SELECT sd.*, wb.slip_in_time, wb.slip_out_time, wb.entry_type, wb.branch_id 
+        SELECT 
+          sd.wb_id,
+          sd.slip_no,
+          sd.vehicle_no,
+          sd.customer_name,
+          wb.slip_in_time, 
+          wb.slip_out_time, 
+          wb.entry_type, 
+          wb.branch_id 
         FROM sales_details sd 
         JOIN wb_weighbridge wb ON sd.wb_id = wb.wb_id
+        WHERE 1=1
       `;
       const params: any[] = [];
       
-      if (branch_id) {
-        query += ' WHERE wb.branch_id = $1';
+      if (branch_id && branch_id !== 'all') {
+        query += ' AND wb.branch_id = $1';
         params.push(parseInt(branch_id as string));
       }
       
@@ -999,14 +1008,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { branch_id } = req.query;
       let query = `
-        SELECT wb.*, wbi.vendor_name, wbi.vehicle_no 
+        SELECT 
+          wb.wb_id,
+          wb.slip_no,
+          wb.slip_in_time,
+          wb.slip_out_time,
+          wb.entry_type,
+          wb.online_entry,
+          wb.branch_id,
+          COALESCE(wbi.vendor_name, '') as vendor_name,
+          COALESCE(wbi.vehicle_no, '') as vehicle_no
         FROM wb_weighbridge wb 
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
-        WHERE wb.entry_type = 'PURCHASE'
+        WHERE 1=1
       `;
       const params: any[] = [];
       
-      if (branch_id) {
+      if (branch_id && branch_id !== 'all') {
         query += ' AND wb.branch_id = $1';
         params.push(parseInt(branch_id as string));
       }
