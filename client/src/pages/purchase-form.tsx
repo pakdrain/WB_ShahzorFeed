@@ -189,6 +189,199 @@ export default function PurchaseForm() {
     setFormData(initialFormData);
   };
 
+  // Print report function
+  const handlePrintReport = () => {
+    if (!formData.slipNo) {
+      alert('Please save the record first or load an existing slip to print');
+      return;
+    }
+    
+    // Create print window with report data
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to print the report');
+      return;
+    }
+
+    const reportHTML = generateReportHTML();
+    printWindow.document.write(reportHTML);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
+  // Generate HTML for the weighbridge report
+  const generateReportHTML = () => {
+    const currentDate = new Date().toLocaleDateString('en-GB', {
+      day: '2-digit',
+      month: 'short',
+      year: '2-digit'
+    }).toUpperCase().replace(/\s/g, '-');
+    
+    const currentTime = new Date().toLocaleTimeString('en-GB', {
+      hour12: false
+    });
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Weighbridge Slip - ${formData.slipNo}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; font-size: 12px; }
+          .header { text-align: center; margin-bottom: 20px; }
+          .slip-section { border: 1px solid #000; margin-bottom: 20px; padding: 15px; page-break-after: always; }
+          .slip-section:last-child { page-break-after: auto; }
+          .company-name { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+          .slip-title { font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+          .two-column { display: flex; justify-content: space-between; margin-bottom: 10px; }
+          .left-section, .right-section { width: 45%; }
+          .commodity-section { margin: 15px 0; }
+          .weights-section { margin: 15px 0; }
+          .signatures { margin-top: 40px; display: flex; justify-content: space-between; }
+          .signature-line { border-bottom: 1px solid #000; width: 150px; text-align: center; }
+          @media print { body { margin: 0; } .slip-section { page-break-after: always; } }
+        </style>
+      </head>
+      <body>
+        <!-- Head Office Copy -->
+        <div class="slip-section">
+          <div class="header">
+            <div>Head Office Copy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Print Date: ${currentDate} ${currentTime}</div>
+            <div class="company-name">Shahzor FeeD Mill</div>
+            <div class="slip-title">WEIGH BRIDGE SLIP</div>
+          </div>
+          
+          <div class="two-column">
+            <div class="left-section">
+              <div>IGP # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.igpNo || ''}</div>
+              <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
+              <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
+              <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ''}</div>
+            </div>
+            <div class="right-section">
+              <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vendor || ''}</div>
+              <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+              <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            </div>
+          </div>
+
+          <div class="commodity-section">
+            <div><strong>Commodity</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>GROSS WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.firstWeight || '0'}</div>
+            <div style="margin-top: 5px;">${formData.itemCode || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.itemDesc || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>TARE WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.secondWeight || '0'}</div>
+            <div style="margin-top: 5px;"><strong>QUANTITY</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.noOfBags || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>WITH BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.grossWeight || '0'}</div>
+            <div style="margin-top: 5px;"><strong>BAG CONDITION</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bagCondition || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaWeight || '0'}</div>
+            <div style="margin-top: 5px;"><strong>BAG TYPE</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaType || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>QUALITY DEDUCTION</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.qualityDeduction || '0'}</div>
+            <div style="margin-top: 5px;"><strong>AVG. WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.wtPerBag || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>NET WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.netWeight || '0'}</div>
+            <div style="margin-top: 5px;"><strong>REMARKS</strong></div>
+            <div style="margin-top: 5px;">${formData.remarks || ''}</div>
+          </div>
+
+          <div class="signatures">
+            <div>
+              <div class="signature-line"></div>
+              <div>Weight By:</div>
+            </div>
+            <div>
+              <div class="signature-line"></div>
+              <div>Checked By:</div>
+            </div>
+            <div>
+              <div class="signature-line"></div>
+              <div>Production Manager:</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feed Mill Copy -->
+        <div class="slip-section">
+          <div class="header">
+            <div>Feed Mill Copy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Shahzor Feed Mill</div>
+            <div class="slip-title">WEIGH BRIDGE SLIP</div>
+          </div>
+          
+          <div class="two-column">
+            <div class="left-section">
+              <div>IGP # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.igpNo || ''}</div>
+              <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
+              <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
+              <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ''}</div>
+            </div>
+            <div class="right-section">
+              <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vendor || ''}</div>
+              <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+              <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            </div>
+          </div>
+
+          <div class="commodity-section">
+            <div><strong>Commodity</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>GROSS WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.firstWeight || '0'}</div>
+            <div style="margin-top: 5px;">${formData.itemCode || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.itemDesc || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>TARE WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.secondWeight || '0'}</div>
+            <div style="margin-top: 5px;"><strong>QUANTITY</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.noOfBags || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>WITH BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.grossWeight || '0'}</div>
+            <div style="margin-top: 5px;"><strong>BAG CONDITION</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bagCondition || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>BARDANA WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaWeight || '0'}</div>
+            <div style="margin-top: 5px;"><strong>BAG TYPE</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.bardanaType || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>QUALITY DEDUCTION</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.qualityDeduction || '0'}</div>
+            <div style="margin-top: 5px;"><strong>AVG. WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.wtPerBag || ''} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <strong>NET WEIGHT</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.netWeight || '0'}</div>
+            <div style="margin-top: 5px;"><strong>REMARKS</strong></div>
+            <div style="margin-top: 5px;">${formData.remarks || ''}</div>
+          </div>
+
+          <div class="signatures">
+            <div>
+              <div class="signature-line"></div>
+              <div>Weight By:</div>
+            </div>
+            <div>
+              <div class="signature-line"></div>
+              <div>Checked By:</div>
+            </div>
+            <div>
+              <div class="signature-line"></div>
+              <div>Production Manager:</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customer Copy -->
+        <div class="slip-section">
+          <div class="header">
+            <div>Customer Copy &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Shahzor Feed Mill</div>
+            <div class="slip-title">IGP SLIP</div>
+          </div>
+          
+          <div class="two-column">
+            <div class="left-section">
+              <div>W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
+              <div style="margin-top: 15px;">Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vendor || ''}</div>
+              <div style="margin-top: 10px;">Commodity: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.itemDesc || ''}</div>
+              <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
+              <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp; ${formData.freight || ''}</div>
+            </div>
+            <div class="right-section">
+              <div>Slip Date: &nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+              <div style="margin-top: 15px;"><strong>QUANTITY</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.noOfBags || ''}</div>
+              <div style="margin-top: 10px;"><strong>NET WEIGHT</strong></div>
+            </div>
+          </div>
+
+          <div class="signatures" style="margin-top: 60px;">
+            <div>
+              <div class="signature-line"></div>
+              <div>Weight By:</div>
+            </div>
+            <div>
+              <div class="signature-line"></div>
+              <div>Checked By:</div>
+            </div>
+            <div>
+              <div class="signature-line"></div>
+              <div>Production Manager:</div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
   // Navigation functions
   const navigateToFirst = async () => {
     try {
@@ -1208,8 +1401,6 @@ export default function PurchaseForm() {
                       console.log('wb_id:', record.wb_id);
                       if (record.wb_id) {
                         loadDataByWbId(record.wb_id);
-                      } else {
-                        alert('No wb_id found for this record');
                       }
                     }}
                   >
@@ -1327,34 +1518,34 @@ export default function PurchaseForm() {
       <div className="flex justify-between items-center bg-white border rounded p-1 mb-1">
         <div className="flex gap-1 text-xs">
           <Button 
-            className={`h-6 px-2 text-xs font-medium ${selectedForm === 'purchase' ? 'bg-blue-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
+            className={`h-8 px-2 text-sm font-medium ${selectedForm === 'purchase' ? 'bg-blue-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
             onClick={() => setSelectedForm('purchase')}
           >
             Purchase
           </Button>
           <Button 
-            className={`h-6 px-2 text-xs font-medium ${selectedForm === 'sales' ? 'bg-rose-700 text-white' : 'bg-rose-600 hover:bg-rose-700 text-white'}`}
+            className={`h-8 px-2 text-sm font-medium ${selectedForm === 'sales' ? 'bg-rose-700 text-white' : 'bg-rose-600 hover:bg-rose-700 text-white'}`}
             onClick={() => setSelectedForm('sales')}
           >
             Sale
           </Button>
-          <Button className={`h-6 px-2 text-xs font-medium ${isEditMode ? 'bg-yellow-600 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}>
+          <Button className={`h-8 px-2 text-sm font-medium ${isEditMode ? 'bg-yellow-600 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}>
             {isEditMode ? 'Editing' : 'Offline'}
           </Button>
-          <Button className="h-6 px-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium" onClick={navigateToFirst}>First</Button>
-          <Button className="h-6 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium" onClick={navigateToPrev}>Prev</Button>
-          <Button className="h-6 px-2 text-xs bg-cyan-600 hover:bg-cyan-700 text-white font-medium" onClick={navigateToNext}>Next</Button>
-          <Button className="h-6 px-2 text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium" onClick={navigateToLast}>Last</Button>
-          <Button className="bg-green-600 hover:bg-green-700 h-6 px-3 text-xs text-white font-medium" onClick={handleSave} disabled={loading}>
+          <Button className="h-8 px-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium" onClick={navigateToFirst}>First</Button>
+          <Button className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium" onClick={navigateToPrev}>Prev</Button>
+          <Button className="h-8 px-2 text-sm bg-cyan-600 hover:bg-cyan-700 text-white font-medium" onClick={navigateToNext}>Next</Button>
+          <Button className="h-8 px-2 text-sm bg-teal-600 hover:bg-teal-700 text-white font-medium" onClick={navigateToLast}>Last</Button>
+          <Button className="bg-green-600 hover:bg-green-700 h-8 px-3 text-sm text-white font-medium" onClick={handleSave} disabled={loading}>
             {loading ? 'Saving...' : 'Save'}
           </Button>
           {isEditMode && (
-            <Button className="h-6 px-2 text-xs bg-red-600 hover:bg-red-700 text-white font-medium" onClick={cancelEdit}>
+            <Button className="h-8 px-2 text-sm bg-red-600 hover:bg-red-700 text-white font-medium" onClick={cancelEdit}>
               Cancel
             </Button>
           )}
-          <Button className="h-6 px-2 text-xs bg-purple-600 hover:bg-purple-700 text-white font-medium">Print</Button>
-          <Button className="h-6 px-2 text-xs bg-orange-600 hover:bg-orange-700 text-white font-medium">Rej</Button>
+          <Button className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium" onClick={handlePrintReport}>Print</Button>
+          <Button className="h-8 px-2 text-sm bg-orange-600 hover:bg-orange-700 text-white font-medium">Rej</Button>
         </div>
         <div className="flex gap-1 items-center">
           {/* Weight Display - positioned on left side with bolder text */}
