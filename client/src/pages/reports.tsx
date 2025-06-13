@@ -220,7 +220,7 @@ export default function Reports() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="">All Branches</SelectItem>
-              {branches.map((branch: any) => (
+              {Array.isArray(branches) && branches.map((branch: any) => (
                 <SelectItem key={branch.branch_id} value={branch.branch_id.toString()}>
                   {branch.branch_name}
                 </SelectItem>

@@ -966,17 +966,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET all sales data
+  // GET all sales data with branch filtering
   app.get('/api/sales', async (req: Request, res: Response) => {
     try {
-      const query = 'SELECT * FROM sales_details ORDER BY id DESC';
-      const result = await pool.query(query);
+      const { branch_id } = req.query;
+      let query = `
+        SELECT sd.*, wb.slip_in_time, wb.slip_out_time, wb.entry_type, wb.branch_id 
+        FROM sales_details sd 
+        JOIN wb_weighbridge wb ON sd.wb_id = wb.wb_id
+      `;
+      const params: any[] = [];
+      
+      if (branch_id) {
+        query += ' WHERE wb.branch_id = $1';
+        params.push(parseInt(branch_id as string));
+      }
+      
+      query += ' ORDER BY sd.id DESC';
+      
+      const result = await pool.query(query, params);
       
       console.log(`Fetched ${result.rows.length} sales records`);
       res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching sales data:', error);
       res.status(500).json({ error: 'Failed to fetch sales data' });
+    }
+  });
+
+  // GET purchase records for reports with branch filtering
+  app.get('/api/purchases', async (req: Request, res: Response) => {
+    try {
+      const { branch_id } = req.query;
+      let query = `
+        SELECT wb.*, wbi.vendor_name, wbi.vehicle_no 
+        FROM wb_weighbridge wb 
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
+        WHERE wb.entry_type = 'PURCHASE'
+      `;
+      const params: any[] = [];
+      
+      if (branch_id) {
+        query += ' AND wb.branch_id = $1';
+        params.push(parseInt(branch_id as string));
+      }
+      
+      query += ' ORDER BY wb.wb_id DESC';
+      
+      const result = await pool.query(query, params);
+      
+      console.log(`Fetched ${result.rows.length} purchase records`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('Error fetching purchase records:', error);
+      res.status(500).json({ error: 'Failed to fetch purchase records' });
     }
   });
 

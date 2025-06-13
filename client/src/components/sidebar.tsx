@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 const navigation = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'Purchase Form', href: '/purchase-form', icon: FileText },
+  { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'Camera Settings', href: '/settings', icon: Settings },
   { name: 'Weighbridge Settings', href: '/weighbridge-settings', icon: Scale },
 ];

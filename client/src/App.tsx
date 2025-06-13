@@ -12,6 +12,7 @@ import CameraSettings from "@/pages/camera-settings";
 import WeighbridgeSettings from "@/pages/weighbridge-settings";
 import PurchaseForm from "@/pages/purchase-form";
 import SalesForm from "@/pages/sales-form";
+import Reports from "@/pages/reports";
 import NotFound from "@/pages/not-found";
 
 function ProtectedApp() {
@@ -25,6 +26,7 @@ function ProtectedApp() {
           <Route path="/weighbridge-settings" component={WeighbridgeSettings} />
           <Route path="/purchase-form" component={PurchaseForm} />
           <Route path="/sales-form" component={SalesForm} />
+          <Route path="/reports" component={Reports} />
           <Route component={NotFound} />
         </Switch>
       </div>
