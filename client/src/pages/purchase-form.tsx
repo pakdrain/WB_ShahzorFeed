@@ -1620,8 +1620,11 @@ export default function PurchaseForm() {
           >
             Sale
           </Button>
-          <Button className={`h-8 px-2 text-sm font-medium ${isEditMode ? 'bg-yellow-600 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}>
-            {isEditMode ? 'Editing' : 'Offline'}
+          <Button 
+            className={`h-8 px-2 text-sm font-medium ${selectedForm === 'offline' ? 'bg-yellow-600 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}
+            onClick={() => setSelectedForm('offline')}
+          >
+            Offline
           </Button>
           <Button className="h-8 px-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium" onClick={navigateToFirst}>First</Button>
           <Button className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium" onClick={navigateToPrev}>Prev</Button>
@@ -2162,6 +2165,75 @@ export default function PurchaseForm() {
                   {/* Sales form content will go here */}
                   <div className="text-center p-4">
                     <p>Sales form functionality coming soon</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Show Offline Form when selectedForm is 'offline' */}
+              {selectedForm === 'offline' && (
+                <div className="h-full flex flex-col">
+                  <div className="bg-white p-4 rounded border">
+                    <h3 className="text-lg font-semibold mb-4 text-black">Offline Entries</h3>
+                    
+                    {/* Offline entries table */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm border-collapse border border-black">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th className="px-3 py-2 text-left border border-black text-black">Slip No</th>
+                            <th className="px-3 py-2 text-left border border-black text-black">Slip Date</th>
+                            <th className="px-3 py-2 text-left border border-black text-black">Entry Type</th>
+                            <th className="px-3 py-2 text-left border border-black text-black">First Weight</th>
+                            <th className="px-3 py-2 text-left border border-black text-black">Second Weight</th>
+                            <th className="px-3 py-2 text-left border border-black text-black">Vehicle No</th>
+                            <th className="px-3 py-2 text-left border border-black text-black">Company Name</th>
+                            <th className="px-3 py-2 text-left border border-black text-black">Manual Trans #</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {firstWeightRecords
+                            .filter((record: any) => !record.online_entry)
+                            .map((record: any) => (
+                            <tr key={record.wb_id} className="hover:bg-gray-50">
+                              <td className="px-3 py-2 border border-black text-black">
+                                <button 
+                                  className="text-blue-600 hover:text-blue-800 font-medium underline"
+                                  onClick={() => {
+                                    loadDataByWbId(record.wb_id);
+                                    setSelectedForm('purchase');
+                                  }}
+                                >
+                                  {record.slip_no}
+                                </button>
+                              </td>
+                              <td className="px-3 py-2 border border-black text-black">
+                                {record.slip_in_time ? new Date(record.slip_in_time).toLocaleDateString() : '---'}
+                              </td>
+                              <td className="px-3 py-2 border border-black text-black">PURCHASE</td>
+                              <td className="px-3 py-2 border border-black text-black">
+                                {record.first_weight ? record.first_weight : '---'}
+                              </td>
+                              <td className="px-3 py-2 border border-black text-black">
+                                {record.second_weight ? record.second_weight : '---'}
+                              </td>
+                              <td className="px-3 py-2 border border-black text-black">
+                                {record.vehicle_no || '---'}
+                              </td>
+                              <td className="px-3 py-2 border border-black text-black">
+                                {record.vendor_name || '---'}
+                              </td>
+                              <td className="px-3 py-2 border border-black text-black">---</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      
+                      {firstWeightRecords.filter((record: any) => !record.online_entry).length === 0 && (
+                        <div className="text-center py-8 text-black border border-black">
+                          No offline records found
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}
