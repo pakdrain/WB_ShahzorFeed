@@ -344,6 +344,7 @@ export default function PurchaseForm() {
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
   const [onlineMode, setOnlineMode] = useState(true);
   const [igpItems, setIgpItems] = useState<any[]>([]);
+  const [branches, setBranches] = useState<any[]>([]);
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
@@ -575,6 +576,17 @@ export default function PurchaseForm() {
       })
       .catch((err: any) => {
         console.error('Error fetching purchases:', err);
+      });
+
+    // Fetch branches for dropdown
+    fetch('/api/branches')
+      .then(res => res.json())
+      .then((data: any[]) => {
+        setBranches(data);
+        console.log('Branches fetched:', data);
+      })
+      .catch((err: any) => {
+        console.error('Error fetching branches:', err);
       });
 
     const now = new Date().toISOString();
@@ -1415,8 +1427,11 @@ export default function PurchaseForm() {
                       <SelectValue placeholder="Select branch" className="text-black" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Branch 1">Branch 1</SelectItem>
-                      <SelectItem value="Branch 2">Branch 2</SelectItem>
+                      {branches.map((branch) => (
+                        <SelectItem key={branch.branch_id} value={branch.branch_id.toString()}>
+                          {branch.branch_name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

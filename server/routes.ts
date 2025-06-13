@@ -638,6 +638,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET branches for dropdown
+  app.get('/api/branches', async (req: Request, res: Response) => {
+    try {
+      const query = 'SELECT branch_id, branch_name FROM branches ORDER BY branch_name';
+      const result = await pool.query(query);
+      
+      console.log(`Fetched ${result.rows.length} branches`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('Error fetching branches:', error);
+      res.status(500).json({ error: 'Failed to fetch branches' });
+    }
+  });
+
   // GET purchase by wb_id
   app.get('/api/purchase/by-wbid/:wbId', async (req: Request, res: Response) => {
     try {
