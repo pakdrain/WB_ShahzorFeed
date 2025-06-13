@@ -1806,8 +1806,8 @@ export default function PurchaseForm() {
                     </Button>
                   </div>
 
-                  {/* Compact Table with IGP Data */}
-                  <div className="border rounded text-xs h-[calc(100%-200px)] overflow-auto">
+                  {/* Compact Table with IGP Data - aligned with master form */}
+                  <div className="border rounded text-xs h-[calc(100%-200px)] overflow-auto mt-4 -ml-4 mr-0" style={{width: 'calc(100% + 1rem)'}}>
                     <table className="w-full text-center">
                       <thead className="bg-gray-100 sticky top-0">
                         <tr>
