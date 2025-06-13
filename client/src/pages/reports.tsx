@@ -41,28 +41,42 @@ export default function Reports() {
   });
 
   // Fetch purchase records
-  const { data: purchaseRecords = [], refetch: refetchPurchase } = useQuery({
+  const { data: purchaseData, refetch: refetchPurchase, error: purchaseError } = useQuery({
     queryKey: ['/api/purchases', selectedBranch],
     queryFn: async () => {
       const url = (selectedBranch && selectedBranch !== 'all') 
         ? `/api/purchases?branch_id=${selectedBranch}` 
         : '/api/purchases';
       const response = await fetch(url);
-      return response.json();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch purchase data');
+      }
+      return data;
     },
   });
 
+  // Ensure purchaseRecords is always an array
+  const purchaseRecords = Array.isArray(purchaseData) ? purchaseData : [];
+
   // Fetch sales records
-  const { data: salesRecords = [], refetch: refetchSales } = useQuery({
+  const { data: salesData, refetch: refetchSales, error: salesError } = useQuery({
     queryKey: ['/api/sales', selectedBranch],
     queryFn: async () => {
       const url = (selectedBranch && selectedBranch !== 'all') 
         ? `/api/sales?branch_id=${selectedBranch}` 
         : '/api/sales';
       const response = await fetch(url);
-      return response.json();
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch sales data');
+      }
+      return data;
     },
   });
+
+  // Ensure salesRecords is always an array
+  const salesRecords = Array.isArray(salesData) ? salesData : [];
 
   // Refetch data when branch selection changes
   useEffect(() => {
@@ -695,8 +709,13 @@ export default function Reports() {
                   ))}
                 </tbody>
               </table>
-              {purchaseRecords.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+              {purchaseError && (
+                <div className="text-center py-8 text-red-500 border border-black">
+                  Error loading purchase records. Please try again.
+                </div>
+              )}
+              {!purchaseError && purchaseRecords.length === 0 && (
+                <div className="text-center py-8 text-black border border-black">
                   No purchase records found
                 </div>
               )}
@@ -764,8 +783,13 @@ export default function Reports() {
                   ))}
                 </tbody>
               </table>
-              {salesRecords.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
+              {salesError && (
+                <div className="text-center py-8 text-red-500 border border-black">
+                  Error loading sales records. Please try again.
+                </div>
+              )}
+              {!salesError && salesRecords.length === 0 && (
+                <div className="text-center py-8 text-black border border-black">
                   No sale records found
                 </div>
               )}

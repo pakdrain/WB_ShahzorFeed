@@ -973,7 +973,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let query = `
         SELECT 
           sd.wb_id,
-          sd.slip_no,
+          wb.slip_no,
           sd.vehicle_no,
           sd.customer_name,
           wb.slip_in_time, 
