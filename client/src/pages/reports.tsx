@@ -119,85 +119,480 @@ export default function Reports() {
       <head>
         <title>Weighbridge Slip - ${record.slip_no}</title>
         <style>
-          body { font-family: Arial, sans-serif; margin: 10px; font-size: 10px; }
-          .header { text-align: center; margin-bottom: 10px; }
-          .slip-section { 
-            border: 2px solid #000; 
-            margin-bottom: 15px; 
-            padding: 10px; 
+          body { 
+            font-family: Arial, sans-serif; 
+            margin: 0; 
+            padding: 5mm; 
+            font-size: 11px;
+            line-height: 1.2;
+          }
+          .page-container {
+            width: 210mm;
+            margin: 0 auto;
+            border: 3px solid #000;
+          }
+          .slip { 
+            border-bottom: 2px solid #000; 
+            padding: 8mm; 
+            height: 90mm;
+            position: relative;
             box-sizing: border-box;
           }
-          .company-name { font-size: 14px; font-weight: bold; margin-bottom: 3px; }
-          .slip-title { font-size: 12px; font-weight: bold; margin-bottom: 8px; }
-          .two-column { display: flex; justify-content: space-between; margin-bottom: 5px; }
-          .left-section, .right-section { 
-            width: 45%; 
-            border: 1px solid #666; 
-            padding: 5px; 
-            border-radius: 3px;
+          .slip:last-child { 
+            border-bottom: none; 
           }
-          .image-container { 
-            border: 2px solid #333; 
-            padding: 10px; 
-            margin: 10px 0; 
-            text-align: center; 
-            height: 150px;
-            border-radius: 3px;
-            background-color: #f9f9f9;
+          .slip-header { 
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 6px;
           }
-          .signatures { margin-top: 15px; display: flex; justify-content: space-between; }
-          .signature-line { border-bottom: 1px solid #000; width: 100px; text-align: center; font-size: 8px; }
-          @media print { 
-            body { margin: 0; } 
-            .slip-section { page-break-inside: avoid; }
+          .header-left {
+            font-weight: bold;
+            font-size: 12px;
+          }
+          .header-center {
+            text-align: center;
+            flex: 1;
+          }
+          .header-right {
+            font-size: 10px;
+            text-align: right;
+          }
+          .company-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 2px 0;
+          }
+          .slip-title {
+            font-size: 13px;
+            font-weight: bold;
+            text-decoration: underline;
+          }
+          .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8mm;
+            height: calc(100% - 40px);
+          }
+          .left-panel, .right-panel {
+            border: 2px solid #000;
+            padding: 4mm;
+            display: flex;
+            flex-direction: column;
+          }
+          .field-group {
+            margin-bottom: 6px;
+          }
+          .field-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
+            padding: 1px 0;
+            border-bottom: 1px dotted #999;
+          }
+          .field-label {
+            font-weight: bold;
+            min-width: 50px;
+          }
+          .field-value {
+            flex: 1;
+            text-align: right;
+            font-weight: bold;
+          }
+          .commodity-section {
+            border: 2px solid #000;
+            padding: 3mm;
+            margin: 4mm 0;
+            flex: 1;
+          }
+          .commodity-header {
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #000;
+            padding-bottom: 2px;
+            margin-bottom: 4px;
+          }
+          .weight-section {
+            border: 2px solid #000;
+            padding: 3mm;
+            margin: 4mm 0;
+            flex: 1;
+          }
+          .weight-header {
+            font-weight: bold;
+            text-align: center;
+            border-bottom: 1px solid #000;
+            padding-bottom: 2px;
+            margin-bottom: 4px;
+          }
+          .image-box {
+            border: 3px solid #000;
+            height: 25mm;
+            margin: 3mm 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f8f8f8;
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+          }
+          .signatures {
+            position: absolute;
+            bottom: 8mm;
+            left: 8mm;
+            right: 8mm;
+            display: flex;
+            justify-content: space-between;
+            border-top: 2px solid #000;
+            padding-top: 4mm;
+          }
+          .signature {
+            text-align: center;
+            width: 30%;
+            font-size: 10px;
+          }
+          .signature-line {
+            border-bottom: 1px solid #000;
+            height: 5mm;
+            margin-bottom: 2mm;
+          }
+          @media print {
+            body { margin: 0; padding: 0; }
+            .page-container { width: 100%; }
+            .slip { page-break-inside: avoid; }
           }
         </style>
       </head>
       <body>
-        <div class="slip-section">
-          <div class="header">
-            <div>Print Date: ${currentDate} ${currentTime}</div>
-            <div class="company-name">Shahzor Feed Mill</div>
-            <div class="slip-title">WEIGH BRIDGE SLIP</div>
-          </div>
-          
-          <div class="two-column">
-            <div class="left-section">
-              <div>W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_no || ''}</div>
-              <div style="margin-top: 5px;">Vehicle # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.vehicle_no || ''}</div>
-              <div style="margin-top: 5px;">Entry Type &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.entry_type || ''}</div>
+        <div class="page-container">
+          <!-- Head Office Copy -->
+          <div class="slip">
+            <div class="slip-header">
+              <div class="header-left">Head Office Copy</div>
+              <div class="header-center">
+                <div class="company-name">Shahzor Feed Mill</div>
+                <div class="slip-title">WEIGH BRIDGE SLIP</div>
+              </div>
+              <div class="header-right">Print Date: ${currentDate}<br>${currentTime}</div>
             </div>
-            <div class="right-section">
-              <div>Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${inTime}</div>
-              <div style="margin-top: 5px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${outTime}</div>
-              <div style="margin-top: 5px;">Entry Mode: &nbsp;&nbsp;&nbsp; ${('online_entry' in record && record.online_entry) ? 'ONLINE' : 'OFFLINE'}</div>
+            
+            <div class="content-grid">
+              <div class="left-panel">
+                <div class="field-group">
+                  <div class="field-row">
+                    <span class="field-label">IGP #</span>
+                    <span class="field-value">${record.slip_no || ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">W.B #</span>
+                    <span class="field-value">${record.wb_id || ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Truck #</span>
+                    <span class="field-value">${record.vehicle_no || ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Freight Payment</span>
+                    <span class="field-value"></span>
+                  </div>
+                </div>
+                
+                <div class="commodity-section">
+                  <div class="commodity-header">Commodity</div>
+                  <div class="field-row">
+                    <span class="field-label">Item</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Quantity</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Bag Condition</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Bag Type</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Avg. Weight</span>
+                    <span class="field-value"></span>
+                  </div>
+                </div>
+                
+                <div class="field-row">
+                  <span class="field-label">Remarks</span>
+                  <span class="field-value"></span>
+                </div>
+                
+                <div class="image-box">FIRST WEIGHT IMAGE</div>
+              </div>
+              
+              <div class="right-panel">
+                <div class="field-group">
+                  <div class="field-row">
+                    <span class="field-label">Party</span>
+                    <span class="field-value">${'vendor_name' in record ? record.vendor_name || '' : 'customer_name' in record ? record.customer_name || '' : ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Time IN</span>
+                    <span class="field-value">${inTime}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Time OUT</span>
+                    <span class="field-value">${outTime}</span>
+                  </div>
+                </div>
+                
+                <div class="weight-section">
+                  <div class="weight-header">WEIGHTS</div>
+                  <div class="field-row">
+                    <span class="field-label">GROSS WEIGHT</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">TARE WEIGHT</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">WITH BARDANA WEIGHT</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">BARDANA WEIGHT</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">QUALITY DEDUCTION</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">NET WEIGHT</span>
+                    <span class="field-value"></span>
+                  </div>
+                </div>
+                
+                <div class="image-box">SECOND WEIGHT IMAGE</div>
+              </div>
+            </div>
+            
+            <div class="signatures">
+              <div class="signature">
+                <div class="signature-line"></div>
+                <div>Weight By:</div>
+              </div>
+              <div class="signature">
+                <div class="signature-line"></div>
+                <div>Checked By:</div>
+              </div>
+              <div class="signature">
+                <div class="signature-line"></div>
+                <div>Production Manager:</div>
+              </div>
             </div>
           </div>
 
-          <div class="image-container">
-            <div style="font-size: 12px; font-weight: bold; margin-bottom: 10px;">First Weight Image</div>
-            <div style="font-size: 10px;">Slip No: ${record.slip_no}</div>
-            <div style="font-size: 10px; margin-top: 5px;">Image captured during first weighing</div>
+          <!-- Feed Mill Copy -->
+          <div class="slip">
+            <div class="slip-header">
+              <div class="header-left">Feed Mill Copy</div>
+              <div class="header-center">
+                <div class="company-name">Shahzor Feed Mill</div>
+                <div class="slip-title">WEIGH BRIDGE SLIP</div>
+              </div>
+              <div class="header-right"></div>
+            </div>
+            
+            <div class="content-grid">
+              <div class="left-panel">
+                <div class="field-group">
+                  <div class="field-row">
+                    <span class="field-label">IGP #</span>
+                    <span class="field-value">${record.slip_no || ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">W.B #</span>
+                    <span class="field-value">${record.wb_id || ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Truck #</span>
+                    <span class="field-value">${record.vehicle_no || ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Freight Payment</span>
+                    <span class="field-value"></span>
+                  </div>
+                </div>
+                
+                <div class="commodity-section">
+                  <div class="commodity-header">Commodity</div>
+                  <div class="field-row">
+                    <span class="field-label">Item</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Quantity</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Bag Condition</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Bag Type</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Avg. Weight</span>
+                    <span class="field-value"></span>
+                  </div>
+                </div>
+                
+                <div class="field-row">
+                  <span class="field-label">Remarks</span>
+                  <span class="field-value"></span>
+                </div>
+                
+                <div class="image-box">FIRST WEIGHT IMAGE</div>
+              </div>
+              
+              <div class="right-panel">
+                <div class="field-group">
+                  <div class="field-row">
+                    <span class="field-label">Party</span>
+                    <span class="field-value">${'vendor_name' in record ? record.vendor_name || '' : 'customer_name' in record ? record.customer_name || '' : ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Time IN</span>
+                    <span class="field-value">${inTime}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Time OUT</span>
+                    <span class="field-value">${outTime}</span>
+                  </div>
+                </div>
+                
+                <div class="weight-section">
+                  <div class="weight-header">WEIGHTS</div>
+                  <div class="field-row">
+                    <span class="field-label">GROSS WEIGHT</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">TARE WEIGHT</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">WITH BARDANA WEIGHT</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">BARDANA WEIGHT</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">QUALITY DEDUCTION</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">NET WEIGHT</span>
+                    <span class="field-value"></span>
+                  </div>
+                </div>
+                
+                <div class="image-box">SECOND WEIGHT IMAGE</div>
+              </div>
+            </div>
+            
+            <div class="signatures">
+              <div class="signature">
+                <div class="signature-line"></div>
+                <div>Weight By:</div>
+              </div>
+              <div class="signature">
+                <div class="signature-line"></div>
+                <div>Checked By:</div>
+              </div>
+              <div class="signature">
+                <div class="signature-line"></div>
+                <div>Production Manager:</div>
+              </div>
+            </div>
           </div>
 
-          <div class="image-container">
-            <div style="font-size: 12px; font-weight: bold; margin-bottom: 10px;">Second Weight Image</div>
-            <div style="font-size: 10px;">Slip No: ${record.slip_no}</div>
-            <div style="font-size: 10px; margin-top: 5px;">Image captured during second weighing</div>
-          </div>
-
-          <div class="signatures">
-            <div>
-              <div class="signature-line"></div>
-              <div>Weight By:</div>
+          <!-- Customer Copy -->
+          <div class="slip">
+            <div class="slip-header">
+              <div class="header-left">Customer Copy</div>
+              <div class="header-center">
+                <div class="company-name">Shahzor Feed Mill</div>
+                <div class="slip-title">IGP SLIP</div>
+              </div>
+              <div class="header-right">Slip Date:<br>${inTime}</div>
             </div>
-            <div>
-              <div class="signature-line"></div>
-              <div>Checked By:</div>
+            
+            <div class="content-grid">
+              <div class="left-panel">
+                <div class="field-group">
+                  <div class="field-row">
+                    <span class="field-label">IGP #</span>
+                    <span class="field-value">${record.slip_no || ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">W.B #</span>
+                    <span class="field-value">${record.wb_id || ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Party</span>
+                    <span class="field-value">${'vendor_name' in record ? record.vendor_name || '' : 'customer_name' in record ? record.customer_name || '' : ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Commodity</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Truck #</span>
+                    <span class="field-value">${record.vehicle_no || ''}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Freight Payment</span>
+                    <span class="field-value"></span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="right-panel">
+                <div class="field-group">
+                  <div class="field-row">
+                    <span class="field-label">Quantity</span>
+                    <span class="field-value"></span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">Net Weight</span>
+                    <span class="field-value"></span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <div class="signature-line"></div>
-              <div>Production Manager:</div>
+            
+            <div class="signatures">
+              <div class="signature">
+                <div class="signature-line"></div>
+                <div>Weight By:</div>
+              </div>
+              <div class="signature">
+                <div class="signature-line"></div>
+                <div>Checked By:</div>
+              </div>
+              <div class="signature">
+                <div class="signature-line"></div>
+                <div>Production Manager:</div>
+              </div>
             </div>
           </div>
         </div>
