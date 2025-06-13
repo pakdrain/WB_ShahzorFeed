@@ -107,6 +107,13 @@ export default function PurchaseForm() {
         if (master.wb_id) {
           loadDeductionData(master.wb_id);
         }
+        
+        // Auto-fetch IGP data if IGP number is present during edit
+        if (details.igp_no) {
+          setTimeout(() => {
+            fetchIgpData();
+          }, 500);
+        }
       }
     } catch (error) {
       console.error('Error loading data by wb_id:', error);
@@ -161,6 +168,13 @@ export default function PurchaseForm() {
         if (master.wb_id) {
           loadDeductionData(master.wb_id);
         }
+        
+        // Auto-fetch IGP data if IGP number is present during edit
+        if (details.igp_no) {
+          setTimeout(() => {
+            fetchIgpData();
+          }, 500);
+        }
       }
     } catch (error) {
       console.error('Error loading data by slip number:', error);
@@ -173,6 +187,73 @@ export default function PurchaseForm() {
     setIsEditMode(false);
     setEditingWbId(null);
     setFormData(initialFormData);
+  };
+
+  // Navigation functions
+  const navigateToFirst = async () => {
+    try {
+      const response = await fetch('/api/purchase/first-weight-records');
+      const records = await response.json();
+      if (records.length > 0) {
+        const firstRecord = records[records.length - 1]; // Get oldest record
+        await loadDataByWbId(firstRecord.wb_id);
+      }
+    } catch (error) {
+      console.error('Error navigating to first record:', error);
+    }
+  };
+
+  const navigateToPrev = async () => {
+    const currentSlip = parseInt(formData.slipNo);
+    if (currentSlip > 1) {
+      const prevSlip = currentSlip - 1;
+      try {
+        const response = await fetch(`/api/purchase/by-slip/${prevSlip}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.master) {
+            await loadDataByWbId(data.master.wb_id);
+          }
+        } else {
+          alert(`No record found for slip number ${prevSlip}`);
+        }
+      } catch (error) {
+        console.error('Error navigating to previous record:', error);
+      }
+    }
+  };
+
+  const navigateToNext = async () => {
+    const currentSlip = parseInt(formData.slipNo);
+    const nextSlip = currentSlip + 1;
+    try {
+      const response = await fetch(`/api/purchase/by-slip/${nextSlip}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.master) {
+          await loadDataByWbId(data.master.wb_id);
+        }
+      } else {
+        // If no next record exists, create new entry with next slip number
+        resetFormToInitial();
+        setFormData(prev => ({ ...prev, slipNo: nextSlip.toString() }));
+      }
+    } catch (error) {
+      console.error('Error navigating to next record:', error);
+    }
+  };
+
+  const navigateToLast = async () => {
+    try {
+      const response = await fetch('/api/purchase/first-weight-records');
+      const records = await response.json();
+      if (records.length > 0) {
+        const lastRecord = records[0]; // Get newest record
+        await loadDataByWbId(lastRecord.wb_id);
+      }
+    } catch (error) {
+      console.error('Error navigating to last record:', error);
+    }
   };
 
   // Function to get current date in YYYY-MM-DD format
@@ -1235,10 +1316,10 @@ export default function PurchaseForm() {
           <Button className={`h-6 px-2 text-xs font-medium ${isEditMode ? 'bg-yellow-600 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}>
             {isEditMode ? 'Editing' : 'Offline'}
           </Button>
-          <Button className="h-6 px-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium">First</Button>
-          <Button className="h-6 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium">Prev</Button>
-          <Button className="h-6 px-2 text-xs bg-cyan-600 hover:bg-cyan-700 text-white font-medium">Next</Button>
-          <Button className="h-6 px-2 text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium">Last</Button>
+          <Button className="h-6 px-2 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-medium" onClick={navigateToFirst}>First</Button>
+          <Button className="h-6 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white font-medium" onClick={navigateToPrev}>Prev</Button>
+          <Button className="h-6 px-2 text-xs bg-cyan-600 hover:bg-cyan-700 text-white font-medium" onClick={navigateToNext}>Next</Button>
+          <Button className="h-6 px-2 text-xs bg-teal-600 hover:bg-teal-700 text-white font-medium" onClick={navigateToLast}>Last</Button>
           <Button className="bg-green-600 hover:bg-green-700 h-6 px-3 text-xs text-white font-medium" onClick={handleSave} disabled={loading}>
             {loading ? 'Saving...' : 'Save'}
           </Button>
