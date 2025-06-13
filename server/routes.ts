@@ -1003,7 +1003,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET purchase records for reports with branch filtering
+  // GET purchase records for reports with branch filtering (online entries only)
   app.get('/api/purchases', async (req: Request, res: Response) => {
     try {
       const { branch_id } = req.query;
@@ -1020,7 +1020,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COALESCE(wbi.vehicle_no, '') as vehicle_no
         FROM wb_weighbridge wb 
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
-        WHERE 1=1
+        WHERE wb.online_entry = true
       `;
       const params: any[] = [];
       
@@ -1033,11 +1033,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const result = await pool.query(query, params);
       
-      console.log(`Fetched ${result.rows.length} purchase records`);
+      console.log(`Fetched ${result.rows.length} online purchase records`);
       res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching purchase records:', error);
       res.status(500).json({ error: 'Failed to fetch purchase records' });
+    }
+  });
+
+  // GET offline purchase records for reports with branch filtering
+  app.get('/api/purchases/offline', async (req: Request, res: Response) => {
+    try {
+      const { branch_id } = req.query;
+      let query = `
+        SELECT 
+          wb.wb_id,
+          wb.slip_no,
+          wb.slip_in_time,
+          wb.slip_out_time,
+          wb.entry_type,
+          wb.online_entry,
+          wb.branch_id,
+          COALESCE(wbi.vendor_name, '') as vendor_name,
+          COALESCE(wbi.vehicle_no, '') as vehicle_no
+        FROM wb_weighbridge wb 
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
+        WHERE wb.online_entry = false
+      `;
+      const params: any[] = [];
+      
+      if (branch_id && branch_id !== 'all') {
+        query += ' AND wb.branch_id = $1';
+        params.push(parseInt(branch_id as string));
+      }
+      
+      query += ' ORDER BY wb.wb_id DESC';
+      
+      const result = await pool.query(query, params);
+      
+      console.log(`Fetched ${result.rows.length} offline purchase records`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('Error fetching offline purchase records:', error);
+      res.status(500).json({ error: 'Failed to fetch offline purchase records' });
     }
   });
 

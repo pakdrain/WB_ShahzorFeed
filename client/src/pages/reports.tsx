@@ -78,15 +78,40 @@ export default function Reports() {
   // Ensure salesRecords is always an array
   const salesRecords = Array.isArray(salesData) ? salesData : [];
 
+  // Fetch offline entries
+  const { data: offlineData, refetch: refetchOffline, error: offlineError } = useQuery({
+    queryKey: ['/api/purchases/offline', selectedBranch],
+    queryFn: async () => {
+      const url = (selectedBranch && selectedBranch !== 'all') 
+        ? `/api/purchases/offline?branch_id=${selectedBranch}` 
+        : '/api/purchases/offline';
+      const response = await fetch(url);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch offline data');
+      }
+      return data;
+    },
+  });
+
+  // Ensure offlineRecords is always an array
+  const offlineRecords = Array.isArray(offlineData) ? offlineData : [];
+
   // Refetch data when branch selection changes
   useEffect(() => {
     refetchPurchase();
     refetchSales();
-  }, [selectedBranch, refetchPurchase, refetchSales]);
+    refetchOffline();
+  }, [selectedBranch, refetchPurchase, refetchSales, refetchOffline]);
 
   const handleEdit = (wbId: number) => {
     // Navigate to purchase form with edit mode using wouter
     setLocation(`/purchase-form?edit=${wbId}`);
+  };
+
+  const handleOfflineEdit = (slipNo: string) => {
+    // Navigate to purchase form with offline slip edit mode
+    setLocation(`/purchase-form?offline_edit=${slipNo}`);
   };
 
   const handlePrintRecord = async (record: PurchaseRecord | SaleRecord) => {
@@ -642,9 +667,10 @@ export default function Reports() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="purchase">Purchase</TabsTrigger>
           <TabsTrigger value="sale">Sale</TabsTrigger>
+          <TabsTrigger value="offline">Offline</TabsTrigger>
         </TabsList>
 
         {/* Purchase Tab */}
@@ -791,6 +817,64 @@ export default function Reports() {
               {!salesError && salesRecords.length === 0 && (
                 <div className="text-center py-8 text-black border border-black">
                   No sale records found
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* Offline Tab */}
+        <TabsContent value="offline" className="space-y-4">
+          <div className="bg-white rounded-lg shadow border-2 border-black">
+            <div className="p-4 border-b-2 border-black">
+              <h2 className="text-lg font-semibold text-black">Offline Entries (Click slip number to edit)</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-collapse">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left border border-black text-black">Slip No</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Slip Date</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">First Weight</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Second Weight</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Company Name</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Manual Trans #</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {offlineRecords.map((record: PurchaseRecord) => (
+                    <tr key={record.wb_id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2 border border-black text-black">
+                        <button 
+                          className="text-blue-600 hover:text-blue-800 font-medium underline"
+                          onClick={() => handleOfflineEdit(record.slip_no)}
+                        >
+                          {record.slip_no}
+                        </button>
+                      </td>
+                      <td className="px-4 py-2 border border-black text-black">
+                        {record.slip_in_time ? new Date(record.slip_in_time).toLocaleDateString() : '---'}
+                      </td>
+                      <td className="px-4 py-2 border border-black text-black">PURCHASE</td>
+                      <td className="px-4 py-2 border border-black text-black">---</td>
+                      <td className="px-4 py-2 border border-black text-black">---</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">---</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {offlineError && (
+                <div className="text-center py-8 text-red-500 border border-black">
+                  Error loading offline records. Please try again.
+                </div>
+              )}
+              {!offlineError && offlineRecords.length === 0 && (
+                <div className="text-center py-8 text-black border border-black">
+                  No offline records found
                 </div>
               )}
             </div>
