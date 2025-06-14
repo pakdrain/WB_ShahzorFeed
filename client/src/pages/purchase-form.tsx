@@ -683,7 +683,7 @@ export default function PurchaseForm() {
     }
     try {
       const response = await fetch(
-        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/sabroso_ords/webridge_igp/dc_data?dc_no=${dcNo}`
+        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/dc_data?dc_no=${dcNo}`
       );
 
       if (!response.ok) {
@@ -699,14 +699,14 @@ export default function PurchaseForm() {
         // Update sales data with fetched DC data
         const updatedSalesData = items.map((item: any, index: number) => ({
           doId: `${index + 1}`, // Auto-generated ID
-          dcNo: item.DC_NO || '',
-          doNo: '', // Keep empty as per requirement
-          customerName: item.CUSTOMER_NAME || '',
-          vehicleNo: item.VEHICLE_NO || '',
-          doDate: item.DC_DATE || '',
-          itemDescription: item.ITEM_DESC || '',
-          dcQty: item.DC_QTY ? String(item.DC_QTY) : '',
-          doQty: item.DEL_QTY ? String(item.DEL_QTY) : '',
+          dcNo: item.dc_no || '',
+          doNo: item.delivery_order_no ? String(item.delivery_order_no) : '', // Map delivery order number to DO #
+          customerName: item.customer_name || '',
+          vehicleNo: item.vehicle_no || '',
+          doDate: item.dc_date ? new Date(item.dc_date).toLocaleDateString() : '',
+          itemDescription: item.item_desc || '',
+          dcQty: item.dc_qty ? String(item.dc_qty) : '',
+          doQty: item.del_qty ? String(item.del_qty) : '',
           branch: '' // Keep empty for now
         }));
         
