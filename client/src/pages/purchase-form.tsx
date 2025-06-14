@@ -622,6 +622,7 @@ export default function PurchaseForm() {
   const [onlineMode, setOnlineMode] = useState(true);
   const [igpItems, setIgpItems] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
+  const [entryTypes, setEntryTypes] = useState<any[]>([]);
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
@@ -926,6 +927,36 @@ export default function PurchaseForm() {
       offlineEntry: isOnline ? '' : 'Yes',
     }));
   };
+
+  // Fetch entry types and branches
+  useEffect(() => {
+    const fetchEntryTypes = async () => {
+      try {
+        const response = await fetch('/api/entry-types');
+        if (response.ok) {
+          const entryTypeData = await response.json();
+          setEntryTypes(entryTypeData);
+        }
+      } catch (error) {
+        console.error('Error fetching entry types:', error);
+      }
+    };
+
+    const fetchBranches = async () => {
+      try {
+        const response = await fetch('/api/branches');
+        if (response.ok) {
+          const branchData = await response.json();
+          setBranches(branchData);
+        }
+      } catch (error) {
+        console.error('Error fetching branches:', error);
+      }
+    };
+
+    fetchEntryTypes();
+    fetchBranches();
+  }, []);
 
   // Handle URL parameters for edit mode
   useEffect(() => {
