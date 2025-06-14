@@ -1835,18 +1835,26 @@ export default function PurchaseForm() {
               <div className="col-span-3 space-y-1">
                 <div>
                   <Label className="text-xs text-black">Branch</Label>
-                  <Select name="branch" value={formData.branch} onValueChange={(value) => setFormData(prev => ({...prev, branch: value}))}>
-                    <SelectTrigger className="h-5 text-xs text-black">
-                      <SelectValue placeholder="Select branch" className="text-black" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {branches.map((branch) => (
-                        <SelectItem key={branch.branch_id} value={branch.branch_id.toString()}>
-                          {branch.branch_name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isEditMode ? (
+                    <Input 
+                      value={branches.find(b => b.branch_id.toString() === formData.branchId?.toString())?.branch_name || formData.branch || ''} 
+                      readOnly 
+                      className="h-5 text-xs text-black bg-gray-100" 
+                    />
+                  ) : (
+                    <Select name="branch" value={formData.branch} onValueChange={(value) => setFormData(prev => ({...prev, branch: value, branchId: value}))}>
+                      <SelectTrigger className="h-5 text-xs text-black">
+                        <SelectValue placeholder="Select branch" className="text-black" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branches.map((branch) => (
+                          <SelectItem key={branch.branch_id} value={branch.branch_id.toString()}>
+                            {branch.branch_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div>
                   <Label className="text-xs text-black">Driver Name</Label>

@@ -139,5 +139,7 @@ export type SalesDetails = typeof salesDetails.$inferSelect;
 export type InsertSalesDetails = z.infer<typeof insertSalesDetailsSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type EntryType = typeof entryType.$inferSelect;
+export type InsertEntryType = z.infer<typeof insertEntryTypeSchema>;
 export type LoginData = z.infer<typeof loginSchema>;
 export type RegisterData = z.infer<typeof registerSchema>;

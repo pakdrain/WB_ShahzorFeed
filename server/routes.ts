@@ -652,6 +652,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET entry types for dropdown
+  app.get('/api/entry-types', async (req: Request, res: Response) => {
+    try {
+      const query = 'SELECT id, type_name FROM entry_type WHERE is_active = true ORDER BY type_name';
+      const result = await pool.query(query);
+      
+      console.log(`Fetched ${result.rows.length} entry types`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('Error fetching entry types:', error);
+      res.status(500).json({ error: 'Failed to fetch entry types' });
+    }
+  });
+
   // GET purchase by wb_id
   app.get('/api/purchase/by-wbid/:wbId', async (req: Request, res: Response) => {
     try {
