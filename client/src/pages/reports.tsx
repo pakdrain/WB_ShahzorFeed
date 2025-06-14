@@ -703,11 +703,7 @@ export default function Reports() {
                         {record.slip_out_time ? new Date(record.slip_out_time).toLocaleString() : '---'}
                       </td>
                       <td className="px-4 py-2 border border-black text-black">
-                        <span className={`px-2 py-1 rounded text-xs border border-black ${
-                          record.online_entry ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'
-                        }`}>
-                          {record.online_entry ? 'Online' : 'Offline'}
-                        </span>
+                        {record.entry_type || 'PURCHASE'}
                       </td>
                       <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
                       <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
@@ -779,9 +775,7 @@ export default function Reports() {
                         {record.slip_out_time ? new Date(record.slip_out_time).toLocaleString() : '---'}
                       </td>
                       <td className="px-4 py-2 border border-black text-black">
-                        <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800 border border-black">
-                          Sale
-                        </span>
+                        {record.entry_type || 'SALE'}
                       </td>
                       <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
                       <td className="px-4 py-2 border border-black text-black">{record.customer_name || '---'}</td>
@@ -857,7 +851,7 @@ export default function Reports() {
                       <td className="px-4 py-2 border border-black text-black">
                         {record.slip_in_time ? new Date(record.slip_in_time).toLocaleDateString() : '---'}
                       </td>
-                      <td className="px-4 py-2 border border-black text-black">PURCHASE</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.entry_type || 'PURCHASE'}</td>
                       <td className="px-4 py-2 border border-black text-black">---</td>
                       <td className="px-4 py-2 border border-black text-black">---</td>
                       <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
