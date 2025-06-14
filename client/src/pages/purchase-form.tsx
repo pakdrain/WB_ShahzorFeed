@@ -675,6 +675,68 @@ export default function PurchaseForm() {
     }
   };
 
+  // DC Data Fetching Function for Sales
+  const fetchDcData = async (dcNo: string) => {
+    if (!dcNo || dcNo.trim() === '') {
+      alert('Please enter DC No');
+      return;
+    }
+    try {
+      const response = await fetch(
+        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/sabroso_ords/webridge_igp/dc_data?dc_no=${dcNo}`
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('DC API Response:', data);
+
+      if (data && data.items && data.items.length > 0) {
+        const items = data.items;
+        
+        // Update sales data with fetched DC data
+        const updatedSalesData = items.map((item: any, index: number) => ({
+          doId: `${index + 1}`, // Auto-generated ID
+          dcNo: item.DC_NO || '',
+          doNo: '', // Keep empty as per requirement
+          customerName: item.CUSTOMER_NAME || '',
+          vehicleNo: item.VEHICLE_NO || '',
+          doDate: item.DC_DATE || '',
+          itemDescription: item.ITEM_DESC || '',
+          dcQty: item.DC_QTY ? String(item.DC_QTY) : '',
+          doQty: item.DEL_QTY ? String(item.DEL_QTY) : '',
+          branch: '' // Keep empty for now
+        }));
+        
+        // Fill remaining rows with empty data if needed
+        while (updatedSalesData.length < 8) {
+          updatedSalesData.push({
+            doId: '',
+            dcNo: '',
+            doNo: '',
+            customerName: '',
+            vehicleNo: '',
+            doDate: '',
+            itemDescription: '',
+            dcQty: '',
+            doQty: '',
+            branch: ''
+          });
+        }
+        
+        setSalesData(updatedSalesData);
+        console.log('DC data fetched and populated successfully:', updatedSalesData);
+      } else {
+        alert('No data found for this DC No.');
+      }
+    } catch (error) {
+      console.error('Error fetching DC data:', error);
+      alert('Failed to fetch DC data. Please check the DC number and try again.');
+    }
+  };
+
   // Function to reset form to clean state
   const resetFormToInitial = () => {
     setFormData({
@@ -1988,6 +2050,15 @@ export default function PurchaseForm() {
                             className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
                             value={salesData[index]?.dcNo || ''}
                             onChange={(e) => handleSalesDataChange(index, 'dcNo', e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                const dcNo = salesData[index]?.dcNo;
+                                if (dcNo && dcNo.trim() !== '') {
+                                  fetchDcData(dcNo.trim());
+                                }
+                              }
+                            }}
+                            placeholder="Press Enter to fetch"
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -2133,19 +2204,47 @@ export default function PurchaseForm() {
                     <div className="bg-gray-200 border border-gray-400 p-1"></div>
                   </div>
 
-                  {/* Bottom section with Weight Per Bags, Total Weight Dill, and Total Feed Bags */}
-                  <div className="bg-gray-100 p-4 flex justify-between items-center border border-gray-300" style={{width: "1220px"}}>
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-black">Weight Per Bags:</label>
-                      <input
-                        type="text"
-                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
-                      />
+                  {/* Bottom section with Weight Per Bags, Total Weight Out, and Total Feed Bags - matching image layout */}
+                  <div className="bg-gray-100 p-2 flex justify-between items-center border border-gray-300 mt-2" style={{width: "1220px"}}>
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <label className="text-xs font-medium text-black">Weight Per Bags:</label>
+                        <input
+                          type="text"
+                          className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
+                          autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          data-form-type="other"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <label className="text-xs font-medium text-black">Total Weight Out:</label>
+                        <input
+                          type="text"
+                          className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
+                          autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          data-form-type="other"
+                        />
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <label className="text-xs font-medium text-black">Total Feed Bags:</label>
+                        <input
+                          type="text"
+                          className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
+                          autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          data-form-type="other"
+                        />
+                      </div>
                     </div>
                     
                     <div className="flex items-center space-x-2">
