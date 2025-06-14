@@ -1053,7 +1053,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           wb.branch_id 
         FROM sales_details sd 
         JOIN wb_weighbridge wb ON sd.wb_id = wb.wb_id
-        WHERE 1=1
+        WHERE wb.entry_type = 'SALE' AND wb.online_entry = 'Yes'
       `;
       const params: any[] = [];
       
@@ -1091,7 +1091,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COALESCE(wbi.vehicle_no, '') as vehicle_no
         FROM wb_weighbridge wb 
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
-        WHERE wb.online_entry = 'Yes'
+        WHERE wb.online_entry = 'Yes' AND wb.entry_type = 'PURCHASE'
       `;
       const params: any[] = [];
       
