@@ -45,6 +45,14 @@ export const deduction = pgTable("deduction", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const entryType = pgTable("entry_type", {
+  id: serial("id").primaryKey(),
+  typeName: text("type_name").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const salesDetails = pgTable("sales_details", {
   id: serial("id").primaryKey(),
   wbId: integer("wb_id").notNull(),
@@ -90,6 +98,11 @@ export const insertDeductionSchema = createInsertSchema(deduction).omit({
 });
 
 export const insertSalesDetailsSchema = createInsertSchema(salesDetails).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertEntryTypeSchema = createInsertSchema(entryType).omit({
   id: true,
   createdAt: true,
 });

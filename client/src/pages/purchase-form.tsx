@@ -43,6 +43,30 @@ export default function PurchaseForm() {
     newData[index] = { ...newData[index], [field]: value };
     setSalesData(newData);
   };
+
+  const handleSalesRowDelete = (index: number) => {
+    setSalesData(prevData => {
+      const newData = [...prevData];
+      // Clear the row data
+      newData[index] = {
+        doId: '',
+        dcNo: '',
+        doNo: '',
+        customerName: '',
+        vehicleNo: '',
+        doDate: '',
+        itemDescription: '',
+        dcQty: '',
+        doQty: '',
+        branch: '',
+        dcId: '',
+        customerId: '',
+        itemId: '',
+        itemCode: ''
+      };
+      return newData;
+    });
+  };
   
   // Fetch all first weight records
   const { data: firstWeightRecords = [] } = useQuery({
@@ -1108,8 +1132,8 @@ export default function PurchaseForm() {
       driver_name: formData.driverName || null,
       company_id: (formData.companyId && formData.companyId !== 'undefined' && formData.companyId.trim() !== '') ? parseInt(formData.companyId, 10) : null,
       branch_id: (formData.branchId && formData.branchId !== 'undefined' && formData.branchId.trim() !== '') ? parseInt(formData.branchId, 10) : null,
-      online_entry: formData.onlineEntry || null,
-      offline_entry: formData.offlineEntry || null,
+      online_entry: onlineMode ? 'Yes' : null,
+      offline_entry: onlineMode ? null : 'Yes',
       created_by: (formData.createdBy && formData.createdBy !== 'undefined' && formData.createdBy.trim() !== '') ? parseInt(formData.createdBy, 10) : null,
       creation_date: formData.creationDate || null,
       last_updated_by: (formData.lastUpdatedBy && formData.lastUpdatedBy !== 'undefined' && formData.lastUpdatedBy.trim() !== '') ? parseInt(formData.lastUpdatedBy, 10) : null,
