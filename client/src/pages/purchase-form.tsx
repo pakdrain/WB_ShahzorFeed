@@ -696,7 +696,7 @@ export default function PurchaseForm() {
       if (data && data.items && data.items.length > 0) {
         const items = data.items;
         
-        // Update sales data with fetched DC data
+        // Update sales data with fetched DC data including hidden columns
         const updatedSalesData = items.map((item: any, index: number) => ({
           doId: `${index + 1}`, // Auto-generated ID
           dcNo: item.dc_no || '',
@@ -707,7 +707,12 @@ export default function PurchaseForm() {
           itemDescription: item.item_desc || '',
           dcQty: item.dc_qty ? String(item.dc_qty) : '',
           doQty: item.del_qty ? String(item.del_qty) : '',
-          branch: '' // Keep empty for now
+          branch: '', // Keep empty for now
+          // Hidden columns for database storage
+          dcId: item.dc_id || '',
+          customerId: item.customer_id || '',
+          itemId: item.item_id || '',
+          itemCode: item.item_code || ''
         }));
         
         // Fill remaining rows with empty data if needed
@@ -722,7 +727,12 @@ export default function PurchaseForm() {
             itemDescription: '',
             dcQty: '',
             doQty: '',
-            branch: ''
+            branch: '',
+            // Hidden columns for database storage
+            dcId: '',
+            customerId: '',
+            itemId: '',
+            itemCode: ''
           });
         }
         
@@ -2027,8 +2037,8 @@ export default function PurchaseForm() {
               {selectedForm === 'sales' && (
                 <div className="h-full flex flex-col">
 
-                  {/* Sales Table Header - exact match to image */}
-                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "100px 100px 240px 140px 120px 180px 100px 100px 140px", width: "1220px"}}>
+                  {/* Sales Table Header - with delete action column */}
+                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px", width: "1250px"}}>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DC #</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO #</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Customer Name</div>
@@ -2038,12 +2048,13 @@ export default function PurchaseForm() {
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DC Qty</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO Qty</div>
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Branch</div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">✖</div>
                   </div>
 
                   {/* Sales Table Body - Fixed height with 8 rows */}
                   <div className="bg-gray-200 mb-4" style={{height: "240px"}}>
                     {[...Array(8)].map((_, index) => (
-                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "100px 100px 240px 140px 120px 180px 100px 100px 140px", width: "1220px", height: "30px"}}>
+                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px", width: "1250px", height: "30px"}}>
                         <div className="bg-white border border-gray-300 p-1">
                           <input
                             type="text"
@@ -2170,6 +2181,16 @@ export default function PurchaseForm() {
                             spellCheck="false"
                             data-form-type="other"
                           />
+                        </div>
+                        <div className="bg-white border border-gray-300 p-1 flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => handleSalesRowDelete(index)}
+                            className="text-red-500 hover:text-red-700 text-lg font-bold"
+                            title="Delete row"
+                          >
+                            ✖
+                          </button>
                         </div>
                       </div>
                     ))}
