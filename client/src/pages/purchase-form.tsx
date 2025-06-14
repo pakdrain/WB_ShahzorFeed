@@ -659,6 +659,8 @@ export default function PurchaseForm() {
           bardanaType: firstItem.bardanatype || '',
           wtPerBag: firstItem.wtperbag ? String(firstItem.wtperbag) : '',
           igpDate: firstItem.igp_date || '',
+          // Change status from Online to Offline when IGP data loads
+          onlineEntry: 'No'
         }));
         setIgpItems(items);
         console.log('IGP data fetched successfully:', items);
@@ -780,14 +782,13 @@ export default function PurchaseForm() {
       const data = await response.json();
       alert('Deduction data saved successfully!');
       console.log('Deduction data saved:', data);
-
-      await Promise.all(insertPromises);
-      alert('Bag data saved successfully!');
       setBagTableData([]); // Clear the table after successful insert
       setNextBagId(1); // Reset bag ID counter
     } catch (error) {
-      console.error('Error saving bag data:', error);
-      alert('Failed to save bag data');
+      console.error('Error saving deduction data:', error);
+      alert('Failed to save deduction data');
+    } finally {
+      setLoading(false);
     }
   };
 
