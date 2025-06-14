@@ -902,8 +902,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Save each deduction entry
       for (const item of bagTableData) {
         const query = `
-          INSERT INTO deduction (wb_id, bag_id, bags, pb, percentage, weight, total)
-          VALUES ($1, $2, $3, $4, $5, $6, $7)
+          INSERT INTO deduction (wb_id, bag_id, bags, pb, percentage, weight)
+          VALUES ($1, $2, $3, $4, $5, $6)
         `;
         
         const values = [
@@ -912,8 +912,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           item.bags,
           item.pb,
           item.percentage,
-          typeof item.weight === 'string' ? parseFloat(item.weight) || 0 : item.weight,
-          item.total
+          typeof item.weight === 'string' ? parseFloat(item.weight) || 0 : item.weight
         ];
         
         console.log('Inserting deduction record:', values);

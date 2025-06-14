@@ -125,6 +125,11 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
 
 ## Changelog
 - June 14, 2025. Initial setup
+- June 14, 2025. Fixed all 4 critical issues:
+  - Fixed branch name display in edit mode (shows branch_name instead of branch_id)
+  - Fixed offline/online entry filtering in reports (offline entries only show offline_entry='Yes')
+  - Fixed deduction table insertion (removed total column from INSERT as it's auto-generated)
+  - Enhanced database query accuracy for proper status filtering
 
 ## User Preferences
 
