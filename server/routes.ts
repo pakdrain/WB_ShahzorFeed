@@ -856,6 +856,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Sales endpoints
+  // Deduction routes - save deduction data
+  app.post('/api/deduction/save', async (req: Request, res: Response) => {
+    try {
+      const { wbId, bagTableData } = req.body;
+      
+      if (!wbId || !bagTableData || bagTableData.length === 0) {
+        return res.status(400).json({ error: 'Missing required data' });
+      }
+      
+      // Delete existing deduction entries for this wb_id
+      await pool.query('DELETE FROM deduction WHERE wb_id = $1', [wbId]);
+      
+      // Save each deduction entry
+      for (const item of bagTableData) {
+        const query = `
+          INSERT INTO deduction (wb_id, bag_id, bags, pb, percentage, weight, total)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `;
+        
+        await pool.query(query, [
+          wbId,
+          item.bagId,
+          item.bags,
+          item.pb,
+          item.percentage,
+          typeof item.weight === 'string' ? parseFloat(item.weight) || 0 : item.weight,
+          item.total
+        ]);
+      }
+      
+      res.json({ success: true, message: 'Deduction data saved successfully' });
+    } catch (error: any) {
+      console.error('Error saving deduction data:', error);
+      res.status(500).json({ error: 'Failed to save deduction data' });
+    }
+  });
+
   app.post('/api/sales/save', async (req: Request, res: Response) => {
     try {
       const { salesData, entryType } = req.body;

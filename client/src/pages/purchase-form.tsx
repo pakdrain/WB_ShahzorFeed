@@ -761,22 +761,25 @@ export default function PurchaseForm() {
     const wbIdNumber = typeof wbId === 'string' ? parseInt(wbId) : wbId;
 
     try {
-      const insertPromises = bagTableData.map(item => 
-        fetch('/api/deduction', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            wbId: wbIdNumber,
-            bagId: item.bagId,
-            bags: item.bags,
-            pb: item.pb,
-            percentage: item.percentage,
-            weight: item.weight
-          }),
-        })
-      );
+      setLoading(true);
+      const response = await fetch('/api/deduction/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wbId: wbIdNumber,
+          bagTableData: bagTableData
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      alert('Deduction data saved successfully!');
+      console.log('Deduction data saved:', data);
 
       await Promise.all(insertPromises);
       alert('Bag data saved successfully!');
