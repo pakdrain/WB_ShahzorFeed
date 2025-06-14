@@ -737,6 +737,14 @@ export default function PurchaseForm() {
     setBagTableData(prev => prev.filter(item => item.bagId !== bagId));
   };
 
+  const updateBagEntry = (bagId: number, field: string, value: string) => {
+    setBagTableData(prev => prev.map(item => 
+      item.bagId === bagId 
+        ? { ...item, [field]: field === 'weight' ? value : parseFloat(value) || 0 }
+        : item
+    ));
+  };
+
   // Function to handle Insert button - save bag data to database
   const handleInsertBagData = async () => {
     if (bagTableData.length === 0) {
@@ -1569,7 +1577,14 @@ export default function PurchaseForm() {
                   <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{item.bags}</div>
                   <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{item.pb.toFixed(1)}</div>
                   <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{item.percentage.toFixed(1)}</div>
-                  <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{item.weight.toFixed(1)}</div>
+                  <div className="border-r border-gray-300 p-1">
+                    <input
+                      type="text"
+                      value={item.weight}
+                      onChange={(e) => updateBagEntry(item.bagId, 'weight', e.target.value)}
+                      className="w-full text-center text-xs text-black bg-transparent border-none focus:outline-none"
+                    />
+                  </div>
                   <div className="p-1 text-center">
                     <button 
                       className="text-red-600 hover:text-red-800 font-bold text-sm"
@@ -1647,14 +1662,14 @@ export default function PurchaseForm() {
             <WeightIndicator comPort="COM6" compact={true} />
           </div>
           <Button 
-            className={`h-6 px-3 text-xs font-medium ${onlineMode ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
+            className={`h-6 px-3 text-xs font-medium ${selectedForm !== 'offline' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
           </Button>
           <Button 
-            className={`h-6 px-3 text-xs font-medium ${!onlineMode ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
-            onClick={() => toggleOnlineMode(false)}
+            className={`h-6 px-3 text-xs font-medium ${selectedForm === 'offline' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
+            onClick={() => setSelectedForm('offline')}
           >
             OFFLINE
           </Button>
@@ -2171,14 +2186,14 @@ export default function PurchaseForm() {
 
               {/* Show Offline Form when selectedForm is 'offline' */}
               {selectedForm === 'offline' && (
-                <div className="h-full flex flex-col">
-                  <div className="bg-white p-4 rounded border">
+                <div className="h-full flex flex-col" style={{maxWidth: "100%", width: "100%"}}>
+                  <div className="bg-white p-4 rounded border" style={{maxWidth: "100%", width: "100%"}}>
                     <h3 className="text-lg font-semibold mb-4 text-black">Offline Entries</h3>
                     
-                    {/* Offline entries table */}
-                    <div className="overflow-x-auto">
+                    {/* Offline entries table with scroll */}
+                    <div className="overflow-auto" style={{maxHeight: "600px", height: "600px"}}>
                       <table className="w-full text-sm border-collapse border border-black">
-                        <thead className="bg-gray-100">
+                        <thead className="bg-gray-100 sticky top-0">
                           <tr>
                             <th className="px-3 py-2 text-left border border-black text-black">Slip No</th>
                             <th className="px-3 py-2 text-left border border-black text-black">Slip Date</th>
@@ -2191,8 +2206,8 @@ export default function PurchaseForm() {
                           </tr>
                         </thead>
                         <tbody>
-                          {firstWeightRecords
-                            .filter((record: any) => !record.online_entry)
+                          {(firstWeightRecords as any[])
+                            .filter((record: any) => record.online_entry !== 'Yes')
                             .map((record: any) => (
                             <tr key={record.wb_id} className="hover:bg-gray-50">
                               <td className="px-3 py-2 border border-black text-black">
@@ -2228,7 +2243,7 @@ export default function PurchaseForm() {
                         </tbody>
                       </table>
                       
-                      {firstWeightRecords.filter((record: any) => !record.online_entry).length === 0 && (
+                      {(firstWeightRecords as any[]).filter((record: any) => record.online_entry !== 'Yes').length === 0 && (
                         <div className="text-center py-8 text-black border border-black">
                           No offline records found
                         </div>
