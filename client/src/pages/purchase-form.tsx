@@ -125,7 +125,8 @@ export default function PurchaseForm() {
           slipInTime: master.slip_in_time ? formatDatetimeLocal(master.slip_in_time) : '',
           slipOutTime: master.slip_out_time ? formatDatetimeLocal(master.slip_out_time) : '',
           entryType: master.entry_type || 'PURCHASE',
-          branch: master.branch_id ? String(master.branch_id) : ''
+          branch: master.branch_id ? String(master.branch_id) : '',
+          branchId: master.branch_id ? String(master.branch_id) : ''
         }));
         
         // Load existing deduction data for this record

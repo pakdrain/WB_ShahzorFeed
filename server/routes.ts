@@ -871,9 +871,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Sales endpoints
   // Deduction routes - save deduction data
+  // GET deduction data by wb_id
+  app.get('/api/deduction/:wbId', async (req: Request, res: Response) => {
+    try {
+      const { wbId } = req.params;
+      const query = 'SELECT * FROM deduction WHERE wb_id = $1 ORDER BY bag_id';
+      const result = await pool.query(query, [parseInt(wbId)]);
+      
+      console.log(`Fetched ${result.rows.length} deduction records for wb_id ${wbId}`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('Error fetching deduction data:', error);
+      res.status(500).json({ error: 'Failed to fetch deduction data' });
+    }
+  });
+
   app.post('/api/deduction/save', async (req: Request, res: Response) => {
     try {
       const { wbId, bagTableData } = req.body;
+      
+      console.log('Received deduction save request:', { wbId, bagTableData });
       
       if (!wbId || !bagTableData || bagTableData.length === 0) {
         return res.status(400).json({ error: 'Missing required data' });
@@ -889,7 +906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           VALUES ($1, $2, $3, $4, $5, $6, $7)
         `;
         
-        await pool.query(query, [
+        const values = [
           wbId,
           item.bagId,
           item.bags,
@@ -897,13 +914,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           item.percentage,
           typeof item.weight === 'string' ? parseFloat(item.weight) || 0 : item.weight,
           item.total
-        ]);
+        ];
+        
+        console.log('Inserting deduction record:', values);
+        await pool.query(query, values);
       }
       
+      console.log(`Successfully saved ${bagTableData.length} deduction records for wb_id ${wbId}`);
       res.json({ success: true, message: 'Deduction data saved successfully' });
     } catch (error: any) {
       console.error('Error saving deduction data:', error);
-      res.status(500).json({ error: 'Failed to save deduction data' });
+      res.status(500).json({ error: 'Failed to save deduction data', details: error.message });
     }
   });
 
@@ -1071,7 +1092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COALESCE(wbi.vehicle_no, '') as vehicle_no
         FROM wb_weighbridge wb 
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
-        WHERE wb.online_entry = true
+        WHERE wb.online_entry = 'Yes'
       `;
       const params: any[] = [];
       
@@ -1109,7 +1130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           COALESCE(wbi.vehicle_no, '') as vehicle_no
         FROM wb_weighbridge wb 
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
-        WHERE wb.online_entry = false
+        WHERE wb.offline_entry = 'Yes' AND (wb.online_entry IS NULL OR wb.online_entry != 'Yes')
       `;
       const params: any[] = [];
       
