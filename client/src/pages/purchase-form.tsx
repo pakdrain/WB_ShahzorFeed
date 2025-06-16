@@ -612,6 +612,7 @@ export default function PurchaseForm() {
     igpId: '',
     vendorId: '',
     weightPerBags: '',
+    dcQty: '',
     supWeightWithoutBardana: '',
     netSupplierWeight: '',
   };
@@ -1297,7 +1298,8 @@ export default function PurchaseForm() {
                 balance_qty: null,
                 customer_name: row.customerName || null, // Additional customer_name field
                 do_no: row.doNo || null, // Additional do_no field
-                do_qty: row.doQty ? parseFloat(row.doQty) : null // Additional do_qty field
+                do_qty: row.doQty ? parseFloat(row.doQty) : null, // Additional do_qty field
+                dc_qty: row.dcQty ? parseFloat(row.dcQty) : null // Map DC Qty to dc_qty field
               };
               
               const salesItemResponse = await fetch('/api/purchase-items', {
@@ -1346,7 +1348,8 @@ export default function PurchaseForm() {
             item_desc: firstIgpItem?.item_desc || formData.itemDesc || null,
             po_qty: firstIgpItem?.po_qty ? parseFloat(firstIgpItem.po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
             igp_qty: firstIgpItem?.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
-            balance_qty: firstIgpItem?.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null)
+            balance_qty: firstIgpItem?.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null),
+            dc_qty: firstIgpItem?.dc_qty ? parseFloat(firstIgpItem.dc_qty) : null
           };
           
           console.log('Items payload being sent:', itemsPayload);

@@ -507,7 +507,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         balance_qty ? parseFloat(balance_qty) : null,
         customer_name,
         do_no,
-        do_qty ? parseFloat(do_qty) : null
+        do_qty ? parseFloat(do_qty) : null,
+        dc_qty ? parseFloat(dc_qty) : null
       ];
 
       const result = await pool.query(query, values);
