@@ -385,9 +385,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slip_date = null,
       } = purchaseData;
 
-      // Convert online/offline entries to string
-      const onlineEntryStr = online_entry !== null ? String(online_entry) : null;
-      const offlineEntryStr = offline_entry !== null ? String(offline_entry) : null;
+      // Convert online/offline entries to string - ensure 'Yes' values are properly handled
+      const onlineEntryStr = (online_entry === 'Yes' || online_entry === true) ? 'Yes' : null;
+      const offlineEntryStr = (offline_entry === 'Yes' || offline_entry === true) ? 'Yes' : null;
 
       const query = `
         INSERT INTO wb_weighbridge (
@@ -470,17 +470,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         balance_qty = null,
         customer_name = null,
         do_no = null,
-        do_qty = null
+        do_qty = null,
+        dc_qty = null
       } = itemData;
 
       const query = `
         INSERT INTO wb_weighbridge_items_purchase (
           wb_id, bardana_type, igp_no, vehicle_no, weight_per_bags, igp_date,
           supplier_weight, quality_deduction, bardana_weight, no_of_bags, vendor_name, bag_condition,
-          po_no, item_code, item_desc, po_qty, igp_qty, balance_qty, customer_name, do_no, do_qty
+          po_no, item_code, item_desc, po_qty, igp_qty, balance_qty, customer_name, do_no, do_qty, dc_qty
         )
         VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
         )
         RETURNING *;
       `;
