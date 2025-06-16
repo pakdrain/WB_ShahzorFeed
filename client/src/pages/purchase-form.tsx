@@ -1194,8 +1194,8 @@ export default function PurchaseForm() {
       driver_name: formData.driverName || null,
       company_id: (formData.companyId && formData.companyId !== 'undefined' && formData.companyId.trim() !== '') ? parseInt(formData.companyId, 10) : null,
       branch_id: (formData.branchId && formData.branchId !== 'undefined' && formData.branchId.trim() !== '') ? parseInt(formData.branchId, 10) : null,
-      online_entry: onlineMode ? 'Yes' : null,
-      offline_entry: onlineMode ? null : 'Yes',
+      online_entry: onlineMode ? 'Yes' : '',
+      offline_entry: onlineMode ? '' : 'Yes',
       created_by: (formData.createdBy && formData.createdBy !== 'undefined' && formData.createdBy.trim() !== '') ? parseInt(formData.createdBy, 10) : null,
       creation_date: formData.creationDate || null,
       last_updated_by: (formData.lastUpdatedBy && formData.lastUpdatedBy !== 'undefined' && formData.lastUpdatedBy.trim() !== '') ? parseInt(formData.lastUpdatedBy, 10) : null,
@@ -1853,13 +1853,13 @@ export default function PurchaseForm() {
             <WeightIndicator comPort="COM6" compact={true} />
           </div>
           <Button 
-            className={`h-6 px-3 text-xs font-medium ${selectedForm !== 'offline' ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
+            className={`h-6 px-3 text-xs font-medium ${onlineMode ? 'bg-green-300 hover:bg-green-400 text-black' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
           </Button>
           <Button 
-            className={`h-6 px-3 text-xs font-medium ${!onlineMode ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
+            className={`h-6 px-3 text-xs font-medium ${!onlineMode ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE

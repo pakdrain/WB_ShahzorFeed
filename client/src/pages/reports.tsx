@@ -714,10 +714,10 @@ export default function Reports() {
                       <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
                       <td className="px-4 py-2 border border-black text-center">
                         <img 
-                          src={`/captured_images/first_weight/${record.slip_no}.jpg`}
+                          src={`/captured_images/first_weight/slip_${record.slip_no}.jpg`}
                           alt="First Weight"
                           className="w-16 h-12 object-cover mx-auto cursor-pointer"
-                          onClick={() => window.open(`/captured_images/first_weight/${record.slip_no}.jpg`, '_blank')}
+                          onClick={() => window.open(`/captured_images/first_weight/slip_${record.slip_no}.jpg`, '_blank')}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
@@ -728,10 +728,10 @@ export default function Reports() {
                       </td>
                       <td className="px-4 py-2 border border-black text-center">
                         <img 
-                          src={`/captured_images/second_weight/${record.slip_no}.jpg`}
+                          src={`/captured_images/second_weight/slip_${record.slip_no}.jpg`}
                           alt="Second Weight"
                           className="w-16 h-12 object-cover mx-auto cursor-pointer"
-                          onClick={() => window.open(`/captured_images/second_weight/${record.slip_no}.jpg`, '_blank')}
+                          onClick={() => window.open(`/captured_images/second_weight/slip_${record.slip_no}.jpg`, '_blank')}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
