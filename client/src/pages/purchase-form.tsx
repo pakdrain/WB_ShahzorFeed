@@ -74,6 +74,12 @@ export default function PurchaseForm() {
     refetchInterval: 3000, // Refresh every 3 seconds
   });
 
+  // Fetch offline records specifically
+  const { data: offlineRecords = [] } = useQuery({
+    queryKey: ['/api/purchases/offline'],
+    refetchInterval: 3000, // Refresh every 3 seconds
+  });
+
   // Filter records based on search criteria
   const filteredRecords = Array.isArray(firstWeightRecords) ? firstWeightRecords.filter((record: any) => {
     const matchesSlipNo = !searchSlipNo || (record.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
@@ -2453,8 +2459,7 @@ export default function PurchaseForm() {
                           </tr>
                         </thead>
                         <tbody>
-                          {(firstWeightRecords as any[])
-                            .filter((record: any) => record.offline_entry === 'Yes')
+                          {(offlineRecords as any[])
                             .map((record: any) => (
                             <tr key={record.wb_id} className="hover:bg-gray-50">
                               <td className="px-3 py-2 border border-black text-black">
