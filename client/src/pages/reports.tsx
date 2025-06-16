@@ -692,6 +692,8 @@ export default function Reports() {
                     <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
                     <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
                     <th className="px-4 py-2 text-left border border-black text-black">Vendor</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">First Weight Image</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Second Weight Image</th>
                     <th className="px-4 py-2 text-left border border-black text-black">Actions</th>
                   </tr>
                 </thead>
@@ -710,6 +712,34 @@ export default function Reports() {
                       </td>
                       <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
                       <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-center">
+                        <img 
+                          src={`/captured_images/first_weight/${record.slip_no}.jpg`}
+                          alt="First Weight"
+                          className="w-16 h-12 object-cover mx-auto cursor-pointer"
+                          onClick={() => window.open(`/captured_images/first_weight/${record.slip_no}.jpg`, '_blank')}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.nextElementSibling!.textContent = 'No Image';
+                          }}
+                        />
+                        <span className="text-xs text-gray-500"></span>
+                      </td>
+                      <td className="px-4 py-2 border border-black text-center">
+                        <img 
+                          src={`/captured_images/second_weight/${record.slip_no}.jpg`}
+                          alt="Second Weight"
+                          className="w-16 h-12 object-cover mx-auto cursor-pointer"
+                          onClick={() => window.open(`/captured_images/second_weight/${record.slip_no}.jpg`, '_blank')}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.nextElementSibling!.textContent = 'No Image';
+                          }}
+                        />
+                        <span className="text-xs text-gray-500"></span>
+                      </td>
                       <td className="px-4 py-2 border border-black">
                         <div className="flex gap-2">
                           <Button 

@@ -14,12 +14,15 @@ export interface CaptureImageOptions {
 export class ImageCaptureService {
   private baseImagePath = './captured_images';
   private firstWeightFolder = 'first_weight';
+  private secondWeightFolder = 'second_weight';
 
   async ensureDirectoriesExist(): Promise<void> {
     try {
       const firstWeightPath = path.join(this.baseImagePath, this.firstWeightFolder);
+      const secondWeightPath = path.join(this.baseImagePath, this.secondWeightFolder);
       await fs.mkdir(firstWeightPath, { recursive: true });
-      log(`📁 Created directories: ${firstWeightPath}`);
+      await fs.mkdir(secondWeightPath, { recursive: true });
+      log(`📁 Created directories: ${firstWeightPath}, ${secondWeightPath}`);
     } catch (error: any) {
       log(`❌ Error creating directories: ${error.message}`);
       throw error;
