@@ -388,7 +388,11 @@ export default function Reports() {
                   <span class="field-value"></span>
                 </div>
                 
-                <div class="image-box">FIRST WEIGHT IMAGE</div>
+                <div class="image-box">
+                  <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg" 
+                       style="width: 100%; height: 100%; object-fit: cover;" 
+                       alt="First Weight Image" />
+                </div>
               </div>
               
               <div class="right-panel">
@@ -435,7 +439,11 @@ export default function Reports() {
                   </div>
                 </div>
                 
-                <div class="image-box">SECOND WEIGHT IMAGE</div>
+                <div class="image-box">
+                  <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg" 
+                       style="width: 100%; height: 100%; object-fit: cover;" 
+                       alt="Second Weight Image" />
+                </div>
               </div>
             </div>
             
@@ -516,7 +524,11 @@ export default function Reports() {
                   <span class="field-value"></span>
                 </div>
                 
-                <div class="image-box">FIRST WEIGHT IMAGE</div>
+                <div class="image-box">
+                  <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg" 
+                       style="width: 100%; height: 100%; object-fit: cover;" 
+                       alt="First Weight Image" />
+                </div>
               </div>
               
               <div class="right-panel">
@@ -563,7 +575,11 @@ export default function Reports() {
                   </div>
                 </div>
                 
-                <div class="image-box">SECOND WEIGHT IMAGE</div>
+                <div class="image-box">
+                  <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg" 
+                       style="width: 100%; height: 100%; object-fit: cover;" 
+                       alt="Second Weight Image" />
+                </div>
               </div>
             </div>
             

@@ -144,6 +144,12 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Implemented proper static file serving for captured images at `/captured_images/:folder/:filename`
   - Added error handling and fallback display for missing images
   - Verified image serving functionality works correctly (returns HTTP 200 for existing images)
+- June 16, 2025. Completed print report image display functionality:
+  - Updated print template to display actual First Weight and Second Weight images instead of placeholder text
+  - Modified image placeholders in print reports to load from `/captured_images/first_weight/slip_${slip_no}.jpg` and `/captured_images/second_weight/slip_${slip_no}.jpg`
+  - Added Image Upload page in sidebar navigation for transferring local images to Replit environment
+  - Implemented image upload endpoint `/api/upload-image/:folder/:filename` for file transfer capability
+  - Print reports now correctly display images for each slip number when images are available
 
 ## User Preferences
 
