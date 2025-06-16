@@ -6,6 +6,9 @@ import { videoStreamService } from "./video-stream";
 import { z } from "zod";
 import pkg from "pg";
 const { Pool } = pkg;
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 import { 
   currentWeight, 
   currentUnit, 
@@ -58,24 +61,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register video streaming routes
   videoStreamService.registerRoutes(app);
 
-  // Serve captured images statically - using path module for static files
-  import path from 'path';
-  import { fileURLToPath } from 'url';
-  
+  // Serve captured images statically
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = path.dirname(__filename);
   const capturedImagesPath = path.join(__dirname, '..', 'captured_images');
   
-  app.use('/captured_images', (req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    next();
-  });
-  
   // Manual static file serving for captured images
-  app.get('/captured_images/*', async (req, res) => {
+  app.get('/captured_images/:folder/:filename', async (req, res) => {
     try {
-      const filePath = path.join(capturedImagesPath, req.params[0]);
-      const fs = await import('fs');
+      const { folder, filename } = req.params;
+      const filePath = path.join(capturedImagesPath, folder, filename);
       
       if (fs.existsSync(filePath)) {
         const ext = path.extname(filePath).toLowerCase();

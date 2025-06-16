@@ -130,6 +130,14 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Fixed offline/online entry filtering in reports (offline entries only show offline_entry='Yes')
   - Fixed deduction table insertion (removed total column from INSERT as it's auto-generated)
   - Enhanced database query accuracy for proper status filtering
+- June 16, 2025. Completed second weight image capture functionality:
+  - Added second weight folder creation and management in ImageCaptureService
+  - Implemented captureSecondWeightImage method with duplicate detection
+  - Added API endpoints for second weight image capture and retrieval
+  - Enhanced captureSecondWeight function to automatically capture images
+  - Added automatic second weight image capture during save operations
+  - Implemented static file serving for both first and second weight images
+  - Both First Weight Image and Second Weight Image columns now fully functional in reports
 
 ## User Preferences
 
