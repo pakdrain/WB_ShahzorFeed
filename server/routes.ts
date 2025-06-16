@@ -1,4 +1,5 @@
 import type { Express, Request, Response } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { streamService } from "./stream-service";
@@ -1311,6 +1312,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Failed to fetch deduction data' });
     }
   });
+
+  // Serve static files for captured images
+  app.use('/captured_images', express.static('./captured_images'));
 
   return httpServer;
 }

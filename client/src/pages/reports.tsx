@@ -283,6 +283,12 @@ export default function Reports() {
             font-size: 10px;
             font-weight: bold;
             text-align: center;
+            overflow: hidden;
+          }
+          .image-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
           }
           .signatures {
             position: absolute;
