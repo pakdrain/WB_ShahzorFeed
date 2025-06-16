@@ -62,7 +62,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register video streaming routes
   videoStreamService.registerRoutes(app);
 
-  // Serve captured images statically
+  // Serve captured images statically 
   app.get('/captured_images/:folder/:filename', async (req, res) => {
     try {
       const { folder, filename } = req.params;
@@ -70,14 +70,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (fs.existsSync(filePath)) {
         const ext = path.extname(filePath).toLowerCase();
-        const contentType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+        const contentType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 
+                           ext === '.png' ? 'image/png' : 'image/jpeg';
         res.setHeader('Content-Type', contentType);
+        res.setHeader('Cache-Control', 'no-cache');
         res.sendFile(path.resolve(filePath));
       } else {
         res.status(404).send('Image not found');
       }
     } catch (error) {
+      console.error('Error serving image:', error);
       res.status(500).send('Error serving image');
+    }
+  });
+
+  // Image upload endpoint for transferring images from local machine
+  app.use(express.static('captured_images'));
+  
+  // Add file upload capability
+  app.post('/api/upload-image/:folder/:filename', async (req, res) => {
+    try {
+      const { folder, filename } = req.params;
+      const uploadDir = path.join('./captured_images', folder);
+      
+      // Ensure directory exists
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      const filePath = path.join(uploadDir, filename);
+      
+      // Write the uploaded file
+      const chunks: Buffer[] = [];
+      req.on('data', (chunk) => chunks.push(chunk));
+      req.on('end', () => {
+        const buffer = Buffer.concat(chunks);
+        fs.writeFileSync(filePath, buffer);
+        console.log(`Image uploaded: ${filePath}`);
+        res.json({ success: true, message: 'Image uploaded successfully' });
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      res.status(500).json({ error: 'Failed to upload image' });
     }
   });
 
