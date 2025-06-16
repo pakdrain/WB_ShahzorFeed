@@ -7,7 +7,7 @@ import { videoStreamService } from "./video-stream";
 import { z } from "zod";
 import pkg from "pg";
 const { Pool } = pkg;
-import pathModule from 'path';
+import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
 import { 
@@ -63,15 +63,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   videoStreamService.registerRoutes(app);
 
   // Serve captured images statically
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = pathModule.dirname(__filename);
-  const capturedImagesPath = pathModule.join(__dirname, '..', 'captured_images');
-  
-  // Manual static file serving for captured images
   app.get('/captured_images/:folder/:filename', async (req, res) => {
     try {
       const { folder, filename } = req.params;
-      const filePath = path.join(capturedImagesPath, folder, filename);
+      const filePath = path.join('./captured_images', folder, filename);
       
       if (fs.existsSync(filePath)) {
         const ext = path.extname(filePath).toLowerCase();
@@ -1313,18 +1308,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve static files for captured images
-  const fs = await import('fs');
-  const pathModule = await import('path');
-  
-  app.get('/captured_images/*', (req: Request, res: Response) => {
-    const filePath = pathModule.join('./captured_images', req.params[0]);
-    if (fs.existsSync(filePath)) {
-      res.sendFile(pathModule.resolve(filePath));
-    } else {
-      res.status(404).send('Image not found');
-    }
-  });
+  // Static file serving for captured images is already handled above
 
   return httpServer;
 }
