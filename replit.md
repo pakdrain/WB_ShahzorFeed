@@ -138,6 +138,12 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Added automatic second weight image capture during save operations
   - Implemented static file serving for both first and second weight images
   - Both First Weight Image and Second Weight Image columns now fully functional in reports
+- June 16, 2025. Fixed offline entries filtering and image display system:
+  - Corrected offline entries table to use dedicated `/api/purchases/offline` endpoint instead of client-side filtering
+  - Fixed offline entries to show only records where offline_entry='Yes' (excludes online entries completely)
+  - Implemented proper static file serving for captured images at `/captured_images/:folder/:filename`
+  - Added error handling and fallback display for missing images
+  - Verified image serving functionality works correctly (returns HTTP 200 for existing images)
 
 ## User Preferences
 

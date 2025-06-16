@@ -2495,7 +2495,7 @@ export default function PurchaseForm() {
                         </tbody>
                       </table>
                       
-                      {(firstWeightRecords as any[]).filter((record: any) => record.offline_entry === 'Yes').length === 0 && (
+                      {(offlineRecords as any[]).length === 0 && (
                         <div className="text-center py-8 text-black border border-black">
                           No offline records found
                         </div>
