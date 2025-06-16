@@ -85,13 +85,17 @@ export default function Reports() {
       const url = (selectedBranch && selectedBranch !== 'all') 
         ? `/api/purchases/offline?branch_id=${selectedBranch}` 
         : '/api/purchases/offline';
+      console.log('Fetching offline data from URL:', url);
       const response = await fetch(url);
       const data = await response.json();
+      console.log('Offline API response:', data);
       if (!response.ok) {
         throw new Error(data.error || 'Failed to fetch offline data');
       }
       return data;
     },
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache the result
   });
 
   // Ensure offlineRecords is always an array
