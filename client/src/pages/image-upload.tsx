@@ -13,7 +13,8 @@ export default function ImageUpload() {
     setMessage('');
 
     try {
-      for (const file of files) {
+      const fileArray = Array.from(files);
+      for (const file of fileArray) {
         // Extract slip number and weight type from filename
         // Expected format: slip_XX_first.jpg or slip_XX_second.jpg
         const filename = file.name;
@@ -28,9 +29,6 @@ export default function ImageUpload() {
         const weightType = match[2];
         const folder = weightType === 'first' ? 'first_weight' : 'second_weight';
         const targetFilename = `slip_${slipNo}.jpg`;
-
-        const formData = new FormData();
-        formData.append('file', file);
 
         const response = await fetch(`/api/upload-image/${folder}/${targetFilename}`, {
           method: 'POST',

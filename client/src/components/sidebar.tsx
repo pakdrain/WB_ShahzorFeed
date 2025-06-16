@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Home, Settings, Video, Menu, X, Scale, FileText, LogOut, User, BarChart3 } from 'lucide-react';
+import { Home, Settings, Video, Menu, X, Scale, FileText, LogOut, User, BarChart3, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
@@ -9,6 +9,7 @@ const navigation = [
   { name: 'Home', href: '/', icon: Home },
   { name: 'Purchase Form', href: '/purchase-form', icon: FileText },
   { name: 'Reports', href: '/reports', icon: BarChart3 },
+  { name: 'Image Upload', href: '/image-upload', icon: Upload },
   { name: 'Camera Settings', href: '/settings', icon: Settings },
   { name: 'Weighbridge Settings', href: '/weighbridge-settings', icon: Scale },
 ];

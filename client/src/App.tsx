@@ -28,6 +28,7 @@ function ProtectedApp() {
           <Route path="/purchase-form" component={PurchaseForm} />
           <Route path="/sales-form" component={SalesForm} />
           <Route path="/reports" component={Reports} />
+          <Route path="/image-upload" component={ImageUpload} />
           <Route component={NotFound} />
         </Switch>
       </div>
