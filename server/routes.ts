@@ -58,6 +58,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register video streaming routes
   videoStreamService.registerRoutes(app);
 
+  // Serve captured images statically - using path module for static files
+  import path from 'path';
+  import { fileURLToPath } from 'url';
+  
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  const capturedImagesPath = path.join(__dirname, '..', 'captured_images');
+  
+  app.use('/captured_images', (req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    next();
+  });
+  
+  // Manual static file serving for captured images
+  app.get('/captured_images/*', async (req, res) => {
+    try {
+      const filePath = path.join(capturedImagesPath, req.params[0]);
+      const fs = await import('fs');
+      
+      if (fs.existsSync(filePath)) {
+        const ext = path.extname(filePath).toLowerCase();
+        const contentType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 'image/png';
+        res.setHeader('Content-Type', contentType);
+        res.sendFile(path.resolve(filePath));
+      } else {
+        res.status(404).send('Image not found');
+      }
+    } catch (error) {
+      res.status(500).send('Error serving image');
+    }
+  });
+
   console.log('✅ Using users table with columns: userName, userPassword');
 
  // Register endpoint
