@@ -922,12 +922,9 @@ export default function PurchaseForm() {
   };
 
   const toggleOnlineMode = (isOnline: boolean) => {
+    console.log('toggleOnlineMode called with:', isOnline);
     setOnlineMode(isOnline);
-    setFormData(prev => ({
-      ...prev,
-      onlineEntry: isOnline ? 'Yes' : '',
-      offlineEntry: isOnline ? '' : 'Yes',
-    }));
+    console.log('onlineMode state updated to:', isOnline);
   };
 
   // Fetch entry types and branches
