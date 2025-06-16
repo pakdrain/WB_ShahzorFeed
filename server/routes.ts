@@ -583,6 +583,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Second weight image capture endpoints
+  app.post('/api/capture/second-weight', async (req: Request, res: Response) => {
+    try {
+      const { slipNo, cameraIp, cameraPort, username, password } = req.body;
+      
+      if (!slipNo || !cameraIp || !cameraPort) {
+        return res.status(400).json({ 
+          error: 'Missing required fields: slipNo, cameraIp, cameraPort' 
+        });
+      }
+
+      const imagePath = await imageCaptureService.captureSecondWeightImage({
+        slipNo,
+        cameraIp,
+        cameraPort,
+        username,
+        password
+      });
+
+      res.json({ 
+        message: 'Second weight image captured successfully',
+        imagePath,
+        slipNo 
+      });
+    } catch (error: any) {
+      console.error('Second weight image capture error:', error);
+      res.status(500).json({ 
+        error: 'Failed to capture second weight image',
+        details: error.message 
+      });
+    }
+  });
+
+  app.get('/api/capture/second-weight/images', async (req: Request, res: Response) => {
+    try {
+      const images = await imageCaptureService.getSecondWeightImages();
+      res.json({ images });
+    } catch (error: any) {
+      console.error('Get second weight images error:', error);
+      res.status(500).json({ 
+        error: 'Failed to retrieve second weight images',
+        details: error.message 
+      });
+    }
+  });
+
+  app.delete('/api/capture/second-weight/:filename', async (req: Request, res: Response) => {
+    try {
+      const { filename } = req.params;
+      const success = await imageCaptureService.deleteImage(filename);
+      
+      if (success) {
+        res.json({ success: true, message: 'Second weight image deleted successfully' });
+      } else {
+        res.status(404).json({ error: 'Second weight image not found' });
+      }
+    } catch (error: any) {
+      console.error('Delete second weight image error:', error);
+      res.status(500).json({ 
+        error: 'Failed to delete second weight image',
+        details: error.message 
+      });
+    }
+  });
+
   // GET latest master record
   app.get('/api/purchase/latest-master', async (req: Request, res: Response) => {
     try {

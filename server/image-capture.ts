@@ -69,6 +69,44 @@ export class ImageCaptureService {
     }
   }
 
+  async captureSecondWeightImage(options: CaptureImageOptions): Promise<string> {
+    const { slipNo, cameraIp, cameraPort, username = 'admin', password = 'admin123' } = options;
+    
+    try {
+      await this.ensureDirectoriesExist();
+      
+      // Check if image already exists for this slip number
+      const existingImages = await this.getSecondWeightImages();
+      const existingImage = existingImages.find((img: string) => img.includes(`slip_${slipNo}_`));
+      
+      if (existingImage) {
+        log(`📸 Second weight image already exists for slip ${slipNo}, skipping capture`);
+        return path.join(this.baseImagePath, this.secondWeightFolder, existingImage);
+      }
+      
+      // Generate filename with slip number and timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const filename = `slip_${slipNo}_${timestamp}.jpg`;
+      const imagePath = path.join(this.baseImagePath, this.secondWeightFolder, filename);
+      
+      // Construct RTSP URL
+      const rtspUrl = `rtsp://${username}:${password}@${cameraIp}:${cameraPort}/cam/realmonitor?channel=1&subtype=0`;
+      
+      log(`📸 Capturing second weight image for slip ${slipNo}...`);
+      const success = await this.captureImageWithFFmpeg(rtspUrl, imagePath);
+      
+      if (success) {
+        log(`✅ Second weight image captured successfully: ${filename}`);
+        return imagePath;
+      } else {
+        throw new Error('Failed to capture second weight image');
+      }
+    } catch (error: any) {
+      log(`❌ Error capturing second weight image: ${error.message}`);
+      throw error;
+    }
+  }
+
   private captureImageWithFFmpeg(rtspUrl: string, outputPath: string): Promise<boolean> {
     return new Promise((resolve, reject) => {
       const ffmpegArgs = [
@@ -121,6 +159,20 @@ export class ImageCaptureService {
         .reverse(); // Most recent first
     } catch (error: any) {
       log(`❌ Error reading first weight images: ${error.message}`);
+      return [];
+    }
+  }
+
+  async getSecondWeightImages(): Promise<string[]> {
+    try {
+      const secondWeightPath = path.join(this.baseImagePath, this.secondWeightFolder);
+      const files = await fs.readdir(secondWeightPath);
+      return files
+        .filter(file => file.toLowerCase().endsWith('.jpg') || file.toLowerCase().endsWith('.jpeg'))
+        .sort()
+        .reverse(); // Most recent first
+    } catch (error: any) {
+      log(`❌ Error reading second weight images: ${error.message}`);
       return [];
     }
   }
