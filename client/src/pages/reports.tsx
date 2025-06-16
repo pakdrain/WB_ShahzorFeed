@@ -718,7 +718,9 @@ export default function Reports() {
                           alt="First Weight"
                           className="w-16 h-12 object-cover mx-auto cursor-pointer"
                           onClick={() => window.open(`/captured_images/first_weight/slip_${record.slip_no}.jpg`, '_blank')}
+                          onLoad={() => console.log(`First weight image loaded for slip ${record.slip_no}`)}
                           onError={(e) => {
+                            console.log(`First weight image error for slip ${record.slip_no}`);
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
                             target.nextElementSibling!.textContent = 'No Image';
@@ -732,7 +734,9 @@ export default function Reports() {
                           alt="Second Weight"
                           className="w-16 h-12 object-cover mx-auto cursor-pointer"
                           onClick={() => window.open(`/captured_images/second_weight/slip_${record.slip_no}.jpg`, '_blank')}
+                          onLoad={() => console.log(`Second weight image loaded for slip ${record.slip_no}`)}
                           onError={(e) => {
+                            console.log(`Second weight image error for slip ${record.slip_no}`);
                             const target = e.target as HTMLImageElement;
                             target.style.display = 'none';
                             target.nextElementSibling!.textContent = 'No Image';

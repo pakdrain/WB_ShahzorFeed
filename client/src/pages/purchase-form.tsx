@@ -2454,7 +2454,7 @@ export default function PurchaseForm() {
                         </thead>
                         <tbody>
                           {(firstWeightRecords as any[])
-                            .filter((record: any) => record.online_entry !== 'Yes')
+                            .filter((record: any) => record.offline_entry === 'Yes')
                             .map((record: any) => (
                             <tr key={record.wb_id} className="hover:bg-gray-50">
                               <td className="px-3 py-2 border border-black text-black">
@@ -2490,7 +2490,7 @@ export default function PurchaseForm() {
                         </tbody>
                       </table>
                       
-                      {(firstWeightRecords as any[]).filter((record: any) => record.online_entry !== 'Yes').length === 0 && (
+                      {(firstWeightRecords as any[]).filter((record: any) => record.offline_entry === 'Yes').length === 0 && (
                         <div className="text-center py-8 text-black border border-black">
                           No offline records found
                         </div>
