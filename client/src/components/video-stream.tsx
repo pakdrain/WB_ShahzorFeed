@@ -81,14 +81,14 @@ export default function VideoStream({
         
         {isConnected && isStreaming ? (
           <img
-            className="w-full h-full object-contain bg-black"
+            className="w-full h-full object-cover bg-black"
             src={`/api/stream/${camera.id}/mjpeg`}
             alt="Live Camera Feed"
             onLoad={() => console.log('MJPEG stream loaded')}
             onError={(e) => console.error('MJPEG stream error:', e)}
             style={{ 
-              maxWidth: '100%', 
-              maxHeight: '100%',
+              width: '100%', 
+              height: '100%',
               backgroundColor: 'black'
             }}
           />

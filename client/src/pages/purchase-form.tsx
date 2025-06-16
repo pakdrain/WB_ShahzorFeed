@@ -1803,8 +1803,8 @@ export default function PurchaseForm() {
             ONLINE
           </Button>
           <Button 
-            className={`h-6 px-3 text-xs font-medium ${selectedForm === 'offline' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
-            onClick={() => setSelectedForm('offline')}
+            className={`h-6 px-3 text-xs font-medium ${!onlineMode ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-gray-500 hover:bg-gray-600 text-white'}`}
+            onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
           </Button>

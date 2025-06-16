@@ -94,8 +94,7 @@ export default function Reports() {
       }
       return data;
     },
-    staleTime: 0, // Always fetch fresh data
-    cacheTime: 0, // Don't cache the result
+    refetchOnMount: true, // Always fetch fresh data
   });
 
   // Ensure offlineRecords is always an array
