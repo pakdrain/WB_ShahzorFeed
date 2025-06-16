@@ -289,6 +289,14 @@ export default function Reports() {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
+          }
+          .image-fallback {
+            display: none;
+            text-align: center;
+            padding: 20px;
+            font-weight: bold;
+            color: #666;
           }
           .signatures {
             position: absolute;

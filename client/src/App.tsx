@@ -13,6 +13,7 @@ import WeighbridgeSettings from "@/pages/weighbridge-settings";
 import PurchaseForm from "@/pages/purchase-form";
 import SalesForm from "@/pages/sales-form";
 import Reports from "@/pages/reports";
+import ImageUpload from "@/pages/image-upload";
 import NotFound from "@/pages/not-found";
 
 function ProtectedApp() {
