@@ -1148,6 +1148,11 @@ export default function PurchaseForm() {
       console.log('No existing record found for slip:', formData.slipNo);
     }
     
+    // Debug the online/offline mode state
+    console.log('Before saving - onlineMode state:', onlineMode);
+    console.log('Before saving - formData.onlineEntry:', formData.onlineEntry);
+    console.log('Before saving - formData.offlineEntry:', formData.offlineEntry);
+    
     // Prepare master data payload with safe parsing
     const masterPayload = {
       slip_no: formData.slipNo || null,
