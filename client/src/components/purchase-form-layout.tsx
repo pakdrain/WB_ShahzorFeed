@@ -131,7 +131,7 @@ export default function PurchaseFormLayout({
             />
           </div>
           
-          <div>
+          <div className="col-span-2">
             <Label className="text-sm font-medium text-gray-700">Weight</Label>
             <div className="flex">
               <Input 
