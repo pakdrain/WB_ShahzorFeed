@@ -152,11 +152,12 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Print reports now correctly display images for each slip number when images are available
 - June 17, 2025. Fixed deduction table save functionality:
   - Corrected database schema to match actual table structure with `id` as primary key and `bag_id` as regular column
-  - Fixed INSERT statement to exclude auto-generated `total` column (calculated as bags * pb)
-  - Updated schema to properly handle generated columns and exclude them from INSERT operations
-  - Deduction button now displays data temporarily in frontend table as requested
-  - Save button now correctly saves deduction data to database table with all required columns
+  - Fixed INSERT statement to include all required columns (wb_id, bag_id, bags, pb, percentage, weight, total)
+  - Updated main Save button to properly integrate deduction data saving using correct `/api/deduction/save` endpoint
+  - Deduction button displays data temporarily in frontend table, Save button saves to database
+  - Fixed deduction save integration: master table saves first to generate wb_id, then deduction data saves using that wb_id
   - Verified complete deduction workflow: display → save → database storage working properly
+  - Tested endpoint successfully saves deduction records to PostgreSQL database
 
 ## User Preferences
 
