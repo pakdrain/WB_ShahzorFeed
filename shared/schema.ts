@@ -94,6 +94,7 @@ export const insertStreamStatsSchema = createInsertSchema(streamStats).omit({
 
 export const insertDeductionSchema = createInsertSchema(deduction).omit({
   id: true,
+  total: true,
   createdAt: true,
 });
 
