@@ -150,6 +150,13 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Added Image Upload page in sidebar navigation for transferring local images to Replit environment
   - Implemented image upload endpoint `/api/upload-image/:folder/:filename` for file transfer capability
   - Print reports now correctly display images for each slip number when images are available
+- June 17, 2025. Fixed deduction table save functionality:
+  - Corrected database schema to match actual table structure with `id` as primary key and `bag_id` as regular column
+  - Fixed INSERT statement to exclude auto-generated `total` column (calculated as bags * pb)
+  - Updated schema to properly handle generated columns and exclude them from INSERT operations
+  - Deduction button now displays data temporarily in frontend table as requested
+  - Save button now correctly saves deduction data to database table with all required columns
+  - Verified complete deduction workflow: display → save → database storage working properly
 
 ## User Preferences
 
