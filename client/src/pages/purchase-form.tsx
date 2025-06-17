@@ -1461,28 +1461,28 @@ export default function PurchaseForm() {
         // Save bag data to deduction table if available
         if (bagTableData.length > 0) {
           try {
-            const bagSavePromises = bagTableData.map(item => 
-              fetch('/api/deduction', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  wbId: savedWbId!,
-                  bagId: item.bagId,
-                  bags: item.bags,
-                  pb: item.pb,
-                  percentage: item.percentage,
-                  weight: item.weight
-                }),
-              })
-            );
+            console.log('Saving deduction data for wb_id:', savedWbId);
+            const deductionResponse = await fetch('/api/deduction/save', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                wbId: savedWbId!,
+                bagTableData: bagTableData
+              }),
+            });
 
-            await Promise.all(bagSavePromises);
-            console.log('Bag data saved successfully to deduction table');
+            if (deductionResponse.ok) {
+              console.log('Deduction data saved successfully to database');
+            } else {
+              const errorText = await deductionResponse.text();
+              console.error('Failed to save deduction data:', errorText);
+              alert('Warning: Main data saved but deduction data failed to save');
+            }
           } catch (bagError) {
-            console.error('Error saving bag data:', bagError);
-            alert('Warning: Main data saved but bag data failed to save');
+            console.error('Error saving deduction data:', bagError);
+            alert('Warning: Main data saved but deduction data failed to save');
           }
         }
         
