@@ -34,13 +34,15 @@ export const streamStats = pgTable("stream_stats", {
 });
 
 export const deduction = pgTable("deduction", {
-  bagId: serial("bag_id").primaryKey(),
+  id: serial("id").primaryKey(),
   wbId: integer("wb_id").notNull(),
+  bagId: integer("bag_id").notNull(),
   bags: integer("bags").notNull(),
   pb: decimal("pb", { precision: 10, scale: 2 }),
   percentage: decimal("percentage", { precision: 5, scale: 2 }),
   weight: decimal("weight", { precision: 10, scale: 2 }),
   total: decimal("total", { precision: 12, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const entryType = pgTable("entry_type", {
@@ -91,8 +93,9 @@ export const insertStreamStatsSchema = createInsertSchema(streamStats).omit({
 });
 
 export const insertDeductionSchema = createInsertSchema(deduction).omit({
-  bagId: true,
-} as const);
+  id: true,
+  createdAt: true,
+});
 
 export const insertSalesDetailsSchema = createInsertSchema(salesDetails).omit({
   id: true,
