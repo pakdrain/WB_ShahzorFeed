@@ -62,11 +62,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register video streaming routes
   videoStreamService.registerRoutes(app);
 
-  // Serve captured images statically 
+  // Serve captured images with dynamic lookup for timestamp-based naming
   app.get('/captured_images/:folder/:filename', async (req, res) => {
     try {
       const { folder, filename } = req.params;
-      const filePath = path.join('./captured_images', folder, filename);
+      const folderPath = path.join('./captured_images', folder);
+      
+      // First try exact filename match
+      let filePath = path.join(folderPath, filename);
       
       if (fs.existsSync(filePath)) {
         const ext = path.extname(filePath).toLowerCase();
@@ -75,9 +78,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.setHeader('Content-Type', contentType);
         res.setHeader('Cache-Control', 'no-cache');
         res.sendFile(path.resolve(filePath));
-      } else {
-        res.status(404).send('Image not found');
+        return;
       }
+      
+      // If exact match fails, try timestamp-based lookup
+      const slipMatch = filename.match(/slip_(.+)\.(jpg|jpeg|png)$/i);
+      if (slipMatch && fs.existsSync(folderPath)) {
+        const slipNumber = slipMatch[1];
+        const files = fs.readdirSync(folderPath);
+        
+        // Look for files with pattern: slip_[slipNumber]_[timestamp].[ext]
+        const matchingFile = files.find(file => {
+          const timestampPattern = new RegExp(`^slip_${slipNumber}_\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}-\\d{3}Z\\.(jpg|jpeg|png)$`, 'i');
+          return timestampPattern.test(file);
+        });
+        
+        if (matchingFile) {
+          filePath = path.join(folderPath, matchingFile);
+          const ext = path.extname(filePath).toLowerCase();
+          const contentType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 
+                             ext === '.png' ? 'image/png' : 'image/jpeg';
+          res.setHeader('Content-Type', contentType);
+          res.setHeader('Cache-Control', 'no-cache');
+          res.sendFile(path.resolve(filePath));
+          console.log(`Found timestamped image: ${matchingFile} for slip ${slipNumber}`);
+          return;
+        }
+      }
+      
+      console.log(`Image not found: ${filename} in folder ${folder}`);
+      res.status(404).send('Image not found');
     } catch (error) {
       console.error('Error serving image:', error);
       res.status(500).send('Error serving image');
