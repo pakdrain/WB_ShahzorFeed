@@ -389,9 +389,13 @@ export default function Reports() {
                 </div>
                 
                 <div class="image-box">
+                  <div style="font-weight: bold; font-size: 10px; margin-bottom: 2px;">First Weight Image</div>
+                  <div style="font-size: 8px; color: #666; margin-bottom: 2px;">C:\\Users\\Wajid Ali\\Downloads\\CameraStreamMonitor\\captured_images\\first_weight</div>
                   <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg" 
+                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
                        style="width: 100%; height: 100%; object-fit: cover;" 
                        alt="First Weight Image" />
+                  <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
                 </div>
               </div>
               
