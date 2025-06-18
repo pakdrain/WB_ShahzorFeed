@@ -86,10 +86,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (slipMatch && fs.existsSync(folderPath)) {
         const slipNumber = slipMatch[1];
         const files = fs.readdirSync(folderPath);
-        // Look for files with pattern: slip_[slipNumber]_[timestamp].[ext]
+        // Look for files with pattern: slip_[slipNumber]_[timestamp].[ext] or any file starting with slip_[slipNumber]
         const matchingFile = files.find(file => {
+          // First try exact timestamp pattern
           const timestampPattern = new RegExp(`^slip_${slipNumber}_\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}-\\d{3}Z\\.(jpg|jpeg|png)$`, 'i');
-          return timestampPattern.test(file);
+          if (timestampPattern.test(file)) return true;
+          
+          // Then try any file starting with slip_[slipNumber]_
+          const generalPattern = new RegExp(`^slip_${slipNumber}_.*\\.(jpg|jpeg|png)$`, 'i');
+          return generalPattern.test(file);
         });
         
         if (matchingFile) {

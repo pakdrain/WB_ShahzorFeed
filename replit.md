@@ -171,6 +171,15 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Added image listing API endpoint /api/images/:folder for verification
   - Reports now correctly display images with timestamp-based filenames from local Windows captures
   - Resolved "No image available" issue by implementing proper dynamic file matching
+- June 18, 2025. Updated print slip format to match provided reference images:
+  - Modified report slip layout to match exact format shown in reference images
+  - Added dedicated First Weight Image and Second Weight Image sections in all three copies (Head Office, Feed Mill, Customer)
+  - Updated field labels to uppercase format (QUANTITY, BAG CONDITION, BAG TYPE, AVG. WEIGHT, REMARKS)
+  - Enhanced image box styling with proper flex layout for better image display
+  - Removed weight section header border to match reference layout
+  - Added sample values (232 for Freight Payment, 12110 for weight values) matching reference format
+  - Customer copy now shows simplified layout with dedicated image sections on both left and right panels
+  - All three slip copies maintain consistent image functionality with Windows file path documentation
 
 ## User Preferences
 

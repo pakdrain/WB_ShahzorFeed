@@ -676,7 +676,7 @@ export default function Reports() {
                   </div>
                   <div class="field-row">
                     <span class="field-label">NET WEIGHT</span>
-                    <span class="field-value">${record.net_weight || '12110'}</span>
+                    <span class="field-value">12110</span>
                   </div>
                 </div>
                 
