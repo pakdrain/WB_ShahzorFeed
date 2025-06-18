@@ -158,6 +158,12 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Fixed deduction save integration: master table saves first to generate wb_id, then deduction data saves using that wb_id
   - Verified complete deduction workflow: display → save → database storage working properly
   - Tested endpoint successfully saves deduction records to PostgreSQL database
+- June 18, 2025. Enhanced print reports with Windows file path display:
+  - Updated print template to show actual Windows file paths for first and second weight images
+  - Added image titles and directory paths: C:\Users\Wajid Ali\Downloads\CameraStreamMonitor\captured_images\first_weight and second_weight
+  - Enhanced error handling with proper fallback display when images are not available
+  - Print reports now display both image titles and source directory paths for documentation purposes
+  - All three print copies (Head Office, Feed Mill, Customer) now include complete image information
 
 ## User Preferences
 
