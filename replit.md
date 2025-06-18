@@ -164,6 +164,13 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Enhanced error handling with proper fallback display when images are not available
   - Print reports now display both image titles and source directory paths for documentation purposes
   - All three print copies (Head Office, Feed Mill, Customer) now include complete image information
+- June 18, 2025. Implemented dynamic timestamp-based image lookup:
+  - Fixed image serving to handle timestamp-based naming convention from Windows system
+  - Added support for filename pattern: slip_[number]_[timestamp].jpg (e.g., slip_81_2025-06-18T06-33-35-006Z.jpg)
+  - Implemented fallback logic: tries exact filename first, then searches for timestamp pattern
+  - Added image listing API endpoint /api/images/:folder for verification
+  - Reports now correctly display images with timestamp-based filenames from local Windows captures
+  - Resolved "No image available" issue by implementing proper dynamic file matching
 
 ## User Preferences
 

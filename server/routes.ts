@@ -86,7 +86,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (slipMatch && fs.existsSync(folderPath)) {
         const slipNumber = slipMatch[1];
         const files = fs.readdirSync(folderPath);
-        
         // Look for files with pattern: slip_[slipNumber]_[timestamp].[ext]
         const matchingFile = files.find(file => {
           const timestampPattern = new RegExp(`^slip_${slipNumber}_\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}-\\d{3}Z\\.(jpg|jpeg|png)$`, 'i');
@@ -101,7 +100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           res.setHeader('Content-Type', contentType);
           res.setHeader('Cache-Control', 'no-cache');
           res.sendFile(path.resolve(filePath));
-          console.log(`Found timestamped image: ${matchingFile} for slip ${slipNumber}`);
+          console.log(`✅ Found timestamped image: ${matchingFile} for slip ${slipNumber}`);
           return;
         }
       }
@@ -142,6 +141,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error uploading image:', error);
       res.status(500).json({ error: 'Failed to upload image' });
+    }
+  });
+
+  // API endpoint to list images in directory for verification
+  app.get('/api/images/:folder', async (req, res) => {
+    try {
+      const { folder } = req.params;
+      const folderPath = path.join('./captured_images', folder);
+      
+      if (!fs.existsSync(folderPath)) {
+        return res.json({ images: [] });
+      }
+      
+      const files = fs.readdirSync(folderPath);
+      const imageFiles = files.filter(file => 
+        file.toLowerCase().endsWith('.jpg') || 
+        file.toLowerCase().endsWith('.jpeg') || 
+        file.toLowerCase().endsWith('.png')
+      );
+      
+      res.json({ images: imageFiles });
+    } catch (error) {
+      console.error('Error listing images:', error);
+      res.status(500).json({ error: 'Failed to list images' });
     }
   });
 
