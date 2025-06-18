@@ -219,7 +219,21 @@ export default function Reports() {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8mm;
-            height: calc(100% - 40px);
+            margin-bottom: 8mm;
+          }
+          .images-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8mm;
+            margin-bottom: 35mm;
+          }
+          .image-title {
+            font-weight: bold;
+            font-size: 12px;
+            text-align: center;
+            padding: 4px;
+            background-color: #f0f0f0;
+            border-bottom: 2px solid #000;
           }
           .left-panel, .right-panel {
             border: 2px solid #000;
@@ -653,15 +667,6 @@ export default function Reports() {
                   </div>
                 </div>
                 
-                <div class="image-box">
-                  <div style="font-weight: bold; font-size: 10px; margin-bottom: 2px;">First Weight Image</div>
-                  <div style="font-size: 8px; color: #666; margin-bottom: 2px;">C:\\Users\\Wajid Ali\\Downloads\\CameraStreamMonitor\\captured_images\\first_weight</div>
-                  <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg" 
-                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                       style="width: 100%; height: 100%; object-fit: cover;" 
-                       alt="First Weight Image" />
-                  <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
-                </div>
               </div>
               
               <div class="right-panel">
@@ -679,16 +684,26 @@ export default function Reports() {
                     <span class="field-value">12110</span>
                   </div>
                 </div>
-                
-                <div class="image-box">
-                  <div style="font-weight: bold; font-size: 10px; margin-bottom: 2px;">Second Weight Image</div>
-                  <div style="font-size: 8px; color: #666; margin-bottom: 2px;">C:\\Users\\Wajid Ali\\Downloads\\CameraStreamMonitor\\captured_images\\second_weight</div>
-                  <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg" 
-                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                       style="width: 100%; height: 100%; object-fit: cover;" 
-                       alt="Second Weight Image" />
-                  <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
-                </div>
+              </div>
+            </div>
+            
+            <div class="images-section">
+              <div class="image-box">
+                <div class="image-title">First Weight Image</div>
+                <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                     style="width: 100%; height: 100%; object-fit: cover;" 
+                     alt="First Weight Image" />
+                <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
+              </div>
+              
+              <div class="image-box">
+                <div class="image-title">Second Weight Image</div>
+                <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg" 
+                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                     style="width: 100%; height: 100%; object-fit: cover;" 
+                     alt="Second Weight Image" />
+                <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
               </div>
             </div>
             

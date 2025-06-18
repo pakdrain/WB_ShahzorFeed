@@ -180,6 +180,12 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Added sample values (232 for Freight Payment, 12110 for weight values) matching reference format
   - Customer copy now shows simplified layout with dedicated image sections on both left and right panels
   - All three slip copies maintain consistent image functionality with Windows file path documentation
+- June 18, 2025. Improved report slip format based on user requirements:
+  - Reorganized all three sections (Head Office, Feed Mill, Customer) to show text details first, followed by images
+  - Removed image file paths from display while maintaining image functionality
+  - Separated images into dedicated section below text content for cleaner layout
+  - Enhanced image titles with better styling and spacing
+  - Maintained all existing functionality while improving visual organization
 
 ## User Preferences
 
