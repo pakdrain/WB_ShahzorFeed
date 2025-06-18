@@ -171,6 +171,12 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Added image listing API endpoint /api/images/:folder for verification
   - Reports now correctly display images with timestamp-based filenames from local Windows captures
   - Resolved "No image available" issue by implementing proper dynamic file matching
+- June 18, 2025. Updated purchase-form.tsx print report format:
+  - Replaced existing report slip format with reports.tsx format while maintaining all functionality
+  - Updated to three-section format: Head Office Copy, Feed Mill Copy, and Customer Copy
+  - Added separate First Weight Image and Second Weight Image areas in all three sections
+  - Integrated dynamic timestamp-based image lookup with Windows file path display
+  - Print reports now use professional grid-based layout with proper styling and image support
 
 ## User Preferences
 
