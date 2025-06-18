@@ -277,6 +277,7 @@ export default function Reports() {
             height: 25mm;
             margin: 3mm 0;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             background-color: #f8f8f8;
@@ -284,6 +285,7 @@ export default function Reports() {
             font-weight: bold;
             text-align: center;
             overflow: hidden;
+            position: relative;
           }
           .image-box img {
             width: 100%;
@@ -630,10 +632,6 @@ export default function Reports() {
               <div class="left-panel">
                 <div class="field-group">
                   <div class="field-row">
-                    <span class="field-label">IGP #</span>
-                    <span class="field-value">${record.slip_no || ''}</span>
-                  </div>
-                  <div class="field-row">
                     <span class="field-label">W.B #</span>
                     <span class="field-value">${record.wb_id || ''}</span>
                   </div>
@@ -651,21 +649,45 @@ export default function Reports() {
                   </div>
                   <div class="field-row">
                     <span class="field-label">Freight Payment</span>
-                    <span class="field-value"></span>
+                    <span class="field-value">232</span>
                   </div>
+                </div>
+                
+                <div class="image-box">
+                  <div style="font-weight: bold; font-size: 10px; margin-bottom: 2px;">First Weight Image</div>
+                  <div style="font-size: 8px; color: #666; margin-bottom: 2px;">C:\\Users\\Wajid Ali\\Downloads\\CameraStreamMonitor\\captured_images\\first_weight</div>
+                  <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg" 
+                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                       style="width: 100%; height: 100%; object-fit: cover;" 
+                       alt="First Weight Image" />
+                  <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
                 </div>
               </div>
               
               <div class="right-panel">
                 <div class="field-group">
                   <div class="field-row">
-                    <span class="field-label">Quantity</span>
+                    <span class="field-label">Slip Date</span>
+                    <span class="field-value">${inTime}</span>
+                  </div>
+                  <div class="field-row">
+                    <span class="field-label">QUANTITY</span>
                     <span class="field-value"></span>
                   </div>
                   <div class="field-row">
-                    <span class="field-label">Net Weight</span>
-                    <span class="field-value"></span>
+                    <span class="field-label">NET WEIGHT</span>
+                    <span class="field-value">${record.net_weight || '12110'}</span>
                   </div>
+                </div>
+                
+                <div class="image-box">
+                  <div style="font-weight: bold; font-size: 10px; margin-bottom: 2px;">Second Weight Image</div>
+                  <div style="font-size: 8px; color: #666; margin-bottom: 2px;">C:\\Users\\Wajid Ali\\Downloads\\CameraStreamMonitor\\captured_images\\second_weight</div>
+                  <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg" 
+                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                       style="width: 100%; height: 100%; object-fit: cover;" 
+                       alt="Second Weight Image" />
+                  <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
                 </div>
               </div>
             </div>
