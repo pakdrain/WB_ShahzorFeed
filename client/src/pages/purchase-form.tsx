@@ -1540,12 +1540,75 @@ export default function PurchaseForm() {
           alert('Record updated successfully!');
           // Auto-print after successful update
           setTimeout(() => {
-            const printHTML = generatePrintHTML();
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-              printWindow.document.write(printHTML);
-              printWindow.document.close();
-              printWindow.print();
+            try {
+              const printHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Purchase Receipt - Slip #${formData.slipNo}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .section { margin-bottom: 15px; }
+    .two-column { display: flex; justify-content: space-between; margin-bottom: 15px; }
+    .left-section, .right-section { width: 48%; }
+    .weight-section { border: 1px solid #ccc; padding: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    @media print { body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>WEIGHBRIDGE SLIP</h2>
+    <h3>PURCHASE ENTRY</h3>
+  </div>
+  
+  <div class="two-column">
+    <div class="left-section">
+      <div>IGP # ${formData.igpNo || ''}</div>
+      <div>W.B # ${formData.slipNo || ''}</div>
+      <div>Truck # ${formData.vehicleNo || ''}</div>
+      <div>Freight Payment ${formData.freight || ''}</div>
+    </div>
+    <div class="right-section">
+      <div>Party: ${formData.vendor || ''}</div>
+      <div>Time IN: ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString() : ''}</div>
+      <div>Time OUT: ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString() : ''}</div>
+    </div>
+  </div>
+
+  <div class="weight-section">
+    <div><strong>Weight Details</strong></div>
+    <div>First Weight: ${formData.firstWeight || '0'}</div>
+    <div>Second Weight: ${formData.secondWeight || '0'}</div>
+    <div>Gross Weight: ${formData.grossWeight || '0'}</div>
+    <div>Bardana Weight: ${formData.bardanaWeight || '0'}</div>
+    <div>Net Weight: ${formData.netWeight || '0'}</div>
+  </div>
+
+  <div class="section">
+    <div><strong>Item Details</strong></div>
+    <div>Item Code: ${formData.itemCode || ''}</div>
+    <div>Item Description: ${formData.itemDesc || ''}</div>
+    <div>Quantity: ${formData.noOfBags || ''}</div>
+    <div>Weight per Bag: ${formData.wtPerBag || ''}</div>
+  </div>
+
+  <div class="section">
+    <div><strong>Remarks:</strong> ${formData.remarks || ''}</div>
+  </div>
+</body>
+</html>`;
+              
+              const printWindow = window.open('', '_blank');
+              if (printWindow) {
+                printWindow.document.write(printHTML);
+                printWindow.document.close();
+                printWindow.print();
+              }
+            } catch (printError) {
+              console.error('Auto-print error:', printError);
             }
           }, 500);
           // Reset form to clean state after edit
@@ -1554,12 +1617,75 @@ export default function PurchaseForm() {
           alert('Purchase data saved successfully!');
           // Auto-print after successful save
           setTimeout(() => {
-            const printHTML = generatePrintHTML();
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-              printWindow.document.write(printHTML);
-              printWindow.document.close();
-              printWindow.print();
+            try {
+              const printHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Purchase Receipt - Slip #${formData.slipNo}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .section { margin-bottom: 15px; }
+    .two-column { display: flex; justify-content: space-between; margin-bottom: 15px; }
+    .left-section, .right-section { width: 48%; }
+    .weight-section { border: 1px solid #ccc; padding: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    @media print { body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>WEIGHBRIDGE SLIP</h2>
+    <h3>PURCHASE ENTRY</h3>
+  </div>
+  
+  <div class="two-column">
+    <div class="left-section">
+      <div>IGP # ${formData.igpNo || ''}</div>
+      <div>W.B # ${formData.slipNo || ''}</div>
+      <div>Truck # ${formData.vehicleNo || ''}</div>
+      <div>Freight Payment ${formData.freight || ''}</div>
+    </div>
+    <div class="right-section">
+      <div>Party: ${formData.vendor || ''}</div>
+      <div>Time IN: ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString() : ''}</div>
+      <div>Time OUT: ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString() : ''}</div>
+    </div>
+  </div>
+
+  <div class="weight-section">
+    <div><strong>Weight Details</strong></div>
+    <div>First Weight: ${formData.firstWeight || '0'}</div>
+    <div>Second Weight: ${formData.secondWeight || '0'}</div>
+    <div>Gross Weight: ${formData.grossWeight || '0'}</div>
+    <div>Bardana Weight: ${formData.bardanaWeight || '0'}</div>
+    <div>Net Weight: ${formData.netWeight || '0'}</div>
+  </div>
+
+  <div class="section">
+    <div><strong>Item Details</strong></div>
+    <div>Item Code: ${formData.itemCode || ''}</div>
+    <div>Item Description: ${formData.itemDesc || ''}</div>
+    <div>Quantity: ${formData.noOfBags || ''}</div>
+    <div>Weight per Bag: ${formData.wtPerBag || ''}</div>
+  </div>
+
+  <div class="section">
+    <div><strong>Remarks:</strong> ${formData.remarks || ''}</div>
+  </div>
+</body>
+</html>`;
+              
+              const printWindow = window.open('', '_blank');
+              if (printWindow) {
+                printWindow.document.write(printHTML);
+                printWindow.document.close();
+                printWindow.print();
+              }
+            } catch (printError) {
+              console.error('Auto-print error:', printError);
             }
           }, 500);
           // Reset form to clean state and increment slip number for next entry
