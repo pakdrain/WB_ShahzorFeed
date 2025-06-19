@@ -2270,7 +2270,7 @@ export default function PurchaseForm() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-black w-16">Vehicle No</span>
-                        <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                        <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black flex-1" readOnly={!editModeEnabled} />
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-black w-16">Weight</span>
