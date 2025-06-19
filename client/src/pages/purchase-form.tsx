@@ -651,17 +651,7 @@ export default function PurchaseForm() {
     }));
   }, [formData.supplierWeight, formData.bardanaWeight, formData.weight]);
 
-  // Auto-fetch IGP data when IGP number is available in edit mode
-  useEffect(() => {
-    if (isEditMode && formData.igpNo && formData.igpNo.trim() !== '') {
-      // Add a delay to ensure form is fully loaded
-      const timer = setTimeout(() => {
-        fetchIgpData();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [isEditMode, formData.igpNo]);
+  // Remove auto-fetch IGP data in edit mode - use saved table data only
 
   // IGP Data Fetching Function
   const fetchIgpData = async () => {
@@ -688,7 +678,7 @@ export default function PurchaseForm() {
           driverName: firstItem.driver_name || '',
           vendor: firstItem.vendor_name || '',
           vehicleNo: firstItem.vehicle_no || '',
-          bardanaWeight: firstItem.bardana_qty ? String(firstItem.bardana_qty) : '',
+          noOfBags: firstItem.bardana_qty ? String(firstItem.bardana_qty) : '',
           bardanaType: firstItem.bardanatype || '',
           wtPerBag: firstItem.wtperbag ? String(firstItem.wtperbag) : '',
           igpDate: firstItem.igp_date || '',
@@ -1200,8 +1190,8 @@ export default function PurchaseForm() {
       driver_name: formData.driverName || null,
       company_id: (formData.companyId && formData.companyId !== 'undefined' && formData.companyId.trim() !== '') ? parseInt(formData.companyId, 10) : null,
       branch_id: (formData.branchId && formData.branchId !== 'undefined' && formData.branchId.trim() !== '') ? parseInt(formData.branchId, 10) : null,
-      online_entry: onlineMode ? 'Yes' : '',
-      offline_entry: onlineMode ? '' : 'Yes',
+      online_entry: onlineMode ? 'Yes' : null,
+      offline_entry: onlineMode ? null : 'Yes',
       created_by: (formData.createdBy && formData.createdBy !== 'undefined' && formData.createdBy.trim() !== '') ? parseInt(formData.createdBy, 10) : null,
       creation_date: formData.creationDate || null,
       last_updated_by: (formData.lastUpdatedBy && formData.lastUpdatedBy !== 'undefined' && formData.lastUpdatedBy.trim() !== '') ? parseInt(formData.lastUpdatedBy, 10) : null,
@@ -1225,17 +1215,9 @@ export default function PurchaseForm() {
           throw new Error('No valid wb_id found for update operation');
         }
         
-        // If this is an offline entry being converted to online, update the status
-        if (isEditMode && formData.onlineEntry === 'Yes' && updateWbId) {
-          try {
-            await fetch(`/api/purchase/convert-to-online/${updateWbId}`, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json' },
-            });
-            console.log('Entry converted from offline to online');
-          } catch (error) {
-            console.error('Error converting to online:', error);
-          }
+        // Handle online/offline status updates properly
+        if (isEditMode && updateWbId) {
+          console.log('Updating online/offline status - onlineMode:', onlineMode);
         }
         
         console.log('Updating record with wb_id:', updateWbId);
