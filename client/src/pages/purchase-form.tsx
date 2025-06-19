@@ -657,8 +657,9 @@ export default function PurchaseForm() {
     setFormData(prev => ({
       ...prev,
       bardanaWeight: bardanaWeight > 0 ? bardanaWeight.toFixed(2) : '0.00',
-      grossWeight: grossWeight > 0 ? grossWeight.toFixed(2) : '0.00',
-      netWeight: netWeight > 0 ? netWeight.toFixed(2) : '0.00'
+      // Fix: Net Weight shows in Gross Weight field, Gross Weight shows in Net Weight field
+      grossWeight: netWeight > 0 ? netWeight.toFixed(2) : '0.00',
+      netWeight: grossWeight > 0 ? grossWeight.toFixed(2) : '0.00'
     }));
   }, [formData.firstWeight, formData.secondWeight, formData.wtPerBag, formData.noOfBags]);
 
@@ -1538,36 +1539,18 @@ export default function PurchaseForm() {
         
         if (isEditMode) {
           alert('Record updated successfully!');
-          // Auto-redirect to print after successful update
-          try {
-            const printHTML = generatePrintHTML();
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-              printWindow.document.write(printHTML);
-              printWindow.document.close();
-              printWindow.print();
-            }
-            console.log('Auto-print completed after update');
-          } catch (printError) {
-            console.log('Auto-print failed, but update was successful:', printError);
-          }
+          // Auto-print after successful update
+          setTimeout(() => {
+            handlePrint();
+          }, 500);
           // Reset form to clean state after edit
           resetFormToInitial();
         } else {
           alert('Purchase data saved successfully!');
-          // Auto-redirect to print after successful save
-          try {
-            const printHTML = generatePrintHTML();
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-              printWindow.document.write(printHTML);
-              printWindow.document.close();
-              printWindow.print();
-            }
-            console.log('Auto-print completed after save');
-          } catch (printError) {
-            console.log('Auto-print failed, but save was successful:', printError);
-          }
+          // Auto-print after successful save
+          setTimeout(() => {
+            handlePrint();
+          }, 500);
           // Reset form to clean state and increment slip number for next entry
           resetFormToInitial();
         }
