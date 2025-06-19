@@ -1015,17 +1015,26 @@ export default function PurchaseForm() {
   }, [location]);
 
   useEffect(() => {
-    // Fetch next slip number
+    // Fetch next slip number based on current form type (Purchase/Sale)
     fetch('/api/purchases')
       .then(res => res.json())
       .then((data: any[]) => {
         if (data.length > 0) {
-          const maxSlip = data.reduce((max: number, curr: any) => {
-            const slip = parseInt(curr.slip_no, 10);
-            return slip > max ? slip : max;
-          }, 0);
-          const nextSlip = (maxSlip + 1).toString();
-          setFormData(prev => ({ ...prev, slipNo: nextSlip }));
+          // Filter by current entry type
+          const currentEntryType = selectedForm === 'sales' ? 'SALE' : 'PURCHASE';
+          const filteredData = data.filter(item => item.entry_type === currentEntryType);
+          
+          if (filteredData.length > 0) {
+            const maxSlip = filteredData.reduce((max: number, curr: any) => {
+              const slip = parseInt(curr.slip_no, 10);
+              return slip > max ? slip : max;
+            }, 0);
+            const nextSlip = (maxSlip + 1).toString();
+            setFormData(prev => ({ ...prev, slipNo: nextSlip }));
+          } else {
+            // No records of this type, start from 1
+            setFormData(prev => ({ ...prev, slipNo: '1' }));
+          }
         } else {
           setFormData(prev => ({ ...prev, slipNo: '1' }));
         }
@@ -2231,12 +2240,13 @@ export default function PurchaseForm() {
                           value={formData.igpNo} 
                           onChange={handleChange} 
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+                            if (e.key === 'Enter' && editModeEnabled) {
                               fetchIgpData();
                             }
                           }}
                           className="h-4 text-xs text-black flex-1" 
-                          placeholder="Press Enter to fetch"
+                          placeholder={editModeEnabled ? "Press Enter to fetch" : "IGP No"}
+                          readOnly={!editModeEnabled}
                         />
                       </div>
                       <div className="flex items-center gap-2">

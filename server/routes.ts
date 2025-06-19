@@ -804,7 +804,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET first weight records
+  // GET first weight records - include both PURCHASE and SALE entries
   app.get('/api/purchase/first-weight-records', async (req: Request, res: Response) => {
     try {
       const query = `
@@ -812,12 +812,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         FROM wb_weighbridge w
         LEFT JOIN wb_weighbridge_items_purchase p ON w.wb_id = p.wb_id
         WHERE w.first_weight IS NOT NULL AND (w.second_weight IS NULL OR w.second_weight = 0)
+        AND w.entry_type IN ('PURCHASE', 'SALE')
         ORDER BY w.wb_id DESC 
         LIMIT 20
       `;
       const result = await pool.query(query);
       
-      console.log(`Fetched ${result.rows.length} first weight records`);
+      console.log(`Fetched ${result.rows.length} first weight records (PURCHASE and SALE)`);
       res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching first weight records:', error);
