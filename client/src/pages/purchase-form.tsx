@@ -657,9 +657,8 @@ export default function PurchaseForm() {
     setFormData(prev => ({
       ...prev,
       bardanaWeight: bardanaWeight > 0 ? bardanaWeight.toFixed(2) : '0.00',
-      // Fix: Net Weight shows in Gross Weight field, Gross Weight shows in Net Weight field
-      grossWeight: netWeight > 0 ? netWeight.toFixed(2) : '0.00',
-      netWeight: grossWeight > 0 ? grossWeight.toFixed(2) : '0.00'
+      grossWeight: grossWeight > 0 ? grossWeight.toFixed(2) : '0.00',
+      netWeight: netWeight > 0 ? netWeight.toFixed(2) : '0.00'
     }));
   }, [formData.firstWeight, formData.secondWeight, formData.wtPerBag, formData.noOfBags]);
 
@@ -1541,7 +1540,13 @@ export default function PurchaseForm() {
           alert('Record updated successfully!');
           // Auto-print after successful update
           setTimeout(() => {
-            handlePrint();
+            const printHTML = generatePrintHTML();
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+              printWindow.document.write(printHTML);
+              printWindow.document.close();
+              printWindow.print();
+            }
           }, 500);
           // Reset form to clean state after edit
           resetFormToInitial();
@@ -1549,7 +1554,13 @@ export default function PurchaseForm() {
           alert('Purchase data saved successfully!');
           // Auto-print after successful save
           setTimeout(() => {
-            handlePrint();
+            const printHTML = generatePrintHTML();
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+              printWindow.document.write(printHTML);
+              printWindow.document.close();
+              printWindow.print();
+            }
           }, 500);
           // Reset form to clean state and increment slip number for next entry
           resetFormToInitial();
