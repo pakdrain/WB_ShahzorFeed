@@ -820,14 +820,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET branches for dropdown
+  // GET branches for dropdown with specific handling for Shahzor
   app.get('/api/branches', async (req: Request, res: Response) => {
     try {
       const query = 'SELECT branch_id, branch_name FROM branches ORDER BY branch_name';
       const result = await pool.query(query);
       
-      console.log(`Fetched ${result.rows.length} branches`);
-      res.json(result.rows);
+      // Process branches to ensure Shahzor returns only its ID
+      const processedBranches = result.rows.map(branch => {
+        if (branch.branch_name === 'Shahzor') {
+          return {
+            branch_id: branch.branch_id,
+            branch_name: 'Shahzor'
+          };
+        }
+        return branch;
+      });
+      
+      console.log(`Fetched ${processedBranches.length} branches`);
+      res.json(processedBranches);
     } catch (error: any) {
       console.error('Error fetching branches:', error);
       res.status(500).json({ error: 'Failed to fetch branches' });
@@ -921,7 +932,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         freight = null,
         remarks = null,
         driver_name = null,
-        slip_out_time = null
+        slip_out_time = null,
+        online_entry = null,
+        offline_entry = null
       } = updateData;
 
       const query = `
@@ -938,6 +951,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           remarks = $10,
           driver_name = $11,
           slip_out_time = $12,
+          online_entry = $13,
+          offline_entry = $14,
           last_updated_date = CURRENT_TIMESTAMP
         WHERE wb_id = $1
         RETURNING *;
@@ -955,7 +970,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         freight ? parseFloat(freight) : null,
         remarks,
         driver_name,
-        slip_out_time
+        slip_out_time,
+        online_entry,
+        offline_entry
       ];
 
       const result = await pool.query(query, values);
@@ -974,7 +991,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         item_desc = null,
         po_qty = null,
         igp_qty = null,
-        balance_qty = null
+        balance_qty = null,
+        igp_date = null,
+        weight_per_bags = null,
+        no_of_bags = null,
+        bardana_type = null
       } = updateData;
 
       // Check if details record exists, then update or insert accordingly
@@ -994,7 +1015,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             item_desc = $7,
             po_qty = $8,
             igp_qty = $9,
-            balance_qty = $10
+            balance_qty = $10,
+            igp_date = $11,
+            weight_per_bags = $12,
+            no_of_bags = $13,
+            bardana_type = $14
           WHERE wb_id = $1
           RETURNING *;
         `;
@@ -1009,7 +1034,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           item_desc,
           po_qty ? parseFloat(po_qty) : null,
           igp_qty ? parseFloat(igp_qty) : null,
-          balance_qty ? parseFloat(balance_qty) : null
+          balance_qty ? parseFloat(balance_qty) : null,
+          igp_date,
+          weight_per_bags ? parseFloat(weight_per_bags) : null,
+          no_of_bags ? parseInt(no_of_bags) : null,
+          bardana_type
         ];
 
         await pool.query(detailsQuery, detailsValues);
@@ -1017,8 +1046,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Insert new record
         const insertQuery = `
           INSERT INTO wb_weighbridge_items_purchase (
-            wb_id, vehicle_no, vendor_name, po_no, igp_no, item_code, item_desc, po_qty, igp_qty, balance_qty
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            wb_id, vehicle_no, vendor_name, po_no, igp_no, item_code, item_desc, po_qty, igp_qty, balance_qty, igp_date, weight_per_bags, no_of_bags, bardana_type
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
           RETURNING *;
         `;
 
@@ -1032,7 +1061,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           item_desc,
           po_qty ? parseFloat(po_qty) : null,
           igp_qty ? parseFloat(igp_qty) : null,
-          balance_qty ? parseFloat(balance_qty) : null
+          balance_qty ? parseFloat(balance_qty) : null,
+          igp_date,
+          weight_per_bags ? parseFloat(weight_per_bags) : null,
+          no_of_bags ? parseInt(no_of_bags) : null,
+          bardana_type
         ];
 
         await pool.query(insertQuery, insertValues);

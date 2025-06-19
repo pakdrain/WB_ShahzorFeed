@@ -194,6 +194,15 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Implemented correct weight calculation formulas: Gross Weight = First Weight - Second Weight, Net Weight = First Weight - Second Weight - Bardana Weight
   - Enhanced edit mode to properly load online/offline status from database values
   - Removed automatic IGP data fetching in edit mode to preserve saved table data integrity
+- June 19, 2025. Completed additional 6 purchase form enhancements:
+  - Implemented Bardana Weight formula: (weight per bag * number of bags) for both master and detail fields
+  - Enhanced weight calculations: Gross Weight = (first weight - second weight), Net Weight = (first weight - second weight - bardana weight)
+  - Added auto-redirect to print view after successful save operation instead of just showing alert
+  - Fixed edit mode to fetch igp_date and all detail fields (po_no, item_desc, etc.) from saved table data
+  - Added driver_name field retrieval in edit mode to display saved driver information
+  - Enhanced branch handling for "Shahzor" to return only corresponding ID with proper filtering
+  - Updated server-side update endpoints to handle all detail table fields including igp_date, weight_per_bags, no_of_bags, bardana_type
+  - Improved online/offline entry status updates in database with proper NULL/YES value handling
 
 ## User Preferences
 

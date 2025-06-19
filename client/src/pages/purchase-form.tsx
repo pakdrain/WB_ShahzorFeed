@@ -128,6 +128,7 @@ export default function PurchaseForm() {
           bardanaType: details.bardana_type || '',
           wtPerBag: details.weight_per_bags ? String(details.weight_per_bags) : '',
           noOfBags: details.no_of_bags ? String(details.no_of_bags) : '',
+          igpDate: details.igp_date || '',
           slipInTime: master.slip_in_time ? formatDatetimeLocal(master.slip_in_time) : '',
           slipOutTime: master.slip_out_time ? formatDatetimeLocal(master.slip_out_time) : '',
           entryType: master.entry_type || 'PURCHASE',
@@ -193,6 +194,7 @@ export default function PurchaseForm() {
           bardanaType: details.bardana_type || '',
           wtPerBag: details.weight_per_bags ? String(details.weight_per_bags) : '',
           noOfBags: details.no_of_bags ? String(details.no_of_bags) : '',
+          igpDate: details.igp_date || '',
           slipInTime: master.slip_in_time ? formatDatetimeLocal(master.slip_in_time) : '',
           slipOutTime: master.slip_out_time ? formatDatetimeLocal(master.slip_out_time) : '',
           entryType: master.entry_type || 'PURCHASE'
@@ -640,8 +642,12 @@ export default function PurchaseForm() {
   useEffect(() => {
     const firstWeight = parseFloat(formData.firstWeight) || 0;
     const secondWeight = parseFloat(formData.secondWeight) || 0;
-    const bardanaWeight = parseFloat(formData.bardanaWeight) || 0;
+    const wtPerBag = parseFloat(formData.wtPerBag) || 0;
+    const noOfBags = parseFloat(formData.noOfBags) || 0;
 
+    // Bardana Weight = weight per bag * number of bags
+    const bardanaWeight = wtPerBag * noOfBags;
+    
     // Gross Weight = First Weight - Second Weight
     const grossWeight = firstWeight - secondWeight;
     
@@ -650,10 +656,11 @@ export default function PurchaseForm() {
 
     setFormData(prev => ({
       ...prev,
+      bardanaWeight: bardanaWeight > 0 ? bardanaWeight.toFixed(2) : '0.00',
       grossWeight: grossWeight > 0 ? grossWeight.toFixed(2) : '0.00',
       netWeight: netWeight > 0 ? netWeight.toFixed(2) : '0.00'
     }));
-  }, [formData.firstWeight, formData.secondWeight, formData.bardanaWeight]);
+  }, [formData.firstWeight, formData.secondWeight, formData.wtPerBag, formData.noOfBags]);
 
   // Remove auto-fetch IGP data in edit mode - use saved table data only
 
@@ -1527,9 +1534,15 @@ export default function PurchaseForm() {
         
         if (isEditMode) {
           alert('Record updated successfully!');
-          // Auto-print after successful update
+          // Auto-redirect to print after successful update
           try {
-            await handlePrint();
+            const printHTML = generatePrintHTML();
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+              printWindow.document.write(printHTML);
+              printWindow.document.close();
+              printWindow.print();
+            }
             console.log('Auto-print completed after update');
           } catch (printError) {
             console.log('Auto-print failed, but update was successful:', printError);
@@ -1537,10 +1550,16 @@ export default function PurchaseForm() {
           // Reset form to clean state after edit
           resetFormToInitial();
         } else {
-          alert('Purchase data saved successfully and first weight image captured!');
-          // Auto-print after successful save
+          alert('Purchase data saved successfully!');
+          // Auto-redirect to print after successful save
           try {
-            await handlePrint();
+            const printHTML = generatePrintHTML();
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+              printWindow.document.write(printHTML);
+              printWindow.document.close();
+              printWindow.print();
+            }
             console.log('Auto-print completed after save');
           } catch (printError) {
             console.log('Auto-print failed, but save was successful:', printError);
