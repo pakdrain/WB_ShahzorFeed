@@ -1246,7 +1246,11 @@ export default function PurchaseForm() {
           item_desc: formData.itemDesc || null,
           po_qty: (formData.poQty && formData.poQty !== 'undefined' && formData.poQty.trim() !== '') ? parseFloat(formData.poQty) : null,
           igp_qty: (formData.igpQty && formData.igpQty !== 'undefined' && formData.igpQty.trim() !== '') ? parseFloat(formData.igpQty) : null,
-          balance_qty: (formData.balanceQty && formData.balanceQty !== 'undefined' && formData.balanceQty.trim() !== '') ? parseFloat(formData.balanceQty) : null
+          balance_qty: (formData.balanceQty && formData.balanceQty !== 'undefined' && formData.balanceQty.trim() !== '') ? parseFloat(formData.balanceQty) : null,
+          igp_date: formData.igpDate || null,
+          weight_per_bags: (formData.wtPerBag && formData.wtPerBag !== 'undefined' && formData.wtPerBag.trim() !== '') ? parseFloat(formData.wtPerBag) : null,
+          no_of_bags: (formData.noOfBags && formData.noOfBags !== 'undefined' && formData.noOfBags.trim() !== '') ? parseInt(formData.noOfBags) : null,
+          bardana_type: formData.bardanaType || null
         };
         
         console.log('Update payload being sent:', updatePayload);
