@@ -1831,6 +1831,12 @@ export default function PurchaseForm() {
     }
   };
 
+  // Handle edit button click - enable editing of all form fields
+  const handleEdit = () => {
+    setEditModeEnabled(!editModeEnabled);
+    console.log('Edit mode toggled:', !editModeEnabled);
+  };
+
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
@@ -2162,6 +2168,7 @@ export default function PurchaseForm() {
                     value={formData.driverName}
                     onChange={handleChange}
                     className="h-5 text-xs text-black placeholder:text-gray-500"
+                    readOnly={!editModeEnabled}
                   />
                 </div>
                 <div className="mt-6">
