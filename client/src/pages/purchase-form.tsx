@@ -667,6 +667,7 @@ export default function PurchaseForm() {
   const [igpItems, setIgpItems] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
+  const [editModeEnabled, setEditModeEnabled] = useState<boolean>(false);
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
