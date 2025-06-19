@@ -186,6 +186,14 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Separated images into dedicated section below text content for cleaner layout
   - Enhanced image titles with better styling and spacing
   - Maintained all existing functionality while improving visual organization
+- June 19, 2025. Fixed all 5 critical issues in purchase form:
+  - Fixed offline/online entry database updates: offline_entry set to NULL when switching to online, online_entry set to YES
+  - Corrected IGP data field mapping: bardana weight now correctly maps to no of bags field instead of bardana weight field
+  - Fixed edit mode to use saved table data instead of re-fetching from IGP API
+  - Added auto-print functionality after entry save completion for both first weight and second weight entries
+  - Implemented correct weight calculation formulas: Gross Weight = First Weight - Second Weight, Net Weight = First Weight - Second Weight - Bardana Weight
+  - Enhanced edit mode to properly load online/offline status from database values
+  - Removed automatic IGP data fetching in edit mode to preserve saved table data integrity
 
 ## User Preferences
 

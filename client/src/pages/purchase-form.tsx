@@ -140,12 +140,14 @@ export default function PurchaseForm() {
           loadDeductionData(master.wb_id);
         }
         
-        // Auto-fetch IGP data if IGP number is present during edit
-        if (details.igp_no) {
-          setTimeout(() => {
-            fetchIgpData();
-          }, 500);
+        // Set online/offline status based on database values
+        if (master.offline_entry === 'Yes') {
+          setOnlineMode(false);
+        } else if (master.online_entry === 'Yes') {
+          setOnlineMode(true);
         }
+        
+        // Don't auto-fetch IGP data in edit mode - use saved table data
       }
     } catch (error) {
       console.error('Error loading data by wb_id:', error);
@@ -201,12 +203,14 @@ export default function PurchaseForm() {
           loadDeductionData(master.wb_id);
         }
         
-        // Auto-fetch IGP data if IGP number is present during edit
-        if (details.igp_no) {
-          setTimeout(() => {
-            fetchIgpData();
-          }, 500);
+        // Set online/offline status based on database values
+        if (master.offline_entry === 'Yes') {
+          setOnlineMode(false);
+        } else if (master.online_entry === 'Yes') {
+          setOnlineMode(true);
         }
+        
+        // Don't auto-fetch IGP data in edit mode - use saved table data
       }
     } catch (error) {
       console.error('Error loading data by slip number:', error);
@@ -634,22 +638,22 @@ export default function PurchaseForm() {
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
-    const supplierWeight = parseFloat(formData.supplierWeight) || 0;
+    const firstWeight = parseFloat(formData.firstWeight) || 0;
+    const secondWeight = parseFloat(formData.secondWeight) || 0;
     const bardanaWeight = parseFloat(formData.bardanaWeight) || 0;
-    const outWeight = parseFloat(formData.weight) || 0;
 
-    // Formula: Supp Wt - Bardana
-    const supplierWeightMinusBardana = supplierWeight - bardanaWeight;
+    // Gross Weight = First Weight - Second Weight
+    const grossWeight = firstWeight - secondWeight;
     
-    // Formula: Supp Wt - Out Wt = Supplier Weight - Out Weight - Bardana
-    const supplierWeightMinusOutWeight = supplierWeight - outWeight - bardanaWeight;
+    // Net Weight = First Weight - Second Weight - Bardana Weight
+    const netWeight = grossWeight - bardanaWeight;
 
     setFormData(prev => ({
       ...prev,
-      supplierWeightMinusBardana: supplierWeightMinusBardana.toFixed(2),
-      supplierWeightMinusOutWeight: supplierWeightMinusOutWeight.toFixed(2)
+      grossWeight: grossWeight > 0 ? grossWeight.toFixed(2) : '0.00',
+      netWeight: netWeight > 0 ? netWeight.toFixed(2) : '0.00'
     }));
-  }, [formData.supplierWeight, formData.bardanaWeight, formData.weight]);
+  }, [formData.firstWeight, formData.secondWeight, formData.bardanaWeight]);
 
   // Remove auto-fetch IGP data in edit mode - use saved table data only
 
@@ -1523,10 +1527,24 @@ export default function PurchaseForm() {
         
         if (isEditMode) {
           alert('Record updated successfully!');
+          // Auto-print after successful update
+          try {
+            await handlePrint();
+            console.log('Auto-print completed after update');
+          } catch (printError) {
+            console.log('Auto-print failed, but update was successful:', printError);
+          }
           // Reset form to clean state after edit
           resetFormToInitial();
         } else {
           alert('Purchase data saved successfully and first weight image captured!');
+          // Auto-print after successful save
+          try {
+            await handlePrint();
+            console.log('Auto-print completed after save');
+          } catch (printError) {
+            console.log('Auto-print failed, but save was successful:', printError);
+          }
           // Reset form to clean state and increment slip number for next entry
           resetFormToInitial();
         }
