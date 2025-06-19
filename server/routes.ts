@@ -454,10 +454,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET all purchases
+  // GET all purchases - show only one record per slip number
   app.get('/api/purchases', async (req, res) => {
     try {
-      const result = await pool.query('SELECT * FROM wb_weighbridge ORDER BY wb_id DESC');
+      const result = await pool.query(`
+        SELECT DISTINCT ON (slip_no) * 
+        FROM wb_weighbridge 
+        ORDER BY slip_no DESC, wb_id DESC
+      `);
       res.json(result.rows);
     } catch (err) {
       console.error('Error fetching purchases:', err);
@@ -804,15 +808,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET first weight records
+  // GET first weight records - show only one record per slip number
   app.get('/api/purchase/first-weight-records', async (req: Request, res: Response) => {
     try {
       const query = `
-        SELECT w.wb_id, w.slip_no, w.entry_type, w.first_weight, w.second_weight, p.vehicle_no
+        SELECT DISTINCT ON (w.slip_no) w.wb_id, w.slip_no, w.entry_type, w.first_weight, w.second_weight, 
+               (SELECT vehicle_no FROM wb_weighbridge_items_purchase WHERE wb_id = w.wb_id LIMIT 1) as vehicle_no
         FROM wb_weighbridge w
-        LEFT JOIN wb_weighbridge_items_purchase p ON w.wb_id = p.wb_id
         WHERE w.first_weight IS NOT NULL AND (w.second_weight IS NULL OR w.second_weight = 0)
-        ORDER BY w.wb_id DESC 
+        ORDER BY w.slip_no DESC, w.wb_id DESC 
         LIMIT 20
       `;
       const result = await pool.query(query);

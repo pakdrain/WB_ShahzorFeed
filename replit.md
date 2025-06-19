@@ -210,6 +210,12 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Added default branch selection on form load to prevent "Select Branch" display
   - Improved IGP data table to show saved record data in edit mode instead of "No IGP data available"
   - Enhanced error logging for better debugging of database operations
+- June 19, 2025. Fixed duplicate slip display and edit navigation issues:
+  - Modified display queries to use DISTINCT ON (slip_no) to show only one record per slip number
+  - Fixed edit functionality to properly navigate to purchase form with edit parameter
+  - Updated all record listing endpoints (purchases, sales, offline, first-weight-records) to group by slip number
+  - Ensured clicking on slip number correctly loads all related detail records for editing
+  - Eliminated duplicate slip number display when multiple detail records exist for one transaction
 
 ## User Preferences
 
