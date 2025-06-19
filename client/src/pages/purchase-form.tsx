@@ -667,7 +667,6 @@ export default function PurchaseForm() {
   const [igpItems, setIgpItems] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
-  const [editModeEnabled, setEditModeEnabled] = useState<boolean>(false);
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
@@ -1016,26 +1015,17 @@ export default function PurchaseForm() {
   }, [location]);
 
   useEffect(() => {
-    // Fetch next slip number based on current form type (Purchase/Sale)
+    // Fetch next slip number
     fetch('/api/purchases')
       .then(res => res.json())
       .then((data: any[]) => {
         if (data.length > 0) {
-          // Filter by current entry type
-          const currentEntryType = selectedForm === 'sales' ? 'SALE' : 'PURCHASE';
-          const filteredData = data.filter(item => item.entry_type === currentEntryType);
-          
-          if (filteredData.length > 0) {
-            const maxSlip = filteredData.reduce((max: number, curr: any) => {
-              const slip = parseInt(curr.slip_no, 10);
-              return slip > max ? slip : max;
-            }, 0);
-            const nextSlip = (maxSlip + 1).toString();
-            setFormData(prev => ({ ...prev, slipNo: nextSlip }));
-          } else {
-            // No records of this type, start from 1
-            setFormData(prev => ({ ...prev, slipNo: '1' }));
-          }
+          const maxSlip = data.reduce((max: number, curr: any) => {
+            const slip = parseInt(curr.slip_no, 10);
+            return slip > max ? slip : max;
+          }, 0);
+          const nextSlip = (maxSlip + 1).toString();
+          setFormData(prev => ({ ...prev, slipNo: nextSlip }));
         } else {
           setFormData(prev => ({ ...prev, slipNo: '1' }));
         }
@@ -1832,12 +1822,6 @@ export default function PurchaseForm() {
     }
   };
 
-  // Handle edit button click - enable editing of all form fields
-  const handleEdit = () => {
-    setEditModeEnabled(!editModeEnabled);
-    console.log('Edit mode toggled:', !editModeEnabled);
-  };
-
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
@@ -2050,15 +2034,6 @@ export default function PurchaseForm() {
             </Button>
           )}
           <Button className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium" onClick={handlePrintReport}>Print</Button>
-          <Button 
-            onClick={handleEdit}
-            className="h-8 px-2 text-sm bg-yellow-600 hover:bg-yellow-700 text-white font-medium flex items-center gap-1"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-            </svg>
-            Edit
-          </Button>
           <Button className="h-8 px-2 text-sm bg-orange-600 hover:bg-orange-700 text-white font-medium">Rej</Button>
         </div>
         <div className="flex gap-1 items-center">
@@ -2147,7 +2122,7 @@ export default function PurchaseForm() {
                       className="h-5 text-xs text-black bg-gray-100" 
                     />
                   ) : (
-                    <Select name="branch" value={formData.branch} onValueChange={(value) => setFormData(prev => ({...prev, branch: value, branchId: value}))} disabled={!editModeEnabled}>
+                    <Select name="branch" value={formData.branch} onValueChange={(value) => setFormData(prev => ({...prev, branch: value, branchId: value}))}>
                       <SelectTrigger className="h-5 text-xs text-black">
                         <SelectValue placeholder="Select branch" className="text-black" />
                       </SelectTrigger>
@@ -2169,7 +2144,6 @@ export default function PurchaseForm() {
                     value={formData.driverName}
                     onChange={handleChange}
                     className="h-5 text-xs text-black placeholder:text-gray-500"
-                    readOnly={!editModeEnabled}
                   />
                 </div>
                 <div className="mt-6">
@@ -2257,13 +2231,12 @@ export default function PurchaseForm() {
                           value={formData.igpNo} 
                           onChange={handleChange} 
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' && editModeEnabled) {
+                            if (e.key === 'Enter') {
                               fetchIgpData();
                             }
                           }}
                           className="h-4 text-xs text-black flex-1" 
-                          placeholder={editModeEnabled ? "Press Enter to fetch" : "IGP No"}
-                          readOnly={!editModeEnabled}
+                          placeholder="Press Enter to fetch"
                         />
                       </div>
                       <div className="flex items-center gap-2">
@@ -2287,7 +2260,7 @@ export default function PurchaseForm() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-black w-16">Vehicle No</span>
-                        <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black flex-1" readOnly={!editModeEnabled} />
+                        <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-black w-16">Weight</span>
