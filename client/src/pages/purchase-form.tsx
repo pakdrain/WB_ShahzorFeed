@@ -1010,6 +1010,16 @@ export default function PurchaseForm() {
       .then((data: any[]) => {
         setBranches(data);
         console.log('Branches fetched:', data);
+        
+        // Set default branch if no branch is selected
+        if (data.length > 0 && (!formData.branchId || formData.branchId === '')) {
+          const defaultBranch = data[0];
+          setFormData(prev => ({
+            ...prev,
+            branchId: String(defaultBranch.branch_id),
+            branch: String(defaultBranch.branch_id)
+          }));
+        }
       })
       .catch((err: any) => {
         console.error('Error fetching branches:', err);
