@@ -498,6 +498,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slip_out_time = null,
         status = null,
         slip_date = null,
+        vendor = null
       } = purchaseData;
 
       // Convert online/offline entries to string - ensure 'Yes' values are properly handled
@@ -510,14 +511,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bardana_weight, gross_weight, freight, remarks, driver_name, company_id,
           branch_id, online_entry, offline_entry, created_by, creation_date,
           last_updated_by, last_updated_date, manual_dc_no, entry_type,
-          slip_out_time, status, slip_date
+          slip_out_time, status, slip_date, vendor
         )
         VALUES (
           $1, $2, $3, $4, $5, $6,
           $7, $8, $9, $10, $11, $12,
           $13, $14, $15, $16, $17,
           $18, $19, $20, $21,
-          $22, $23, $24
+          $22, $23, $24, $25
         )
         RETURNING *;
       `;
@@ -547,6 +548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slip_out_time,
         status,
         slip_date,
+        vendor,
       ];
 
       const result = await pool.query(query, values);
@@ -554,7 +556,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result.rows[0]);
     } catch (err) {
       console.error('Error inserting purchase:', err);
-      res.status(500).json({ error: 'Insert error' });
+      console.error('Error details:', err.message);
+      console.error('Error stack:', err.stack);
+      res.status(500).json({ 
+        error: 'Insert error',
+        details: err.message
+      });
     }
   });
 
