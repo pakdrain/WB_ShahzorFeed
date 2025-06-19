@@ -148,6 +148,21 @@ export default function PurchaseForm() {
           setOnlineMode(true);
         }
         
+        // Set IGP items after form data is loaded - use saved detail fields
+        setTimeout(() => {
+          if (details.po_no || details.item_code || details.item_desc) {
+            setIgpItems([{
+              po_no: details.po_no || '',
+              item_code: details.item_code || '',
+              item_desc: details.item_desc || 'Saved record data',
+              po_qty: details.po_qty || '',
+              igp_qty: details.igp_qty || '',
+              balance_qty: details.balance_qty || ''
+            }]);
+            console.log('IGP items set from saved detail fields in wb_id loading');
+          }
+        }, 100);
+        
         // Don't auto-fetch IGP data in edit mode - use saved table data
       }
     } catch (error) {
@@ -211,6 +226,21 @@ export default function PurchaseForm() {
         } else if (master.online_entry === 'Yes') {
           setOnlineMode(true);
         }
+        
+        // Set IGP items after form data is loaded - use saved detail fields
+        setTimeout(() => {
+          if (details.po_no || details.item_code || details.item_desc) {
+            setIgpItems([{
+              po_no: details.po_no || '',
+              item_code: details.item_code || '',
+              item_desc: details.item_desc || 'Saved record data',
+              po_qty: details.po_qty || '',
+              igp_qty: details.igp_qty || '',
+              balance_qty: details.balance_qty || ''
+            }]);
+            console.log('IGP items set from saved detail fields in slip loading');
+          }
+        }, 100);
         
         // Don't auto-fetch IGP data in edit mode - use saved table data
       }
@@ -2306,7 +2336,9 @@ export default function PurchaseForm() {
                           })
                         ) : (
                           <tr>
-                            <td className="border p-1 h-4 text-xs text-black" colSpan={6}>No IGP data available</td>
+                            <td className="border p-1 h-4 text-xs text-black" colSpan={6}>
+                              {isEditMode ? 'Loading saved record data...' : 'No IGP data available'}
+                            </td>
                           </tr>
                         )}
                       </tbody>

@@ -203,6 +203,13 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Enhanced branch handling for "Shahzor" to return only corresponding ID with proper filtering
   - Updated server-side update endpoints to handle all detail table fields including igp_date, weight_per_bags, no_of_bags, bardana_type
   - Improved online/offline entry status updates in database with proper NULL/YES value handling
+- June 19, 2025. Fixed database INSERT error and enhanced edit mode IGP data display:
+  - Resolved "vendor does not exist" error by removing vendor column from wb_weighbridge table INSERT query
+  - Vendor data correctly mapped to vendor_name field in wb_weighbridge_items_purchase table
+  - Enhanced edit mode to display saved IGP detail data automatically without requiring IGP number re-entry
+  - Added default branch selection on form load to prevent "Select Branch" display
+  - Improved IGP data table to show saved record data in edit mode instead of "No IGP data available"
+  - Enhanced error logging for better debugging of database operations
 
 ## User Preferences
 
