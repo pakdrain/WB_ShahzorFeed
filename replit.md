@@ -222,6 +222,8 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Purchase entries continue to open the purchase form as expected
   - Updated routing in purchase form display table, reports page, and all record listings
   - Fixed the issue where all entries were incorrectly routing to purchase form regardless of type
+  - Enhanced form switching to work within same page: master table stays on top, form content below changes based on entry type
+  - URL parameters now include form type (form=sales or form=purchase) to maintain proper form state on page load
 
 ## User Preferences
 

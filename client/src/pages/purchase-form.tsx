@@ -994,11 +994,19 @@ export default function PurchaseForm() {
     fetchBranches();
   }, []);
 
-  // Handle URL parameters for edit mode
+  // Handle URL parameters for edit mode and form type
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const editWbId = urlParams.get('edit');
+    const formType = urlParams.get('form');
     const offlineEditSlip = urlParams.get('offline_edit');
+    
+    // Set form type based on URL parameter
+    if (formType === 'sales') {
+      setSelectedForm('sales');
+    } else if (formType === 'purchase') {
+      setSelectedForm('purchase');
+    }
     
     if (editWbId) {
       // Load record for editing by wb_id
@@ -1881,14 +1889,14 @@ export default function PurchaseForm() {
                       console.log('entry_type:', record.entry_type);
                       
                       if (record.wb_id) {
-                        // Route based on entry type
+                        // Switch form type based on entry type, then load data
                         if (record.entry_type === 'SALE') {
-                          // Navigate to sales form with edit parameter
-                          window.location.href = `/purchase-form?form=sales&edit=${record.wb_id}`;
+                          setSelectedForm('sales');
                         } else {
-                          // Navigate to purchase form with edit parameter (default)
-                          window.location.href = `/purchase-form?form=purchase&edit=${record.wb_id}`;
+                          setSelectedForm('purchase');
                         }
+                        // Load the data for editing
+                        loadDataByWbId(record.wb_id);
                       }
                     }}
                   >

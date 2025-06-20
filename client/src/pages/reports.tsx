@@ -107,14 +107,22 @@ export default function Reports() {
     refetchOffline();
   }, [selectedBranch, refetchPurchase, refetchSales, refetchOffline]);
 
-  const handleEdit = (wbId: number) => {
-    // Navigate to purchase form with edit mode using wouter
-    setLocation(`/purchase-form?edit=${wbId}`);
+  const handleEdit = (wbId: number, entryType?: string) => {
+    // Navigate to purchase form with edit mode and proper form type
+    if (entryType === 'SALE') {
+      setLocation(`/purchase-form?form=sales&edit=${wbId}`);
+    } else {
+      setLocation(`/purchase-form?form=purchase&edit=${wbId}`);
+    }
   };
 
-  const handleOfflineEdit = (slipNo: string) => {
-    // Navigate to purchase form with offline slip edit mode
-    setLocation(`/purchase-form?offline_edit=${slipNo}`);
+  const handleOfflineEdit = (record: any) => {
+    // Navigate to purchase form with proper form type based on entry type
+    if (record.entry_type === 'SALE') {
+      setLocation(`/purchase-form?form=sales&edit=${record.wb_id}`);
+    } else {
+      setLocation(`/purchase-form?form=purchase&edit=${record.wb_id}`);
+    }
   };
 
   const handlePrintRecord = async (record: PurchaseRecord | SaleRecord) => {
