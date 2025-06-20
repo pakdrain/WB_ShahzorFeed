@@ -224,6 +224,12 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Fixed the issue where all entries were incorrectly routing to purchase form regardless of type
   - Enhanced form switching to work within same page: master table stays on top, form content below changes based on entry type
   - URL parameters now include form type (form=sales or form=purchase) to maintain proper form state on page load
+- June 20, 2025. Updated reports.tsx print slip format to match purchase-form.tsx exactly:
+  - Replaced generateDetailedReportHTML function with exact same structure as purchase form
+  - Implemented 3 sections: Head Office Copy, Feed Mill Copy, Customer Copy
+  - Added first weight and second weight image sections in row layout (side by side) for all copies
+  - Maintained exact styling, layout, and data fetching from purchase form implementation
+  - Report slip now matches purchase form format with proper image display and field organization
 
 ## User Preferences
 
