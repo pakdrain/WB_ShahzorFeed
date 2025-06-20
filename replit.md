@@ -216,6 +216,12 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Updated all record listing endpoints (purchases, sales, offline, first-weight-records) to group by slip number
   - Ensured clicking on slip number correctly loads all related detail records for editing
   - Eliminated duplicate slip number display when multiple detail records exist for one transaction
+- June 20, 2025. Implemented proper form routing based on entry type:
+  - Added entry type-based routing logic for slip number clicks in all display tables
+  - Sales entries now correctly open the sales form when clicked for editing
+  - Purchase entries continue to open the purchase form as expected
+  - Updated routing in purchase form display table, reports page, and all record listings
+  - Fixed the issue where all entries were incorrectly routing to purchase form regardless of type
 
 ## User Preferences
 

@@ -1878,8 +1878,17 @@ export default function PurchaseForm() {
                     onClick={() => {
                       console.log('Clicked record:', record);
                       console.log('wb_id:', record.wb_id);
+                      console.log('entry_type:', record.entry_type);
+                      
                       if (record.wb_id) {
-                        loadDataByWbId(record.wb_id);
+                        // Route based on entry type
+                        if (record.entry_type === 'SALE') {
+                          // Navigate to sales form with edit parameter
+                          window.location.href = `/purchase-form?form=sales&edit=${record.wb_id}`;
+                        } else {
+                          // Navigate to purchase form with edit parameter (default)
+                          window.location.href = `/purchase-form?form=purchase&edit=${record.wb_id}`;
+                        }
                       }
                     }}
                   >
