@@ -127,14 +127,23 @@ export default function Reports() {
 
   const handlePrintRecord = async (record: PurchaseRecord | SaleRecord) => {
     try {
-      // Generate print report with images
+      // Fetch complete record data including all fields
+      const response = await fetch(`/api/purchase/by-wbid/${record.wb_id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch complete record data');
+      }
+      
+      const completeData = await response.json();
+      console.log('Complete record data for print:', completeData);
+      
+      // Generate print report with complete data
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
         alert('Please allow popups to print the report');
         return;
       }
 
-      const reportHTML = generateDetailedReportHTML(record);
+      const reportHTML = generateDetailedReportHTML(completeData);
       printWindow.document.write(reportHTML);
       printWindow.document.close();
       printWindow.print();
@@ -144,7 +153,10 @@ export default function Reports() {
     }
   };
 
-  const generateDetailedReportHTML = (record: PurchaseRecord | SaleRecord) => {
+  const generateDetailedReportHTML = (data: any) => {
+    // Extract master and details data
+    const record = data.master || data;
+    const details = data.details && data.details.length > 0 ? data.details[0] : {};
     const currentDate = new Date().toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',

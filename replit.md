@@ -224,6 +224,13 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Fixed the issue where all entries were incorrectly routing to purchase form regardless of type
   - Enhanced form switching to work within same page: master table stays on top, form content below changes based on entry type
   - URL parameters now include form type (form=sales or form=purchase) to maintain proper form state on page load
+- June 20, 2025. Enhanced report slip data fetching in reports.tsx:
+  - Modified handlePrintRecord to fetch complete record data using /api/purchase/by-wbid endpoint
+  - Updated generateDetailedReportHTML to use master and details data structure
+  - Added all missing field mappings including IGP fields, vehicle info, weights, and commodity details
+  - Enhanced data population for Party, Item Description, Quantities, Bag information, and Weight calculations
+  - Fixed report to display actual fetched data instead of empty fields
+  - Maintained exact same 3-section layout (Head Office, Feed Mill, Customer copies) with image sections in rows
 - June 20, 2025. Updated reports.tsx print slip format to match purchase-form.tsx exactly:
   - Replaced generateDetailedReportHTML function with exact same structure as purchase form
   - Implemented 3 sections: Head Office Copy, Feed Mill Copy, Customer Copy
