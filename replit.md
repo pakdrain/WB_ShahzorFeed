@@ -237,6 +237,13 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Added first weight and second weight image sections in row layout (side by side) for all copies
   - Maintained exact styling, layout, and data fetching from purchase form implementation
   - Report slip now matches purchase form format with proper image display and field organization
+- June 20, 2025. Fixed complete data fetching in reports.tsx print slip:
+  - Completely replaced generateDetailedReportHTML function to match purchase-form.tsx structure
+  - Enhanced field mapping to use both record (master) and details data from API response
+  - Added proper data population for all fields: IGP #, W.B #, Truck #, Freight Payment, Party, Time IN/OUT
+  - Implemented complete commodity section: Item Description, Quantity, Bag Condition, Bag Type, Average Weight, Remarks
+  - Added comprehensive weight calculations: Gross Weight, Tare Weight, With Bardana Weight, Bardana Weight, Quality Deduction, Net Weight
+  - Report slip now fetches and displays complete data for all fields instead of showing empty values
 
 ## User Preferences
 
