@@ -154,7 +154,7 @@ export default function Reports() {
   };
 
   const generateDetailedReportHTML = (data: any) => {
-    // Extract master and details data
+    // Extract master and details data from the API response
     const record = data.master || data;
     const details = data.details && data.details.length > 0 ? data.details[0] : {};
     const currentDate = new Date().toLocaleDateString('en-GB', {
