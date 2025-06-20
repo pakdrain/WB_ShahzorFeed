@@ -963,7 +963,7 @@ export default function Reports() {
                       <td className="px-4 py-2 border border-black text-black">
                         <button 
                           className="text-blue-600 hover:text-blue-800 font-medium underline"
-                          onClick={() => handleOfflineEdit(record.slip_no)}
+                          onClick={() => handleOfflineEdit(record)}
                         >
                           {record.slip_no}
                         </button>
