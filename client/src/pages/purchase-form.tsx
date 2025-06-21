@@ -671,7 +671,9 @@ export default function PurchaseForm() {
     const urlParams = new URLSearchParams(window.location.search);
     const typeMode = urlParams.get('type');
     console.log('useState initialization - typeMode:', typeMode);
-    return typeMode === 'offline' ? false : true;
+    const initialMode = typeMode === 'offline' ? false : true;
+    console.log('Setting initial onlineMode to:', initialMode);
+    return initialMode;
   });
   const [igpItems, setIgpItems] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
@@ -968,7 +970,7 @@ export default function PurchaseForm() {
   };
 
   const toggleOnlineMode = (isOnline: boolean) => {
-    console.log('toggleOnlineMode called with:', isOnline);
+    console.log('toggleOnlineMode called with:', isOnline, 'Current onlineMode:', onlineMode);
     setOnlineMode(isOnline);
     console.log('onlineMode state updated to:', isOnline);
     
@@ -2265,12 +2267,12 @@ export default function PurchaseForm() {
             {/* Large Label Between Sections */}
             <div className="text-center py-4 mb-3">
               <div className={`inline-block px-8 py-3 rounded-lg shadow-md ${
-                onlineMode 
+                onlineMode === true
                   ? 'bg-gradient-to-r from-green-500 to-green-600 text-white' 
                   : 'bg-gradient-to-r from-red-500 to-red-600 text-white'
               }`}>
                 <h2 className="text-3xl font-bold tracking-wide">
-                  {onlineMode ? 'Purchase Online' : 'Purchase Offline'}
+                  {onlineMode === true ? 'Purchase Online' : 'Purchase Offline'}
                 </h2>
               </div>
             </div>
