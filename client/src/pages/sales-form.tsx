@@ -39,6 +39,9 @@ export default function SalesForm() {
   const toggleOnlineMode = (isOnline: boolean) => {
     setOnlineMode(isOnline);
   };
+
+  // Disable IGP fetching in offline mode
+  const shouldFetchIgp = onlineMode;
   
   const [salesData, setSalesData] = useState<SalesRowData[]>([
     {
@@ -131,9 +134,17 @@ export default function SalesForm() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-blue-50 p-2">
-      {/* Header Controls */}
-      <div className="flex justify-between items-center mb-2">
+    <div className="min-h-screen bg-gray-100">
+      <div className="p-4">
+        {/* Master Table */}
+        <div className="mb-4">
+          <WeightDisplayTable />
+        </div>
+        
+        {/* Sales Form */}
+        <div className="h-full flex flex-col bg-blue-50 p-2">
+              {/* Header Controls */}
+          <div className="flex justify-between items-center mb-2">
         <div className="flex gap-2">
           <Button 
             onClick={addRow}
@@ -158,14 +169,13 @@ export default function SalesForm() {
           <div className={`px-4 py-1 border border-gray-400 text-xs font-medium ${
             !onlineMode ? 'bg-red-600 text-white' : 'bg-gray-300 text-gray-700'
           }`}>OFFLINE</div>
-        </div>
-      </div>
+          </div>
 
-      {/* Main Table Container */}
-      <div className="flex-1 overflow-hidden flex flex-col border border-gray-300">
+          {/* Main Table Container */}
+          <div className="flex-1 overflow-hidden flex flex-col border border-gray-300">
         
-        {/* Table Header */}
-        <div className="grid grid-cols-10 gap-px bg-gray-300 text-xs font-semibold min-w-[1200px]">
+            {/* Table Header */}
+            <div className="grid grid-cols-10 gap-px bg-gray-300 text-xs font-semibold min-w-[1200px]">
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO ID</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DC #</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO #</div>
@@ -176,10 +186,10 @@ export default function SalesForm() {
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DC Qty</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO Qty</div>
           <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Branch</div>
-        </div>
+            </div>
 
-        {/* Table Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto bg-gray-200 overflow-x-auto">
+            {/* Table Body - Scrollable */}
+            <div className="flex-1 overflow-y-auto bg-gray-200 overflow-x-auto">
           {salesData.map((row, index) => (
             <div key={index} className="grid grid-cols-10 gap-px text-xs min-w-[1200px]">
               <div className="bg-white border border-gray-300 p-1">
@@ -261,6 +271,8 @@ export default function SalesForm() {
               </div>
             </div>
           ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

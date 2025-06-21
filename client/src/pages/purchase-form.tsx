@@ -2013,7 +2013,17 @@ export default function PurchaseForm() {
                       />
                     )}
                   </div>
-                  <div className="p-1 text-center">
+                  <div className="p-1 text-center flex flex-col items-center gap-1">
+                    <input
+                      type="checkbox"
+                      checked={percentageMode[item.bagId] || false}
+                      onChange={(e) => setPercentageMode(prev => ({
+                        ...prev,
+                        [item.bagId]: e.target.checked
+                      }))}
+                      className="w-3 h-3"
+                      title="Percentage mode"
+                    />
                     <button 
                       className="text-red-600 hover:text-red-800 font-bold text-sm"
                       onClick={() => removeBagEntry(item.bagId)}
