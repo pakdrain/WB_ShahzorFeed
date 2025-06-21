@@ -667,14 +667,7 @@ export default function PurchaseForm() {
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
 
   
-  const [onlineMode, setOnlineMode] = useState(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const typeMode = urlParams.get('type');
-    console.log('useState initialization - typeMode:', typeMode);
-    const initialMode = typeMode === 'offline' ? false : true;
-    console.log('Setting initial onlineMode to:', initialMode);
-    return initialMode;
-  });
+  const [onlineMode, setOnlineMode] = useState(false); // Start with offline by default
   const [igpItems, setIgpItems] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
@@ -973,6 +966,11 @@ export default function PurchaseForm() {
     console.log('toggleOnlineMode called with:', isOnline, 'Current onlineMode:', onlineMode);
     setOnlineMode(isOnline);
     console.log('onlineMode state updated to:', isOnline);
+    
+    // Force re-render by updating state immediately
+    setTimeout(() => {
+      console.log('After timeout - onlineMode is:', onlineMode);
+    }, 100);
     
     // Update URL to reflect the current mode
     const urlParams = new URLSearchParams(window.location.search);
@@ -2136,18 +2134,18 @@ export default function PurchaseForm() {
           <div className="mr-2">
             <WeightIndicator comPort="COM6" compact={true} />
           </div>
-          <Button 
-            className={`h-6 px-3 text-xs font-medium ${onlineMode === true ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
+          <button 
+            className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === true ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
-          </Button>
-          <Button 
-            className={`h-6 px-3 text-xs font-medium ${onlineMode === false ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
+          </button>
+          <button 
+            className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
-          </Button>
+          </button>
         </div>
         <div className="text-2xl text-green-600 font-bold">2500</div>
       </div>
