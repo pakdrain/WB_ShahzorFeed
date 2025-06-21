@@ -156,6 +156,13 @@ export default function SalesForm() {
           </div>
         </div>
         
+        {/* Large Label Between Sections */}
+        <div className="text-center py-4">
+          <h2 className="text-3xl font-bold text-gray-800">
+            {onlineMode ? 'Sale Online' : 'Sale Offline'}
+          </h2>
+        </div>
+        
         {/* Sales Form */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="h-full flex flex-col bg-blue-50 p-2">

@@ -2228,6 +2228,13 @@ export default function PurchaseForm() {
               </div>
             </div>
 
+            {/* Large Label Between Sections */}
+            <div className="text-center py-3 mb-2">
+              <h2 className="text-3xl font-bold text-gray-800">
+                {onlineMode ? 'Purchase Online' : 'Purchase Offline'}
+              </h2>
+            </div>
+
             {/* Top buttons row - above details section */}
             <div className="flex gap-2 mb-2">
               <Button 
