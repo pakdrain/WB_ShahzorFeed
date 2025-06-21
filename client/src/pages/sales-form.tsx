@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import WeightDisplayTable from '@/components/weight-display-table';
 
 interface SalesRowData {
   doId: string;
@@ -34,6 +35,10 @@ export default function SalesForm() {
       setOnlineMode(false);
     }
   }, []);
+
+  const toggleOnlineMode = (isOnline: boolean) => {
+    setOnlineMode(isOnline);
+  };
   
   const [salesData, setSalesData] = useState<SalesRowData[]>([
     {
@@ -145,11 +150,14 @@ export default function SalesForm() {
           </Button>
         </div>
         
-        {/* Type Indicator */}
+        {/* Type Indicator - Online/Offline Status */}
         <div className="flex gap-1">
-          <div className="px-4 py-1 bg-blue-200 border border-gray-400 text-xs font-medium text-black">Purchase</div>
-          <div className="px-4 py-1 bg-blue-500 text-white border border-gray-400 text-xs font-medium">Sale</div>
-          <div className="px-4 py-1 bg-blue-200 border border-gray-400 text-xs font-medium text-black">Offline</div>
+          <div className={`px-4 py-1 border border-gray-400 text-xs font-medium ${
+            onlineMode ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-700'
+          }`}>ONLINE</div>
+          <div className={`px-4 py-1 border border-gray-400 text-xs font-medium ${
+            !onlineMode ? 'bg-red-600 text-white' : 'bg-gray-300 text-gray-700'
+          }`}>OFFLINE</div>
         </div>
       </div>
 

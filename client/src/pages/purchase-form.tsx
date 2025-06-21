@@ -20,6 +20,7 @@ export default function PurchaseForm() {
   
   // Deduction/Bag table state
   const [bagTableData, setBagTableData] = useState<any[]>([]);
+  const [percentageMode, setPercentageMode] = useState<{[key: string]: boolean}>({});
   
   // Sales data state - mapped to database columns
   const [salesData, setSalesData] = useState<any[]>(
@@ -1985,12 +1986,32 @@ export default function PurchaseForm() {
                   <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{item.pb.toFixed(1)}</div>
                   <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{item.percentage.toFixed(1)}</div>
                   <div className="border-r border-gray-300 p-1">
-                    <input
-                      type="text"
-                      value={item.weight}
-                      onChange={(e) => updateBagEntry(item.bagId, 'weight', e.target.value)}
-                      className="w-full text-center text-xs text-black bg-transparent border-none focus:outline-none"
-                    />
+                    {percentageMode[item.bagId] ? (
+                      <select
+                        value={item.weight}
+                        onChange={(e) => updateBagEntry(item.bagId, 'weight', e.target.value)}
+                        className="w-full text-center text-xs text-black bg-transparent border-none focus:outline-none"
+                      >
+                        <option value="">Select %</option>
+                        <option value="0.1">0.1% (0.1)</option>
+                        <option value="0.2">0.2% (0.2)</option>
+                        <option value="0.3">0.3% (0.3)</option>
+                        <option value="0.4">0.4% (0.4)</option>
+                        <option value="0.5">0.5% (0.5)</option>
+                        <option value="0.6">0.6% (0.6)</option>
+                        <option value="0.7">0.7% (0.7)</option>
+                        <option value="0.8">0.8% (0.8)</option>
+                        <option value="0.9">0.9% (0.9)</option>
+                        <option value="1.0">1.0% (1.0)</option>
+                      </select>
+                    ) : (
+                      <input
+                        type="text"
+                        value={item.weight}
+                        onChange={(e) => updateBagEntry(item.bagId, 'weight', e.target.value)}
+                        className="w-full text-center text-xs text-black bg-transparent border-none focus:outline-none"
+                      />
+                    )}
                   </div>
                   <div className="p-1 text-center">
                     <button 
