@@ -128,6 +128,35 @@ export default function SalesForm() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="p-4">
+        {/* Header with Online/Offline Toggle */}
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Sales Order Form</h1>
+          
+          {/* Online/Offline Mode Toggle */}
+          <div className="flex items-center gap-2">
+            <button
+              className={`px-4 py-2 rounded text-sm font-medium ${
+                onlineMode 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+              }`}
+              onClick={() => setOnlineMode(true)}
+            >
+              ONLINE
+            </button>
+            <button
+              className={`px-4 py-2 rounded text-sm font-medium ${
+                !onlineMode 
+                  ? 'bg-red-600 text-white' 
+                  : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+              }`}
+              onClick={() => setOnlineMode(false)}
+            >
+              OFFLINE
+            </button>
+          </div>
+        </div>
+
         {/* Master Table */}
         <div className="mb-4">
           <WeightDisplayTable />
@@ -153,7 +182,7 @@ export default function SalesForm() {
               </Button>
             </div>
             
-            {/* Type Indicator - Online/Offline Status */}
+            {/* Type Indicator - Shows current mode */}
             <div className="flex gap-1">
               <div className={`px-4 py-1 border border-gray-400 text-xs font-medium ${
                 onlineMode ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-700'

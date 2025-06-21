@@ -1013,10 +1013,10 @@ export default function PurchaseForm() {
     
     // Set online/offline mode based on type parameter
     if (typeMode === 'online') {
-      toggleOnlineMode(true);
+      setOnlineMode(true);
       setSelectedForm('purchase');
     } else if (typeMode === 'offline') {
-      toggleOnlineMode(false);
+      setOnlineMode(false);
       setSelectedForm('purchase');
     }
     
