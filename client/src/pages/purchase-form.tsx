@@ -669,6 +669,7 @@ export default function PurchaseForm() {
   const getInitialOnlineMode = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const typeMode = urlParams.get('type');
+    console.log('getInitialOnlineMode - typeMode:', typeMode);
     return typeMode === 'offline' ? false : true;
   };
   
@@ -1026,9 +1027,11 @@ export default function PurchaseForm() {
     
     // Set online/offline mode based on type parameter
     if (typeMode === 'online') {
+      console.log('Setting ONLINE mode from URL parameter');
       setOnlineMode(true);
       setSelectedForm('purchase');
     } else if (typeMode === 'offline') {
+      console.log('Setting OFFLINE mode from URL parameter');
       setOnlineMode(false);
       setSelectedForm('purchase');
     }

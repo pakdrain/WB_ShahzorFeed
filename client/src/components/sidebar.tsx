@@ -141,6 +141,15 @@ export default function Sidebar() {
                           const isSubActive = currentPath === basePath && 
                             currentParams.get('type') === subItemParams.get('type');
                           
+                          console.log('Sidebar check:', {
+                            subItemName: subItem.name,
+                            currentPath,
+                            basePath,
+                            currentType: currentParams.get('type'),
+                            subItemType: subItemParams.get('type'),
+                            isSubActive
+                          });
+                          
                           return (
                             <Link key={subItem.name} href={subItem.href}>
                               <Button
