@@ -658,6 +658,7 @@ export default function PurchaseForm() {
     dcQty: '',
     supWeightWithoutBardana: '',
     netSupplierWeight: '',
+    isPercentageMode: false,
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -2322,10 +2323,36 @@ export default function PurchaseForm() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-black w-16">Weight</span>
-                        <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black w-20" />
+                        {formData.isPercentageMode ? (
+                          <select
+                            name="weight"
+                            value={formData.weight}
+                            onChange={handleChange}
+                            className="h-4 text-xs text-black w-20 border border-gray-300 rounded"
+                          >
+                            <option value="">Select %</option>
+                            <option value="0.1">0.1</option>
+                            <option value="0.2">0.2</option>
+                            <option value="0.3">0.3</option>
+                            <option value="0.4">0.4</option>
+                            <option value="0.5">0.5</option>
+                            <option value="0.6">0.6</option>
+                            <option value="0.7">0.7</option>
+                            <option value="0.8">0.8</option>
+                            <option value="0.9">0.9</option>
+                            <option value="1.0">1.0</option>
+                          </select>
+                        ) : (
+                          <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black w-20" />
+                        )}
                         <span className="text-xs text-black ml-2">Bags</span>
                         <Input name="bags" value={formData.bags} onChange={handleChange} className="h-4 text-xs text-black w-20" />
-                        <input type="checkbox" className="w-3 h-3 ml-1" />
+                        <input 
+                          type="checkbox" 
+                          checked={formData.isPercentageMode || false}
+                          onChange={(e) => setFormData(prev => ({ ...prev, isPercentageMode: e.target.checked, weight: '' }))}
+                          className="w-3 h-3 ml-1" 
+                        />
                         <span className="text-xs text-black">%</span>
                       </div>
                     </div>

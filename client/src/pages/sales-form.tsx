@@ -43,6 +43,15 @@ export default function SalesForm() {
   // Disable IGP fetching in offline mode
   const shouldFetchIgp = onlineMode;
   
+  // Disable IGP data fetching when in offline mode
+  const fetchIgpData = (igpNo: string) => {
+    if (!onlineMode) {
+      console.log('IGP data fetching disabled in offline mode');
+      return;
+    }
+    // IGP fetching logic would go here in online mode
+  };
+  
   const [salesData, setSalesData] = useState<SalesRowData[]>([{
     doId: '',
     dcNo: '',
