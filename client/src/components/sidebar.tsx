@@ -1,13 +1,49 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { Home, Settings, Video, Menu, X, Scale, FileText, LogOut, User, BarChart3, Upload } from 'lucide-react';
+import { 
+  Home, 
+  Settings, 
+  Video, 
+  Menu, 
+  X, 
+  Scale, 
+  FileText, 
+  LogOut, 
+  User, 
+  BarChart3, 
+  Upload,
+  ShoppingCart,
+  RotateCcw,
+  Network,
+  ChevronDown,
+  ChevronRight
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 
 const navigation = [
   { name: 'Home', href: '/', icon: Home },
-  { name: 'Purchase Form', href: '/purchase-form', icon: FileText },
+  { 
+    name: 'Purchase Form', 
+    icon: FileText, 
+    hasSubItems: true,
+    subItems: [
+      { name: 'Purchase Online', href: '/purchase-form?type=online', icon: FileText },
+      { name: 'Purchase Offline', href: '/purchase-form?type=offline', icon: FileText },
+    ]
+  },
+  { 
+    name: 'Sale Form', 
+    icon: ShoppingCart, 
+    hasSubItems: true,
+    subItems: [
+      { name: 'Sale Online', href: '/sales-form?type=online', icon: ShoppingCart },
+      { name: 'Sale Offline', href: '/sales-form?type=offline', icon: ShoppingCart },
+    ]
+  },
+  { name: 'Sale Return', href: '/sale-return', icon: RotateCcw },
+  { name: 'Sale Node', href: '/sale-node', icon: Network },
   { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'Image Upload', href: '/image-upload', icon: Upload },
   { name: 'Camera Settings', href: '/settings', icon: Settings },
@@ -16,8 +52,17 @@ const navigation = [
 
 export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [location] = useLocation();
   const { user, logout } = useAuth();
+
+  const toggleExpanded = (itemName: string) => {
+    setExpandedItems(prev => 
+      prev.includes(itemName) 
+        ? prev.filter(name => name !== itemName)
+        : [...prev, itemName]
+    );
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -53,26 +98,86 @@ export default function Sidebar() {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-4 space-y-1">
             {navigation.map((item) => {
-              const isActive = location === item.href;
-              return (
-                <Link key={item.name} href={item.href}>
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start text-left h-12 px-4",
-                      isActive
-                        ? "bg-monitoring-blue text-white hover:bg-monitoring-blue/90"
-                        : "text-gray-300 hover:bg-monitoring-gray hover:text-white"
+              if (item.hasSubItems) {
+                const isExpanded = expandedItems.includes(item.name);
+                const hasActiveSubItem = item.subItems?.some(subItem => 
+                  location === subItem.href || 
+                  (subItem.href.includes('?') && location.startsWith(subItem.href.split('?')[0]))
+                );
+                
+                return (
+                  <div key={item.name} className="space-y-1">
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "w-full justify-between text-left h-12 px-4",
+                        hasActiveSubItem
+                          ? "bg-monitoring-blue text-white hover:bg-monitoring-blue/90"
+                          : "text-gray-300 hover:bg-monitoring-gray hover:text-white"
+                      )}
+                      onClick={() => toggleExpanded(item.name)}
+                    >
+                      <div className="flex items-center">
+                        <item.icon className="mr-3 h-5 w-5" />
+                        {item.name}
+                      </div>
+                      {isExpanded ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </Button>
+                    
+                    {isExpanded && (
+                      <div className="ml-4 space-y-1">
+                        {item.subItems?.map((subItem) => {
+                          const isSubActive = location === subItem.href || 
+                            (subItem.href.includes('?') && location.startsWith(subItem.href.split('?')[0]));
+                          
+                          return (
+                            <Link key={subItem.name} href={subItem.href}>
+                              <Button
+                                variant="ghost"
+                                className={cn(
+                                  "w-full justify-start text-left h-10 px-4 ml-2",
+                                  isSubActive
+                                    ? "bg-monitoring-blue/70 text-white hover:bg-monitoring-blue/80"
+                                    : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
+                                )}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <subItem.icon className="mr-3 h-4 w-4" />
+                                {subItem.name}
+                              </Button>
+                            </Link>
+                          );
+                        })}
+                      </div>
                     )}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <item.icon className="mr-3 h-5 w-5" />
-                    {item.name}
-                  </Button>
-                </Link>
-              );
+                  </div>
+                );
+              } else {
+                const isActive = location === item.href;
+                return (
+                  <Link key={item.name} href={item.href}>
+                    <Button
+                      variant="ghost"
+                      className={cn(
+                        "w-full justify-start text-left h-12 px-4",
+                        isActive
+                          ? "bg-monitoring-blue text-white hover:bg-monitoring-blue/90"
+                          : "text-gray-300 hover:bg-monitoring-gray hover:text-white"
+                      )}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <item.icon className="mr-3 h-5 w-5" />
+                      {item.name}
+                    </Button>
+                  </Link>
+                );
+              }
             })}
           </nav>
 

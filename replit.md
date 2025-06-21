@@ -244,6 +244,14 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Implemented complete commodity section: Item Description, Quantity, Bag Condition, Bag Type, Average Weight, Remarks
   - Added comprehensive weight calculations: Gross Weight, Tare Weight, With Bardana Weight, Bardana Weight, Quality Deduction, Net Weight
   - Report slip now fetches and displays complete data for all fields instead of showing empty values
+- June 21, 2025. Enhanced sidebar navigation with hierarchical tab structure:
+  - Added hierarchical navigation with expandable main tabs and sub-tabs
+  - Purchase Form now has sub-tabs: Purchase Online and Purchase Offline
+  - Added Sale Form with sub-tabs: Sale Online and Sale Offline  
+  - Added new main tabs: Sale Return and Sale Node
+  - Implemented collapsible/expandable functionality with chevron icons
+  - Enhanced active state detection for both main tabs and sub-tabs
+  - Updated routing to support new navigation structure with query parameters
 
 ## User Preferences
 

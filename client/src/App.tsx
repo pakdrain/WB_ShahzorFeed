@@ -15,6 +15,8 @@ import SalesForm from "@/pages/sales-form";
 import Reports from "@/pages/reports";
 import ImageUpload from "@/pages/image-upload";
 import NotFound from "@/pages/not-found";
+import SaleReturn from "@/pages/sale-return";
+import SaleNode from "@/pages/sale-node";
 
 function ProtectedApp() {
   return (
@@ -27,6 +29,8 @@ function ProtectedApp() {
           <Route path="/weighbridge-settings" component={WeighbridgeSettings} />
           <Route path="/purchase-form" component={PurchaseForm} />
           <Route path="/sales-form" component={SalesForm} />
+          <Route path="/sale-return" component={SaleReturn} />
+          <Route path="/sale-node" component={SaleNode} />
           <Route path="/reports" component={Reports} />
           <Route path="/image-upload" component={ImageUpload} />
           <Route component={NotFound} />
