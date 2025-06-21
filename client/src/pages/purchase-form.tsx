@@ -665,18 +665,13 @@ export default function PurchaseForm() {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
-  // Initialize based on URL parameter
-  const getInitialOnlineMode = () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const typeMode = urlParams.get('type');
-    console.log('getInitialOnlineMode - typeMode:', typeMode);
-    return typeMode === 'offline' ? false : true;
-  };
+
   
   const [onlineMode, setOnlineMode] = useState(() => {
-    const initial = getInitialOnlineMode();
-    console.log('Initial onlineMode from getInitialOnlineMode:', initial);
-    return initial;
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeMode = urlParams.get('type');
+    console.log('useState initialization - typeMode:', typeMode);
+    return typeMode === 'offline' ? false : true;
   });
   const [igpItems, setIgpItems] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
@@ -1040,10 +1035,21 @@ export default function PurchaseForm() {
       setSelectedForm('purchase');
     }
     
-    // Force offline mode display if coming from offline URL
-    if (typeMode === 'offline' && onlineMode === true) {
-      console.log('Force setting offline mode since URL has type=offline');
-      setOnlineMode(false);
+    // Force update the URL if it doesn't have the type parameter
+    if (typeMode === 'offline' || typeMode === 'online') {
+      // URL already has correct parameter, update the mode if needed
+      if (typeMode === 'offline' && onlineMode === true) {
+        console.log('Force setting offline mode since URL has type=offline');
+        setOnlineMode(false);
+      }
+    } else {
+      // URL missing type parameter, add it based on current state
+      const currentType = onlineMode ? 'online' : 'offline';
+      const urlParams = new URLSearchParams(window.location.search);
+      urlParams.set('type', currentType);
+      const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+      window.history.replaceState({}, '', newUrl);
+      console.log('Added missing type parameter to URL:', currentType);
     }
     
     console.log('URL type parameter:', typeMode, 'Setting onlineMode to:', typeMode !== 'offline');
