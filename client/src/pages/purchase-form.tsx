@@ -673,7 +673,11 @@ export default function PurchaseForm() {
     return typeMode === 'offline' ? false : true;
   };
   
-  const [onlineMode, setOnlineMode] = useState(getInitialOnlineMode());
+  const [onlineMode, setOnlineMode] = useState(() => {
+    const initial = getInitialOnlineMode();
+    console.log('Initial onlineMode from getInitialOnlineMode:', initial);
+    return initial;
+  });
   const [igpItems, setIgpItems] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
@@ -1034,6 +1038,12 @@ export default function PurchaseForm() {
       console.log('Setting OFFLINE mode from URL parameter');
       setOnlineMode(false);
       setSelectedForm('purchase');
+    }
+    
+    // Force offline mode display if coming from offline URL
+    if (typeMode === 'offline' && onlineMode === true) {
+      console.log('Force setting offline mode since URL has type=offline');
+      setOnlineMode(false);
     }
     
     console.log('URL type parameter:', typeMode, 'Setting onlineMode to:', typeMode !== 'offline');

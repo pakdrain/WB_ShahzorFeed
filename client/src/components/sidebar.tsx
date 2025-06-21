@@ -141,13 +141,18 @@ export default function Sidebar() {
                           const isSubActive = currentPath === basePath && 
                             currentParams.get('type') === subItemParams.get('type');
                           
+                          // Debug: Log the complete location and href for comparison
                           console.log('Sidebar check:', {
                             subItemName: subItem.name,
+                            fullLocation: location,
+                            subItemHref: subItem.href,
                             currentPath,
                             basePath,
                             currentType: currentParams.get('type'),
                             subItemType: subItemParams.get('type'),
-                            isSubActive
+                            isSubActive,
+                            pathMatch: currentPath === basePath,
+                            typeMatch: currentParams.get('type') === subItemParams.get('type')
                           });
                           
                           return (
