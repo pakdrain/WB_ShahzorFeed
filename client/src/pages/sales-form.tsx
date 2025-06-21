@@ -44,6 +44,12 @@ export default function SalesForm() {
 
   const toggleOnlineMode = (isOnline: boolean) => {
     setOnlineMode(isOnline);
+    
+    // Update URL to reflect the current mode
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('type', isOnline ? 'online' : 'offline');
+    const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+    window.history.replaceState({}, '', newUrl);
   };
 
   // Disable IGP fetching in offline mode

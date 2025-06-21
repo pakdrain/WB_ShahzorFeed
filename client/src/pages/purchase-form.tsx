@@ -971,6 +971,12 @@ export default function PurchaseForm() {
     console.log('toggleOnlineMode called with:', isOnline);
     setOnlineMode(isOnline);
     console.log('onlineMode state updated to:', isOnline);
+    
+    // Update URL to reflect the current mode
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('type', isOnline ? 'online' : 'offline');
+    const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+    window.history.replaceState({}, '', newUrl);
   };
 
   // Fetch entry types and branches
@@ -1026,6 +1032,8 @@ export default function PurchaseForm() {
       setOnlineMode(false);
       setSelectedForm('purchase');
     }
+    
+    console.log('URL type parameter:', typeMode, 'Setting onlineMode to:', typeMode !== 'offline');
     
     if (editWbId) {
       // Load record for editing by wb_id
