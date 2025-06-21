@@ -21,6 +21,19 @@ interface SalesRowData {
 export default function SalesForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [onlineMode, setOnlineMode] = useState(true);
+  
+  // Handle URL parameters for online/offline mode
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeMode = urlParams.get('type');
+    
+    if (typeMode === 'online') {
+      setOnlineMode(true);
+    } else if (typeMode === 'offline') {
+      setOnlineMode(false);
+    }
+  }, []);
   
   const [salesData, setSalesData] = useState<SalesRowData[]>([
     {

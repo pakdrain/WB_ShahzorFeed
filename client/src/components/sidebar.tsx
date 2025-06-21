@@ -102,10 +102,11 @@ export default function Sidebar() {
             {navigation.map((item) => {
               if (item.hasSubItems) {
                 const isExpanded = expandedItems.includes(item.name);
-                const hasActiveSubItem = item.subItems?.some(subItem => 
-                  location === subItem.href || 
-                  (subItem.href.includes('?') && location.startsWith(subItem.href.split('?')[0]))
-                );
+                const hasActiveSubItem = item.subItems?.some(subItem => {
+                  const basePath = subItem.href.split('?')[0];
+                  const currentPath = location.split('?')[0];
+                  return currentPath === basePath;
+                });
                 
                 return (
                   <div key={item.name} className="space-y-1">
@@ -133,8 +134,12 @@ export default function Sidebar() {
                     {isExpanded && (
                       <div className="ml-4 space-y-1">
                         {item.subItems?.map((subItem) => {
-                          const isSubActive = location === subItem.href || 
-                            (subItem.href.includes('?') && location.startsWith(subItem.href.split('?')[0]));
+                          const basePath = subItem.href.split('?')[0];
+                          const currentPath = location.split('?')[0];
+                          const currentParams = new URLSearchParams(location.split('?')[1] || '');
+                          const subItemParams = new URLSearchParams(subItem.href.split('?')[1] || '');
+                          const isSubActive = currentPath === basePath && 
+                            currentParams.get('type') === subItemParams.get('type');
                           
                           return (
                             <Link key={subItem.name} href={subItem.href}>

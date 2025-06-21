@@ -252,6 +252,13 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
   - Implemented collapsible/expandable functionality with chevron icons
   - Enhanced active state detection for both main tabs and sub-tabs
   - Updated routing to support new navigation structure with query parameters
+- June 21, 2025. Enhanced sidebar navigation to work with existing forms:
+  - Updated Purchase Form to handle ?type=online and ?type=offline URL parameters
+  - Updated Sales Form to handle ?type=online and ?type=offline URL parameters  
+  - Purchase Online/Offline sub-tabs now open the same Purchase Form with appropriate mode
+  - Sale Online/Offline sub-tabs now open the same Sales Form with appropriate mode
+  - Improved active state detection to match URL parameters for proper highlighting
+  - Maintained existing form functionality while adding hierarchical navigation support
 
 ## User Preferences
 

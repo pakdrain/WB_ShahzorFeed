@@ -999,12 +999,22 @@ export default function PurchaseForm() {
     const urlParams = new URLSearchParams(window.location.search);
     const editWbId = urlParams.get('edit');
     const formType = urlParams.get('form');
+    const typeMode = urlParams.get('type');
     const offlineEditSlip = urlParams.get('offline_edit');
     
     // Set form type based on URL parameter
     if (formType === 'sales') {
       setSelectedForm('sales');
     } else if (formType === 'purchase') {
+      setSelectedForm('purchase');
+    }
+    
+    // Set online/offline mode based on type parameter
+    if (typeMode === 'online') {
+      toggleOnlineMode(true);
+      setSelectedForm('purchase');
+    } else if (typeMode === 'offline') {
+      toggleOnlineMode(false);
       setSelectedForm('purchase');
     }
     
