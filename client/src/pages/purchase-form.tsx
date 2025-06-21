@@ -665,7 +665,14 @@ export default function PurchaseForm() {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
-  const [onlineMode, setOnlineMode] = useState(true);
+  // Initialize based on URL parameter
+  const getInitialOnlineMode = () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeMode = urlParams.get('type');
+    return typeMode === 'offline' ? false : true;
+  };
+  
+  const [onlineMode, setOnlineMode] = useState(getInitialOnlineMode());
   const [igpItems, setIgpItems] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
@@ -1083,7 +1090,7 @@ export default function PurchaseForm() {
       lastUpdatedDate: now,
       slipDate: now,
     }));
-    toggleOnlineMode(true);
+    // Don't force online mode - let URL parameter control the initial state
   }, []);
 
   const resetForm = () => {
@@ -1096,7 +1103,7 @@ export default function PurchaseForm() {
     setIgpItems([]);
     setIsEditMode(false);
     setEditingWbId(null);
-    toggleOnlineMode(true);
+    // Keep current online/offline mode
   };
 
   const captureFirstWeight = async () => {

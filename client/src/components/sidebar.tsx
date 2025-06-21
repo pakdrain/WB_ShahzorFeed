@@ -148,7 +148,7 @@ export default function Sidebar() {
                                 className={cn(
                                   "w-full justify-start text-left h-10 px-4 ml-2",
                                   isSubActive
-                                    ? "bg-monitoring-blue/70 text-white hover:bg-monitoring-blue/80"
+                                    ? "bg-blue-600 text-white hover:bg-blue-700"
                                     : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
                                 )}
                                 onClick={() => setIsMobileMenuOpen(false)}
