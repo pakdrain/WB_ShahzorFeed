@@ -2137,13 +2137,13 @@ export default function PurchaseForm() {
             <WeightIndicator comPort="COM6" compact={true} />
           </div>
           <Button 
-            className={`h-6 px-3 text-xs font-medium ${onlineMode ? 'bg-green-300 hover:bg-green-400 text-black' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
+            className={`h-6 px-3 text-xs font-medium ${onlineMode === true ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
           </Button>
           <Button 
-            className={`h-6 px-3 text-xs font-medium ${!onlineMode ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
+            className={`h-6 px-3 text-xs font-medium ${onlineMode === false ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
