@@ -4,7 +4,6 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import WeightDisplayTable from '@/components/weight-display-table';
 
 interface SalesRowData {
   doId: string;
@@ -128,7 +127,7 @@ export default function SalesForm() {
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="p-4">
-        {/* Header with Online/Offline Toggle */}
+        {/* Master Form Header - Same as Purchase Form */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Sales Order Form</h1>
           
@@ -140,7 +139,7 @@ export default function SalesForm() {
                   ? 'bg-green-600 text-white' 
                   : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
               }`}
-              onClick={() => setOnlineMode(true)}
+              onClick={() => toggleOnlineMode(true)}
             >
               ONLINE
             </button>
@@ -150,152 +149,150 @@ export default function SalesForm() {
                   ? 'bg-red-600 text-white' 
                   : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
               }`}
-              onClick={() => setOnlineMode(false)}
+              onClick={() => toggleOnlineMode(false)}
             >
               OFFLINE
             </button>
           </div>
         </div>
-
-        {/* Master Table */}
-        <div className="mb-4">
-          <WeightDisplayTable />
-        </div>
         
         {/* Sales Form */}
-        <div className="h-full flex flex-col bg-blue-50 p-2">
-          {/* Header Controls */}
-          <div className="flex justify-between items-center mb-2">
-            <div className="flex gap-2">
-              <Button 
-                onClick={addRow}
-                className="h-6 text-xs bg-green-600 hover:bg-green-700"
-              >
-                Add Row
-              </Button>
-              <Button 
-                onClick={handleSave}
-                disabled={saveMutation.isPending}
-                className="h-6 text-xs bg-blue-600 hover:bg-blue-700"
-              >
-                {saveMutation.isPending ? 'Saving...' : 'Save'}
-              </Button>
-            </div>
-            
-            {/* Type Indicator - Shows current mode */}
-            <div className="flex gap-1">
-              <div className={`px-4 py-1 border border-gray-400 text-xs font-medium ${
-                onlineMode ? 'bg-green-600 text-white' : 'bg-gray-300 text-gray-700'
-              }`}>ONLINE</div>
-              <div className={`px-4 py-1 border border-gray-400 text-xs font-medium ${
-                !onlineMode ? 'bg-red-600 text-white' : 'bg-gray-300 text-gray-700'
-              }`}>OFFLINE</div>
-            </div>
-          </div>
-
-          {/* Main Table Container */}
-          <div className="flex-1 overflow-hidden flex flex-col border border-gray-300">
-            
-            {/* Table Header */}
-            <div className="grid grid-cols-10 gap-px bg-gray-300 text-xs font-semibold min-w-[1200px]">
-              <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO ID</div>
-              <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DC #</div>
-              <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO #</div>
-              <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Customer Name</div>
-              <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Vehicle No</div>
-              <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO Date</div>
-              <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Item Description</div>
-              <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DC Qty</div>
-              <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO Qty</div>
-              <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Branch</div>
-            </div>
-
-            {/* Table Body - Scrollable */}
-            <div className="flex-1 overflow-y-auto bg-gray-200 overflow-x-auto">
-              {salesData.map((row, index) => (
-                <div key={index} className="grid grid-cols-10 gap-px text-xs min-w-[1200px]">
-                  <div className="bg-white border border-gray-300 p-1">
-                    <Input
-                      value={row.doId}
-                      onChange={(e) => updateRow(index, 'doId', e.target.value)}
-                      className="h-4 text-xs text-black border-none p-0"
-                      placeholder="DO ID"
-                    />
-                  </div>
-                  <div className="bg-white border border-gray-300 p-1">
-                    <Input
-                      value={row.dcNo}
-                      onChange={(e) => updateRow(index, 'dcNo', e.target.value)}
-                      className="h-4 text-xs text-black border-none p-0"
-                      placeholder="DC #"
-                    />
-                  </div>
-                  <div className="bg-white border border-gray-300 p-1">
-                    <Input
-                      value={row.doNo}
-                      onChange={(e) => updateRow(index, 'doNo', e.target.value)}
-                      className="h-4 text-xs text-black border-none p-0"
-                      placeholder="DO #"
-                    />
-                  </div>
-                  <div className="bg-white border border-gray-300 p-1">
-                    <Input
-                      value={row.customerName}
-                      onChange={(e) => updateRow(index, 'customerName', e.target.value)}
-                      className="h-4 text-xs text-black border-none p-0"
-                      placeholder="Customer Name"
-                    />
-                  </div>
-                  <div className="bg-white border border-gray-300 p-1">
-                    <Input
-                      value={row.vehicleNo}
-                      onChange={(e) => updateRow(index, 'vehicleNo', e.target.value)}
-                      className="h-4 text-xs text-black border-none p-0"
-                      placeholder="Vehicle No"
-                    />
-                  </div>
-                  <div className="bg-white border border-gray-300 p-1">
-                    <Input
-                      value={row.doDate}
-                      onChange={(e) => updateRow(index, 'doDate', e.target.value)}
-                      className="h-4 text-xs text-black border-none p-0"
-                      placeholder="DO Date"
-                    />
-                  </div>
-                  <div className="bg-white border border-gray-300 p-1">
-                    <Input
-                      value={row.itemDescription}
-                      onChange={(e) => updateRow(index, 'itemDescription', e.target.value)}
-                      className="h-4 text-xs text-black border-none p-0"
-                      placeholder="Item Description"
-                    />
-                  </div>
-                  <div className="bg-white border border-gray-300 p-1">
-                    <Input
-                      value={row.dcQty}
-                      onChange={(e) => updateRow(index, 'dcQty', e.target.value)}
-                      className="h-4 text-xs text-black border-none p-0"
-                      placeholder="DC Qty"
-                    />
-                  </div>
-                  <div className="bg-white border border-gray-300 p-1">
-                    <Input
-                      value={row.doQty}
-                      onChange={(e) => updateRow(index, 'doQty', e.target.value)}
-                      className="h-4 text-xs text-black border-none p-0"
-                      placeholder="DO Qty"
-                    />
-                  </div>
-                  <div className="bg-white border border-gray-300 p-1">
-                    <Input
-                      value={row.branch}
-                      onChange={(e) => updateRow(index, 'branch', e.target.value)}
-                      className="h-4 text-xs text-black border-none p-0"
-                      placeholder="Branch"
-                    />
-                  </div>
+        <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="h-full flex flex-col bg-blue-50 p-2">
+            {/* Header Controls */}
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex gap-2">
+                <Button 
+                  onClick={addRow}
+                  className="h-6 text-xs bg-green-600 hover:bg-green-700"
+                >
+                  Add Row
+                </Button>
+                <Button 
+                  onClick={handleSave}
+                  disabled={saveMutation.isPending}
+                  className="h-6 text-xs bg-blue-600 hover:bg-blue-700"
+                >
+                  {saveMutation.isPending ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+              
+              {/* Type Indicator */}
+              <div className="flex gap-1">
+                <div className="px-4 py-1 bg-blue-200 border border-gray-400 text-xs font-medium text-black">Purchase</div>
+                <div className="px-4 py-1 bg-blue-500 text-white border border-gray-400 text-xs font-medium">Sale</div>
+                <div className={`px-4 py-1 border border-gray-400 text-xs font-medium ${
+                  !onlineMode ? 'bg-red-600 text-white' : 'bg-blue-200 text-black'
+                }`}>
+                  {onlineMode ? 'Online' : 'Offline'}
                 </div>
-              ))}
+              </div>
+            </div>
+
+            {/* Main Table Container */}
+            <div className="flex-1 overflow-hidden flex flex-col border border-gray-300">
+              
+              {/* Table Header */}
+              <div className="grid grid-cols-10 gap-px bg-gray-300 text-xs font-semibold min-w-[1200px]">
+                <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO ID</div>
+                <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DC #</div>
+                <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO #</div>
+                <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Customer Name</div>
+                <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Vehicle No</div>
+                <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO Date</div>
+                <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Item Description</div>
+                <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DC Qty</div>
+                <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">DO Qty</div>
+                <div className="bg-blue-100 p-2 text-center border border-gray-400 text-black">Branch</div>
+              </div>
+
+              {/* Table Body - Scrollable */}
+              <div className="flex-1 overflow-y-auto bg-gray-200 overflow-x-auto">
+                {salesData.map((row, index) => (
+                  <div key={index} className="grid grid-cols-10 gap-px text-xs min-w-[1200px]">
+                    <div className="bg-white border border-gray-300 p-1">
+                      <Input
+                        value={row.doId}
+                        onChange={(e) => updateRow(index, 'doId', e.target.value)}
+                        className="h-4 text-xs text-black border-none p-0"
+                        placeholder="DO ID"
+                      />
+                    </div>
+                    <div className="bg-white border border-gray-300 p-1">
+                      <Input
+                        value={row.dcNo}
+                        onChange={(e) => updateRow(index, 'dcNo', e.target.value)}
+                        className="h-4 text-xs text-black border-none p-0"
+                        placeholder="DC #"
+                      />
+                    </div>
+                    <div className="bg-white border border-gray-300 p-1">
+                      <Input
+                        value={row.doNo}
+                        onChange={(e) => updateRow(index, 'doNo', e.target.value)}
+                        className="h-4 text-xs text-black border-none p-0"
+                        placeholder="DO #"
+                      />
+                    </div>
+                    <div className="bg-white border border-gray-300 p-1">
+                      <Input
+                        value={row.customerName}
+                        onChange={(e) => updateRow(index, 'customerName', e.target.value)}
+                        className="h-4 text-xs text-black border-none p-0"
+                        placeholder="Customer Name"
+                      />
+                    </div>
+                    <div className="bg-white border border-gray-300 p-1">
+                      <Input
+                        value={row.vehicleNo}
+                        onChange={(e) => updateRow(index, 'vehicleNo', e.target.value)}
+                        className="h-4 text-xs text-black border-none p-0"
+                        placeholder="Vehicle No"
+                      />
+                    </div>
+                    <div className="bg-white border border-gray-300 p-1">
+                      <Input
+                        value={row.doDate}
+                        onChange={(e) => updateRow(index, 'doDate', e.target.value)}
+                        className="h-4 text-xs text-black border-none p-0"
+                        placeholder="DO Date"
+                      />
+                    </div>
+                    <div className="bg-white border border-gray-300 p-1">
+                      <Input
+                        value={row.itemDescription}
+                        onChange={(e) => updateRow(index, 'itemDescription', e.target.value)}
+                        className="h-4 text-xs text-black border-none p-0"
+                        placeholder="Item Description"
+                      />
+                    </div>
+                    <div className="bg-white border border-gray-300 p-1">
+                      <Input
+                        value={row.dcQty}
+                        onChange={(e) => updateRow(index, 'dcQty', e.target.value)}
+                        className="h-4 text-xs text-black border-none p-0"
+                        placeholder="DC Qty"
+                      />
+                    </div>
+                    <div className="bg-white border border-gray-300 p-1">
+                      <Input
+                        value={row.doQty}
+                        onChange={(e) => updateRow(index, 'doQty', e.target.value)}
+                        className="h-4 text-xs text-black border-none p-0"
+                        placeholder="DO Qty"
+                      />
+                    </div>
+                    <div className="bg-white border border-gray-300 p-1">
+                      <Input
+                        value={row.branch}
+                        onChange={(e) => updateRow(index, 'branch', e.target.value)}
+                        className="h-4 text-xs text-black border-none p-0"
+                        placeholder="Branch"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
