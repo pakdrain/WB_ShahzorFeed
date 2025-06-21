@@ -667,7 +667,13 @@ export default function PurchaseForm() {
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
 
   
-  const [onlineMode, setOnlineMode] = useState(false); // Start with offline by default
+  const [onlineMode, setOnlineMode] = useState(() => {
+    // Initialize based on URL parameter immediately
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeMode = urlParams.get('type');
+    console.log('Initial state calculation - typeMode:', typeMode);
+    return typeMode === 'online' ? true : false; // offline by default if no parameter
+  });
   const [igpItems, setIgpItems] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
@@ -967,11 +973,6 @@ export default function PurchaseForm() {
     setOnlineMode(isOnline);
     console.log('onlineMode state updated to:', isOnline);
     
-    // Force re-render by updating state immediately
-    setTimeout(() => {
-      console.log('After timeout - onlineMode is:', onlineMode);
-    }, 100);
-    
     // Update URL to reflect the current mode
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.set('type', isOnline ? 'online' : 'offline');
@@ -1034,6 +1035,8 @@ export default function PurchaseForm() {
       setOnlineMode(false);
       setSelectedForm('purchase');
     }
+    
+    console.log('useEffect complete - typeMode:', typeMode, 'onlineMode should be:', typeMode === 'online' ? true : false);
     
     // Force update the URL if it doesn't have the type parameter
     if (typeMode === 'offline' || typeMode === 'online') {
