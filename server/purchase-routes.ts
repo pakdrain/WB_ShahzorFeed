@@ -60,7 +60,7 @@ export function registerPurchaseRoutes(app: Express) {
       
       res.json({ 
         success: true, 
-        wbId: result.rows[0].wb_id,
+        wbId: result[0].wb_id,
         message: 'Purchase saved successfully' 
       });
     } catch (error) {
@@ -122,7 +122,7 @@ export function registerPurchaseRoutes(app: Express) {
       
       const masterResult = await db.unsafe(masterQuery, [wbId]);
       
-      if (masterResult.rows.length === 0) {
+      if (masterResult.length === 0) {
         return res.status(404).json({ error: 'Purchase record not found' });
       }
 
@@ -134,8 +134,8 @@ export function registerPurchaseRoutes(app: Express) {
       const detailsResult = await db.unsafe(detailsQuery, [wbId]);
       
       res.json({
-        master: masterResult.rows[0],
-        details: detailsResult.rows
+        master: masterResult[0],
+        details: detailsResult
       });
     } catch (error) {
       console.error('Error fetching purchase:', error);
@@ -157,7 +157,7 @@ export function registerPurchaseRoutes(app: Express) {
       
       const masterResult = await db.query(masterQuery, [slipNo]);
       
-      if (masterResult.rows.length === 0) {
+      if (masterResult.length === 0) {
         return res.status(404).json({ error: 'Purchase record not found' });
       }
 
@@ -166,11 +166,11 @@ export function registerPurchaseRoutes(app: Express) {
         WHERE wb_id = $1
       `;
       
-      const detailsResult = await db.query(detailsQuery, [masterResult.rows[0].wb_id]);
+      const detailsResult = await db.unsafe(detailsQuery, [masterResult[0].wb_id]);
       
       res.json({
-        master: masterResult.rows[0],
-        details: detailsResult.rows
+        master: masterResult[0],
+        details: detailsResult
       });
     } catch (error) {
       console.error('Error fetching purchase:', error);
@@ -192,9 +192,9 @@ export function registerPurchaseRoutes(app: Express) {
         LIMIT 50
       `;
       
-      const result = await db.query(query);
-      console.log(`Fetched ${result.rows.length} purchase records`);
-      res.json(result.rows);
+      const result = await db.unsafe(query);
+      console.log(`Fetched ${result.length} purchase records`);
+      res.json(result);
     } catch (error) {
       console.error('Error fetching purchases:', error);
       res.status(500).json({ error: 'Failed to fetch purchases' });
@@ -215,9 +215,9 @@ export function registerPurchaseRoutes(app: Express) {
         LIMIT 50
       `;
       
-      const result = await db.query(query);
-      console.log(`Fetched ${result.rows.length} offline purchase records`);
-      res.json(result.rows);
+      const result = await db.unsafe(query);
+      console.log(`Fetched ${result.length} offline purchase records`);
+      res.json(result);
     } catch (error) {
       console.error('Error fetching offline purchases:', error);
       res.status(500).json({ error: 'Failed to fetch offline purchases' });
@@ -238,9 +238,9 @@ export function registerPurchaseRoutes(app: Express) {
         LIMIT 50
       `;
       
-      const result = await db.query(query);
-      console.log(`Fetched ${result.rows.length} first weight records`);
-      res.json(result.rows);
+      const result = await db.unsafe(query);
+      console.log(`Fetched ${result.length} first weight records`);
+      res.json(result);
     } catch (error) {
       console.error('Error fetching first weight records:', error);
       res.status(500).json({ error: 'Failed to fetch first weight records' });
@@ -258,7 +258,7 @@ export function registerPurchaseRoutes(app: Express) {
         WHERE wb_id = $1 AND entry_type = 'Purchase'
       `;
       
-      await db.query(updateQuery, [wbId]);
+      await db.unsafe(updateQuery, [wbId]);
       
       res.json({ 
         success: true, 

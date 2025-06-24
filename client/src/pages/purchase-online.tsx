@@ -3,8 +3,8 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { WeightIndicator } from '@/components/WeightIndicator';
-import { VideoStreamFullscreen } from '@/components/VideoStreamFullscreen';
+import { WeightIndicator } from '@/components/weight-indicator';
+import { VideoStreamFullscreen } from '@/components/video-stream-fullscreen';
 
 const PurchaseOnline = () => {
   const [location, navigate] = useLocation();
