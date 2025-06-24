@@ -177,6 +177,8 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
+  registerPurchaseRoutes(app);
+  registerSalesRoutes(app);
   
   // Add Sales API route
   addSalesRoute(app);
