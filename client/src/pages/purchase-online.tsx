@@ -3,7 +3,7 @@ import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { WeightIndicator } from '@/components/weight-indicator';
+import WeightIndicator from '@/components/weight-indicator';
 import { VideoStreamFullscreen } from '@/components/video-stream-fullscreen';
 
 const PurchaseOnline = () => {

@@ -155,7 +155,7 @@ export function registerPurchaseRoutes(app: Express) {
         WHERE w.slip_no = $1 AND w.entry_type = 'Purchase'
       `;
       
-      const masterResult = await db.query(masterQuery, [slipNo]);
+      const masterResult = await db.unsafe(masterQuery, [slipNo]);
       
       if (masterResult.length === 0) {
         return res.status(404).json({ error: 'Purchase record not found' });

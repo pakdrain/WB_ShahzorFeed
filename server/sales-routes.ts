@@ -116,12 +116,12 @@ export function registerSalesRoutes(app: Express) {
         master.status, master.slipDate
       ];
 
-      await db.query(updateMasterQuery, masterValues);
+      await db.unsafe(updateMasterQuery, masterValues);
 
       // Update sale details if provided
       if (details && Object.keys(details).length > 0) {
         // First, delete existing details
-        await db.query('DELETE FROM wb_weighbridge_sales_details WHERE wb_id = $1', [wbId]);
+        await db.unsafe('DELETE FROM wb_weighbridge_sales_details WHERE wb_id = $1', [wbId]);
         
         // Insert new details
         const detailsQuery = `
@@ -162,9 +162,9 @@ export function registerSalesRoutes(app: Express) {
         WHERE w.wb_id = $1 AND w.entry_type = 'Sale'
       `;
       
-      const masterResult = await db.query(masterQuery, [wbId]);
+      const masterResult = await db.unsafe(masterQuery, [wbId]);
       
-      if (masterResult.rows.length === 0) {
+      if (masterResult.length === 0) {
         return res.status(404).json({ error: 'Sale record not found' });
       }
 
@@ -173,11 +173,11 @@ export function registerSalesRoutes(app: Express) {
         WHERE wb_id = $1
       `;
       
-      const detailsResult = await db.query(detailsQuery, [wbId]);
+      const detailsResult = await db.unsafe(detailsQuery, [wbId]);
       
       res.json({
-        master: masterResult.rows[0],
-        details: detailsResult.rows[0] || {}
+        master: masterResult[0],
+        details: detailsResult[0] || {}
       });
     } catch (error) {
       console.error('Error fetching sale:', error);
@@ -234,9 +234,9 @@ export function registerSalesRoutes(app: Express) {
         LIMIT 50
       `;
       
-      const result = await db.query(query);
-      console.log(`Fetched ${result.rows.length} sale records`);
-      res.json(result.rows);
+      const result = await db.unsafe(query);
+      console.log(`Fetched ${result.length} sale records`);
+      res.json(result);
     } catch (error) {
       console.error('Error fetching sales:', error);
       res.status(500).json({ error: 'Failed to fetch sales' });
@@ -277,7 +277,7 @@ export function registerSalesRoutes(app: Express) {
         WHERE wb_id = $1 AND entry_type = 'Sale'
       `;
       
-      await db.query(updateQuery, [wbId]);
+      await db.unsafe(updateQuery, [wbId]);
       
       res.json({ 
         success: true, 
