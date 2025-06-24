@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import WeightIndicator from '@/components/weight-indicator';
-import { VideoStreamFullscreen } from '@/components/video-stream-fullscreen';
+import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
 
 const PurchaseOnline = () => {
   const [location, navigate] = useLocation();

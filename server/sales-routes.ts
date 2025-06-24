@@ -197,9 +197,9 @@ export function registerSalesRoutes(app: Express) {
         WHERE w.slip_no = $1 AND w.entry_type = 'Sale'
       `;
       
-      const masterResult = await db.query(masterQuery, [slipNo]);
+      const masterResult = await db.unsafe(masterQuery, [slipNo]);
       
-      if (masterResult.rows.length === 0) {
+      if (masterResult.length === 0) {
         return res.status(404).json({ error: 'Sale record not found' });
       }
 
@@ -208,11 +208,11 @@ export function registerSalesRoutes(app: Express) {
         WHERE wb_id = $1
       `;
       
-      const detailsResult = await db.query(detailsQuery, [masterResult.rows[0].wb_id]);
+      const detailsResult = await db.unsafe(detailsQuery, [masterResult[0].wb_id]);
       
       res.json({
-        master: masterResult.rows[0],
-        details: detailsResult.rows[0] || {}
+        master: masterResult[0],
+        details: detailsResult[0] || {}
       });
     } catch (error) {
       console.error('Error fetching sale:', error);
@@ -257,9 +257,9 @@ export function registerSalesRoutes(app: Express) {
         LIMIT 50
       `;
       
-      const result = await db.query(query);
-      console.log(`Fetched ${result.rows.length} offline sale records`);
-      res.json(result.rows);
+      const result = await db.unsafe(query);
+      console.log(`Fetched ${result.length} offline sale records`);
+      res.json(result);
     } catch (error) {
       console.error('Error fetching offline sales:', error);
       res.status(500).json({ error: 'Failed to fetch offline sales' });
