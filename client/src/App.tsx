@@ -12,10 +12,6 @@ import CameraSettings from "@/pages/camera-settings";
 import WeighbridgeSettings from "@/pages/weighbridge-settings";
 import PurchaseForm from "@/pages/purchase-form";
 import SalesForm from "@/pages/sales-form";
-import PurchaseOnline from "@/pages/purchase-online";
-import PurchaseOffline from "@/pages/purchase-offline";
-import SaleOnline from "@/pages/sale-online";
-import SaleOffline from "@/pages/sale-offline";
 import Reports from "@/pages/reports";
 import ImageUpload from "@/pages/image-upload";
 import NotFound from "@/pages/not-found";
@@ -33,10 +29,6 @@ function ProtectedApp() {
           <Route path="/weighbridge-settings" component={WeighbridgeSettings} />
           <Route path="/purchase-form" component={PurchaseForm} />
           <Route path="/sales-form" component={SalesForm} />
-          <Route path="/purchase-online" component={PurchaseOnline} />
-          <Route path="/purchase-offline" component={PurchaseOffline} />
-          <Route path="/sale-online" component={SaleOnline} />
-          <Route path="/sale-offline" component={SaleOffline} />
           <Route path="/sale-return" component={SaleReturn} />
           <Route path="/sale-node" component={SaleNode} />
           <Route path="/reports" component={Reports} />

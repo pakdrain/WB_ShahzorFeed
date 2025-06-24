@@ -1,9 +1,6 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { addSalesRoute } from "./routes-simple";
-import { registerPurchaseRoutes } from "./purchase-routes";
-import { registerSalesRoutes } from "./sales-routes";
-import { registerCommonRoutes } from "./common-routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';
@@ -180,9 +177,6 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
-  registerPurchaseRoutes(app);
-  registerSalesRoutes(app);
-  registerCommonRoutes(app);
   
   // Add Sales API route
   addSalesRoute(app);

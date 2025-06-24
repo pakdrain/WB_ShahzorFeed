@@ -125,13 +125,6 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
 
 ## Changelog
 - June 14, 2025. Initial setup
-- June 21, 2025. Restructured application architecture with separate pages:
-  - Created dedicated pages: purchase-online.tsx, purchase-offline.tsx, sale-online.tsx, sale-offline.tsx
-  - Separated purchase and sales APIs into purchase-routes.ts and sales-routes.ts for better maintainability
-  - Added separate slip number generation APIs for purchases and sales
-  - Updated sidebar navigation to point to new dedicated pages
-  - Created wb_weighbridge_sales_details table for sale-specific data
-  - Enhanced modular structure for easier feature development and maintenance
 - June 14, 2025. Fixed all 4 critical issues:
   - Fixed branch name display in edit mode (shows branch_name instead of branch_id)
   - Fixed offline/online entry filtering in reports (offline entries only show offline_entry='Yes')
