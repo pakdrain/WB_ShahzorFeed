@@ -81,6 +81,16 @@ export class MemStorage implements IStorage {
 
     const updatedCamera = { ...camera, ...updates };
     this.cameras.set(id, updatedCamera);
+    
+    // Log the camera update for debugging
+    console.log('Camera updated:', {
+      id: updatedCamera.id,
+      name: updatedCamera.name,
+      ip: updatedCamera.ip,
+      port: updatedCamera.port,
+      rtspUrl: updatedCamera.rtspUrl
+    });
+    
     return updatedCamera;
   }
 

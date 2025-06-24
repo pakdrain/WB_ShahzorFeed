@@ -674,6 +674,7 @@ export default function PurchaseForm() {
     console.log('Initial state calculation - typeMode:', typeMode);
     return typeMode === 'online' ? true : false; // offline by default if no parameter
   });
+  const [plateReading, setPlateReading] = useState(false);
   const [igpItems, setIgpItems] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
@@ -978,6 +979,30 @@ export default function PurchaseForm() {
     urlParams.set('type', isOnline ? 'online' : 'offline');
     const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
     window.history.replaceState({}, '', newUrl);
+  };
+
+  const readLicensePlate = async () => {
+    setPlateReading(true);
+    try {
+      const response = await fetch('/api/cameras/read-plate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cameraId: 1 })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.plateNumber) {
+          setFormData(prev => ({ ...prev, vehicleNo: result.plateNumber }));
+          console.log('License plate detected:', result.plateNumber);
+        }
+      } else {
+        console.error('Failed to read license plate');
+      }
+    } catch (error) {
+      console.error('Error reading license plate:', error);
+    }
+    setPlateReading(false);
   };
 
   // Fetch entry types and branches
@@ -2369,7 +2394,17 @@ export default function PurchaseForm() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-black w-16">Vehicle No</span>
-                        <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                        <div className="flex gap-1 flex-1">
+                          <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                          <Button 
+                            type="button"
+                            onClick={readLicensePlate}
+                            disabled={plateReading}
+                            className="h-4 px-2 text-xs bg-blue-500 hover:bg-blue-600 text-white"
+                          >
+                            {plateReading ? '...' : 'Read'}
+                          </Button>
+                        </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-black w-16">Weight</span>

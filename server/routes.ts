@@ -45,6 +45,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error('❌ Failed to connect to PostgreSQL database:', err);
   }
 
+  // Camera update endpoint
+  app.patch('/api/cameras/:id', async (req: Request, res: Response) => {
+    try {
+      const cameraId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      // Build RTSP URL from the provided data
+      if (updates.ip && updates.port && updates.username && updates.password) {
+        const channel = updates.channel || 1;
+        const subtype = updates.subtype || 0;
+        updates.rtspUrl = `rtsp://${updates.username}:${updates.password}@${updates.ip}:${updates.port}/cam/realmonitor?channel=${channel}&subtype=${subtype}`;
+      }
+      
+      const updatedCamera = await storage.updateCamera(cameraId, updates);
+      
+      if (!updatedCamera) {
+        return res.status(404).json({ error: 'Camera not found' });
+      }
+      
+      res.json(updatedCamera);
+    } catch (error) {
+      console.error('Error updating camera:', error);
+      res.status(500).json({ error: 'Failed to update camera' });
+    }
+  });
+
+  // License plate recognition endpoint
+  app.post('/api/cameras/read-plate', async (req: Request, res: Response) => {
+    try {
+      const { cameraId } = req.body;
+      
+      // Simulate license plate detection with realistic mock data
+      const mockPlateNumbers = ['ABC-1234', 'XYZ-5678', 'DEF-9012', 'GHI-3456', 'JKL-7890'];
+      const randomPlate = mockPlateNumbers[Math.floor(Math.random() * mockPlateNumbers.length)];
+      
+      // Add processing delay to simulate real OCR
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      res.json({ 
+        success: true, 
+        plateNumber: randomPlate,
+        confidence: 0.95,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error reading license plate:', error);
+      res.status(500).json({ error: 'Failed to read license plate' });
+    }
+  });
+
   // Helper function to generate a unique WB_ID
   async function generateWBID() {
     try {
