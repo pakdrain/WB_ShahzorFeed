@@ -12,7 +12,7 @@ export function registerPurchaseRoutes(app: Express) {
         FROM wb_weighbridge 
         WHERE entry_type = 'Purchase'
       `;
-      const nextSlipNumber = result.rows[0]?.next_slip_no || 1;
+      const nextSlipNumber = result[0]?.next_slip_no || 1;
       res.json({ nextSlipNumber: nextSlipNumber.toString() });
     } catch (error) {
       console.error('Error generating next slip number:', error);
@@ -26,10 +26,10 @@ export function registerPurchaseRoutes(app: Express) {
       const masterData = req.body;
       
       // Generate WB ID
-      const wbIdResult = await db.query(
-        'SELECT COALESCE(MAX(wb_id), 0) + 1 as next_wb_id FROM wb_weighbridge'
-      );
-      const wbId = wbIdResult.rows[0].next_wb_id;
+      const wbIdResult = await db`
+        SELECT COALESCE(MAX(wb_id), 0) + 1 as next_wb_id FROM wb_weighbridge
+      `;
+      const wbId = wbIdResult[0].next_wb_id;
 
       // Insert master record
       const masterQuery = `
@@ -56,7 +56,7 @@ export function registerPurchaseRoutes(app: Express) {
         masterData.status, masterData.slipDate
       ];
 
-      const result = await db.query(masterQuery, masterValues);
+      const result = await db.unsafe(masterQuery, masterValues);
       
       res.json({ 
         success: true, 
@@ -96,7 +96,7 @@ export function registerPurchaseRoutes(app: Express) {
         masterData.status, masterData.slipDate
       ];
 
-      await db.query(updateQuery, updateValues);
+      await db.unsafe(updateQuery, updateValues);
       
       res.json({ 
         success: true, 
@@ -120,7 +120,7 @@ export function registerPurchaseRoutes(app: Express) {
         WHERE w.wb_id = $1 AND w.entry_type = 'Purchase'
       `;
       
-      const masterResult = await db.query(masterQuery, [wbId]);
+      const masterResult = await db.unsafe(masterQuery, [wbId]);
       
       if (masterResult.rows.length === 0) {
         return res.status(404).json({ error: 'Purchase record not found' });
@@ -131,7 +131,7 @@ export function registerPurchaseRoutes(app: Express) {
         WHERE wb_id = $1
       `;
       
-      const detailsResult = await db.query(detailsQuery, [wbId]);
+      const detailsResult = await db.unsafe(detailsQuery, [wbId]);
       
       res.json({
         master: masterResult.rows[0],

@@ -33,6 +33,10 @@ function ProtectedApp() {
           <Route path="/weighbridge-settings" component={WeighbridgeSettings} />
           <Route path="/purchase-form" component={PurchaseForm} />
           <Route path="/sales-form" component={SalesForm} />
+          <Route path="/purchase-online" component={PurchaseOnline} />
+          <Route path="/purchase-offline" component={PurchaseOffline} />
+          <Route path="/sale-online" component={SaleOnline} />
+          <Route path="/sale-offline" component={SaleOffline} />
           <Route path="/sale-return" component={SaleReturn} />
           <Route path="/sale-node" component={SaleNode} />
           <Route path="/reports" component={Reports} />

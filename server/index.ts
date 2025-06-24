@@ -1,6 +1,9 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { addSalesRoute } from "./routes-simple";
+import { registerPurchaseRoutes } from "./purchase-routes";
+import { registerSalesRoutes } from "./sales-routes";
+import { registerCommonRoutes } from "./common-routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { SerialPort } from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline';

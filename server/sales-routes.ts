@@ -12,7 +12,7 @@ export function registerSalesRoutes(app: Express) {
         FROM wb_weighbridge 
         WHERE entry_type = 'Sale'
       `;
-      const nextSlipNumber = result.rows[0]?.next_slip_no || 1;
+      const nextSlipNumber = result[0]?.next_slip_no || 1;
       res.json({ nextSlipNumber: nextSlipNumber.toString() });
     } catch (error) {
       console.error('Error generating next slip number:', error);
@@ -26,10 +26,10 @@ export function registerSalesRoutes(app: Express) {
       const { master, details } = req.body;
       
       // Generate WB ID
-      const wbIdResult = await db.query(
-        'SELECT COALESCE(MAX(wb_id), 0) + 1 as next_wb_id FROM wb_weighbridge'
-      );
-      const wbId = wbIdResult.rows[0].next_wb_id;
+      const wbIdResult = await db`
+        SELECT COALESCE(MAX(wb_id), 0) + 1 as next_wb_id FROM wb_weighbridge
+      `;
+      const wbId = wbIdResult[0].next_wb_id;
 
       // Insert master record
       const masterQuery = `
@@ -56,8 +56,8 @@ export function registerSalesRoutes(app: Express) {
         master.status, master.slipDate
       ];
 
-      const masterResult = await db.query(masterQuery, masterValues);
-      const savedWbId = masterResult.rows[0].wb_id;
+      const masterResult = await db.unsafe(masterQuery, masterValues);
+      const savedWbId = masterResult[0].wb_id;
 
       // Insert sale details if provided
       if (details && Object.keys(details).length > 0) {
