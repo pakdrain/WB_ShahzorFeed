@@ -1,14 +1,17 @@
 import type { Express, Request, Response } from 'express';
-import { db } from './storage';
+import postgres from 'postgres';
+
+const db = postgres(process.env.DATABASE_URL!);
 
 export function registerSalesRoutes(app: Express) {
   // Generate next slip number for sales
   app.get('/api/sales/next-slip-number', async (req: Request, res: Response) => {
     try {
-      const result = await db.query(
-        'SELECT COALESCE(MAX(CAST(slip_no AS INTEGER)), 0) + 1 as next_slip_no FROM wb_weighbridge WHERE entry_type = $1',
-        ['Sale']
-      );
+      const result = await db`
+        SELECT COALESCE(MAX(CAST(slip_no AS INTEGER)), 0) + 1 as next_slip_no 
+        FROM wb_weighbridge 
+        WHERE entry_type = 'Sale'
+      `;
       const nextSlipNumber = result.rows[0]?.next_slip_no || 1;
       res.json({ nextSlipNumber: nextSlipNumber.toString() });
     } catch (error) {

@@ -29,8 +29,8 @@ const navigation = [
     icon: FileText, 
     hasSubItems: true,
     subItems: [
-      { name: 'Purchase Online', href: '/purchase-form?type=online', icon: FileText },
-      { name: 'Purchase Offline', href: '/purchase-form?type=offline', icon: FileText },
+      { name: 'Purchase Online', href: '/purchase-online', icon: FileText },
+      { name: 'Purchase Offline', href: '/purchase-offline', icon: FileText },
     ]
   },
   { 
@@ -38,8 +38,8 @@ const navigation = [
     icon: ShoppingCart, 
     hasSubItems: true,
     subItems: [
-      { name: 'Sale Online', href: '/sales-form?type=online', icon: ShoppingCart },
-      { name: 'Sale Offline', href: '/sales-form?type=offline', icon: ShoppingCart },
+      { name: 'Sale Online', href: '/sale-online', icon: ShoppingCart },
+      { name: 'Sale Offline', href: '/sale-offline', icon: ShoppingCart },
     ]
   },
   { name: 'Sale Return', href: '/sale-return', icon: RotateCcw },
