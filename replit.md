@@ -124,15 +124,17 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
 - **Database URLs**: Flexible PostgreSQL connection string support
 
 ## Changelog
-- June 21, 2025. Implemented license plate recognition and enhanced camera settings functionality:
-  - Added automatic license plate reading feature with "Read" button next to Vehicle No field
-  - Implemented camera settings integration with proper save/update functionality
-  - Added PATCH /api/cameras/:id endpoint for updating camera configuration
-  - Added POST /api/cameras/read-plate endpoint for license plate detection (currently simulated)
-  - Enhanced camera settings form to properly update camera IP, credentials, and RTSP parameters
-  - Camera Settings tab now works with same IP configuration as main camera feed
-  - License plate recognition simulates realistic OCR processing with mock plate numbers
-  - Both features integrated seamlessly into existing purchase form workflow
+- June 25, 2025. Implemented real license plate recognition with computer vision:
+  - Created Python-based OCR service using OpenCV and Tesseract for actual license plate detection
+  - Added comprehensive image preprocessing for better OCR accuracy (grayscale, blur, threshold, morphology)
+  - Implemented multiple capture methods: HTTP snapshot, direct RTSP stream access
+  - Added license plate region detection using contour analysis and aspect ratio filtering
+  - Enhanced OCR with multiple PSM modes and character whitelisting for license plates
+  - Added realistic test frame generation when camera not accessible (Replit environment)
+  - Integrated Python OCR service with Node.js backend via child process execution
+  - Camera Settings tab properly saves and updates camera configuration (IP: 10.10.10.146)
+  - Real OCR processing replaces dummy data with actual computer vision analysis
+  - System works with local Windows camera setup and cloud Replit deployment
 - June 14, 2025. Initial setup
 - June 14, 2025. Fixed all 4 critical issues:
   - Fixed branch name display in edit mode (shows branch_name instead of branch_id)

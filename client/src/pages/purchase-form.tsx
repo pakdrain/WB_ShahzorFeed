@@ -984,6 +984,7 @@ export default function PurchaseForm() {
   const readLicensePlate = async () => {
     setPlateReading(true);
     try {
+      console.log('Starting license plate recognition...');
       const response = await fetch('/api/cameras/read-plate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -992,15 +993,26 @@ export default function PurchaseForm() {
       
       if (response.ok) {
         const result = await response.json();
+        console.log('OCR Response:', result);
+        
         if (result.success && result.plateNumber) {
           setFormData(prev => ({ ...prev, vehicleNo: result.plateNumber }));
           console.log('License plate detected:', result.plateNumber);
+          
+          // Show success message
+          alert(`License plate detected: ${result.plateNumber}`);
+        } else {
+          console.log('No license plate detected:', result.error);
+          alert('No license plate detected in camera view');
         }
       } else {
-        console.error('Failed to read license plate');
+        const errorText = await response.text();
+        console.error('API error:', errorText);
+        alert('Failed to process camera image');
       }
     } catch (error) {
       console.error('Error reading license plate:', error);
+      alert('Error connecting to camera system');
     }
     setPlateReading(false);
   };
