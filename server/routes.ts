@@ -79,7 +79,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Execute Python OCR script
       const { spawn } = require('child_process');
-      const python = spawn('python3', ['license_plate_reader.py']);
+      const python = spawn('python3', ['ocr_service.py'], {
+        cwd: process.cwd(),
+        timeout: 8000 // 8 second timeout
+      });
       
       let result = '';
       let error = '';
@@ -123,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             error: 'OCR processing timeout' 
           });
         }
-      }, 15000); // 15 second timeout
+      }, 10000); // 10 second timeout
       
     } catch (error) {
       console.error('Error reading license plate:', error);
