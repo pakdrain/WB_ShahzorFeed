@@ -997,13 +997,14 @@ export default function PurchaseForm() {
         
         if (result.success && result.plateNumber) {
           setFormData(prev => ({ ...prev, vehicleNo: result.plateNumber }));
-          console.log('License plate detected:', result.plateNumber);
+          console.log('License plate detected:', result.plateNumber, 'Method:', result.method);
           
-          // Show success message
-          alert(`License plate detected: ${result.plateNumber}`);
+          // Show success message with method info
+          const methodText = result.method === 'camera_anpr_api' ? 'Camera ANPR' : 'Computer Vision OCR';
+          alert(`License plate detected: ${result.plateNumber}\nMethod: ${methodText}\nConfidence: ${(result.confidence * 100).toFixed(0)}%`);
         } else {
           console.log('No license plate detected:', result.error);
-          alert('No license plate detected in camera view');
+          alert(`License plate recognition failed:\n${result.error}\n\nPlease ensure:\n- Camera is connected and accessible\n- Vehicle with license plate is visible in camera view\n- Camera has clear view of the license plate`);
         }
       } else {
         const errorText = await response.text();
