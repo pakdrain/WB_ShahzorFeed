@@ -75,23 +75,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/cameras/read-plate', async (req: Request, res: Response) => {
     try {
       const { cameraId } = req.body;
+      console.log('License plate recognition requested for camera:', cameraId);
       
-      // Simulate license plate detection with realistic mock data
-      const mockPlateNumbers = ['ABC-1234', 'XYZ-5678', 'DEF-9012', 'GHI-3456', 'JKL-7890'];
-      const randomPlate = mockPlateNumbers[Math.floor(Math.random() * mockPlateNumbers.length)];
+      // Execute Python OCR script
+      const { spawn } = require('child_process');
+      const python = spawn('python3', ['license_plate_reader.py']);
       
-      // Add processing delay to simulate real OCR
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      let result = '';
+      let error = '';
       
-      res.json({ 
-        success: true, 
-        plateNumber: randomPlate,
-        confidence: 0.95,
-        timestamp: new Date().toISOString()
+      python.stdout.on('data', (data: Buffer) => {
+        result += data.toString();
       });
+      
+      python.stderr.on('data', (data: Buffer) => {
+        error += data.toString();
+      });
+      
+      python.on('close', (code: number) => {
+        if (code === 0 && result) {
+          try {
+            const parsedResult = JSON.parse(result.trim());
+            console.log('OCR Result:', parsedResult);
+            res.json(parsedResult);
+          } catch (parseError) {
+            console.error('Error parsing OCR result:', parseError);
+            res.status(500).json({ 
+              success: false, 
+              error: 'Failed to parse OCR result' 
+            });
+          }
+        } else {
+          console.error('Python script error:', error);
+          res.status(500).json({ 
+            success: false, 
+            error: 'OCR processing failed: ' + error 
+          });
+        }
+      });
+      
+      // Set timeout for the process
+      setTimeout(() => {
+        python.kill();
+        if (!res.headersSent) {
+          res.status(408).json({ 
+            success: false, 
+            error: 'OCR processing timeout' 
+          });
+        }
+      }, 15000); // 15 second timeout
+      
     } catch (error) {
       console.error('Error reading license plate:', error);
-      res.status(500).json({ error: 'Failed to read license plate' });
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to read license plate' 
+      });
     }
   });
 
