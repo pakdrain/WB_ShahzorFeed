@@ -274,3 +274,10 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Important Notes
+
+- The license plate recognition system is designed to work with the actual camera (IP: 10.10.10.146) when deployed locally
+- Camera has built-in ANPR functionality that should be utilized
+- System requires real license plate detection from camera feed, not dummy/mock data
+- The application should capture actual number plates visible in the camera and populate the vehicle number field automatically
