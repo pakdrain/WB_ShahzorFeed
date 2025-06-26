@@ -2428,12 +2428,13 @@ export default function PurchaseForm() {
                           value={formData.igpNo} 
                           onChange={handleChange} 
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+                            if (e.key === 'Enter' && onlineMode) {
                               fetchIgpData();
                             }
                           }}
-                          className="h-4 text-xs text-black flex-1" 
-                          placeholder="Press Enter to fetch"
+                          className={`h-4 text-xs flex-1 ${onlineMode ? 'text-black' : 'text-gray-500 bg-gray-100'}`}
+                          placeholder={onlineMode ? "Press Enter to fetch" : "Not available in offline mode"}
+                          readOnly={!onlineMode}
                         />
                       </div>
                       <div className="flex items-center gap-2">
@@ -2443,12 +2444,13 @@ export default function PurchaseForm() {
                           value={formData.igpDate} 
                           onChange={handleChange} 
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+                            if (e.key === 'Enter' && onlineMode) {
                               fetchIgpData();
                             }
                           }}
-                          className="h-4 text-xs text-black flex-1" 
-                          placeholder="Press Enter to fetch"
+                          className={`h-4 text-xs flex-1 ${onlineMode ? 'text-black' : 'text-gray-500 bg-gray-100'}`}
+                          placeholder={onlineMode ? "Press Enter to fetch" : "Not available in offline mode"}
+                          readOnly={!onlineMode}
                         />
                       </div>
                       <div className="flex items-center gap-2">

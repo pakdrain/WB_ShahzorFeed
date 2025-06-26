@@ -107,7 +107,7 @@ export default function Sidebar() {
                   const currentPath = location.split('?')[0];
                   return currentPath === basePath;
                 });
-                
+
                 return (
                   <div key={item.name} className="space-y-1">
                     <Button
@@ -130,7 +130,7 @@ export default function Sidebar() {
                         <ChevronRight className="h-4 w-4" />
                       )}
                     </Button>
-                    
+
                     {isExpanded && (
                       <div className="ml-4 space-y-1">
                         {item.subItems?.map((subItem) => {
@@ -140,9 +140,9 @@ export default function Sidebar() {
                           const subItemParams = new URLSearchParams(subItem.href.split('?')[1] || '');
                           const isSubActive = currentPath === basePath && 
                             currentParams.get('type') === subItemParams.get('type');
-                          
 
-                          
+
+
                           return (
                             <Button
                               key={subItem.name}

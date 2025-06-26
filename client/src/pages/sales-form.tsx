@@ -149,7 +149,12 @@ export default function SalesForm() {
             itemDescription: detail.item_desc || '',
             dcQty: detail.igp_qty ? String(detail.igp_qty) : '',
             doQty: detail.po_qty ? String(detail.po_qty) : '',
-            branch: ''
+            branch: '',
+            // Hidden columns for database storage
+            dcId: detail.dc_id || '',
+            customerId: detail.customer_id || '',
+            itemId: detail.item_id || '',
+            itemCode: detail.item_code || ''
           }));
           
           // Fill remaining rows with empty data
@@ -164,11 +169,17 @@ export default function SalesForm() {
               itemDescription: '',
               dcQty: '',
               doQty: '',
-              branch: ''
+              branch: '',
+              // Hidden columns for database storage
+              dcId: '',
+              customerId: '',
+              itemId: '',
+              itemCode: ''
             });
           }
           
           setSalesData(salesRows);
+          console.log('Sales data loaded for editing:', salesRows);
         }
       }
     } catch (error) {
@@ -834,8 +845,15 @@ export default function SalesForm() {
         itemDescription: '',
         dcQty: '',
         doQty: '',
-        branch: ''
+        branch: '',
+        // Hidden columns for database storage
+        dcId: '',
+        customerId: '',
+        itemId: '',
+        itemCode: ''
       })));
+      
+      console.log('Sales data table cleared after save');
       
       // Auto-print after successful save
       setTimeout(() => {
