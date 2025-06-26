@@ -50,20 +50,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const cameraId = parseInt(req.params.id);
       const updates = req.body;
-      
+
       // Build RTSP URL from the provided data
       if (updates.ip && updates.port && updates.username && updates.password) {
         const channel = updates.channel || 1;
         const subtype = updates.subtype || 0;
         updates.rtspUrl = `rtsp://${updates.username}:${updates.password}@${updates.ip}:${updates.port}/cam/realmonitor?channel=${channel}&subtype=${subtype}`;
       }
-      
+
       const updatedCamera = await storage.updateCamera(cameraId, updates);
-      
+
       if (!updatedCamera) {
         return res.status(404).json({ error: 'Camera not found' });
       }
-      
+
       res.json(updatedCamera);
     } catch (error) {
       console.error('Error updating camera:', error);
@@ -76,25 +76,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { cameraId } = req.body;
       console.log('License plate recognition requested for camera:', cameraId);
-      
+
       // Execute Python OCR script
       const { spawn } = require('child_process');
       const python = spawn('python3', ['ocr_service.py'], {
         cwd: process.cwd(),
         timeout: 8000 // 8 second timeout
       });
-      
+
       let result = '';
       let error = '';
-      
+
       python.stdout.on('data', (data: Buffer) => {
         result += data.toString();
       });
-      
+
       python.stderr.on('data', (data: Buffer) => {
         error += data.toString();
       });
-      
+
       python.on('close', (code: number) => {
         if (code === 0 && result) {
           try {
@@ -116,7 +116,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       });
-      
+
       // Set timeout for the process
       setTimeout(() => {
         python.kill();
@@ -127,7 +127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
       }, 10000); // 10 second timeout
-      
+
     } catch (error) {
       console.error('Error reading license plate:', error);
       res.status(500).json({ 
@@ -150,7 +150,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize WebSocket service
   streamService.initialize(httpServer);
-  
+
   // Register video streaming routes
   videoStreamService.registerRoutes(app);
 
@@ -159,10 +159,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { folder, filename } = req.params;
       const folderPath = path.join('./captured_images', folder);
-      
+
       // First try exact filename match
       let filePath = path.join(folderPath, filename);
-      
+
       if (fs.existsSync(filePath)) {
         const ext = path.extname(filePath).toLowerCase();
         const contentType = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg' : 
@@ -172,7 +172,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.sendFile(path.resolve(filePath));
         return;
       }
-      
+
       // If exact match fails, try timestamp-based lookup
       const slipMatch = filename.match(/slip_(.+)\.(jpg|jpeg|png)$/i);
       if (slipMatch && fs.existsSync(folderPath)) {
@@ -183,12 +183,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // First try exact timestamp pattern
           const timestampPattern = new RegExp(`^slip_${slipNumber}_\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}-\\d{3}Z\\.(jpg|jpeg|png)$`, 'i');
           if (timestampPattern.test(file)) return true;
-          
+
           // Then try any file starting with slip_[slipNumber]_
           const generalPattern = new RegExp(`^slip_${slipNumber}_.*\\.(jpg|jpeg|png)$`, 'i');
           return generalPattern.test(file);
         });
-        
+
         if (matchingFile) {
           filePath = path.join(folderPath, matchingFile);
           const ext = path.extname(filePath).toLowerCase();
@@ -201,7 +201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return;
         }
       }
-      
+
       console.log(`Image not found: ${filename} in folder ${folder}`);
       res.status(404).send('Image not found');
     } catch (error) {
@@ -212,20 +212,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Image upload endpoint for transferring images from local machine
   app.use(express.static('captured_images'));
-  
+
   // Add file upload capability
   app.post('/api/upload-image/:folder/:filename', async (req, res) => {
     try {
       const { folder, filename } = req.params;
       const uploadDir = path.join('./captured_images', folder);
-      
+
       // Ensure directory exists
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
-      
+
       const filePath = path.join(uploadDir, filename);
-      
+
       // Write the uploaded file
       const chunks: Buffer[] = [];
       req.on('data', (chunk) => chunks.push(chunk));
@@ -246,18 +246,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { folder } = req.params;
       const folderPath = path.join('./captured_images', folder);
-      
+
       if (!fs.existsSync(folderPath)) {
         return res.json({ images: [] });
       }
-      
+
       const files = fs.readdirSync(folderPath);
       const imageFiles = files.filter(file => 
         file.toLowerCase().endsWith('.jpg') || 
         file.toLowerCase().endsWith('.jpeg') || 
         file.toLowerCase().endsWith('.png')
       );
-      
+
       res.json({ images: imageFiles });
     } catch (error) {
       console.error('Error listing images:', error);
@@ -367,12 +367,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: 'Database initialization failed' });
     }
   });
-  
+
   // Test camera connection
   app.post("/api/cameras/test", async (req, res) => {
     try {
       const { rtspUrl } = req.body;
-      
+
       if (!rtspUrl) {
         return res.status(400).json({ message: "RTSP URL is required" });
       }
@@ -394,7 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const camera = await storage.getCamera(id);
-      
+
       if (!camera) {
         return res.status(404).json({ message: "Camera not found" });
       }
@@ -447,7 +447,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const stats = await storage.getLatestStreamStats(id);
-      
+
       if (!stats) {
         return res.status(404).json({ message: "No stats found for camera" });
       }
@@ -491,7 +491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/weight/connect', async (req, res) => {
     try {
       const { comPort, baudRate = 9600 } = req.body;
-      
+
       if (!comPort) {
         return res.status(400).json({ success: false, message: 'COM port is required' });
       }
@@ -499,7 +499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update current settings
       updateComPort(comPort);
       updateBaudRate(parseInt(baudRate));
-      
+
       res.json({ 
         success: true, 
         message: `Connected to ${currentComPort}`,
@@ -507,7 +507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         baudRate: currentBaudRate,
         connected: true
       });
-      
+
     } catch (error: any) {
       res.status(500).json({ 
         success: false, 
@@ -740,7 +740,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/capture/first-weight', async (req: Request, res: Response) => {
     try {
       const { slipNo, cameraIp = '10.10.10.146', cameraPort = 554 } = req.body;
-      
+
       if (!slipNo) {
         return res.status(400).json({ error: 'Slip number is required' });
       }
@@ -784,7 +784,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { filename } = req.params;
       const success = await imageCaptureService.deleteImage(filename);
-      
+
       if (success) {
         res.json({ success: true, message: 'Image deleted successfully' });
       } else {
@@ -803,7 +803,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/capture/second-weight', async (req: Request, res: Response) => {
     try {
       const { slipNo, cameraIp, cameraPort, username, password } = req.body;
-      
+
       if (!slipNo || !cameraIp || !cameraPort) {
         return res.status(400).json({ 
           error: 'Missing required fields: slipNo, cameraIp, cameraPort' 
@@ -849,7 +849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { filename } = req.params;
       const success = await imageCaptureService.deleteImage(filename);
-      
+
       if (success) {
         res.json({ success: true, message: 'Second weight image deleted successfully' });
       } else {
@@ -869,11 +869,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = 'SELECT * FROM wb_weighbridge ORDER BY wb_id DESC LIMIT 1';
       const result = await pool.query(query);
-      
+
       if (result.rows.length === 0) {
         return res.status(404).json({ message: 'No master records found' });
       }
-      
+
       console.log(`Fetched latest master record: WB_ID ${result.rows[0].wb_id}`);
       res.json(result.rows[0]);
     } catch (error: any) {
@@ -887,11 +887,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = 'SELECT * FROM wb_weighbridge_items_purchase ORDER BY id DESC LIMIT 1';
       const result = await pool.query(query);
-      
+
       if (result.rows.length === 0) {
         return res.status(404).json({ message: 'No detail records found' });
       }
-      
+
       console.log(`Fetched latest detail record: ID ${result.rows[0].id}`);
       res.json(result.rows[0]);
     } catch (error: any) {
@@ -900,19 +900,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET first weight records - show only one record per slip number for all entry types
+  // GET first weight records for display table (all entry types)
   app.get('/api/purchase/first-weight-records', async (req: Request, res: Response) => {
     try {
       const query = `
-        SELECT DISTINCT ON (w.slip_no) w.wb_id, w.slip_no, w.entry_type, w.first_weight, w.second_weight, 
-               (SELECT vehicle_no FROM wb_weighbridge_items_purchase WHERE wb_id = w.wb_id LIMIT 1) as vehicle_no
-        FROM wb_weighbridge w
-        WHERE w.first_weight IS NOT NULL
-        ORDER BY w.slip_no DESC, w.wb_id DESC 
+        SELECT 
+          wb.wb_id,
+          wb.slip_no,
+          wb.entry_type,
+          wb.first_weight,
+          wb.second_weight,
+          COALESCE(wbi.vehicle_no, '') as vehicle_no
+        FROM wb_weighbridge wb 
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
+        WHERE wb.first_weight IS NOT NULL 
+          AND wb.first_weight > 0
+        ORDER BY wb.wb_id DESC 
         LIMIT 20
       `;
+
       const result = await pool.query(query);
-      
+
       console.log(`Fetched ${result.rows.length} first weight records (all entry types)`);
       res.json(result.rows);
     } catch (error: any) {
@@ -926,7 +934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = 'SELECT branch_id, branch_name FROM branches ORDER BY branch_name';
       const result = await pool.query(query);
-      
+
       // Process branches to ensure Shahzor returns only its ID
       const processedBranches = result.rows.map(branch => {
         if (branch.branch_name === 'Shahzor') {
@@ -937,7 +945,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         return branch;
       });
-      
+
       console.log(`Fetched ${processedBranches.length} branches`);
       res.json(processedBranches);
     } catch (error: any) {
@@ -951,7 +959,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = 'SELECT id, type_name FROM entry_type WHERE is_active = true ORDER BY type_name';
       const result = await pool.query(query);
-      
+
       console.log(`Fetched ${result.rows.length} entry types`);
       res.json(result.rows);
     } catch (error: any) {
@@ -964,19 +972,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/purchase/by-wbid/:wbId', async (req: Request, res: Response) => {
     try {
       const { wbId } = req.params;
-      
+
       const masterQuery = 'SELECT * FROM wb_weighbridge WHERE wb_id = $1';
       const masterResult = await pool.query(masterQuery, [parseInt(wbId)]);
-      
+
       if (masterResult.rows.length === 0) {
         return res.status(404).json({ message: 'No record found for this wb_id' });
       }
-      
+
       const master = masterResult.rows[0];
-      
+
       const detailsQuery = 'SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1';
       const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
-      
+
       console.log(`Fetched purchase record for wb_id ${wbId}`);
       res.json({
         master,
@@ -992,19 +1000,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/purchase/by-slip/:slipNo', async (req: Request, res: Response) => {
     try {
       const { slipNo } = req.params;
-      
+
       const masterQuery = 'SELECT * FROM wb_weighbridge WHERE slip_no = $1';
       const masterResult = await pool.query(masterQuery, [slipNo]);
-      
+
       if (masterResult.rows.length === 0) {
         return res.status(404).json({ message: 'No record found for this slip number' });
       }
-      
+
       const master = masterResult.rows[0];
-      
+
       const detailsQuery = 'SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1';
       const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
-      
+
       console.log(`Fetched purchase record for slip ${slipNo}`);
       res.json({
         master,
@@ -1021,7 +1029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { wbId } = req.params;
       const updateData = req.body;
-      
+
       const {
         slip_no = null,
         slip_in_time = null,
@@ -1077,7 +1085,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
 
       const result = await pool.query(query, values);
-      
+
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'Purchase record not found' });
       }
@@ -1193,7 +1201,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { wbId } = req.params;
       const query = 'SELECT * FROM deduction WHERE wb_id = $1 ORDER BY bag_id';
       const result = await pool.query(query, [parseInt(wbId)]);
-      
+
       console.log(`Fetched ${result.rows.length} deduction records for wb_id ${wbId}`);
       res.json(result.rows);
     } catch (error: any) {
@@ -1205,23 +1213,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/deduction/save', async (req: Request, res: Response) => {
     try {
       const { wbId, bagTableData } = req.body;
-      
+
       console.log('Received deduction save request:', { wbId, bagTableData });
-      
+
       if (!wbId || !bagTableData || bagTableData.length === 0) {
         return res.status(400).json({ error: 'Missing required data' });
       }
-      
+
       // Delete existing deduction entries for this wb_id
       await pool.query('DELETE FROM deduction WHERE wb_id = $1', [wbId]);
-      
+
       // Save each deduction entry
       for (const item of bagTableData) {
         const query = `
           INSERT INTO deduction (wb_id, bags, pb, percentage, weight, total)
           VALUES ($1, $2, $3, $4, $5, $6)
         `;
-        
+
         const values = [
           wbId,
           item.bags,
@@ -1230,11 +1238,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           typeof item.weight === 'string' ? parseFloat(item.weight) || 0 : item.weight,
           item.total || (item.bags * item.pb)
         ];
-        
+
         console.log('Inserting deduction record:', values);
         await pool.query(query, values);
       }
-      
+
       console.log(`Successfully saved ${bagTableData.length} deduction records for wb_id ${wbId}`);
       res.json({ success: true, message: 'Deduction data saved successfully' });
     } catch (error: any) {
@@ -1246,7 +1254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/sales/save', async (req: Request, res: Response) => {
     try {
       const { salesData, entryType } = req.body;
-      
+
       if (!salesData || !entryType) {
         return res.status(400).json({ error: 'Sales data and entry type are required' });
       }
@@ -1372,16 +1380,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE wb.entry_type = 'SALE' AND wb.online_entry = 'Yes'
       `;
       const params: any[] = [];
-      
+
       if (branch_id && branch_id !== 'all') {
         query += ' AND wb.branch_id = $1';
         params.push(parseInt(branch_id as string));
       }
-      
+
       query += ' ORDER BY sd.id DESC';
-      
+
       const result = await pool.query(query, params);
-      
+
       console.log(`Fetched ${result.rows.length} sales records`);
       res.json(result.rows);
     } catch (error: any) {
@@ -1410,16 +1418,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE wb.online_entry = 'Yes' AND wb.entry_type = 'PURCHASE'
       `;
       const params: any[] = [];
-      
+
       if (branch_id && branch_id !== 'all') {
         query += ' AND wb.branch_id = $1';
         params.push(parseInt(branch_id as string));
       }
-      
+
       query += ' ORDER BY wb.wb_id DESC';
-      
+
       const result = await pool.query(query, params);
-      
+
       console.log(`Fetched ${result.rows.length} online purchase records`);
       res.json(result.rows);
     } catch (error: any) {
@@ -1448,16 +1456,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE wb.offline_entry = 'Yes' AND (wb.online_entry IS NULL OR wb.online_entry != 'Yes')
       `;
       const params: any[] = [];
-      
+
       if (branch_id && branch_id !== 'all') {
         query += ' AND wb.branch_id = $1';
         params.push(parseInt(branch_id as string));
       }
-      
+
       query += ' ORDER BY wb.wb_id DESC';
-      
+
       const result = await pool.query(query, params);
-      
+
       console.log(`Fetched ${result.rows.length} offline purchase records`);
       res.json(result.rows);
     } catch (error: any) {
@@ -1470,7 +1478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/purchase/convert-to-online/:wbId', async (req: Request, res: Response) => {
     try {
       const { wbId } = req.params;
-      
+
       // Update the wb_weighbridge record to set online_entry = true
       const updateQuery = `
         UPDATE wb_weighbridge 
@@ -1478,13 +1486,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE wb_id = $1
         RETURNING *
       `;
-      
+
       const result = await pool.query(updateQuery, [parseInt(wbId)]);
-      
+
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'Record not found' });
       }
-      
+
       console.log(`Converted wb_id ${wbId} from offline to online`);
       res.json({ message: 'Entry converted to online successfully', record: result.rows[0] });
     } catch (error: any) {
@@ -1498,14 +1506,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = 'SELECT do_id FROM sales_details ORDER BY id DESC LIMIT 1';
       const result = await pool.query(query);
-      
+
       let nextDoId = 'DO001';
       if (result.rows.length > 0 && result.rows[0].do_id) {
         const currentNumber = parseInt(result.rows[0].do_id.replace('DO', ''));
         const nextNumber = currentNumber + 1;
         nextDoId = `DO${String(nextNumber).padStart(3, '0')}`;
       }
-      
+
       res.json({ nextDoId });
     } catch (error: any) {
       console.error('Error generating next DO ID:', error);
@@ -1517,7 +1525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/purchases/next-slip', async (req, res) => {
     try {
       const { entry_type } = req.query;
-      
+
       if (!entry_type) {
         return res.status(400).json({ error: 'entry_type query parameter is required' });
       }
@@ -1528,9 +1536,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ORDER BY CAST(slip_no AS INTEGER) DESC 
         LIMIT 1
       `;
-      
+
       const result = await pool.query(query, [entry_type.toUpperCase()]);
-      
+
       let nextSlipNo = '1';
       if (result.rows.length > 0 && result.rows[0].slip_no) {
         const currentNumber = parseInt(result.rows[0].slip_no, 10);
@@ -1538,7 +1546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nextSlipNo = (currentNumber + 1).toString();
         }
       }
-      
+
       console.log(`Generated next slip number for ${entry_type}: ${nextSlipNo}`);
       res.json({ nextSlipNo });
     } catch (error: any) {
@@ -1551,15 +1559,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/deduction/:wbId', async (req, res) => {
     try {
       const { wbId } = req.params;
-      
+
       const query = `
         SELECT * FROM deduction 
         WHERE wb_id = $1 
         ORDER BY bag_id
       `;
-      
+
       const result = await pool.query(query, [wbId]);
-      
+
       console.log(`Fetched ${result.rows.length} deduction records for WB_ID: ${wbId}`);
       res.json(result.rows);
     } catch (error: any) {

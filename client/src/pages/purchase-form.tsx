@@ -2384,7 +2384,22 @@ export default function PurchaseForm() {
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-black w-16">Bardana Type</span>
-                        <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                        {onlineMode ? (
+                          <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                        ) : (
+                          <Select name="bardanaType" value={formData.bardanaType} onValueChange={(value) => setFormData(prev => ({...prev, bardanaType: value}))}>
+                            <SelectTrigger className="h-4 text-xs text-black flex-1">
+                              <SelectValue placeholder="Select bardana type" className="text-black" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="PP BAGS 100 GR">PP BAGS 100 GR</SelectItem>
+                              <SelectItem value="PP BAGS 50 GR">PP BAGS 50 GR</SelectItem>
+                              <SelectItem value="JUTE BAGS">JUTE BAGS</SelectItem>
+                              <SelectItem value="HDPE BAGS">HDPE BAGS</SelectItem>
+                              <SelectItem value="PLASTIC BAGS">PLASTIC BAGS</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-black w-16">Wt per Bag</span>
@@ -2438,7 +2453,22 @@ export default function PurchaseForm() {
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-black w-16">Vendor</span>
-                        <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                        {onlineMode ? (
+                          <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                        ) : (
+                          <Select name="vendor" value={formData.vendor} onValueChange={(value) => setFormData(prev => ({...prev, vendor: value}))}>
+                            <SelectTrigger className="h-4 text-xs text-black flex-1">
+                              <SelectValue placeholder="Select vendor" className="text-black" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="ABC Suppliers">ABC Suppliers</SelectItem>
+                              <SelectItem value="XYZ Trading">XYZ Trading</SelectItem>
+                              <SelectItem value="Global Vendors">Global Vendors</SelectItem>
+                              <SelectItem value="Local Suppliers">Local Suppliers</SelectItem>
+                              <SelectItem value="Premium Traders">Premium Traders</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-black w-16">Vehicle No</span>
@@ -2552,10 +2582,80 @@ export default function PurchaseForm() {
                               </tr>
                             );
                           })
-                        ) : (
+                        ) : onlineMode ? (
                           <tr>
                             <td className="border p-1 h-4 text-xs text-black" colSpan={6}>
                               {isEditMode ? 'Loading saved record data...' : 'No IGP data available'}
+                            </td>
+                          </tr>
+                        ) : (
+                          <tr>
+                            <td className="border p-1 h-4 text-xs text-black">
+                              <Input 
+                                name="poNo" 
+                                value={formData.poNo} 
+                                onChange={handleChange} 
+                                className="h-4 text-xs text-black w-full border-none bg-transparent" 
+                                placeholder="Enter PO No"
+                              />
+                            </td>
+                            <td className="border p-1 h-4 text-xs text-black">
+                              <Select name="itemCode" value={formData.itemCode} onValueChange={(value) => setFormData(prev => ({...prev, itemCode: value}))}>
+                                <SelectTrigger className="h-4 text-xs text-black w-full border-none bg-transparent">
+                                  <SelectValue placeholder="Select item" className="text-black" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="WHEAT001">WHEAT001</SelectItem>
+                                  <SelectItem value="RICE001">RICE001</SelectItem>
+                                  <SelectItem value="CORN001">CORN001</SelectItem>
+                                  <SelectItem value="BARLEY001">BARLEY001</SelectItem>
+                                  <SelectItem value="OATS001">OATS001</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="border p-1 h-4 text-xs text-black">
+                              <Select name="itemDesc" value={formData.itemDesc} onValueChange={(value) => setFormData(prev => ({...prev, itemDesc: value}))}>
+                                <SelectTrigger className="h-4 text-xs text-black w-full border-none bg-transparent">
+                                  <SelectValue placeholder="Select description" className="text-black" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="Wheat Grade A">Wheat Grade A</SelectItem>
+                                  <SelectItem value="Rice Premium">Rice Premium</SelectItem>
+                                  <SelectItem value="Corn Feed Grade">Corn Feed Grade</SelectItem>
+                                  <SelectItem value="Barley Malt">Barley Malt</SelectItem>
+                                  <SelectItem value="Oats Rolled">Oats Rolled</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </td>
+                            <td className="border p-1 h-4 text-xs text-black">
+                              <Input 
+                                name="poQty" 
+                                value={formData.poQty} 
+                                onChange={handleChange} 
+                                className="h-4 text-xs text-black w-full border-none bg-transparent" 
+                                placeholder="PO Qty"
+                                type="number"
+                              />
+                            </td>
+                            <td className="border p-1 h-4 text-xs text-black">
+                              <Input 
+                                name="igpQty" 
+                                value={formData.igpQty} 
+                                onChange={handleChange} 
+                                className="h-4 text-xs text-black w-full border-none bg-transparent" 
+                                placeholder="IGP Qty"
+                                type="number"
+                              />
+                            </td>
+                            <td className="border p-1 h-4 text-xs text-black">
+                              <Input 
+                                name="balanceQty" 
+                                value={formData.balanceQty} 
+                                onChange={handleChange} 
+                                className="h-4 text-xs text-black w-full border-none bg-transparent" 
+                                placeholder="Balance"
+                                type="number"
+                              />
                             </td>
                           </tr>
                         )}

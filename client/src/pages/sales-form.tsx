@@ -823,6 +823,20 @@ export default function SalesForm() {
       console.log('Sales data saved successfully');
       alert('Sales data saved successfully!');
       
+      // Reset sales data table after successful save
+      setSalesData(Array.from({ length: 8 }, (_, index) => ({
+        doId: '',
+        dcNo: '',
+        doNo: '',
+        customerName: '',
+        vehicleNo: '',
+        doDate: '',
+        itemDescription: '',
+        dcQty: '',
+        doQty: '',
+        branch: ''
+      })));
+      
       // Auto-print after successful save
       setTimeout(() => {
         try {
@@ -1063,9 +1077,14 @@ export default function SalesForm() {
           </Button>
           <Button 
             className="h-8 px-2 text-sm font-medium bg-amber-600 hover:bg-amber-700 text-white"
+            onClick={() => toggleOnlineMode(false)}
           >
             Offline
           </Button>
+          <Button className="h-8 px-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium">First</Button>
+          <Button className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium">Prev</Button>
+          <Button className="h-8 px-2 text-sm bg-cyan-600 hover:bg-cyan-700 text-white font-medium">Next</Button>
+          <Button className="h-8 px-2 text-sm bg-teal-600 hover:bg-teal-700 text-white font-medium">Last</Button>
           <Button className="bg-green-600 hover:bg-green-700 h-8 px-3 text-sm text-white font-medium" onClick={handleSave} disabled={loading}>
             {loading ? 'Saving...' : 'Save'}
           </Button>
@@ -1221,6 +1240,36 @@ export default function SalesForm() {
                   {onlineMode === true ? 'Sale Online' : 'Sale Offline'}
                 </h2>
               </div>
+            </div>
+
+            {/* Top buttons row - above details section */}
+            <div className="flex gap-2 mb-2">
+              <Button 
+                className="h-6 text-xs px-3 bg-gray-300 text-black"
+                onClick={() => {
+                  // Navigate to purchase form
+                  const urlParams = new URLSearchParams(window.location.search);
+                  const typeMode = urlParams.get('type');
+                  const modeParam = typeMode ? `?type=${typeMode}` : '';
+                  setLocation(`/purchase-form${modeParam}`);
+                }}
+              >
+                Purchase
+              </Button>
+              <Button 
+                className="h-6 text-xs px-3 bg-blue-600 text-white"
+              >
+                Sales
+              </Button>
+              <Button 
+                className="h-6 text-xs px-3 bg-gray-300 text-black"
+                onClick={() => {
+                  // Set offline mode
+                  toggleOnlineMode(false);
+                }}
+              >
+                Offline
+              </Button>
             </div>
 
             {/* Sales Details Section */}
