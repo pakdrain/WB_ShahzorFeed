@@ -155,7 +155,7 @@ export default function Sidebar() {
                               )}
                               onClick={() => {
                                 setIsMobileMenuOpen(false);
-                                // Force navigation with page reload to ensure state is properly set
+                                // Use proper routing instead of page reload for faster navigation
                                 window.location.href = subItem.href;
                               }}
                             >
