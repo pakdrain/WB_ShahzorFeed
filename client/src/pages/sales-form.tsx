@@ -288,7 +288,7 @@ export default function SalesForm() {
   };
 
   // Function to reset form to clean state
-  const resetFormToInitial = () => {
+  const resetFormToInitial = async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const typeMode = urlParams.get('type');
     const isOfflineMode = typeMode === 'offline';
@@ -300,16 +300,53 @@ export default function SalesForm() {
       setOnlineMode(true);
     }
     
-    setFormData({
-      ...initialFormData,
-      slipInTime: new Date().toISOString().slice(0, 16),
-      onlineEntry: isOfflineMode ? 'No' : 'Yes',
-      offlineEntry: isOfflineMode ? 'Yes' : 'No',
-      entryType: 'SALE',
-      creationDate: new Date().toISOString(),
-      lastUpdatedDate: new Date().toISOString(),
-      slipDate: new Date().toISOString()
-    });
+    // Fetch next slip number for SALE entry type
+    try {
+      const response = await fetch('/api/purchases/next-slip?entry_type=SALE');
+      const data = await response.json();
+      
+      setFormData({
+        ...initialFormData,
+        slipNo: data.nextSlipNo,
+        slipInTime: new Date().toISOString().slice(0, 16),
+        onlineEntry: isOfflineMode ? 'No' : 'Yes',
+        offlineEntry: isOfflineMode ? 'Yes' : 'No',
+        entryType: 'SALE',
+        creationDate: new Date().toISOString(),
+        lastUpdatedDate: new Date().toISOString(),
+        slipDate: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error('Error fetching next slip number:', error);
+      // Fallback to current slip number + 1
+      const currentSlipNo = parseInt(formData.slipNo) || 1;
+      setFormData({
+        ...initialFormData,
+        slipNo: (currentSlipNo + 1).toString(),
+        slipInTime: new Date().toISOString().slice(0, 16),
+        onlineEntry: isOfflineMode ? 'No' : 'Yes',
+        offlineEntry: isOfflineMode ? 'Yes' : 'No',
+        entryType: 'SALE',
+        creationDate: new Date().toISOString(),
+        lastUpdatedDate: new Date().toISOString(),
+        slipDate: new Date().toISOString()
+      });
+    }
+    
+    // Reset sales data table
+    setSalesData(Array.from({ length: 8 }, (_, index) => ({
+      doId: '',
+      dcNo: '',
+      doNo: '',
+      customerName: '',
+      vehicleNo: '',
+      doDate: '',
+      itemDescription: '',
+      dcQty: '',
+      doQty: '',
+      branch: ''
+    })));
+    
     setIsEditMode(false);
     setEditingWbId(null);
   };
@@ -587,15 +624,90 @@ export default function SalesForm() {
     }
     
     try {
-      // Save sales data logic would go here
-      console.log('Saving sales data:', { formData, salesData });
+      // Generate WB_ID for the sales record
+      const wbIdResponse = await fetch('/api/purchases', {
+        method: 'GET'
+      });
+      const existingRecords = await wbIdResponse.json();
+      const maxWbId = existingRecords.length > 0 ? 
+        Math.max(...existingRecords.map((r: any) => r.wb_id || 0)) : 0;
+      const newWbId = maxWbId + 1;
+
+      // Save master sales record to wb_weighbridge table
+      const masterData = {
+        ...formData,
+        wb_id: newWbId,
+        entry_type: 'SALE',
+        slip_date: formData.slipDate || new Date().toISOString(),
+        creation_date: new Date().toISOString(),
+        last_updated_date: new Date().toISOString()
+      };
+
+      const masterResponse = await fetch('/api/purchases', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(masterData),
+      });
+
+      if (!masterResponse.ok) {
+        throw new Error('Failed to save master sales record');
+      }
+
+      // Save sales detail records for each non-empty row
+      const nonEmptyRows = salesData.filter(row => 
+        row.dcNo || row.doNo || row.customerName || row.vehicleNo || 
+        row.itemDescription || row.dcQty || row.doQty
+      );
+
+      for (const row of nonEmptyRows) {
+        const salesItemPayload = {
+          wb_id: newWbId,
+          bardana_type: null,
+          igp_no: row.dcNo || null,
+          vehicle_no: row.vehicleNo || null,
+          weight_per_bags: null,
+          igp_date: row.doDate || null,
+          supplier_weight: null,
+          quality_deduction: null,
+          bardana_weight: null,
+          no_of_bags: null,
+          vendor_name: row.customerName || null,
+          bag_condition: null,
+          po_no: row.doNo || null,
+          item_code: null,
+          item_desc: row.itemDescription || null,
+          po_qty: row.doQty ? parseFloat(row.doQty) : null,
+          igp_qty: row.dcQty ? parseFloat(row.dcQty) : null,
+          balance_qty: null,
+          customer_name: row.customerName || null,
+          do_no: row.doNo || null,
+          do_qty: row.doQty ? parseFloat(row.doQty) : null,
+          dc_qty: row.dcQty ? parseFloat(row.dcQty) : null
+        };
+        
+        const salesItemResponse = await fetch('/api/purchase-items', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(salesItemPayload),
+        });
+        
+        if (!salesItemResponse.ok) {
+          console.error('Failed to save sales item:', row);
+        }
+      }
+
+      console.log('Sales data saved successfully');
       alert('Sales data saved successfully!');
       
       // Reset form to clean state and increment slip number for next entry
       resetFormToInitial();
       
     } catch (err: any) {
-      const errorMessage = err.message || 'Failed to save sales.';
+      const errorMessage = err.message || 'Failed to save sales data.';
       alert(errorMessage);
       console.error('Save error:', err);
     } finally {
