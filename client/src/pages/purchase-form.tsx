@@ -672,7 +672,13 @@ export default function PurchaseForm() {
     const urlParams = new URLSearchParams(window.location.search);
     const typeMode = urlParams.get('type');
     console.log('Initial state calculation - typeMode:', typeMode);
-    return typeMode === 'online' ? true : false; // offline by default if no parameter
+    if (typeMode === 'online') {
+      return true;
+    } else if (typeMode === 'offline') {
+      return false;
+    }
+    // Default to online if no parameter specified
+    return true;
   });
   const [plateReading, setPlateReading] = useState(false);
   const [igpItems, setIgpItems] = useState<any[]>([]);
@@ -979,6 +985,13 @@ export default function PurchaseForm() {
     urlParams.set('type', isOnline ? 'online' : 'offline');
     const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
     window.history.replaceState({}, '', newUrl);
+    
+    // Update form data to reflect the mode change
+    setFormData(prev => ({
+      ...prev,
+      onlineEntry: isOnline ? 'Yes' : 'No',
+      offlineEntry: isOnline ? 'No' : 'Yes'
+    }));
   };
 
   const readLicensePlate = async () => {
@@ -1056,6 +1069,8 @@ export default function PurchaseForm() {
     const typeMode = urlParams.get('type');
     const offlineEditSlip = urlParams.get('offline_edit');
     
+    console.log('URL parameters:', { editWbId, formType, typeMode, offlineEditSlip });
+    
     // Set form type based on URL parameter
     if (formType === 'sales') {
       setSelectedForm('sales');
@@ -1063,7 +1078,7 @@ export default function PurchaseForm() {
       setSelectedForm('purchase');
     }
     
-    // Set online/offline mode based on type parameter
+    // Set online/offline mode based on type parameter - this is the main fix
     if (typeMode === 'online') {
       console.log('Setting ONLINE mode from URL parameter');
       setOnlineMode(true);
@@ -1074,27 +1089,6 @@ export default function PurchaseForm() {
       setSelectedForm('purchase');
     }
     
-    console.log('useEffect complete - typeMode:', typeMode, 'onlineMode should be:', typeMode === 'online' ? true : false);
-    
-    // Force update the URL if it doesn't have the type parameter
-    if (typeMode === 'offline' || typeMode === 'online') {
-      // URL already has correct parameter, update the mode if needed
-      if (typeMode === 'offline' && onlineMode === true) {
-        console.log('Force setting offline mode since URL has type=offline');
-        setOnlineMode(false);
-      }
-    } else {
-      // URL missing type parameter, add it based on current state
-      const currentType = onlineMode ? 'online' : 'offline';
-      const urlParams = new URLSearchParams(window.location.search);
-      urlParams.set('type', currentType);
-      const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-      window.history.replaceState({}, '', newUrl);
-      console.log('Added missing type parameter to URL:', currentType);
-    }
-    
-    console.log('URL type parameter:', typeMode, 'Setting onlineMode to:', typeMode !== 'offline');
-    
     if (editWbId) {
       // Load record for editing by wb_id
       loadDataByWbId(parseInt(editWbId));
@@ -1102,7 +1096,7 @@ export default function PurchaseForm() {
       // Load offline record for editing by slip number
       loadDataBySlipNo(offlineEditSlip);
       // Set offline mode for offline entries
-      toggleOnlineMode(false);
+      setOnlineMode(false);
     } else {
       // Reset form to clean state for new purchase
       resetFormToInitial();
