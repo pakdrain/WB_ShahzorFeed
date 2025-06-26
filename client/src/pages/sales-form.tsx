@@ -633,14 +633,31 @@ export default function SalesForm() {
         Math.max(...existingRecords.map((r: any) => r.wb_id || 0)) : 0;
       const newWbId = maxWbId + 1;
 
-      // Save master sales record to wb_weighbridge table
-      const masterData = {
-        ...formData,
-        wb_id: newWbId,
+      // Prepare master data payload with proper null handling for numeric fields
+      const masterPayload = {
+        slip_no: formData.slipNo || null,
+        slip_in_time: formatISODate(formData.slipInTime),
+        first_weight: formData.firstWeight && formData.firstWeight.trim() !== '' ? parseFloat(formData.firstWeight) : null,
+        second_weight: formData.secondWeight && formData.secondWeight.trim() !== '' ? parseFloat(formData.secondWeight) : null,
+        net_weight: formData.netWeight && formData.netWeight.trim() !== '' ? parseFloat(formData.netWeight) : null,
+        bardana_weight: formData.bardanaWeight && formData.bardanaWeight.trim() !== '' ? parseFloat(formData.bardanaWeight) : null,
+        gross_weight: formData.grossWeight && formData.grossWeight.trim() !== '' ? parseFloat(formData.grossWeight) : null,
+        freight: formData.freight && formData.freight.trim() !== '' ? parseFloat(formData.freight) : null,
+        remarks: formData.remarks || null,
+        driver_name: formData.driverName || null,
+        company_id: (formData.companyId && formData.companyId !== 'undefined' && formData.companyId.trim() !== '') ? parseInt(formData.companyId, 10) : null,
+        branch_id: (formData.branchId && formData.branchId !== 'undefined' && formData.branchId.trim() !== '') ? parseInt(formData.branchId, 10) : null,
+        online_entry: (formData.onlineEntry === 'Yes' || formData.onlineEntry === true) ? 'Yes' : null,
+        offline_entry: (formData.offlineEntry === 'Yes' || formData.offlineEntry === true) ? 'Yes' : null,
+        created_by: (formData.createdBy && formData.createdBy !== 'undefined' && formData.createdBy.trim() !== '') ? parseInt(formData.createdBy, 10) : null,
+        creation_date: formData.creationDate || null,
+        last_updated_by: (formData.lastUpdatedBy && formData.lastUpdatedBy !== 'undefined' && formData.lastUpdatedBy.trim() !== '') ? parseInt(formData.lastUpdatedBy, 10) : null,
+        last_updated_date: formData.lastUpdatedDate || null,
+        manual_dc_no: formData.manualDcNo || null,
         entry_type: 'SALE',
-        slip_date: formData.slipDate || new Date().toISOString(),
-        creation_date: new Date().toISOString(),
-        last_updated_date: new Date().toISOString()
+        slip_out_time: formatISODate(formData.slipOutTime),
+        status: formData.status || null,
+        slip_date: formData.slipDate || null,
       };
 
       const masterResponse = await fetch('/api/purchases', {
@@ -648,11 +665,12 @@ export default function SalesForm() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(masterData),
+        body: JSON.stringify(masterPayload),
       });
 
       if (!masterResponse.ok) {
-        throw new Error('Failed to save master sales record');
+        const errorText = await masterResponse.text();
+        throw new Error(`Failed to save master sales record: ${errorText}`);
       }
 
       // Save sales detail records for each non-empty row
@@ -678,13 +696,13 @@ export default function SalesForm() {
           po_no: row.doNo || null,
           item_code: null,
           item_desc: row.itemDescription || null,
-          po_qty: row.doQty ? parseFloat(row.doQty) : null,
-          igp_qty: row.dcQty ? parseFloat(row.dcQty) : null,
+          po_qty: row.doQty && row.doQty.trim() !== '' ? parseFloat(row.doQty) : null,
+          igp_qty: row.dcQty && row.dcQty.trim() !== '' ? parseFloat(row.dcQty) : null,
           balance_qty: null,
           customer_name: row.customerName || null,
           do_no: row.doNo || null,
-          do_qty: row.doQty ? parseFloat(row.doQty) : null,
-          dc_qty: row.dcQty ? parseFloat(row.dcQty) : null
+          do_qty: row.doQty && row.doQty.trim() !== '' ? parseFloat(row.doQty) : null,
+          dc_qty: row.dcQty && row.dcQty.trim() !== '' ? parseFloat(row.dcQty) : null
         };
         
         const salesItemResponse = await fetch('/api/purchase-items', {
@@ -702,6 +720,106 @@ export default function SalesForm() {
 
       console.log('Sales data saved successfully');
       alert('Sales data saved successfully!');
+      
+      // Auto-print after successful save
+      setTimeout(() => {
+        try {
+          const printHTML = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Sales Receipt - Slip #${formData.slipNo}</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .section { margin-bottom: 15px; }
+    .two-column { display: flex; justify-content: space-between; margin-bottom: 15px; }
+    .left-section, .right-section { width: 48%; }
+    .weight-section { border: 1px solid #ccc; padding: 10px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    @media print { body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h2>WEIGHBRIDGE SLIP</h2>
+    <h3>SALES ENTRY</h3>
+  </div>
+  
+  <div class="two-column">
+    <div class="left-section">
+      <div>DC # ${salesData.find(row => row.dcNo)?.dcNo || ''}</div>
+      <div>W.B # ${formData.slipNo || ''}</div>
+      <div>Truck # ${salesData.find(row => row.vehicleNo)?.vehicleNo || ''}</div>
+      <div>Freight Payment ${formData.freight || ''}</div>
+    </div>
+    <div class="right-section">
+      <div>Customer: ${salesData.find(row => row.customerName)?.customerName || ''}</div>
+      <div>Time IN: ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString() : ''}</div>
+      <div>Time OUT: ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString() : ''}</div>
+    </div>
+  </div>
+  
+  <div class="weight-section">
+    <div class="two-column">
+      <div class="left-section">
+        <div><strong>First Weight:</strong> ${formData.firstWeight || '0'} KG</div>
+        <div><strong>Second Weight:</strong> ${formData.secondWeight || '0'} KG</div>
+        <div><strong>Gross Weight:</strong> ${formData.grossWeight || '0'} KG</div>
+      </div>
+      <div class="right-section">
+        <div><strong>Bardana Weight:</strong> ${formData.bardanaWeight || '0'} KG</div>
+        <div><strong>Net Weight:</strong> ${formData.netWeight || '0'} KG</div>
+      </div>
+    </div>
+  </div>
+  
+  <table>
+    <thead>
+      <tr>
+        <th>DC #</th>
+        <th>DO #</th>
+        <th>Customer Name</th>
+        <th>Item Description</th>
+        <th>DC Qty</th>
+        <th>DO Qty</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${nonEmptyRows.map(row => `
+        <tr>
+          <td>${row.dcNo || ''}</td>
+          <td>${row.doNo || ''}</td>
+          <td>${row.customerName || ''}</td>
+          <td>${row.itemDescription || ''}</td>
+          <td>${row.dcQty || ''}</td>
+          <td>${row.doQty || ''}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+  
+  <div class="section">
+    <div><strong>Driver:</strong> ${formData.driverName || ''}</div>
+  </div>
+  
+  <div class="section">
+    <div><strong>Remarks:</strong> ${formData.remarks || ''}</div>
+  </div>
+</body>
+</html>`;
+          
+          const printWindow = window.open('', '_blank');
+          if (printWindow) {
+            printWindow.document.write(printHTML);
+            printWindow.document.close();
+            printWindow.print();
+          }
+        } catch (printError) {
+          console.error('Auto-print error:', printError);
+        }
+      }, 500);
       
       // Reset form to clean state and increment slip number for next entry
       resetFormToInitial();
