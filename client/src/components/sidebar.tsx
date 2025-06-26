@@ -144,21 +144,24 @@ export default function Sidebar() {
 
                           
                           return (
-                            <Link key={subItem.name} href={subItem.href}>
-                              <Button
-                                variant="ghost"
-                                className={cn(
-                                  "w-full justify-start text-left h-10 px-4 ml-2",
-                                  isSubActive
-                                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                                    : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
-                                )}
-                                onClick={() => setIsMobileMenuOpen(false)}
-                              >
-                                <subItem.icon className="mr-3 h-4 w-4" />
-                                {subItem.name}
-                              </Button>
-                            </Link>
+                            <Button
+                              key={subItem.name}
+                              variant="ghost"
+                              className={cn(
+                                "w-full justify-start text-left h-10 px-4 ml-2",
+                                isSubActive
+                                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                                  : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
+                              )}
+                              onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                // Force navigation with page reload to ensure state is properly set
+                                window.location.href = subItem.href;
+                              }}
+                            >
+                              <subItem.icon className="mr-3 h-4 w-4" />
+                              {subItem.name}
+                            </Button>
                           );
                         })}
                       </div>

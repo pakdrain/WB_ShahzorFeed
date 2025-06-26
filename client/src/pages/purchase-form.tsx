@@ -1120,6 +1120,23 @@ export default function PurchaseForm() {
     }
   }, [location]);
 
+  // Additional effect to handle URL changes for real-time mode switching
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const typeMode = urlParams.get('type');
+      
+      if (typeMode === 'offline' && onlineMode) {
+        setOnlineMode(false);
+      } else if (typeMode === 'online' && !onlineMode) {
+        setOnlineMode(true);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [onlineMode]);
+
   // Sync form data when onlineMode changes
   useEffect(() => {
     setFormData(prev => ({
