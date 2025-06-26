@@ -81,6 +81,102 @@ export default function SalesForm() {
     return matchesSlipNo && matchesVehicleNo;
   }) : [];
 
+  // Function to load data by wb_id for editing
+  const loadDataByWbId = async (wbId: number) => {
+    try {
+      console.log('loadDataByWbId called with wbId:', wbId);
+      const response = await fetch(`/api/purchase/by-wbid/${wbId}`);
+      console.log('Response status:', response.status);
+      const data = await response.json();
+      console.log('Response data:', data);
+      if (data && data.master) {
+        const master = data.master;
+        const details = data.details && data.details.length > 0 ? data.details[0] : {};
+        
+        // Enable edit mode
+        setIsEditMode(true);
+        setEditingWbId(master.wb_id);
+        
+        // Load all the form data including detail table data
+        setFormData(prev => ({
+          ...prev,
+          slipNo: master.slip_no || '',
+          vehicleNo: details.vehicle_no || '',
+          firstWeight: master.first_weight ? String(master.first_weight) : '',
+          secondWeight: master.second_weight ? String(master.second_weight) : '',
+          netWeight: master.net_weight ? String(master.net_weight) : '',
+          bardanaWeight: master.bardana_weight ? String(master.bardana_weight) : '',
+          grossWeight: master.gross_weight ? String(master.gross_weight) : '',
+          freight: master.freight ? String(master.freight) : '',
+          remarks: master.remarks || '',
+          driverName: master.driver_name || '',
+          // Detail table data
+          vendor: details.vendor_name || '',
+          igpNo: details.igp_no || '',
+          poNo: details.po_no || '',
+          itemCode: details.item_code || '',
+          itemDesc: details.item_desc || '',
+          poQty: details.po_qty ? String(details.po_qty) : '',
+          igpQty: details.igp_qty ? String(details.igp_qty) : '',
+          balanceQty: details.balance_qty ? String(details.balance_qty) : '',
+          bardanaType: details.bardana_type || '',
+          wtPerBag: details.weight_per_bags ? String(details.weight_per_bags) : '',
+          noOfBags: details.no_of_bags ? String(details.no_of_bags) : '',
+          igpDate: details.igp_date || '',
+          slipInTime: master.slip_in_time ? formatDatetimeLocal(master.slip_in_time) : '',
+          slipOutTime: master.slip_out_time ? formatDatetimeLocal(master.slip_out_time) : '',
+          entryType: master.entry_type || 'SALE',
+          branch: master.branch_id ? String(master.branch_id) : '',
+          branchId: master.branch_id ? String(master.branch_id) : ''
+        }));
+        
+        // Set online/offline status based on database values
+        if (master.offline_entry === 'Yes') {
+          setOnlineMode(false);
+        } else if (master.online_entry === 'Yes') {
+          setOnlineMode(true);
+        }
+        
+        // Load sales data from details if it's a sales record
+        if (master.entry_type === 'SALE' && data.details && data.details.length > 0) {
+          const salesRows = data.details.map((detail: any, index: number) => ({
+            doId: String(index + 1),
+            dcNo: detail.igp_no || '',
+            doNo: detail.po_no || '',
+            customerName: detail.vendor_name || detail.customer_name || '',
+            vehicleNo: detail.vehicle_no || '',
+            doDate: detail.igp_date || '',
+            itemDescription: detail.item_desc || '',
+            dcQty: detail.igp_qty ? String(detail.igp_qty) : '',
+            doQty: detail.po_qty ? String(detail.po_qty) : '',
+            branch: ''
+          }));
+          
+          // Fill remaining rows with empty data
+          while (salesRows.length < 8) {
+            salesRows.push({
+              doId: '',
+              dcNo: '',
+              doNo: '',
+              customerName: '',
+              vehicleNo: '',
+              doDate: '',
+              itemDescription: '',
+              dcQty: '',
+              doQty: '',
+              branch: ''
+            });
+          }
+          
+          setSalesData(salesRows);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data by wb_id:', error);
+      alert('Failed to load record data');
+    }
+  };
+
   // Function to get current date in YYYY-MM-DD format
   const getCurrentDate = () => {
     const today = new Date();
@@ -285,6 +381,13 @@ export default function SalesForm() {
       console.error('Error fetching DC data:', error);
       alert('Failed to fetch DC data. Please check the DC number and try again.');
     }
+  };
+
+  // Function to cancel edit mode and return to new entry mode
+  const cancelEdit = () => {
+    setIsEditMode(false);
+    setEditingWbId(null);
+    resetFormToInitial();
   };
 
   // Function to reset form to clean state
@@ -887,6 +990,13 @@ export default function SalesForm() {
                     className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
                     onClick={() => {
                       console.log('Clicked record:', record);
+                      console.log('wb_id:', record.wb_id);
+                      console.log('entry_type:', record.entry_type);
+                      
+                      if (record.wb_id) {
+                        // Load the data for editing
+                        loadDataByWbId(record.wb_id);
+                      }
                     }}
                   >
                     {record.slip_no || "---"}
@@ -959,6 +1069,11 @@ export default function SalesForm() {
           <Button className="bg-green-600 hover:bg-green-700 h-8 px-3 text-sm text-white font-medium" onClick={handleSave} disabled={loading}>
             {loading ? 'Saving...' : 'Save'}
           </Button>
+          {isEditMode && (
+            <Button className="h-8 px-2 text-sm bg-red-600 hover:bg-red-700 text-white font-medium" onClick={cancelEdit}>
+              Cancel
+            </Button>
+          )}
           <Button className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium">Print</Button>
           <Button className="h-8 px-2 text-sm bg-orange-600 hover:bg-orange-700 text-white font-medium">Rej</Button>
         </div>

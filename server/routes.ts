@@ -907,7 +907,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         SELECT DISTINCT ON (w.slip_no) w.wb_id, w.slip_no, w.entry_type, w.first_weight, w.second_weight, 
                (SELECT vehicle_no FROM wb_weighbridge_items_purchase WHERE wb_id = w.wb_id LIMIT 1) as vehicle_no
         FROM wb_weighbridge w
-        WHERE w.first_weight IS NOT NULL AND (w.second_weight IS NULL OR w.second_weight = 0)
+        WHERE w.first_weight IS NOT NULL
         ORDER BY w.slip_no DESC, w.wb_id DESC 
         LIMIT 20
       `;
