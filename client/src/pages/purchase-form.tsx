@@ -1147,23 +1147,15 @@ export default function PurchaseForm() {
   }, [onlineMode]);
 
   useEffect(() => {
-    // Fetch next slip number
-    fetch('/api/purchases')
+    // Fetch next slip number for PURCHASE entry type
+    fetch('/api/purchases/next-slip?entry_type=PURCHASE')
       .then(res => res.json())
-      .then((data: any[]) => {
-        if (data.length > 0) {
-          const maxSlip = data.reduce((max: number, curr: any) => {
-            const slip = parseInt(curr.slip_no, 10);
-            return slip > max ? slip : max;
-          }, 0);
-          const nextSlip = (maxSlip + 1).toString();
-          setFormData(prev => ({ ...prev, slipNo: nextSlip }));
-        } else {
-          setFormData(prev => ({ ...prev, slipNo: '1' }));
-        }
+      .then((data: any) => {
+        setFormData(prev => ({ ...prev, slipNo: data.nextSlipNo }));
       })
       .catch((err: any) => {
-        console.error('Error fetching purchases:', err);
+        console.error('Error fetching next slip number:', err);
+        setFormData(prev => ({ ...prev, slipNo: '1' }));
       });
 
     // Fetch branches for dropdown
@@ -2030,7 +2022,7 @@ export default function PurchaseForm() {
                     {record.vehicle_no || "---"}
                   </div>
                   <div className="p-1 text-center text-xs text-blue-600 font-semibold bg-white">
-                    PURCHASE
+                    {record.entry_type || "PURCHASE"}
                   </div>
                 </div>
               ))
@@ -2363,7 +2355,13 @@ export default function PurchaseForm() {
               </Button>
               <Button 
                 className={`h-6 text-xs px-3 ${selectedForm === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-                onClick={() => setSelectedForm('sales')}
+                onClick={() => {
+                  // Navigate to sales form
+                  const urlParams = new URLSearchParams(window.location.search);
+                  const typeMode = urlParams.get('type');
+                  const modeParam = typeMode ? `?type=${typeMode}` : '';
+                  setLocation(`/sales-form${modeParam}`);
+                }}
               >
                 Sales
               </Button>

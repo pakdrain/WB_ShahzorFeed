@@ -900,7 +900,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET first weight records - show only one record per slip number
+  // GET first weight records - show only one record per slip number for all entry types
   app.get('/api/purchase/first-weight-records', async (req: Request, res: Response) => {
     try {
       const query = `
@@ -913,7 +913,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `;
       const result = await pool.query(query);
       
-      console.log(`Fetched ${result.rows.length} first weight records`);
+      console.log(`Fetched ${result.rows.length} first weight records (all entry types)`);
       res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching first weight records:', error);
@@ -1529,7 +1529,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LIMIT 1
       `;
       
-      const result = await pool.query(query, [entry_type]);
+      const result = await pool.query(query, [entry_type.toUpperCase()]);
       
       let nextSlipNo = '1';
       if (result.rows.length > 0 && result.rows[0].slip_no) {

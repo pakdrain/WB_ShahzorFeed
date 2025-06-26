@@ -318,11 +318,10 @@ export default function SalesForm() {
       });
     } catch (error) {
       console.error('Error fetching next slip number:', error);
-      // Fallback to current slip number + 1
-      const currentSlipNo = parseInt(formData.slipNo) || 1;
+      // Fallback - fetch next SALE slip number
       setFormData({
         ...initialFormData,
-        slipNo: (currentSlipNo + 1).toString(),
+        slipNo: '1',
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? 'No' : 'Yes',
         offlineEntry: isOfflineMode ? 'Yes' : 'No',
@@ -896,7 +895,7 @@ export default function SalesForm() {
                     {record.vehicle_no || "---"}
                   </div>
                   <div className="p-1 text-center text-xs text-blue-600 font-semibold bg-white">
-                    SALE
+                    {record.entry_type || "SALE"}
                   </div>
                 </div>
               ))
@@ -937,7 +936,13 @@ export default function SalesForm() {
         <div className="flex gap-1 text-xs">
           <Button 
             className="h-8 px-2 text-sm font-medium bg-blue-200 hover:bg-blue-300 text-black"
-            onClick={() => setLocation('/purchase-form')}
+            onClick={() => {
+              // Navigate to purchase form
+              const urlParams = new URLSearchParams(window.location.search);
+              const typeMode = urlParams.get('type');
+              const modeParam = typeMode ? `?type=${typeMode}` : '';
+              setLocation(`/purchase-form${modeParam}`);
+            }}
           >
             Purchase
           </Button>
