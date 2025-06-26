@@ -487,23 +487,15 @@ export default function SalesForm() {
   }, [onlineMode]);
 
   useEffect(() => {
-    // Fetch next slip number
-    fetch('/api/purchases')
+    // Fetch next slip number specific to SALE entry type
+    fetch('/api/purchases/next-slip?entry_type=SALE')
       .then(res => res.json())
-      .then((data: any[]) => {
-        if (data.length > 0) {
-          const maxSlip = data.reduce((max: number, curr: any) => {
-            const slip = parseInt(curr.slip_no, 10);
-            return slip > max ? slip : max;
-          }, 0);
-          const nextSlip = (maxSlip + 1).toString();
-          setFormData(prev => ({ ...prev, slipNo: nextSlip }));
-        } else {
-          setFormData(prev => ({ ...prev, slipNo: '1' }));
-        }
+      .then((data: any) => {
+        setFormData(prev => ({ ...prev, slipNo: data.nextSlipNo }));
       })
       .catch((err: any) => {
-        console.error('Error fetching purchases:', err);
+        console.error('Error fetching next slip number:', err);
+        setFormData(prev => ({ ...prev, slipNo: '1' }));
       });
 
     // Fetch branches for dropdown

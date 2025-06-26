@@ -1513,6 +1513,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET endpoint for generating next slip number by entry type
+  app.get('/api/purchases/next-slip', async (req, res) => {
+    try {
+      const { entry_type } = req.query;
+      
+      if (!entry_type) {
+        return res.status(400).json({ error: 'entry_type query parameter is required' });
+      }
+
+      const query = `
+        SELECT slip_no FROM wb_weighbridge 
+        WHERE entry_type = $1 AND slip_no ~ '^[0-9]+$'
+        ORDER BY CAST(slip_no AS INTEGER) DESC 
+        LIMIT 1
+      `;
+      
+      const result = await pool.query(query, [entry_type]);
+      
+      let nextSlipNo = '1';
+      if (result.rows.length > 0 && result.rows[0].slip_no) {
+        const currentNumber = parseInt(result.rows[0].slip_no, 10);
+        if (!isNaN(currentNumber)) {
+          nextSlipNo = (currentNumber + 1).toString();
+        }
+      }
+      
+      console.log(`Generated next slip number for ${entry_type}: ${nextSlipNo}`);
+      res.json({ nextSlipNo });
+    } catch (error: any) {
+      console.error('Error generating next slip number:', error);
+      res.status(500).json({ error: 'Failed to generate next slip number' });
+    }
+  });
+
   // GET endpoint for fetching deduction data by WB_ID
   app.get('/api/deduction/:wbId', async (req, res) => {
     try {
