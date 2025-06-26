@@ -837,6 +837,13 @@ export default function PurchaseForm() {
     const typeMode = urlParams.get('type');
     const isOfflineMode = typeMode === 'offline';
     
+    // Sync onlineMode state with URL parameter
+    if (typeMode === 'offline') {
+      setOnlineMode(false);
+    } else if (typeMode === 'online') {
+      setOnlineMode(true);
+    }
+    
     setFormData({
       ...initialFormData,
       slipInTime: new Date().toISOString().slice(0, 16),
@@ -850,7 +857,6 @@ export default function PurchaseForm() {
     setIgpItems([]);
     setIsEditMode(false);
     setEditingWbId(null);
-    // Don't change onlineMode here - let URL parameter control it
   };
 
   // Get camera data
@@ -1094,22 +1100,10 @@ export default function PurchaseForm() {
       console.log('Setting OFFLINE mode from URL parameter');
       setOnlineMode(false);
       setSelectedForm('purchase');
-      // Also update form data immediately
-      setFormData(prev => ({
-        ...prev,
-        onlineEntry: 'No',
-        offlineEntry: 'Yes'
-      }));
     } else if (typeMode === 'online') {
       console.log('Setting ONLINE mode from URL parameter');
       setOnlineMode(true);
       setSelectedForm('purchase');
-      // Also update form data immediately
-      setFormData(prev => ({
-        ...prev,
-        onlineEntry: 'Yes',
-        offlineEntry: 'No'
-      }));
     }
     
     if (editWbId) {
@@ -1125,6 +1119,15 @@ export default function PurchaseForm() {
       resetFormToInitial();
     }
   }, [location]);
+
+  // Sync form data when onlineMode changes
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      onlineEntry: onlineMode ? 'Yes' : 'No',
+      offlineEntry: onlineMode ? 'No' : 'Yes'
+    }));
+  }, [onlineMode]);
 
   useEffect(() => {
     // Fetch next slip number
