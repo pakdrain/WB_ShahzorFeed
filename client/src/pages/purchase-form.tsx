@@ -1177,7 +1177,7 @@ export default function PurchaseForm() {
             ...prev,
             branchId: String(defaultBranch.branch_id),
             branch: String(defaultBranch.branch_id),
-            createdBy: user?.userid || ''
+            createdBy: String(user?.userid || '')
           }));
         }
       })
@@ -1373,7 +1373,7 @@ export default function PurchaseForm() {
       branch_id: (formData.branchId && formData.branchId !== 'undefined' && formData.branchId.trim() !== '') ? parseInt(formData.branchId, 10) : null,
       online_entry: onlineMode ? 'Yes' : null,
       offline_entry: onlineMode ? null : 'Yes',
-      created_by: user?.userid || null,
+      created_by: user?.userid ? parseInt(user.userid.toString()) : null,
       creation_date: formData.creationDate || null,
       last_updated_by: (formData.lastUpdatedBy && formData.lastUpdatedBy !== 'undefined' && formData.lastUpdatedBy.trim() !== '') ? parseInt(formData.lastUpdatedBy, 10) : null,
       last_updated_date: formData.lastUpdatedDate || null,

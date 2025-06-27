@@ -173,8 +173,6 @@ export default function Sidebar() {
                           const isSubActive = currentPath === basePath && 
                             currentParams.get('type') === subItemParams.get('type');
 
-
-
                           return (
                             <Button
                               key={subItem.name}
@@ -182,7 +180,7 @@ export default function Sidebar() {
                               className={cn(
                                 "w-full justify-start text-left h-10 px-4 ml-2",
                                 isSubActive
-                                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                                  ? "bg-monitoring-blue text-white hover:bg-monitoring-blue/90"
                                   : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
                               )}
                               onClick={() => {
