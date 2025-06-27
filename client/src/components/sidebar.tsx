@@ -185,7 +185,7 @@ export default function Sidebar() {
                               )}
                               onClick={() => {
                                 setIsMobileMenuOpen(false);
-                                // Use React routing instead of window.location.href to prevent page reload
+                                console.log('Navigating to:', subItem.href);
                                 setLocation(subItem.href);
                               }}
                             >

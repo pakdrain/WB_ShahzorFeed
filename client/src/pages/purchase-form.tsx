@@ -2356,20 +2356,18 @@ export default function PurchaseForm() {
               <Button 
                 className={`h-6 text-xs px-3 ${onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
                 onClick={() => {
-                  const currentPath = location.split('?')[0];
-                  setLocation(`${currentPath}?type=online`);
+                  setLocation('/purchase-form?type=online');
                 }}
               >
-                Purchase Online
+                {onlineMode ? 'Online' : 'Purchase Online'}
               </Button>
               <Button 
                 className={`h-6 text-xs px-3 ${!onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
                 onClick={() => {
-                  const currentPath = location.split('?')[0];
-                  setLocation(`${currentPath}?type=offline`);
+                  setLocation('/purchase-form?type=offline');
                 }}
               >
-                Purchase Offline
+                {!onlineMode ? 'Offline' : 'Purchase Offline'}
               </Button>
               <Button 
                 className="h-6 text-xs px-3 bg-gray-300 text-black"
