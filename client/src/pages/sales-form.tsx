@@ -655,9 +655,12 @@ export default function SalesForm() {
         setBranches(data);
         console.log('Branches fetched:', data);
         
-        // Set default branch if no branch is selected
+        // Set default branch based on logged-in user's branch
         if (data.length > 0 && (!formData.branchId || formData.branchId === '')) {
-          const defaultBranch = data[0];
+          const userBranchId = user?.branchId;
+          const defaultBranch = userBranchId ? 
+            data.find(b => b.branch_id === userBranchId) || data[0] : 
+            data[0];
           setFormData(prev => ({
             ...prev,
             branchId: String(defaultBranch.branch_id),
@@ -762,7 +765,7 @@ export default function SalesForm() {
         branch_id: (formData.branchId && formData.branchId !== 'undefined' && formData.branchId.trim() !== '') ? parseInt(formData.branchId, 10) : null,
         online_entry: (formData.onlineEntry === 'Yes' || formData.onlineEntry === true) ? 'Yes' : null,
         offline_entry: (formData.offlineEntry === 'Yes' || formData.offlineEntry === true) ? 'Yes' : null,
-        created_by: (formData.createdBy && formData.createdBy !== 'undefined' && formData.createdBy.trim() !== '') ? parseInt(formData.createdBy, 10) : null,
+        created_by: user?.userid || null,
         creation_date: formData.creationDate || null,
         last_updated_by: (formData.lastUpdatedBy && formData.lastUpdatedBy !== 'undefined' && formData.lastUpdatedBy.trim() !== '') ? parseInt(formData.lastUpdatedBy, 10) : null,
         last_updated_date: formData.lastUpdatedDate || null,

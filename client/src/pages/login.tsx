@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, Scale, Users, LogIn, UserPlus } from "lucide-react";
 import { z } from "zod";
 
@@ -23,6 +24,7 @@ const registerSchema = z.object({
   userName: z.string().min(3, "Username must be at least 3 characters").max(50, "Username too long"),
   userPassword: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(1, "Please confirm your password"),
+  branchId: z.string().min(1, "Please select a branch"),
 }).refine((data) => data.userPassword === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -37,6 +39,24 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [activeTab, setActiveTab] = useState("login");
+  const [branches, setBranches] = useState<any[]>([]);
+
+  // Fetch branches for registration dropdown
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const response = await fetch('/api/branches');
+        if (response.ok) {
+          const branchData = await response.json();
+          setBranches(branchData);
+        }
+      } catch (error) {
+        console.error('Error fetching branches:', error);
+      }
+    };
+
+    fetchBranches();
+  }, []);
 
   // Login form
   const loginForm = useForm<LoginData>({
@@ -54,6 +74,7 @@ export default function Login() {
       userName: "",
       userPassword: "",
       confirmPassword: "",
+      branchId: "",
     },
   });
 
@@ -250,6 +271,30 @@ export default function Login() {
               {/* Registration Form */}
               <TabsContent value="register">
                 <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="registerBranch" className="text-gray-300">Branch</Label>
+                    <Select 
+                      value={registerForm.watch("branchId")} 
+                      onValueChange={(value) => registerForm.setValue("branchId", value)}
+                    >
+                      <SelectTrigger className="bg-monitoring-gray border-monitoring-gray text-white focus:border-monitoring-blue">
+                        <SelectValue placeholder="Select your branch" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branches.map((branch) => (
+                          <SelectItem key={branch.branch_id} value={branch.branch_id.toString()}>
+                            {branch.branch_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {registerForm.formState.errors.branchId && (
+                      <p className="text-sm text-monitoring-red">
+                        {registerForm.formState.errors.branchId.message}
+                      </p>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="registerUsername" className="text-gray-300">Username</Label>
                     <Input

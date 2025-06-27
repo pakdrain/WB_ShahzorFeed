@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 interface User {
+  userid: number;
   userName: string;
+  branchId: number;
 }
 
 interface AuthContextType {

@@ -270,9 +270,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
  // Register endpoint
   app.post('/api/auth/register', async (req, res) => {
     try {
-      const { userName, userPassword, confirmPassword } = req.body;
+      const { userName, userPassword, confirmPassword, branchId } = req.body;
 
-      if (!userName || !userPassword || !confirmPassword) {
+      if (!userName || !userPassword || !confirmPassword || !branchId) {
         return res.status(400).json({ error: 'All fields are required' });
       }
 
@@ -289,16 +289,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: 'Username already exists' });
       }
 
-      await pool.query(
-        'INSERT INTO users (userName, userPassword) VALUES ($1, $2)',
-        [userName, userPassword]
+      const result = await pool.query(
+        'INSERT INTO users (userName, userPassword, branch_id) VALUES ($1, $2, $3) RETURNING userid, userName, branch_id',
+        [userName, userPassword, parseInt(branchId)]
       );
 
       console.log('✅ User registered successfully:', userName);
       res.status(201).json({
         success: true,
         message: 'User registered successfully',
-        user: { userName }
+        user: { 
+          userid: result.rows[0].userid,
+          userName: result.rows[0].userName,
+          branchId: result.rows[0].branch_id
+        }
       });
 
     } catch (error: any) {
@@ -317,7 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const userResult = await pool.query(
-        'SELECT * FROM users WHERE userName = $1 AND userPassword = $2',
+        'SELECT userid, userName, branch_id FROM users WHERE userName = $1 AND userPassword = $2',
         [userName, userPassword]
       );
 
@@ -325,11 +329,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ error: 'Invalid username or password' });
       }
 
+      const user = userResult.rows[0];
+
       console.log('✅ User logged in successfully:', userName);
       res.json({
         success: true,
         message: 'Login successful',
-        user: { userName }
+        user: { 
+          userid: user.userid,
+          userName: user.userName,
+          branchId: user.branch_id
+        }
       });
 
     } catch (error: any) {
@@ -356,8 +366,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await pool.query(`
         CREATE TABLE IF NOT EXISTS users (
+          userid SERIAL PRIMARY KEY,
           userName VARCHAR(1000),
-          userPassword VARCHAR(1000)
+          userPassword VARCHAR(1000),
+          branch_id INTEGER
         );
       `);
 

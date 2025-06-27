@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
 import { 
   Home, 
@@ -53,16 +53,45 @@ const navigation = [
 export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
 
   const toggleExpanded = (itemName: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemName) 
-        ? prev.filter(name => name !== itemName)
-        : [...prev, itemName]
-    );
+    setExpandedItems(prev => {
+      // When expanding a new section, collapse all others
+      if (!prev.includes(itemName)) {
+        return [itemName]; // Only keep the newly expanded item
+      } else {
+        return prev.filter(name => name !== itemName); // Collapse the clicked item
+      }
+    });
   };
+
+  // Auto-expand sections that have active sub-items and collapse others
+  useEffect(() => {
+    let activeSection = '';
+    navigation.forEach(item => {
+      if (item.hasSubItems) {
+        const hasActiveSubItem = item.subItems?.some(subItem => {
+          const basePath = subItem.href.split('?')[0];
+          const currentPath = location.split('?')[0];
+          const currentParams = new URLSearchParams(location.split('?')[1] || '');
+          const subItemParams = new URLSearchParams(subItem.href.split('?')[1] || '');
+          return currentPath === basePath && 
+            currentParams.get('type') === subItemParams.get('type');
+        });
+
+        if (hasActiveSubItem) {
+          activeSection = item.name;
+        }
+      }
+    });
+
+    // Set only the active section to be expanded
+    if (activeSection && !expandedItems.includes(activeSection)) {
+      setExpandedItems([activeSection]);
+    }
+  }, [location]);
 
   const handleLogout = async () => {
     await logout();
@@ -155,8 +184,8 @@ export default function Sidebar() {
                               )}
                               onClick={() => {
                                 setIsMobileMenuOpen(false);
-                                // Use proper routing instead of page reload for faster navigation
-                                window.location.href = subItem.href;
+                                // Use React routing instead of window.location.href to prevent page reload
+                                setLocation(subItem.href);
                               }}
                             >
                               <subItem.icon className="mr-3 h-4 w-4" />
