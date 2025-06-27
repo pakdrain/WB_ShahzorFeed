@@ -2366,31 +2366,13 @@ export default function PurchaseForm() {
             {/* Top buttons row - above details section */}
             <div className="flex gap-2 mb-2">
               <Button 
-                className={`h-6 text-xs px-3 ${onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-                onClick={() => {
-                  window.history.replaceState({}, '', '/purchase-form?type=online');
-                  setLocation('/purchase-form?type=online');
-                  setTimeout(() => {
-                    window.location.href = '/purchase-form?type=online';
-                  }, 50);
-                }}
+                className={`h-6 text-xs px-3 ${selectedForm === 'purchase' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                onClick={() => setSelectedForm('purchase')}
               >
-                {onlineMode ? 'Online' : 'Purchase Online'}
+                Purchase
               </Button>
               <Button 
-                className={`h-6 text-xs px-3 ${!onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-                onClick={() => {
-                  window.history.replaceState({}, '', '/purchase-form?type=offline');
-                  setLocation('/purchase-form?type=offline');
-                  setTimeout(() => {
-                    window.location.href = '/purchase-form?type=offline';
-                  }, 50);
-                }}
-              >
-                {!onlineMode ? 'Offline' : 'Purchase Offline'}
-              </Button>
-              <Button 
-                className="h-6 text-xs px-3 bg-gray-300 text-black"
+                className={`h-6 text-xs px-3 ${selectedForm === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
                 onClick={() => {
                   // Navigate to sales form
                   const urlParams = new URLSearchParams(window.location.search);
@@ -2405,6 +2387,12 @@ export default function PurchaseForm() {
                 }}
               >
                 Sales
+              </Button>
+              <Button 
+                className={`h-6 text-xs px-3 ${selectedForm === 'offline' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                onClick={() => setSelectedForm('offline')}
+              >
+                Offline
               </Button>
             </div>
 
@@ -2483,9 +2471,8 @@ export default function PurchaseForm() {
                               fetchIgpData();
                             }
                           }}
-                          className={`h-4 text-xs flex-1 ${onlineMode ? 'text-black' : 'text-gray-500 bg-gray-100'}`}
-                          placeholder={onlineMode ? "Press Enter to fetch" : "Not available in offline mode"}
-                          readOnly={!onlineMode}
+                          className="h-4 text-xs flex-1 text-black"
+                          placeholder={onlineMode ? "Press Enter to fetch" : "Enter IGP Date"}
                         />
                       </div>
                       <div className="flex items-center gap-2">
@@ -2981,7 +2968,7 @@ export default function PurchaseForm() {
               {selectedForm === 'offline' && (
                 <div className="h-full flex flex-col" style={{maxWidth: "100%", width: "100%"}}>
                   <div className="bg-white p-4 rounded border" style={{maxWidth: "100%", width: "100%"}}>
-                    <h3 className="text-lg font-semibold mb-4 text-black">Offline Entries</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-black">Purchase Offline Entries</h3>
                     
                     {/* Offline entries table with scroll */}
                     <div className="overflow-auto" style={{maxHeight: "600px", height: "600px"}}>
@@ -3000,6 +2987,7 @@ export default function PurchaseForm() {
                         </thead>
                         <tbody>
                           {(offlineRecords as any[])
+                            .filter((record: any) => record.entry_type === 'PURCHASE' && record.offline_entry === 'Yes')
                             .map((record: any) => (
                             <tr key={record.wb_id} className="hover:bg-gray-50">
                               <td className="px-3 py-2 border border-black text-black">
@@ -3035,9 +3023,9 @@ export default function PurchaseForm() {
                         </tbody>
                       </table>
                       
-                      {(offlineRecords as any[]).length === 0 && (
+                      {(offlineRecords as any[]).filter((record: any) => record.entry_type === 'PURCHASE' && record.offline_entry === 'Yes').length === 0 && (
                         <div className="text-center py-8 text-black border border-black">
-                          No offline records found
+                          No Purchase Offline records found
                         </div>
                       )}
                     </div>
