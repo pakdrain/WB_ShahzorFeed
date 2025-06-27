@@ -168,12 +168,8 @@ export default function Sidebar() {
                         {item.subItems?.map((subItem) => {
                           const basePath = subItem.href.split('?')[0];
                           const currentPath = location.split('?')[0];
-                          const currentSearchParams = location.split('?')[1] || '';
-                          const subItemSearchParams = subItem.href.split('?')[1] || '';
-                          
-                          const currentParams = new URLSearchParams(currentSearchParams);
-                          const subItemParams = new URLSearchParams(subItemSearchParams);
-                          
+                          const currentParams = new URLSearchParams(location.split('?')[1] || '');
+                          const subItemParams = new URLSearchParams(subItem.href.split('?')[1] || '');
                           const isSubActive = currentPath === basePath && 
                             currentParams.get('type') === subItemParams.get('type');
 
@@ -189,12 +185,14 @@ export default function Sidebar() {
                                   ? "bg-blue-600 text-white hover:bg-blue-700"
                                   : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
                               )}
-                              asChild
+                              onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                // Use React routing instead of window.location.href to prevent page reload
+                                setLocation(subItem.href);
+                              }}
                             >
-                              <Link href={subItem.href}>
-                                <subItem.icon className="mr-3 h-4 w-4" />
-                                {subItem.name}
-                              </Link>
+                              <subItem.icon className="mr-3 h-4 w-4" />
+                              {subItem.name}
                             </Button>
                           );
                         })}

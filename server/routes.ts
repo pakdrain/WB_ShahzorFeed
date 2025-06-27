@@ -624,8 +624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         entry_type = null,
         slip_out_time = null,
         status = null,
-        slip_date = null,
-        user_id = null
+        slip_date = null
       } = purchaseData;
 
       // Convert online/offline entries to string - ensure 'Yes' values are properly handled
@@ -666,7 +665,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         branch_id,
         onlineEntryStr,
         offlineEntryStr,
-        user_id || created_by,
+        created_by,
         creation_date,
         last_updated_by,
         last_updated_date,
