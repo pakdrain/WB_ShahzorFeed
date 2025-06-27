@@ -1083,13 +1083,14 @@ export default function SalesForm() {
       <div className="flex justify-between items-center bg-white border rounded p-1 mb-1">
         <div className="flex gap-1 text-xs">
           <Button 
-            className="h-8 px-2 text-sm font-medium bg-blue-200 hover:bg-blue-300 text-black"
+            className="h-8 px-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white"
             onClick={() => {
-              // Navigate to purchase form
+              // Navigate to purchase form with same type
               const urlParams = new URLSearchParams(window.location.search);
-              const typeMode = urlParams.get('type');
-              const modeParam = typeMode ? `?type=${typeMode}` : '';
-              setLocation(`/purchase-form${modeParam}`);
+              const typeMode = urlParams.get('type') || 'online';
+              const targetUrl = `/purchase-form?type=${typeMode}`;
+              window.history.pushState({}, '', targetUrl);
+              setLocation(targetUrl);
             }}
           >
             Purchase
@@ -1271,11 +1272,12 @@ export default function SalesForm() {
               <Button 
                 className="h-6 text-xs px-3 bg-gray-300 text-black"
                 onClick={() => {
-                  // Navigate to purchase form
+                  // Navigate to purchase form with same type
                   const urlParams = new URLSearchParams(window.location.search);
-                  const typeMode = urlParams.get('type');
-                  const modeParam = typeMode ? `?type=${typeMode}` : '';
-                  setLocation(`/purchase-form${modeParam}`);
+                  const typeMode = urlParams.get('type') || 'online';
+                  const targetUrl = `/purchase-form?type=${typeMode}`;
+                  window.history.pushState({}, '', targetUrl);
+                  setLocation(targetUrl);
                 }}
               >
                 Purchase
@@ -1283,6 +1285,7 @@ export default function SalesForm() {
               <Button 
                 className={`h-6 text-xs px-3 ${onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
                 onClick={() => {
+                  window.history.pushState({}, '', '/sales-form?type=online');
                   setLocation('/sales-form?type=online');
                 }}
               >
@@ -1291,6 +1294,7 @@ export default function SalesForm() {
               <Button 
                 className={`h-6 text-xs px-3 ${!onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
                 onClick={() => {
+                  window.history.pushState({}, '', '/sales-form?type=offline');
                   setLocation('/sales-form?type=offline');
                 }}
               >

@@ -38,8 +38,8 @@ const navigation = [
     icon: ShoppingCart, 
     hasSubItems: true,
     subItems: [
-      { name: 'Sale Online', href: '/sales-form?type=online', icon: ShoppingCart },
-      { name: 'Sale Offline', href: '/sales-form?type=offline', icon: ShoppingCart },
+      { name: 'Sales Online', href: '/sales-form?type=online', icon: ShoppingCart },
+      { name: 'Sales Offline', href: '/sales-form?type=offline', icon: ShoppingCart },
     ]
   },
   { name: 'Sale Return', href: '/sale-return', icon: RotateCcw },
@@ -167,9 +167,11 @@ export default function Sidebar() {
                       <div className="ml-4 space-y-1">
                         {item.subItems?.map((subItem) => {
                           const basePath = subItem.href.split('?')[0];
-                          const currentPath = location.split('?')[0];
+                          const currentPath = location.split('?')[1] ? location.split('?')[0] : location;
                           const currentParams = new URLSearchParams(location.split('?')[1] || '');
                           const subItemParams = new URLSearchParams(subItem.href.split('?')[1] || '');
+                          
+                          // Check if this sub-item matches the current route
                           const isSubActive = currentPath === basePath && 
                             currentParams.get('type') === subItemParams.get('type');
 
@@ -186,6 +188,8 @@ export default function Sidebar() {
                               onClick={() => {
                                 setIsMobileMenuOpen(false);
                                 console.log('Navigating to:', subItem.href);
+                                // Force navigation by replacing current URL
+                                window.history.pushState({}, '', subItem.href);
                                 setLocation(subItem.href);
                               }}
                             >
