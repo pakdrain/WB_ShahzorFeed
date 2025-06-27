@@ -167,7 +167,7 @@ export default function Sidebar() {
                       <div className="ml-4 space-y-1">
                         {item.subItems?.map((subItem) => {
                           const basePath = subItem.href.split('?')[0];
-                          const currentPath = location.split('?')[1] ? location.split('?')[0] : location;
+                          const currentPath = location.split('?')[0];
                           const currentParams = new URLSearchParams(location.split('?')[1] || '');
                           const subItemParams = new URLSearchParams(subItem.href.split('?')[1] || '');
                           
@@ -188,9 +188,13 @@ export default function Sidebar() {
                               onClick={() => {
                                 setIsMobileMenuOpen(false);
                                 console.log('Navigating to:', subItem.href);
-                                // Force navigation by replacing current URL
-                                window.history.pushState({}, '', subItem.href);
+                                // Force immediate URL change and navigation
+                                window.history.replaceState({}, '', subItem.href);
                                 setLocation(subItem.href);
+                                // Force page refresh to ensure proper initialization
+                                setTimeout(() => {
+                                  window.location.href = subItem.href;
+                                }, 50);
                               }}
                             >
                               <subItem.icon className="mr-3 h-4 w-4" />

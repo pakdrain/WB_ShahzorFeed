@@ -1102,10 +1102,22 @@ export default function PurchaseForm() {
       console.log('Setting OFFLINE mode from URL parameter');
       setOnlineMode(false);
       setSelectedForm('purchase');
+      // Force update form data immediately
+      setFormData(prev => ({
+        ...prev,
+        onlineEntry: 'No',
+        offlineEntry: 'Yes'
+      }));
     } else if (typeMode === 'online') {
       console.log('Setting ONLINE mode from URL parameter');
       setOnlineMode(true);
       setSelectedForm('purchase');
+      // Force update form data immediately
+      setFormData(prev => ({
+        ...prev,
+        onlineEntry: 'Yes',
+        offlineEntry: 'No'
+      }));
     }
     
     if (editWbId) {
@@ -2356,7 +2368,11 @@ export default function PurchaseForm() {
               <Button 
                 className={`h-6 text-xs px-3 ${onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
                 onClick={() => {
+                  window.history.replaceState({}, '', '/purchase-form?type=online');
                   setLocation('/purchase-form?type=online');
+                  setTimeout(() => {
+                    window.location.href = '/purchase-form?type=online';
+                  }, 50);
                 }}
               >
                 {onlineMode ? 'Online' : 'Purchase Online'}
@@ -2364,7 +2380,11 @@ export default function PurchaseForm() {
               <Button 
                 className={`h-6 text-xs px-3 ${!onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
                 onClick={() => {
+                  window.history.replaceState({}, '', '/purchase-form?type=offline');
                   setLocation('/purchase-form?type=offline');
+                  setTimeout(() => {
+                    window.location.href = '/purchase-form?type=offline';
+                  }, 50);
                 }}
               >
                 {!onlineMode ? 'Offline' : 'Purchase Offline'}
@@ -2376,7 +2396,12 @@ export default function PurchaseForm() {
                   const urlParams = new URLSearchParams(window.location.search);
                   const typeMode = urlParams.get('type');
                   const modeParam = typeMode ? `?type=${typeMode}` : '';
-                  setLocation(`/sales-form${modeParam}`);
+                  const targetUrl = `/sales-form${modeParam}`;
+                  window.history.replaceState({}, '', targetUrl);
+                  setLocation(targetUrl);
+                  setTimeout(() => {
+                    window.location.href = targetUrl;
+                  }, 50);
                 }}
               >
                 Sales

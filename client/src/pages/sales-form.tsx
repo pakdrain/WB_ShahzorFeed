@@ -615,9 +615,21 @@ export default function SalesForm() {
     if (typeMode === 'offline') {
       console.log('Setting OFFLINE mode from URL parameter');
       setOnlineMode(false);
+      // Force update form data immediately
+      setFormData(prev => ({
+        ...prev,
+        onlineEntry: 'No',
+        offlineEntry: 'Yes'
+      }));
     } else if (typeMode === 'online') {
       console.log('Setting ONLINE mode from URL parameter');
       setOnlineMode(true);
+      // Force update form data immediately
+      setFormData(prev => ({
+        ...prev,
+        onlineEntry: 'Yes',
+        offlineEntry: 'No'
+      }));
     }
     
     if (editWbId) {
@@ -1276,8 +1288,11 @@ export default function SalesForm() {
                   const urlParams = new URLSearchParams(window.location.search);
                   const typeMode = urlParams.get('type') || 'online';
                   const targetUrl = `/purchase-form?type=${typeMode}`;
-                  window.history.pushState({}, '', targetUrl);
+                  window.history.replaceState({}, '', targetUrl);
                   setLocation(targetUrl);
+                  setTimeout(() => {
+                    window.location.href = targetUrl;
+                  }, 50);
                 }}
               >
                 Purchase
@@ -1285,8 +1300,11 @@ export default function SalesForm() {
               <Button 
                 className={`h-6 text-xs px-3 ${onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
                 onClick={() => {
-                  window.history.pushState({}, '', '/sales-form?type=online');
+                  window.history.replaceState({}, '', '/sales-form?type=online');
                   setLocation('/sales-form?type=online');
+                  setTimeout(() => {
+                    window.location.href = '/sales-form?type=online';
+                  }, 50);
                 }}
               >
                 {onlineMode ? 'Online' : 'Sales Online'}
@@ -1294,8 +1312,11 @@ export default function SalesForm() {
               <Button 
                 className={`h-6 text-xs px-3 ${!onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
                 onClick={() => {
-                  window.history.pushState({}, '', '/sales-form?type=offline');
+                  window.history.replaceState({}, '', '/sales-form?type=offline');
                   setLocation('/sales-form?type=offline');
+                  setTimeout(() => {
+                    window.location.href = '/sales-form?type=offline';
+                  }, 50);
                 }}
               >
                 {!onlineMode ? 'Offline' : 'Sales Offline'}
