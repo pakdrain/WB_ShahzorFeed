@@ -312,39 +312,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Login endpoint
-  app.post('/api/auth/login', async (req, res) => {
+  app.post('/api/auth/login', async (req: Request, res: Response) => {
+    const { userName, userPassword } = req.body;
+
+    if (!userName || !userPassword) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Username and password are required' 
+      });
+    }
+
     try {
-      const { userName, userPassword } = req.body;
-
-      if (!userName || !userPassword) {
-        return res.status(400).json({ error: 'Username and password are required' });
-      }
-
-      const userResult = await pool.query(
-        'SELECT userid, userName, branch_id FROM users WHERE userName = $1 AND userPassword = $2',
-        [userName, userPassword]
+      const result = await pool.query(
+        `SELECT u.userid, u.userName, u.userPassword, u.branchId, b.branch_name as branchName 
+         FROM users u 
+         LEFT JOIN branches b ON u.branchId = b.branch_id 
+         WHERE u.userName = $1`,
+        [userName]
       );
 
-      if (userResult.rows.length === 0) {
-        return res.status(401).json({ error: 'Invalid username or password' });
+      if (result.rows.length === 0) {
+        return res.status(401).json({ 
+          success: false, 
+          message: 'Invalid username or password' 
+        });
       }
 
-      const user = userResult.rows[0];
+      const user = result.rows[0];
 
-      console.log('✅ User logged in successfully:', userName);
-      res.json({
-        success: true,
-        message: 'Login successful',
-        user: { 
-          userid: user.userid,
-          userName: user.userName,
-          branchId: user.branch_id
-        }
+      // Simple password comparison (in production, use bcrypt)
+      if (user.userpassword !== userPassword) {
+        return res.status(401).json({ 
+          success: false, 
+          message: 'Invalid username or password' 
+        });
+      }
+
+      // Remove password from response
+      const { userpassword, ...userWithoutPassword } = user;
+
+      res.json({ 
+        success: true, 
+        user: userWithoutPassword 
       });
-
-    } catch (error: any) {
-      console.error('❌ Login error:', error);
-      res.status(500).json({ error: 'Login failed: ' + error.message });
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Internal server error' 
+      });
     }
   });
 

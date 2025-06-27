@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -94,9 +94,14 @@ export default function Login() {
     onSuccess: (data) => {
       if (data.success) {
         // Use auth context to login
-        login(data.user);
-        // Redirect to purchase form
-        setLocation("/purchase-form");
+        login({
+          userid: data.user.userid,
+          userName: data.user.userName,
+          branchId: data.user.branchId,
+          branchName: data.user.branchName
+        });
+
+        setLocation('/purchase-form');
       }
     },
     onError: (error) => {
@@ -180,14 +185,14 @@ export default function Login() {
                   Register
                 </TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="login" className="mt-6">
                 <CardTitle className="text-2xl text-white">Welcome Back</CardTitle>
                 <CardDescription className="text-gray-400">
                   Enter your credentials to access the system
                 </CardDescription>
               </TabsContent>
-              
+
               <TabsContent value="register" className="mt-6">
                 <CardTitle className="text-2xl text-white">Create Account</CardTitle>
                 <CardDescription className="text-gray-400">

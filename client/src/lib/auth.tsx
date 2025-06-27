@@ -4,6 +4,7 @@ interface User {
   userid: number;
   userName: string;
   branchId: number;
+  branchName?: string;
 }
 
 interface AuthContextType {

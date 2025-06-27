@@ -10,9 +10,11 @@ import WeightDisplayTable from '@/components/weight-display-table';
 import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
+import { useAuth } from '@/lib/auth';
 
 export default function PurchaseForm() {
   const [location, setLocation] = useLocation();
+  const { user } = useAuth();
   const [searchSlipNo, setSearchSlipNo] = useState('');
   const [searchVehicleNo, setSearchVehicleNo] = useState('');
   const [activeTab, setActiveTab] = useState('purchase');
@@ -1174,7 +1176,8 @@ export default function PurchaseForm() {
           setFormData(prev => ({
             ...prev,
             branchId: String(defaultBranch.branch_id),
-            branch: String(defaultBranch.branch_id)
+            branch: String(defaultBranch.branch_id),
+            createdBy: user?.userid || ''
           }));
         }
       })
