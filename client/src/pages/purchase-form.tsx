@@ -2366,13 +2366,12 @@ export default function PurchaseForm() {
             {/* Top buttons row - above details section */}
             <div className="flex gap-2 mb-2">
               <Button 
-                className={`h-6 text-xs px-3 ${selectedForm === 'purchase' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-                onClick={() => setSelectedForm('purchase')}
+                className="h-6 text-xs px-3 bg-blue-600 text-white"
               >
                 Purchase
               </Button>
               <Button 
-                className={`h-6 text-xs px-3 ${selectedForm === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                className="h-6 text-xs px-3 bg-gray-300 text-black"
                 onClick={() => {
                   // Navigate to sales form
                   const urlParams = new URLSearchParams(window.location.search);

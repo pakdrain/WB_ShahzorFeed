@@ -67,6 +67,18 @@ export default function Sidebar() {
     });
   };
 
+  // Helper function to check if a path is active
+  const isActive = (path: string, queryParam?: string) => {
+    const currentPath = location.split('?')[0];
+    const currentQuery = new URLSearchParams(location.split('?')[1] || '');
+
+    if (queryParam) {
+      const expectedParam = queryParam.split('=');
+      return currentPath === path && currentQuery.get(expectedParam[0]) === expectedParam[1];
+    }
+    return currentPath === path;
+  };
+
   // Auto-expand sections that have active sub-items and collapse others
   useEffect(() => {
     let activeSection = '';
@@ -170,7 +182,7 @@ export default function Sidebar() {
                           const currentPath = location.split('?')[0];
                           const currentParams = new URLSearchParams(location.split('?')[1] || '');
                           const subItemParams = new URLSearchParams(subItem.href.split('?')[1] || '');
-                          
+
                           // Check if this sub-item matches the current route
                           const isSubActive = currentPath === basePath && 
                             currentParams.get('type') === subItemParams.get('type');

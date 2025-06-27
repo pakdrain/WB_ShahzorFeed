@@ -1298,28 +1298,22 @@ export default function SalesForm() {
                 Purchase
               </Button>
               <Button 
-                className={`h-6 text-xs px-3 ${onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-                onClick={() => {
-                  window.history.replaceState({}, '', '/sales-form?type=online');
-                  setLocation('/sales-form?type=online');
-                  setTimeout(() => {
-                    window.location.href = '/sales-form?type=online';
-                  }, 50);
-                }}
+                className="h-6 text-xs px-3 bg-blue-600 text-white"
               >
-                {onlineMode ? 'Online' : 'Sales Online'}
+                Sales
               </Button>
               <Button 
-                className={`h-6 text-xs px-3 ${!onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                className="h-6 text-xs px-3 bg-gray-300 text-black"
                 onClick={() => {
-                  window.history.replaceState({}, '', '/sales-form?type=offline');
-                  setLocation('/sales-form?type=offline');
+                  // Navigate to offline form
+                  window.history.replaceState({}, '', '/purchase-form?type=offline');
+                  setLocation('/purchase-form?type=offline');
                   setTimeout(() => {
-                    window.location.href = '/sales-form?type=offline';
+                    window.location.href = '/purchase-form?type=offline';
                   }, 50);
                 }}
               >
-                {!onlineMode ? 'Offline' : 'Sales Offline'}
+                Offline
               </Button>
             </div>
 
