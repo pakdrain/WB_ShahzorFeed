@@ -1,10 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { useLocation } from 'wouter';
+import { useAuth } from '@/lib/auth';
 import WeightIndicator from '@/components/weight-indicator';
 import WeightDisplayTable from '@/components/weight-display-table';
 import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
@@ -17,7 +22,7 @@ export default function SalesForm() {
   const { user } = useAuth();
   const [searchSlipNo, setSearchSlipNo] = useState('');
   const [searchVehicleNo, setSearchVehicleNo] = useState('');
-  
+
   // Sales data state - mapped to database columns
   const [salesData, setSalesData] = useState<any[]>(
     Array.from({ length: 8 }, (_, index) => ({
@@ -63,7 +68,7 @@ export default function SalesForm() {
       return newData;
     });
   };
-  
+
   // Fetch all first weight records
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ['/api/purchase/first-weight-records'],
@@ -94,11 +99,11 @@ export default function SalesForm() {
       if (data && data.master) {
         const master = data.master;
         const details = data.details && data.details.length > 0 ? data.details[0] : {};
-        
+
         // Enable edit mode
         setIsEditMode(true);
         setEditingWbId(master.wb_id);
-        
+
         // Load all the form data including detail table data
         setFormData(prev => ({
           ...prev,
@@ -131,14 +136,14 @@ export default function SalesForm() {
           branch: master.branch_id ? String(master.branch_id) : '',
           branchId: master.branch_id ? String(master.branch_id) : ''
         }));
-        
+
         // Set online/offline status based on database values
         if (master.offline_entry === 'Yes') {
           setOnlineMode(false);
         } else if (master.online_entry === 'Yes') {
           setOnlineMode(true);
         }
-        
+
         // Load sales data from details if it's a sales record
         if (master.entry_type === 'SALE' && data.details && data.details.length > 0) {
           const salesRows = data.details.map((detail: any, index: number) => ({
@@ -158,7 +163,7 @@ export default function SalesForm() {
             itemId: detail.item_id || '',
             itemCode: detail.item_code || ''
           }));
-          
+
           // Fill remaining rows with empty data
           while (salesRows.length < 8) {
             salesRows.push({
@@ -179,7 +184,7 @@ export default function SalesForm() {
               itemCode: ''
             });
           }
-          
+
           setSalesData(salesRows);
           console.log('Sales data loaded for editing:', salesRows);
         }
@@ -279,7 +284,7 @@ export default function SalesForm() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
 
-  
+
   const [onlineMode, setOnlineMode] = useState(() => {
     // Initialize based on URL parameter immediately
     const urlParams = new URLSearchParams(window.location.search);
@@ -309,10 +314,10 @@ export default function SalesForm() {
 
     // Bardana Weight = weight per bag * number of bags
     const bardanaWeight = wtPerBag * noOfBags;
-    
+
     // Gross Weight = First Weight - Second Weight
     const grossWeight = firstWeight - secondWeight;
-    
+
     // Net Weight = First Weight - Second Weight - Bardana Weight
     const netWeight = grossWeight - bardanaWeight;
 
@@ -344,7 +349,7 @@ export default function SalesForm() {
 
       if (data && data.items && data.items.length > 0) {
         const items = data.items;
-        
+
         // Update sales data with fetched DC data including hidden columns
         const updatedSalesData = items.map((item: any, index: number) => ({
           doId: `${index + 1}`, // Auto-generated ID
@@ -363,7 +368,7 @@ export default function SalesForm() {
           itemId: item.item_id || '',
           itemCode: item.item_code || ''
         }));
-        
+
         // Fill remaining rows with empty data if needed
         while (updatedSalesData.length < 8) {
           updatedSalesData.push({
@@ -384,7 +389,7 @@ export default function SalesForm() {
             itemCode: ''
           });
         }
-        
+
         setSalesData(updatedSalesData);
         console.log('DC data fetched and populated successfully:', updatedSalesData);
       } else {
@@ -408,19 +413,19 @@ export default function SalesForm() {
     const urlParams = new URLSearchParams(window.location.search);
     const typeMode = urlParams.get('type');
     const isOfflineMode = typeMode === 'offline';
-    
+
     // Sync onlineMode state with URL parameter
     if (typeMode === 'offline') {
       setOnlineMode(false);
     } else if (typeMode === 'online') {
       setOnlineMode(true);
     }
-    
+
     // Fetch next slip number for SALE entry type
     try {
       const response = await fetch('/api/purchases/next-slip?entry_type=SALE');
       const data = await response.json();
-      
+
       setFormData({
         ...initialFormData,
         slipNo: data.nextSlipNo,
@@ -447,7 +452,7 @@ export default function SalesForm() {
         slipDate: new Date().toISOString()
       });
     }
-    
+
     // Reset sales data table
     setSalesData(Array.from({ length: 8 }, (_, index) => ({
       doId: '',
@@ -461,7 +466,7 @@ export default function SalesForm() {
       doQty: '',
       branch: ''
     })));
-    
+
     setIsEditMode(false);
     setEditingWbId(null);
   };
@@ -495,7 +500,7 @@ export default function SalesForm() {
       if (value === '' || /^\d*\.?\d*$/.test(value)) {
         setFormData(prev => {
           const newData = { ...prev, [name]: value };
-          
+
           // Auto-calculate bardana weight when wtPerBag or noOfBags changes
           if (name === 'wtPerBag' || name === 'noOfBags') {
             const wtPerBag = parseFloat(name === 'wtPerBag' ? value : prev.wtPerBag) || 0;
@@ -503,7 +508,7 @@ export default function SalesForm() {
             const calculatedBardanaWeight = wtPerBag * noOfBags;
             newData.bardanaWeight = calculatedBardanaWeight > 0 ? String(calculatedBardanaWeight) : '';
           }
-          
+
           return newData;
         });
       }
@@ -514,24 +519,24 @@ export default function SalesForm() {
 
   const toggleOnlineMode = (isOnline: boolean) => {
     console.log('toggleOnlineMode called with:', isOnline, 'Current onlineMode:', onlineMode);
-    
+
     // Only update if mode actually changes
     if (onlineMode !== isOnline) {
       setOnlineMode(isOnline);
-      
+
       // Update URL to reflect the current mode
       const urlParams = new URLSearchParams(window.location.search);
       urlParams.set('type', isOnline ? 'online' : 'offline');
       const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
       window.history.replaceState({}, '', newUrl);
-      
+
       // Update form data to reflect the mode change
       setFormData(prev => ({
         ...prev,
         onlineEntry: isOnline ? 'Yes' : 'No',
         offlineEntry: isOnline ? 'No' : 'Yes'
       }));
-      
+
       console.log('Mode changed to:', isOnline ? 'ONLINE' : 'OFFLINE');
     }
   };
@@ -545,15 +550,15 @@ export default function SalesForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cameraId: 1 })
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         console.log('OCR Response:', result);
-        
+
         if (result.success && result.plateNumber) {
           setFormData(prev => ({ ...prev, vehicleNo: result.plateNumber }));
           console.log('License plate detected:', result.plateNumber, 'Method:', result.method);
-          
+
           // Show success message with method info
           const methodText = result.method === 'camera_anpr_api' ? 'Camera ANPR' : 'Computer Vision OCR';
           alert(`License plate detected: ${result.plateNumber}\nMethod: ${methodText}\nConfidence: ${(result.confidence * 100).toFixed(0)}%`);
@@ -608,9 +613,9 @@ export default function SalesForm() {
     const urlParams = new URLSearchParams(window.location.search);
     const editWbId = urlParams.get('edit');
     const typeMode = urlParams.get('type');
-    
+
     console.log('URL parameters:', { editWbId, typeMode });
-    
+
     // Set online/offline mode based on type parameter - IMMEDIATE UPDATE
     if (typeMode === 'offline') {
       console.log('Setting OFFLINE mode from URL parameter');
@@ -619,7 +624,7 @@ export default function SalesForm() {
       console.log('Setting ONLINE mode from URL parameter');
       setOnlineMode(true);
     }
-    
+
     if (editWbId) {
       // Load record for editing by wb_id - would need to implement loadDataByWbId for sales
       console.log('Edit mode for wb_id:', editWbId);
@@ -656,7 +661,7 @@ export default function SalesForm() {
       .then((data: any[]) => {
         setBranches(data);
         console.log('Branches fetched:', data);
-        
+
         // Set default branch based on logged-in user's branch
         if (data.length > 0 && (!formData.branchId || formData.branchId === '')) {
           const userBranchId = user?.branchId;
@@ -701,7 +706,7 @@ export default function SalesForm() {
     try {
       const response = await fetch('/api/weight/data');
       const weightData = await response.json();
-      
+
       // Update the firstWeight field with current weight reading
       setFormData(prev => ({
         ...prev,
@@ -717,9 +722,9 @@ export default function SalesForm() {
     try {
       const response = await fetch('/api/weight/data');
       const weightData = await response.json();
-      
+
       const currentTime = new Date().toISOString();
-      
+
       // Update the secondWeight field with current weight reading and set slip_out_time
       setFormData(prev => ({
         ...prev,
@@ -734,14 +739,14 @@ export default function SalesForm() {
 
   const handleSave = async () => {
     setLoading(true);
-    
+
     // Validate that first weight is not null/empty when saving
     if (!formData.firstWeight || formData.firstWeight.trim() === '' || parseFloat(formData.firstWeight) <= 0) {
       alert('First weight is required and must be greater than 0');
       setLoading(false);
       return;
     }
-    
+
     try {
       // Generate WB_ID for the sales record
       const wbIdResponse = await fetch('/api/purchases', {
@@ -819,11 +824,12 @@ export default function SalesForm() {
           igp_qty: row.dcQty && row.dcQty.trim() !== '' ? parseFloat(row.dcQty) : null,
           balance_qty: null,
           customer_name: row.customerName || null,
+```python
           do_no: row.doNo || null,
           do_qty: row.doQty && row.doQty.trim() !== '' ? parseFloat(row.doQty) : null,
           dc_qty: row.dcQty && row.dcQty.trim() !== '' ? parseFloat(row.dcQty) : null
         };
-        
+
         const salesItemResponse = await fetch('/api/purchase-items', {
           method: 'POST',
           headers: {
@@ -831,7 +837,7 @@ export default function SalesForm() {
           },
           body: JSON.stringify(salesItemPayload),
         });
-        
+
         if (!salesItemResponse.ok) {
           console.error('Failed to save sales item:', row);
         }
@@ -839,7 +845,7 @@ export default function SalesForm() {
 
       console.log('Sales data saved successfully');
       alert('Sales data saved successfully!');
-      
+
       // Reset sales data table after successful save
       setSalesData(Array.from({ length: 8 }, (_, index) => ({
         doId: '',
@@ -858,9 +864,9 @@ export default function SalesForm() {
         itemId: '',
         itemCode: ''
       })));
-      
+
       console.log('Sales data table cleared after save');
-      
+
       // Auto-print after successful save
       setTimeout(() => {
         try {
@@ -886,7 +892,7 @@ export default function SalesForm() {
     <h2>WEIGHBRIDGE SLIP</h2>
     <h3>SALES ENTRY</h3>
   </div>
-  
+
   <div class="two-column">
     <div class="left-section">
       <div>DC # ${salesData.find(row => row.dcNo)?.dcNo || ''}</div>
@@ -900,7 +906,7 @@ export default function SalesForm() {
       <div>Time OUT: ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString() : ''}</div>
     </div>
   </div>
-  
+
   <div class="weight-section">
     <div class="two-column">
       <div class="left-section">
@@ -914,7 +920,7 @@ export default function SalesForm() {
       </div>
     </div>
   </div>
-  
+
   <table>
     <thead>
       <tr>
@@ -939,17 +945,17 @@ export default function SalesForm() {
       `).join('')}
     </tbody>
   </table>
-  
+
   <div class="section">
     <div><strong>Driver:</strong> ${formData.driverName || ''}</div>
   </div>
-  
+
   <div class="section">
     <div><strong>Remarks:</strong> ${formData.remarks || ''}</div>
   </div>
 </body>
 </html>`;
-          
+
           const printWindow = window.open('', '_blank');
           if (printWindow) {
             printWindow.document.write(printHTML);
@@ -960,10 +966,10 @@ export default function SalesForm() {
           console.error('Auto-print error:', printError);
         }
       }, 500);
-      
+
       // Reset form to clean state and increment slip number for next entry
       resetFormToInitial();
-      
+
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to save sales data.';
       alert(errorMessage);
@@ -1030,7 +1036,7 @@ export default function SalesForm() {
                       console.log('Clicked record:', record);
                       console.log('wb_id:', record.wb_id);
                       console.log('entry_type:', record.entry_type);
-                      
+
                       if (record.wb_id) {
                         // Load the data for editing
                         loadDataByWbId(record.wb_id);
@@ -1240,7 +1246,7 @@ export default function SalesForm() {
                     <Button className="h-5 bg-red-500 text-xs">Exit</Button>
                   </div>
                 </div>
-                
+
                 {/* Clean Camera Feed - just the video content */}
                 <div className="mt-2 h-24 w-full overflow-hidden">
                   <VideoStreamFullscreen
@@ -1503,7 +1509,7 @@ export default function SalesForm() {
                         data-form-type="other"
                       />
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <label className="text-xs font-medium text-black">Total Weight Out:</label>
                       <input
@@ -1516,7 +1522,7 @@ export default function SalesForm() {
                         data-form-type="other"
                       />
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <label className="text-xs font-medium text-black">Total Feed Bags:</label>
                       <input
@@ -1530,7 +1536,7 @@ export default function SalesForm() {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <label className="text-sm font-medium text-black">Total Weight Dill:</label>
                     <input
@@ -1543,7 +1549,7 @@ export default function SalesForm() {
                       data-form-type="other"
                     />
                   </div>
-                  
+
                   <div className="flex items-center space-x-2">
                     <label className="text-sm font-medium text-black">Total Feed Bags:</label>
                     <input
