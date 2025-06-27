@@ -265,7 +265,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  console.log('✅ Using users table with columns: userName, userPassword');
+  console.log('✅ Using users table with columns: userid, username, userpassword, branchid');
 
  // Register endpoint
   app.post('/api/auth/register', async (req, res) => {
@@ -281,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const existingUser = await pool.query(
-        'SELECT * FROM users WHERE user_name = $1',
+        'SELECT * FROM users WHERE username = $1',
         [userName]
       );
 
@@ -290,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const result = await pool.query(
-        'INSERT INTO users (user_name, user_password, branch_id) VALUES ($1, $2, $3) RETURNING userid, user_name, branch_id',
+        'INSERT INTO users (username, userpassword, branchid) VALUES ($1, $2, $3) RETURNING userid, username, branchid',
         [userName, userPassword, parseInt(branchId)]
       );
 
@@ -300,8 +300,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'User registered successfully',
         user: { 
           userid: result.rows[0].userid,
-          userName: result.rows[0].user_name,
-          branchId: result.rows[0].branch_id
+          userName: result.rows[0].username,
+          branchId: result.rows[0].branchid
         }
       });
 
@@ -324,10 +324,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const result = await pool.query(
-        `SELECT u.userid, u.user_name as userName, u.user_password as userPassword, u.branch_id as branchId, b.branch_name as branchName 
+        `SELECT u.userid, u.username, u.userpassword, u.branchid, b.branch_name as branchName 
          FROM users u 
-         LEFT JOIN branches b ON u.branch_id = b.branch_id 
-         WHERE u.user_name = $1`,
+         LEFT JOIN branches b ON u.branchid = b.branch_id 
+         WHERE u.username = $1`,
         [userName]
       );
 
@@ -348,12 +348,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Remove password from response
-      const { userpassword, ...userWithoutPassword } = user;
-
+      // Remove password from response and format to match expected structure
       res.json({ 
         success: true, 
-        user: userWithoutPassword 
+        user: {
+          userid: user.userid,
+          userName: user.username,
+          branchId: user.branchid,
+          branchName: user.branchname
+        }
       });
     } catch (error) {
       console.error('Login error:', error);
@@ -383,9 +386,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await pool.query(`
         CREATE TABLE IF NOT EXISTS users (
           userid SERIAL PRIMARY KEY,
-          user_name VARCHAR(1000),
-          user_password VARCHAR(1000),
-          branch_id INTEGER
+          username VARCHAR(1000),
+          userpassword VARCHAR(1000),
+          branchid INTEGER
         );
       `);
 
