@@ -134,7 +134,10 @@ export default function Sidebar() {
                 const hasActiveSubItem = item.subItems?.some(subItem => {
                   const basePath = subItem.href.split('?')[0];
                   const currentPath = location.split('?')[0];
-                  return currentPath === basePath;
+                  const currentParams = new URLSearchParams(location.split('?')[1] || '');
+                  const subItemParams = new URLSearchParams(subItem.href.split('?')[1] || '');
+                  return currentPath === basePath && 
+                    currentParams.get('type') === subItemParams.get('type');
                 });
 
                 return (

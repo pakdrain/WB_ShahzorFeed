@@ -281,7 +281,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const existingUser = await pool.query(
-        'SELECT * FROM users WHERE userName = $1',
+        'SELECT * FROM users WHERE user_name = $1',
         [userName]
       );
 
@@ -290,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const result = await pool.query(
-        'INSERT INTO users (userName, userPassword, branch_id) VALUES ($1, $2, $3) RETURNING userid, userName, branch_id',
+        'INSERT INTO users (user_name, user_password, branch_id) VALUES ($1, $2, $3) RETURNING userid, user_name, branch_id',
         [userName, userPassword, parseInt(branchId)]
       );
 
@@ -300,7 +300,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: 'User registered successfully',
         user: { 
           userid: result.rows[0].userid,
-          userName: result.rows[0].userName,
+          userName: result.rows[0].user_name,
           branchId: result.rows[0].branch_id
         }
       });
@@ -324,10 +324,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const result = await pool.query(
-        `SELECT u.userid, u.userName, u.userPassword, u.branchId, b.branch_name as branchName 
+        `SELECT u.userid, u.user_name as userName, u.user_password as userPassword, u.branch_id as branchId, b.branch_name as branchName 
          FROM users u 
-         LEFT JOIN branches b ON u.branchId = b.branch_id 
-         WHERE u.userName = $1`,
+         LEFT JOIN branches b ON u.branch_id = b.branch_id 
+         WHERE u.user_name = $1`,
         [userName]
       );
 
@@ -383,8 +383,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await pool.query(`
         CREATE TABLE IF NOT EXISTS users (
           userid SERIAL PRIMARY KEY,
-          userName VARCHAR(1000),
-          userPassword VARCHAR(1000),
+          user_name VARCHAR(1000),
+          user_password VARCHAR(1000),
           branch_id INTEGER
         );
       `);
