@@ -180,7 +180,7 @@ export default function Sidebar() {
                               className={cn(
                                 "w-full justify-start text-left h-10 px-4 ml-2",
                                 isSubActive
-                                  ? "bg-monitoring-blue text-white hover:bg-monitoring-blue/90"
+                                  ? "bg-blue-600 text-white hover:bg-blue-700"
                                   : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
                               )}
                               onClick={() => {

@@ -2354,13 +2354,25 @@ export default function PurchaseForm() {
             {/* Top buttons row - above details section */}
             <div className="flex gap-2 mb-2">
               <Button 
-                className={`h-6 text-xs px-3 ${selectedForm === 'purchase' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-                onClick={() => setSelectedForm('purchase')}
+                className={`h-6 text-xs px-3 ${onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                onClick={() => {
+                  const currentPath = location.split('?')[0];
+                  setLocation(`${currentPath}?type=online`);
+                }}
               >
-                Purchase
+                Purchase Online
               </Button>
               <Button 
-                className={`h-6 text-xs px-3 ${selectedForm === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                className={`h-6 text-xs px-3 ${!onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                onClick={() => {
+                  const currentPath = location.split('?')[0];
+                  setLocation(`${currentPath}?type=offline`);
+                }}
+              >
+                Purchase Offline
+              </Button>
+              <Button 
+                className="h-6 text-xs px-3 bg-gray-300 text-black"
                 onClick={() => {
                   // Navigate to sales form
                   const urlParams = new URLSearchParams(window.location.search);
@@ -2370,12 +2382,6 @@ export default function PurchaseForm() {
                 }}
               >
                 Sales
-              </Button>
-              <Button 
-                className={`h-6 text-xs px-3 ${selectedForm === 'offline' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-                onClick={() => setSelectedForm('offline')}
-              >
-                Offline
               </Button>
             </div>
 

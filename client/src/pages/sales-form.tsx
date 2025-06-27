@@ -1281,18 +1281,22 @@ export default function SalesForm() {
                 Purchase
               </Button>
               <Button 
-                className="h-6 text-xs px-3 bg-blue-600 text-white"
-              >
-                Sales
-              </Button>
-              <Button 
-                className="h-6 text-xs px-3 bg-gray-300 text-black"
+                className={`h-6 text-xs px-3 ${onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
                 onClick={() => {
-                  // Set offline mode
-                  toggleOnlineMode(false);
+                  const currentPath = location.split('?')[0];
+                  setLocation(`${currentPath}?type=online`);
                 }}
               >
-                Offline
+                Sales Online
+              </Button>
+              <Button 
+                className={`h-6 text-xs px-3 ${!onlineMode ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
+                onClick={() => {
+                  const currentPath = location.split('?')[0];
+                  setLocation(`${currentPath}?type=offline`);
+                }}
+              >
+                Sales Offline
               </Button>
             </div>
 
