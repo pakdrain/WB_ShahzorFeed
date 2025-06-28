@@ -101,7 +101,7 @@ export default function Sidebar() {
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => {
       const expandableItems = ['Purchase Form', 'Sale Form'];
-      
+
       // If clicking on the same item that's already expanded, collapse it
       if (prev.includes(itemName)) {
         return prev.filter(name => name !== itemName);
@@ -155,7 +155,7 @@ export default function Sidebar() {
         if (hasActiveSubItem && !expandedItems.includes(item.name)) {
           setExpandedItems(prev => [...prev, item.name]);
         }
-        
+
         // Also check if we're on purchase-form or sales-form pages to keep them expanded
         const currentPath = location.split('?')[0];
         if ((currentPath === '/purchase-form' && item.name === 'Purchase Form') ||
