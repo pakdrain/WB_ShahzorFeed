@@ -235,7 +235,10 @@ export default function Sidebar() {
                           ? "bg-blue-600 text-white hover:bg-blue-700"
                           : "text-gray-300 hover:bg-monitoring-gray hover:text-white"
                       )}
-                      onClick={() => toggleExpanded(item.name)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        toggleExpanded(item.name);
+                      }}
                     >
                       <div className="flex items-center">
                         <item.icon className="mr-3 h-5 w-5" />
