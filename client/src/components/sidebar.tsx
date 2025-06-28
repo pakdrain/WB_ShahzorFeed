@@ -16,45 +16,58 @@ import {
   RotateCcw,
   Network,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 
-const navigation = [
-  { name: 'Home', href: '/', icon: Home },
-  { 
-    name: 'Purchase Form', 
-    icon: FileText, 
-    hasSubItems: true,
-    subItems: [
-      { name: 'Purchase Online', href: '/purchase-form?type=online', icon: FileText },
-      { name: 'Purchase Offline', href: '/purchase-form?type=offline', icon: FileText },
-    ]
-  },
-  { 
-    name: 'Sale Form', 
-    icon: ShoppingCart, 
-    hasSubItems: true,
-    subItems: [
-      { name: 'Sales Online', href: '/sales-form?type=online', icon: ShoppingCart },
-      { name: 'Sales Offline', href: '/sales-form?type=offline', icon: ShoppingCart },
-    ]
-  },
-  { name: 'Sale Return', href: '/sale-return', icon: RotateCcw },
-  { name: 'Sale Node', href: '/sale-node', icon: Network },
-  { name: 'Reports', href: '/reports', icon: BarChart3 },
-  { name: 'Image Upload', href: '/image-upload', icon: Upload },
-  { name: 'Camera Settings', href: '/settings', icon: Settings },
-  { name: 'Weighbridge Settings', href: '/weighbridge-settings', icon: Scale },
-];
+const getNavigation = (isAdmin: boolean) => {
+  const baseNavigation = [
+    { name: 'Home', href: '/', icon: Home },
+    { 
+      name: 'Purchase Form', 
+      icon: FileText, 
+      hasSubItems: true,
+      subItems: [
+        { name: 'Purchase Online', href: '/purchase-form?type=online', icon: FileText },
+        { name: 'Purchase Offline', href: '/purchase-form?type=offline', icon: FileText },
+      ]
+    },
+    { 
+      name: 'Sale Form', 
+      icon: ShoppingCart, 
+      hasSubItems: true,
+      subItems: [
+        { name: 'Sales Online', href: '/sales-form?type=online', icon: ShoppingCart },
+        { name: 'Sales Offline', href: '/sales-form?type=offline', icon: ShoppingCart },
+      ]
+    },
+    { name: 'Sale Return', href: '/sale-return', icon: RotateCcw },
+    { name: 'Sale Node', href: '/sale-node', icon: Network },
+    { name: 'Reports', href: '/reports', icon: BarChart3 },
+    { name: 'Image Upload', href: '/image-upload', icon: Upload },
+    { name: 'Camera Settings', href: '/settings', icon: Settings },
+    { name: 'Weighbridge Settings', href: '/weighbridge-settings', icon: Scale },
+  ];
+
+  if (isAdmin) {
+    baseNavigation.splice(-2, 0, { name: 'Role', href: '/role-management', icon: Users });
+  }
+
+  return baseNavigation;
+};
 
 export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
+  
+  // Check if user is admin (you can adjust this logic based on your admin identification)
+  const isAdmin = user?.userName === 'admin' || user?.userid === 1;
+  const navigation = getNavigation(isAdmin);
   const sidebarRef = useRef(null);
 
   // Load expanded items from localStorage on component mount
@@ -239,11 +252,6 @@ export default function Sidebar() {
                                 )}
                                 onClick={() => {
                                   setIsMobileMenuOpen(false);
-                                  setTimeout(() => {
-                                    if (window.location.href !== subItem.href) {
-                                      window.location.href = subItem.href;
-                                    }
-                                  }, 50);
                                 }}
                               >
                                 <subItem.icon className="mr-3 h-4 w-4" />

@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { streamService } from "./stream-service";
 import { videoStreamService } from "./video-stream";
 import { z } from "zod";
-import pkg from "pg";
+import pkg from 'pg';
 const { Pool } = pkg;
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -907,7 +907,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Fetched latest master record: WB_ID ${result.rows[0].wb_id}`);
       res.json(result.rows[0]);
-    } catch (error: any) {
+        } catch (error: any) {
       console.error('Error fetching latest master record:', error);
       res.status(500).json({ error: 'Failed to fetch latest master record' });
     }
@@ -1604,6 +1604,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error('Error fetching deduction data:', error);
       res.status(500).json({ error: 'Failed to fetch deduction data' });
+    }
+  });
+
+  // Weighbridge Settings Routes
+  app.get('/api/weighbridge-settings', async (req, res) => {
+    try {
+      const query = 'SELECT * FROM weighbridge_settings ORDER BY id LIMIT 1';
+      const result = await pool.query(query);
+
+      if (result.rows.length === 0) {
+        return res.json({
+          id: 1,
+          port: 'COM1',
+          baudRate: 9600,
+          dataBits: 8,
+          stopBits: 1,
+          parity: 'none',
+          autoCapture: false,
+          threshold: 10.0,
+          stabilityTime: 3000,
+          tareEnabled: true,
+          calibrationFactor: 1.0
+        });
+      }
+
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Error fetching weighbridge settings:', error);
+      res.status(500).json({ error: 'Failed to fetch weighbridge settings' });
+    }
+  });
+
+  // User Permissions Routes
+  app.get('/api/users/:userId/permissions', async (req, res) => {
+    try {
+      const { userId } = req.params;
+
+      // First check if user exists and get user info
+      const userQuery = 'SELECT u.userid, u.username, b.branch_name FROM users u LEFT JOIN branches b ON u.branchid = b.branch_id WHERE u.userid = $1';
+      const userResult = await pool.query(userQuery, [userId]);
+
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      const user = userResult.rows[0];
+
+      // Get user permissions
+      const permissionsQuery = 'SELECT permission_id FROM user_permissions WHERE userid = $1';
+      const permissionsResult = await pool.query(permissionsQuery, [userId]);
+
+      const permissions = permissionsResult.rows.map(row => row.permission_id);
+
+      res.json({
+        userInfo: {
+          userName: user.username,
+          branchName: user.branch_name || 'Unknown Branch'
+        },
+        permissions
+      });
+    } catch (error) {
+      console.error('Error fetching user permissions:', error);
+      res.status(500).json({ error: 'Failed to fetch user permissions' });
+    }
+  });
+
+  app.put('/api/users/:userId/permissions', async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { permissions } = req.body;
+
+      // Check if user exists
+      const userQuery = 'SELECT userid FROM users WHERE userid = $1';
+      const userResult = await pool.query(userQuery, [userId]);
+
+      if (userResult.rows.length === 0) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Create user_permissions table if it doesn't exist
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS user_permissions (
+          id SERIAL PRIMARY KEY,
+          userid INTEGER REFERENCES users(userid) ON DELETE CASCADE,
+          permission_id VARCHAR(100) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(userid, permission_id)
+        )
+      `);
+
+      // Delete existing permissions for this user
+      await pool.query('DELETE FROM user_permissions WHERE userid = $1', [userId]);
+
+      // Insert new permissions
+      if (permissions && permissions.length > 0) {
+        const insertQuery = 'INSERT INTO user_permissions (userid, permission_id) VALUES ($1, $2)';
+        for (const permission of permissions) {
+          await pool.query(insertQuery, [userId, permission]);
+        }
+      }
+
+      res.json({ success: true, message: 'Permissions updated successfully' });
+    } catch (error) {
+      console.error('Error updating user permissions:', error);
+      res.status(500).json({ error: 'Failed to update user permissions' });
     }
   });
 

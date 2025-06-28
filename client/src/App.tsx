@@ -10,6 +10,7 @@ import Login from "@/pages/login";
 import CameraMonitor from "@/pages/camera-monitor";
 import CameraSettings from "@/pages/camera-settings";
 import WeighbridgeSettings from "@/pages/weighbridge-settings";
+import RoleManagement from "@/pages/role-management";
 import PurchaseForm from "@/pages/purchase-form";
 import SalesForm from "@/pages/sales-form";
 import Reports from "@/pages/reports";
@@ -27,6 +28,7 @@ function ProtectedApp() {
           <Route path="/" component={CameraMonitor} />
           <Route path="/settings" component={CameraSettings} />
           <Route path="/weighbridge-settings" component={WeighbridgeSettings} />
+          <Route path="/role-management" component={RoleManagement} />
           <Route path="/purchase-form" component={PurchaseForm} />
           <Route path="/sales-form" component={SalesForm} />
           <Route path="/sale-return" component={SaleReturn} />
