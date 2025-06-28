@@ -74,12 +74,15 @@ export default function Sidebar() {
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => {
       if (!prev.includes(itemName)) {
-        // If expanding this item, close other form items
+        // If expanding this item, close other expandable items
         if (itemName === 'Purchase Form' || itemName === 'Sale Form') {
+          // Close all other expandable forms when opening Purchase or Sale Form
+          return [itemName];
+        } else {
+          // For other items, close Purchase and Sale forms
           const filteredItems = prev.filter(name => name !== 'Purchase Form' && name !== 'Sale Form');
           return [...filteredItems, itemName];
         }
-        return [...prev, itemName];
       } else {
         return prev.filter(name => name !== itemName);
       }
@@ -265,7 +268,11 @@ export default function Sidebar() {
                           ? "bg-blue-600 text-white hover:bg-blue-700"
                           : "text-gray-300 hover:bg-monitoring-gray hover:text-white"
                       )}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        // Close Purchase and Sale forms when clicking other items
+                        setExpandedItems(prev => prev.filter(name => name !== 'Purchase Form' && name !== 'Sale Form'));
+                      }}
                     >
                       <item.icon className="mr-3 h-5 w-5" />
                       {item.name}
