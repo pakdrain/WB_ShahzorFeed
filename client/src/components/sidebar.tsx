@@ -118,6 +118,14 @@ export default function Sidebar() {
     });
   };
 
+  const handleNavigation = (href: string) => {
+    // Close all expandable items when navigating to a non-expandable route
+    const expandableItems = ['Purchase Form', 'Sale Form'];
+    setExpandedItems(prev => prev.filter(name => !expandableItems.includes(name)));
+    setIsMobileMenuOpen(false);
+    window.location.href = href;
+  };
+
 
   const isActive = (path: string, queryParam?: string) => {
     const currentPath = location.split('?')[0];
@@ -284,8 +292,9 @@ export default function Sidebar() {
                           ? "bg-blue-600 text-white hover:bg-blue-700"
                           : "text-gray-300 hover:bg-monitoring-gray hover:text-white"
                       )}
-                      onClick={() => {
-                        setIsMobileMenuOpen(false);
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleNavigation(item.href);
                       }}
                     >
                       <item.icon className="mr-3 h-5 w-5" />

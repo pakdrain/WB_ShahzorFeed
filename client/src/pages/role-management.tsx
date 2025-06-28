@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/lib/auth';
+import { Edit, Trash2 } from 'lucide-react';
 
 interface UserPermissions {
   userId: string;
@@ -176,6 +177,32 @@ export default function RoleManagement() {
     setCurrentView('assign');
   };
 
+  const handleDeleteUser = async (userPermissions: UserPermissions) => {
+    if (!confirm(`Are you sure you want to delete permissions for ${userPermissions.userName}?`)) {
+      return;
+    }
+
+    try {
+      // Remove from local state
+      const updatedUsers = savedUsers.filter(u => u.userId !== userPermissions.userId);
+      setSavedUsers(updatedUsers);
+      localStorage.setItem('userPermissions', JSON.stringify(updatedUsers));
+
+      // Delete from database
+      await fetch(`/api/users/${userPermissions.userId}/permissions`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      alert('User permissions deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting user permissions:', error);
+      alert('Error deleting user permissions');
+    }
+  };
+
   const permissionLabels = {
     home: 'Home',
     purchaseForm: 'Purchase Form',
@@ -345,14 +372,26 @@ export default function RoleManagement() {
                           </div>
                         </div>
                       </div>
-                      <Button 
-                        variant="outline" 
-                        size="lg"
-                        className="bg-white hover:bg-blue-50 border-2 border-blue-300 text-blue-600 font-bold px-6 py-3 ml-6"
-                        onClick={() => handleEditUser(userPermissions)}
-                      >
-                        ✏️ EDIT
-                      </Button>
+                      <div className="flex space-x-3 ml-6">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="bg-white hover:bg-blue-50 border-2 border-blue-300 text-blue-600 p-3"
+                          onClick={() => handleEditUser(userPermissions)}
+                          title="Edit User Permissions"
+                        >
+                          <Edit className="h-5 w-5" />
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          className="bg-white hover:bg-red-50 border-2 border-red-300 text-red-600 p-3"
+                          onClick={() => handleDeleteUser(userPermissions)}
+                          title="Delete User Permissions"
+                        >
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))
