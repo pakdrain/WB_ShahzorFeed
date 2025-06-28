@@ -1102,22 +1102,10 @@ export default function PurchaseForm() {
       console.log('Setting OFFLINE mode from URL parameter');
       setOnlineMode(false);
       setSelectedForm('purchase');
-      // Force update form data immediately
-      setFormData(prev => ({
-        ...prev,
-        onlineEntry: 'No',
-        offlineEntry: 'Yes'
-      }));
     } else if (typeMode === 'online') {
       console.log('Setting ONLINE mode from URL parameter');
       setOnlineMode(true);
       setSelectedForm('purchase');
-      // Force update form data immediately
-      setFormData(prev => ({
-        ...prev,
-        onlineEntry: 'Yes',
-        offlineEntry: 'No'
-      }));
     }
     
     if (editWbId) {
@@ -1159,6 +1147,23 @@ export default function PurchaseForm() {
       offlineEntry: onlineMode ? 'No' : 'Yes'
     }));
   }, [onlineMode]);
+
+  // Additional effect to handle URL changes for real-time mode switching
+  useEffect(() => {
+    const handleURLChange = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const typeMode = urlParams.get('type');
+      
+      if (typeMode === 'offline' && onlineMode) {
+        setOnlineMode(false);
+      } else if (typeMode === 'online' && !onlineMode) {
+        setOnlineMode(true);
+      }
+    };
+
+    // Check URL on component mount and location changes
+    handleURLChange();
+  }, [location, onlineMode]);
 
   useEffect(() => {
     // Fetch next slip number for PURCHASE entry type

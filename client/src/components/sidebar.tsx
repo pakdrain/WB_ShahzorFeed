@@ -88,29 +88,20 @@ export default function Sidebar() {
           const basePath = subItem.href.split('?')[0];
           const currentPath = location.split('?')[0];
           
-          // Get the current URL parameters
-          const currentQuery = location.split('?')[1] || '';
+          // Get the current URL parameters properly
+          const urlParts = location.split('?');
+          const currentQuery = urlParts.length > 1 ? urlParts[1] : '';
           const currentParams = new URLSearchParams(currentQuery);
           
           // Get the expected parameters from sub-item href
-          const subItemQuery = subItem.href.split('?')[1] || '';
+          const subItemParts = subItem.href.split('?');
+          const subItemQuery = subItemParts.length > 1 ? subItemParts[1] : '';
           const subItemParams = new URLSearchParams(subItemQuery);
           
           const currentType = currentParams.get('type');
           const expectedType = subItemParams.get('type');
           
           const isMatch = currentPath === basePath && currentType === expectedType;
-          
-          console.log('useEffect Active check:', {
-            itemName: item.name,
-            subItemName: subItem.name,
-            currentPath,
-            basePath,
-            currentType,
-            expectedType,
-            isMatch,
-            location
-          });
           
           return isMatch;
         });
@@ -194,7 +185,7 @@ export default function Sidebar() {
                       className={cn(
                         "w-full justify-between text-left h-12 px-4",
                         hasActiveSubItem
-                          ? "bg-monitoring-blue text-white hover:bg-monitoring-blue/90"
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
                           : "text-gray-300 hover:bg-monitoring-gray hover:text-white"
                       )}
                       onClick={() => toggleExpanded(item.name)}
@@ -239,7 +230,7 @@ export default function Sidebar() {
                                 className={cn(
                                   "w-full justify-start text-left h-10 px-4 ml-2",
                                   isSubActive
-                                    ? "bg-monitoring-blue text-white hover:bg-monitoring-blue/90"
+                                    ? "bg-blue-600 text-white hover:bg-blue-700"
                                     : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
                                 )}
                                 onClick={() => setIsMobileMenuOpen(false)}
@@ -263,7 +254,7 @@ export default function Sidebar() {
                       className={cn(
                         "w-full justify-start text-left h-12 px-4",
                         isActive
-                          ? "bg-monitoring-blue text-white hover:bg-monitoring-blue/90"
+                          ? "bg-blue-600 text-white hover:bg-blue-700"
                           : "text-gray-300 hover:bg-monitoring-gray hover:text-white"
                       )}
                       onClick={() => setIsMobileMenuOpen(false)}

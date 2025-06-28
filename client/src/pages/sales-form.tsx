@@ -615,26 +615,14 @@ export default function SalesForm() {
     if (typeMode === 'offline') {
       console.log('Setting OFFLINE mode from URL parameter');
       setOnlineMode(false);
-      // Force update form data immediately
-      setFormData(prev => ({
-        ...prev,
-        onlineEntry: 'No',
-        offlineEntry: 'Yes'
-      }));
     } else if (typeMode === 'online') {
       console.log('Setting ONLINE mode from URL parameter');
       setOnlineMode(true);
-      // Force update form data immediately
-      setFormData(prev => ({
-        ...prev,
-        onlineEntry: 'Yes',
-        offlineEntry: 'No'
-      }));
     }
     
     if (editWbId) {
-      // Load record for editing by wb_id - would need to implement loadDataByWbId for sales
-      console.log('Edit mode for wb_id:', editWbId);
+      // Load record for editing by wb_id
+      loadDataByWbId(parseInt(editWbId));
     } else {
       // Reset form to clean state for new sales
       resetFormToInitial();
@@ -649,6 +637,23 @@ export default function SalesForm() {
       offlineEntry: onlineMode ? 'No' : 'Yes'
     }));
   }, [onlineMode]);
+
+  // Additional effect to handle URL changes for real-time mode switching
+  useEffect(() => {
+    const handleURLChange = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const typeMode = urlParams.get('type');
+      
+      if (typeMode === 'offline' && onlineMode) {
+        setOnlineMode(false);
+      } else if (typeMode === 'online' && !onlineMode) {
+        setOnlineMode(true);
+      }
+    };
+
+    // Check URL on component mount and location changes
+    handleURLChange();
+  }, [location, onlineMode]);
 
   useEffect(() => {
     // Fetch next slip number specific to SALE entry type
