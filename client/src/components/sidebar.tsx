@@ -103,6 +103,17 @@ export default function Sidebar() {
           
           const isMatch = currentPath === basePath && currentType === expectedType;
           
+          console.log('useEffect Active check:', {
+            itemName: item.name,
+            subItemName: subItem.name,
+            currentPath,
+            basePath,
+            currentType,
+            expectedType,
+            isMatch,
+            location
+          });
+          
           return isMatch;
         });
 
@@ -115,6 +126,9 @@ export default function Sidebar() {
     // Set only the active section to be expanded
     if (activeSection && !expandedItems.includes(activeSection)) {
       setExpandedItems([activeSection]);
+    } else if (activeSection === '' && expandedItems.length > 0) {
+      // Collapse all if no active section found
+      setExpandedItems([]);
     }
   }, [location]);
 
@@ -160,18 +174,13 @@ export default function Sidebar() {
                   const basePath = subItem.href.split('?')[0];
                   const currentPath = location.split('?')[0];
                   
-                  // Get the current URL parameters properly
-                  const urlParts = location.split('?');
-                  const currentQuery = urlParts.length > 1 ? urlParts[1] : '';
-                  const currentParams = new URLSearchParams(currentQuery);
+                  // Get the current URL parameters properly - handle both cases
+                  const currentUrl = new URL(window.location.href);
+                  const currentType = currentUrl.searchParams.get('type');
                   
                   // Get the expected parameters from sub-item href
-                  const subItemParts = subItem.href.split('?');
-                  const subItemQuery = subItemParts.length > 1 ? subItemParts[1] : '';
-                  const subItemParams = new URLSearchParams(subItemQuery);
-                  
-                  const currentType = currentParams.get('type');
-                  const expectedType = subItemParams.get('type');
+                  const subItemUrl = new URL(subItem.href, window.location.origin);
+                  const expectedType = subItemUrl.searchParams.get('type');
                   
                   const isMatch = currentPath === basePath && currentType === expectedType;
                   
@@ -207,18 +216,13 @@ export default function Sidebar() {
                           const basePath = subItem.href.split('?')[0];
                           const currentPath = location.split('?')[0];
                           
-                          // Get the current URL parameters properly
-                          const urlParts = location.split('?');
-                          const currentQuery = urlParts.length > 1 ? urlParts[1] : '';
-                          const currentParams = new URLSearchParams(currentQuery);
+                          // Get the current URL parameters properly - handle both cases
+                          const currentUrl = new URL(window.location.href);
+                          const currentType = currentUrl.searchParams.get('type');
                           
                           // Get the expected parameters from sub-item href
-                          const subItemParts = subItem.href.split('?');
-                          const subItemQuery = subItemParts.length > 1 ? subItemParts[1] : '';
-                          const subItemParams = new URLSearchParams(subItemQuery);
-                          
-                          const currentType = currentParams.get('type');
-                          const expectedType = subItemParams.get('type');
+                          const subItemUrl = new URL(subItem.href, window.location.origin);
+                          const expectedType = subItemUrl.searchParams.get('type');
 
                           // Check if this sub-item matches the current route
                           const isSubActive = currentPath === basePath && currentType === expectedType;

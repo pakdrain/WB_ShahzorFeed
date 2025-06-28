@@ -1117,8 +1117,10 @@ export default function PurchaseForm() {
       // Set offline mode for offline entries
       setOnlineMode(false);
     } else {
-      // Reset form to clean state for new purchase
-      resetFormToInitial();
+      // Reset form to clean state for new purchase - delay to ensure proper initialization
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
     }
   }, [location]);
 

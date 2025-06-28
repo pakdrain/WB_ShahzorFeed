@@ -624,8 +624,10 @@ export default function SalesForm() {
       // Load record for editing by wb_id
       loadDataByWbId(parseInt(editWbId));
     } else {
-      // Reset form to clean state for new sales
-      resetFormToInitial();
+      // Reset form to clean state for new sales - delay to ensure proper initialization
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
     }
   }, [location]);
 
