@@ -101,6 +101,17 @@ export default function Sidebar() {
           
           const isMatch = currentPath === basePath && currentType === expectedType;
           
+          console.log('useEffect Active check:', {
+            itemName: item.name,
+            subItemName: subItem.name,
+            currentPath,
+            basePath,
+            currentType,
+            expectedType,
+            isMatch,
+            location
+          });
+          
           return isMatch;
         });
 
@@ -158,12 +169,14 @@ export default function Sidebar() {
                   const basePath = subItem.href.split('?')[0];
                   const currentPath = location.split('?')[0];
                   
-                  // Get the current URL parameters
-                  const currentQuery = location.split('?')[1] || '';
+                  // Get the current URL parameters properly
+                  const urlParts = location.split('?');
+                  const currentQuery = urlParts.length > 1 ? urlParts[1] : '';
                   const currentParams = new URLSearchParams(currentQuery);
                   
                   // Get the expected parameters from sub-item href
-                  const subItemQuery = subItem.href.split('?')[1] || '';
+                  const subItemParts = subItem.href.split('?');
+                  const subItemQuery = subItemParts.length > 1 ? subItemParts[1] : '';
                   const subItemParams = new URLSearchParams(subItemQuery);
                   
                   const currentType = currentParams.get('type');
@@ -203,12 +216,14 @@ export default function Sidebar() {
                           const basePath = subItem.href.split('?')[0];
                           const currentPath = location.split('?')[0];
                           
-                          // Get the current URL parameters
-                          const currentQuery = location.split('?')[1] || '';
+                          // Get the current URL parameters properly
+                          const urlParts = location.split('?');
+                          const currentQuery = urlParts.length > 1 ? urlParts[1] : '';
                           const currentParams = new URLSearchParams(currentQuery);
                           
                           // Get the expected parameters from sub-item href
-                          const subItemQuery = subItem.href.split('?')[1] || '';
+                          const subItemParts = subItem.href.split('?');
+                          const subItemQuery = subItemParts.length > 1 ? subItemParts[1] : '';
                           const subItemParams = new URLSearchParams(subItemQuery);
                           
                           const currentType = currentParams.get('type');
@@ -218,30 +233,21 @@ export default function Sidebar() {
                           const isSubActive = currentPath === basePath && currentType === expectedType;
 
                           return (
-                            <Button
-                              key={subItem.name}
-                              variant="ghost"
-                              className={cn(
-                                "w-full justify-start text-left h-10 px-4 ml-2",
-                                isSubActive
-                                  ? "bg-monitoring-blue text-white hover:bg-monitoring-blue/90"
-                                  : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
-                              )}
-                              onClick={() => {
-                                setIsMobileMenuOpen(false);
-                                console.log('Navigating to:', subItem.href);
-                                // Force immediate URL change and navigation
-                                window.history.replaceState({}, '', subItem.href);
-                                setLocation(subItem.href);
-                                // Force page refresh to ensure proper initialization
-                                setTimeout(() => {
-                                  window.location.href = subItem.href;
-                                }, 50);
-                              }}
-                            >
-                              <subItem.icon className="mr-3 h-4 w-4" />
-                              {subItem.name}
-                            </Button>
+                            <Link key={subItem.name} href={subItem.href}>
+                              <Button
+                                variant="ghost"
+                                className={cn(
+                                  "w-full justify-start text-left h-10 px-4 ml-2",
+                                  isSubActive
+                                    ? "bg-monitoring-blue text-white hover:bg-monitoring-blue/90"
+                                    : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
+                                )}
+                                onClick={() => setIsMobileMenuOpen(false)}
+                              >
+                                <subItem.icon className="mr-3 h-4 w-4" />
+                                {subItem.name}
+                              </Button>
+                            </Link>
                           );
                         })}
                       </div>
