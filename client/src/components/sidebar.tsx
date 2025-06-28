@@ -74,6 +74,11 @@ export default function Sidebar() {
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => {
       if (!prev.includes(itemName)) {
+        // If expanding this item, close other form items
+        if (itemName === 'Purchase Form' || itemName === 'Sale Form') {
+          const filteredItems = prev.filter(name => name !== 'Purchase Form' && name !== 'Sale Form');
+          return [...filteredItems, itemName];
+        }
         return [...prev, itemName];
       } else {
         return prev.filter(name => name !== itemName);
@@ -94,7 +99,6 @@ export default function Sidebar() {
   };
 
   useEffect(() => {
-    let activeSection = '';
     navigation.forEach(item => {
       if (item.hasSubItems) {
         const hasActiveSubItem = item.subItems?.some(subItem => {
@@ -109,17 +113,19 @@ export default function Sidebar() {
           const currentParams = new URLSearchParams(currentParts[1] || '');
           const currentType = currentParams.get('type');
 
-          const isMatch = currentPath === basePath && currentType === expectedType;
-
-          return isMatch;
+          return currentPath === basePath && currentType === expectedType;
         });
 
-        if (hasActiveSubItem) {
-          activeSection = item.name;
+        if (hasActiveSubItem && !expandedItems.includes(item.name)) {
+          setExpandedItems(prev => {
+            // Remove other forms and add this one
+            const filteredItems = prev.filter(name => name !== 'Purchase Form' && name !== 'Sale Form');
+            return [...filteredItems, item.name];
+          });
         }
       }
     });
-  }, [location]);
+  }, [location, expandedItems]);
 
   const handleLogout = async () => {
     await logout();
