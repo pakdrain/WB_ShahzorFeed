@@ -88,31 +88,17 @@ export default function Sidebar() {
           const basePath = subItem.href.split('?')[0];
           const currentPath = location.split('?')[0];
           
-          // Get the current URL parameters properly
-          const urlParts = location.split('?');
-          const currentQuery = urlParts.length > 1 ? urlParts[1] : '';
-          const currentParams = new URLSearchParams(currentQuery);
-          
           // Get the expected parameters from sub-item href
           const subItemParts = subItem.href.split('?');
-          const subItemQuery = subItemParts.length > 1 ? subItemParts[1] : '';
-          const subItemParams = new URLSearchParams(subItemQuery);
-          
-          const currentType = currentParams.get('type');
+          const subItemParams = new URLSearchParams(subItemParts[1] || '');
           const expectedType = subItemParams.get('type');
           
-          const isMatch = currentPath === basePath && currentType === expectedType;
+          // Get current URL parameters
+          const currentParts = location.split('?');
+          const currentParams = new URLSearchParams(currentParts[1] || '');
+          const currentType = currentParams.get('type');
           
-          console.log('useEffect Active check:', {
-            itemName: item.name,
-            subItemName: subItem.name,
-            currentPath,
-            basePath,
-            currentType,
-            expectedType,
-            isMatch,
-            location
-          });
+          const isMatch = currentPath === basePath && currentType === expectedType;
           
           return isMatch;
         });
@@ -174,13 +160,15 @@ export default function Sidebar() {
                   const basePath = subItem.href.split('?')[0];
                   const currentPath = location.split('?')[0];
                   
-                  // Get the current URL parameters properly - handle both cases
-                  const currentUrl = new URL(window.location.href);
-                  const currentType = currentUrl.searchParams.get('type');
-                  
                   // Get the expected parameters from sub-item href
-                  const subItemUrl = new URL(subItem.href, window.location.origin);
-                  const expectedType = subItemUrl.searchParams.get('type');
+                  const subItemParts = subItem.href.split('?');
+                  const subItemParams = new URLSearchParams(subItemParts[1] || '');
+                  const expectedType = subItemParams.get('type');
+                  
+                  // Get current URL parameters
+                  const currentParts = location.split('?');
+                  const currentParams = new URLSearchParams(currentParts[1] || '');
+                  const currentType = currentParams.get('type');
                   
                   const isMatch = currentPath === basePath && currentType === expectedType;
                   
@@ -216,13 +204,15 @@ export default function Sidebar() {
                           const basePath = subItem.href.split('?')[0];
                           const currentPath = location.split('?')[0];
                           
-                          // Get the current URL parameters properly - handle both cases
-                          const currentUrl = new URL(window.location.href);
-                          const currentType = currentUrl.searchParams.get('type');
-                          
                           // Get the expected parameters from sub-item href
-                          const subItemUrl = new URL(subItem.href, window.location.origin);
-                          const expectedType = subItemUrl.searchParams.get('type');
+                          const subItemParts = subItem.href.split('?');
+                          const subItemParams = new URLSearchParams(subItemParts[1] || '');
+                          const expectedType = subItemParams.get('type');
+                          
+                          // Get current URL parameters
+                          const currentParts = location.split('?');
+                          const currentParams = new URLSearchParams(currentParts[1] || '');
+                          const currentType = currentParams.get('type');
 
                           // Check if this sub-item matches the current route
                           const isSubActive = currentPath === basePath && currentType === expectedType;
@@ -237,7 +227,15 @@ export default function Sidebar() {
                                     ? "bg-blue-600 text-white hover:bg-blue-700"
                                     : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
                                 )}
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                onClick={() => {
+                                  setIsMobileMenuOpen(false);
+                                  // Force navigation to ensure the route loads
+                                  setTimeout(() => {
+                                    if (window.location.href !== subItem.href) {
+                                      window.location.href = subItem.href;
+                                    }
+                                  }, 50);
+                                }}
                               >
                                 <subItem.icon className="mr-3 h-4 w-4" />
                                 {subItem.name}
