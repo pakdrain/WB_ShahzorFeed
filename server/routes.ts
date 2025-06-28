@@ -1776,28 +1776,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create role table if it doesn't exist
 app.post('/api/create-role-table', async (req: Request, res: Response) => {
   try {
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS role (
-        roleid SERIAL PRIMARY KEY,
-        role_name VARCHAR(100),
-        home_menu INTEGER DEFAULT 0,
-        pur_form_menu INTEGER DEFAULT 0,
-        pur_form_online INTEGER DEFAULT 0,
-        pur_form_offline INTEGER DEFAULT 0,
-        sale_form_menu INTEGER DEFAULT 0,
-        sale_form_online INTEGER DEFAULT 0,
-        sale_form_offline INTEGER DEFAULT 0,
-        sale_return_menu INTEGER DEFAULT 0,
-        sale_node_menu INTEGER DEFAULT 0,
-        reports INTEGER DEFAULT 0,
-        camera_settings INTEGER DEFAULT 0,
-        wb_settings INTEGER DEFAULT 0
+    // Check if table exists first
+    const tableExists = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'role'
       )
     `);
 
-    // Insert default roles if table is empty
-    const existingRoles = await pool.query('SELECT COUNT(*) FROM role');
-    if (parseInt(existingRoles.rows[0].count) === 0) {
+    if (!tableExists.rows[0].exists) {
+      await pool.query(`
+        CREATE TABLE role (
+          roleid SERIAL PRIMARY KEY,
+          role_name VARCHAR(100),
+          home_menu INTEGER DEFAULT 0,
+          pur_form_menu INTEGER DEFAULT 0,
+          pur_form_online INTEGER DEFAULT 0,
+          pur_form_offline INTEGER DEFAULT 0,
+          sale_form_menu INTEGER DEFAULT 0,
+          sale_form_online INTEGER DEFAULT 0,
+          sale_form_offline INTEGER DEFAULT 0,
+          sale_return_menu INTEGER DEFAULT 0,
+          sale_node_menu INTEGER DEFAULT 0,
+          reports INTEGER DEFAULT 0,
+          camera_settings INTEGER DEFAULT 0,
+          wb_settings INTEGER DEFAULT 0
+        )
+      `);
+
+      // Insert default roles
       await pool.query(`
         INSERT INTO role (role_name, home_menu, pur_form_menu, pur_form_online, pur_form_offline, sale_form_menu, sale_form_online, sale_form_offline, sale_return_menu, sale_node_menu, reports, camera_settings, wb_settings)
         VALUES 
@@ -1806,43 +1814,50 @@ app.post('/api/create-role-table', async (req: Request, res: Response) => {
         ('HOD', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0),
         ('Employee', 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0)
       `);
+    } else {
+      // Table exists, check if it has data
+      const existingRoles = await pool.query('SELECT COUNT(*) FROM role');
+      if (parseInt(existingRoles.rows[0].count) === 0) {
+        await pool.query(`
+          INSERT INTO role (role_name, home_menu, pur_form_menu, pur_form_online, pur_form_offline, sale_form_menu, sale_form_online, sale_form_offline, sale_return_menu, sale_node_menu, reports, camera_settings, wb_settings)
+          VALUES 
+          ('Admin', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+          ('Office', 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0),
+          ('HOD', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0),
+          ('Employee', 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0)
+        `);
+      }
     }
 
-    res.json({ success: true, message: 'Role table created successfully' });
+    res.json({ success: true, message: 'Role table ready' });
   } catch (error) {
-    console.error('Error creating role table:', error);
-    res.status(500).json({ message: 'Failed to create role table' });
+    console.error('Error with role table:', error);
+    res.status(500).json({ message: 'Failed to setup role table' });
   }
 });
 
 // Role management endpoint
 app.get('/api/user-roles', async (req: Request, res: Response) => {
   try {
-    // Ensure role table exists first
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS role (
-        roleid SERIAL PRIMARY KEY,
-        role_name VARCHAR(100),
-        home_menu INTEGER DEFAULT 0,
-        pur_form_menu INTEGER DEFAULT 0,
-        pur_form_online INTEGER DEFAULT 0,
-        pur_form_offline INTEGER DEFAULT 0,
-        sale_form_menu INTEGER DEFAULT 0,
-        sale_form_online INTEGER DEFAULT 0,
-        sale_form_offline INTEGER DEFAULT 0,
-        sale_return_menu INTEGER DEFAULT 0,
-        sale_node_menu INTEGER DEFAULT 0,
-        reports INTEGER DEFAULT 0,
-        camera_settings INTEGER DEFAULT 0,
-        wb_settings INTEGER DEFAULT 0
+    // Check if table exists
+    const tableExists = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'role'
       )
     `);
+
+    if (!tableExists.rows[0].exists) {
+      // Return empty array if table doesn't exist
+      return res.json([]);
+    }
 
     const result = await pool.query('SELECT * FROM role ORDER BY roleid');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching user roles:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
 

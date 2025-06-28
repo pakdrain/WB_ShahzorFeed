@@ -27,15 +27,27 @@ export default function RoleManagement() {
   });
 
   // Fetch existing roles from API
-  const { data: existingRoles = [], refetch } = useQuery({
+  const { data: existingRoles = [], refetch, isLoading, error } = useQuery({
     queryKey: ['/api/user-roles'],
   });
 
   // Create role table if it doesn't exist
   useEffect(() => {
-    fetch('/api/create-role-table', { method: 'POST' })
-      .then(() => refetch())
-      .catch(console.error);
+    const initializeTable = async () => {
+      try {
+        const response = await fetch('/api/create-role-table', { method: 'POST' });
+        if (response.ok) {
+          console.log('Role table initialized successfully');
+          refetch();
+        } else {
+          console.error('Failed to initialize role table');
+        }
+      } catch (error) {
+        console.error('Error initializing role table:', error);
+      }
+    };
+
+    initializeTable();
   }, [refetch]);
 
   const roles = ['Admin', 'Office', 'HOD', 'Employee'];
@@ -157,6 +169,30 @@ export default function RoleManagement() {
             </Button>
           </CardContent>
         </Card>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading roles...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="text-center py-8">
+          <p className="text-red-600">Error loading roles. Please try refreshing the page.</p>
+          <Button onClick={() => refetch()} className="mt-2">
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
