@@ -99,10 +99,15 @@ export default function Sidebar() {
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => {
       if (!prev.includes(itemName)) {
-        // If expanding this item, close other expandable items
-        if (itemName === 'Purchase Form' || itemName === 'Sale Form') {
-          // Close all other expandable forms when opening Purchase or Sale Form
-          return [itemName];
+        // If expanding this item, only close other expandable items if they're not Purchase or Sale forms
+        if (itemName === 'Purchase Form') {
+          // Close Sale Form when opening Purchase Form, but keep other items
+          const filteredItems = prev.filter(name => name !== 'Sale Form');
+          return [...filteredItems, itemName];
+        } else if (itemName === 'Sale Form') {
+          // Close Purchase Form when opening Sale Form, but keep other items
+          const filteredItems = prev.filter(name => name !== 'Purchase Form');
+          return [...filteredItems, itemName];
         } else {
           // For other items, close Purchase and Sale forms
           const filteredItems = prev.filter(name => name !== 'Purchase Form' && name !== 'Sale Form');
@@ -152,9 +157,16 @@ export default function Sidebar() {
 
         if (hasActiveSubItem && !expandedItems.includes(item.name)) {
           setExpandedItems(prev => {
-            // Remove other forms and add this one
-            const filteredItems = prev.filter(name => name !== 'Purchase Form' && name !== 'Sale Form');
-            return [...filteredItems, item.name];
+            // Only remove the opposite form type, keep other expanded items
+            if (item.name === 'Purchase Form') {
+              const filteredItems = prev.filter(name => name !== 'Sale Form');
+              return [...filteredItems, item.name];
+            } else if (item.name === 'Sale Form') {
+              const filteredItems = prev.filter(name => name !== 'Purchase Form');
+              return [...filteredItems, item.name];
+            } else {
+              return [...prev, item.name];
+            }
           });
         }
       }
@@ -287,8 +299,12 @@ export default function Sidebar() {
                       )}
                       onClick={() => {
                         setIsMobileMenuOpen(false);
-                        // Close Purchase and Sale forms when clicking other items
-                        setExpandedItems(prev => prev.filter(name => name !== 'Purchase Form' && name !== 'Sale Form'));
+                        // Only close Purchase and Sale forms when clicking other form items
+                        if (item.name !== 'Purchase Form' && item.name !== 'Sale Form' && 
+                            (item.name === 'Role' || item.name === 'Reports' || item.name === 'Image Upload' || 
+                             item.name === 'Camera Settings' || item.name === 'Weighbridge Settings')) {
+                          setExpandedItems(prev => prev.filter(name => name !== 'Purchase Form' && name !== 'Sale Form'));
+                        }
                       }}
                     >
                       <item.icon className="mr-3 h-5 w-5" />

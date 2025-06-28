@@ -1717,33 +1717,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all user roles
-  app.get('/api/user-roles', async (req: Request, res: Response) => {
+  // Get all user roles with user information
+  app.get('/api/user-roles', async (req, res) => {
     try {
-      // Create user_roles table if it doesn't exist
+      // First, ensure the user_roles table exists
       await pool.query(`
         CREATE TABLE IF NOT EXISTS user_roles (
           id SERIAL PRIMARY KEY,
-          user_id INTEGER REFERENCES users(userid),
+          user_id INTEGER NOT NULL,
           role VARCHAR(50) NOT NULL,
           permissions TEXT[] DEFAULT '{}',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE(user_id)
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
 
       const result = await pool.query(`
         SELECT 
-          ur.user_id as "userId",
-          u.username as "userName",
-          b.branch_name as "branchName",
+          ur.user_id as userId,
+          u.username as userName,
+          b.branch_name as branchName,
           ur.role,
           ur.permissions,
-          ur.created_at as "createdAt"
+          ur.created_at as createdAt
         FROM user_roles ur
-        JOIN users u ON ur.user_id = u.userid
-        LEFT JOIN branches b ON u.branchid = b.branch_id
+        LEFT JOIN users u ON ur.user_id = u.userid
+        LEFT JOIN branches b ON u.branch_id = b.branch_id
         ORDER BY ur.created_at DESC
       `);
 
