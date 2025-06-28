@@ -121,13 +121,19 @@ export default function Sidebar() {
           const basePath = subItem.href.split('?')[0];
           const currentPath = location.split('?')[0];
 
-          const subItemParts = subItem.href.split('?');
-          const subItemParams = new URLSearchParams(subItemParts[1] || '');
-          const expectedType = subItemParams.get('type');
+          const expectedType = getQueryParam(subItem.href, 'type');
+          const currentType = getQueryParam(location, 'type');
 
-          const currentParts = location.split('?');
-          const currentParams = new URLSearchParams(currentParts[1] || '');
-          const currentType = currentParams.get('type');
+          console.log('useEffect Active check:', {
+            itemName: item.name,
+            subItemName: subItem.name,
+            currentPath,
+            basePath,
+            currentType,
+            expectedType,
+            isMatch: currentPath === basePath && currentType === expectedType,
+            location
+          });
 
           return currentPath === basePath && currentType === expectedType;
         });
@@ -141,11 +147,19 @@ export default function Sidebar() {
         }
       }
     });
-  }, [location, expandedItems]);
+  }, [location]);
 
   const handleLogout = async () => {
     await logout();
     setIsMobileMenuOpen(false);
+  };
+
+  // Helper function to extract query parameters from URL
+  const getQueryParam = (url: string, param: string) => {
+    const urlParts = url.split('?');
+    if (urlParts.length < 2) return null;
+    const params = new URLSearchParams(urlParts[1]);
+    return params.get(param);
   };
 
   return (
@@ -188,17 +202,10 @@ export default function Sidebar() {
                   const basePath = subItem.href.split('?')[0];
                   const currentPath = location.split('?')[0];
 
-                  const subItemParts = subItem.href.split('?');
-                  const subItemParams = new URLSearchParams(subItemParts[1] || '');
-                  const expectedType = subItemParams.get('type');
+                  const expectedType = getQueryParam(subItem.href, 'type');
+                  const currentType = getQueryParam(location, 'type');
 
-                  const currentParts = location.split('?');
-                  const currentParams = new URLSearchParams(currentParts[1] || '');
-                  const currentType = currentParams.get('type');
-
-                  const isMatch = currentPath === basePath && currentType === expectedType;
-
-                  return isMatch;
+                  return currentPath === basePath && currentType === expectedType;
                 });
 
                 return (
@@ -230,13 +237,8 @@ export default function Sidebar() {
                           const basePath = subItem.href.split('?')[0];
                           const currentPath = location.split('?')[0];
 
-                          const subItemParts = subItem.href.split('?');
-                          const subItemParams = new URLSearchParams(subItemParts[1] || '');
-                          const expectedType = subItemParams.get('type');
-
-                          const currentParts = location.split('?');
-                          const currentParams = new URLSearchParams(currentParts[1] || '');
-                          const currentType = currentParams.get('type');
+                          const expectedType = getQueryParam(subItem.href, 'type');
+                          const currentType = getQueryParam(location, 'type');
 
                           const isSubActive = currentPath === basePath && currentType === expectedType;
 
@@ -253,8 +255,10 @@ export default function Sidebar() {
                                 onClick={(e) => {
                                   e.preventDefault();
                                   setIsMobileMenuOpen(false);
-                                  // Force navigation by updating location directly
-                                  setLocation(subItem.href);
+                                  // Force navigation with a small delay to ensure proper state update
+                                  setTimeout(() => {
+                                    setLocation(subItem.href);
+                                  }, 10);
                                 }}
                               >
                                 <subItem.icon className="mr-3 h-4 w-4" />
