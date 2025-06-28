@@ -64,7 +64,7 @@ export default function Sidebar() {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
-  
+
   // Helper function to extract query parameters from URL
   const getQueryParam = (url: string, param: string) => {
     const urlParts = url.split('?');
@@ -72,7 +72,7 @@ export default function Sidebar() {
     const params = new URLSearchParams(urlParts[1]);
     return params.get(param);
   };
-  
+
   // Check if user is admin (you can adjust this logic based on your admin identification)
   const isAdmin = user?.userName === 'admin' || user?.userid === 1;
   const navigation = getNavigation(isAdmin);

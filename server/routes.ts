@@ -1651,21 +1651,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'User not found' });
       }
 
-      // Get user permissions from user_roles table
+      // Get user permissions from role table
       const permissionsResult = await pool.query(
-        'SELECT role, permissions FROM user_roles WHERE user_id = $1',
+        `SELECT 
+          role_name,
+          home_menu, pur_form_menu, pur_form_online, pur_form_offline,
+          sale_form_menu, sale_form_online, sale_form_offline, 
+          sale_return_menu, sale_node_menu, reports, 
+          camera_settings, wb_settings
+         FROM role WHERE roleid = $1`,
         [userId]
       );
 
-      const permissions = permissionsResult.rows.length > 0 ? permissionsResult.rows[0].permissions : [];
-      const role = permissionsResult.rows.length > 0 ? permissionsResult.rows[0].role : '';
+      let permissions = [];
+      let role = '';
+
+      if (permissionsResult.rows.length > 0) {
+        const roleData = permissionsResult.rows[0];
+        role = roleData.role_name || '';
+        
+        // Build permissions array based on role table columns
+        if (roleData.home_menu === 1) permissions.push('home');
+        if (roleData.pur_form_menu === 1) permissions.push('purchase_form');
+        if (roleData.pur_form_online === 1) permissions.push('purchase_online');
+        if (roleData.pur_form_offline === 1) permissions.push('purchase_offline');
+        if (roleData.sale_form_menu === 1) permissions.push('sales_form');
+        if (roleData.sale_form_online === 1) permissions.push('sales_online');
+        if (roleData.sale_form_offline === 1) permissions.push('sales_offline');
+        if (roleData.sale_return_menu === 1) permissions.push('sale_return');
+        if (roleData.sale_node_menu === 1) permissions.push('sale_node');
+        if (roleData.reports === 1) permissions.push('reports');
+        if (roleData.camera_settings === 1) permissions.push('camera_settings');
+        if (roleData.wb_settings === 1) permissions.push('weighbridge_settings');
+      }
 
       res.json({
         userInfo: {
           userName: userResult.rows[0].username,
           branchName: userResult.rows[0].branch_name
         },
-        permissions: permissions || [],
+        permissions: permissions,
         role: role
       });
     } catch (error) {
@@ -1686,29 +1711,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'User not found' });
       }
 
-      // Create user_roles table if it doesn't exist
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS user_roles (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER REFERENCES users(userid),
-          role VARCHAR(50) NOT NULL,
-          permissions TEXT[] DEFAULT '{}',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE(user_id)
-        )
-      `);
+      // Convert permissions array to integer flags
+      const permissionFlags = {
+        home_menu: permissions.includes('home') ? 1 : 0,
+        pur_form_menu: permissions.includes('purchase_form') ? 1 : 0,
+        pur_form_online: permissions.includes('purchase_online') ? 1 : 0,
+        pur_form_offline: permissions.includes('purchase_offline') ? 1 : 0,
+        sale_form_menu: permissions.includes('sales_form') ? 1 : 0,
+        sale_form_online: permissions.includes('sales_online') ? 1 : 0,
+        sale_form_offline: permissions.includes('sales_offline') ? 1 : 0,
+        sale_return_menu: permissions.includes('sale_return') ? 1 : 0,
+        sale_node_menu: permissions.includes('sale_node') ? 1 : 0,
+        reports: permissions.includes('reports') ? 1 : 0,
+        camera_settings: permissions.includes('camera_settings') ? 1 : 0,
+        wb_settings: permissions.includes('weighbridge_settings') ? 1 : 0
+      };
 
-      // Insert or update user permissions
+      // Insert or update role permissions
       await pool.query(`
-        INSERT INTO user_roles (user_id, role, permissions, updated_at)
-        VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
-        ON CONFLICT (user_id)
+        INSERT INTO role (
+          roleid, role_name, home_menu, pur_form_menu, pur_form_online, pur_form_offline,
+          sale_form_menu, sale_form_online, sale_form_offline, sale_return_menu, 
+          sale_node_menu, reports, camera_settings, wb_settings
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        ON CONFLICT (roleid)
         DO UPDATE SET 
-          role = EXCLUDED.role,
-          permissions = EXCLUDED.permissions,
-          updated_at = EXCLUDED.updated_at
-      `, [userId, role, permissions]);
+          role_name = EXCLUDED.role_name,
+          home_menu = EXCLUDED.home_menu,
+          pur_form_menu = EXCLUDED.pur_form_menu,
+          pur_form_online = EXCLUDED.pur_form_online,
+          pur_form_offline = EXCLUDED.pur_form_offline,
+          sale_form_menu = EXCLUDED.sale_form_menu,
+          sale_form_online = EXCLUDED.sale_form_online,
+          sale_form_offline = EXCLUDED.sale_form_offline,
+          sale_return_menu = EXCLUDED.sale_return_menu,
+          sale_node_menu = EXCLUDED.sale_node_menu,
+          reports = EXCLUDED.reports,
+          camera_settings = EXCLUDED.camera_settings,
+          wb_settings = EXCLUDED.wb_settings
+      `, [
+        userId, role,
+        permissionFlags.home_menu,
+        permissionFlags.pur_form_menu,
+        permissionFlags.pur_form_online,
+        permissionFlags.pur_form_offline,
+        permissionFlags.sale_form_menu,
+        permissionFlags.sale_form_online,
+        permissionFlags.sale_form_offline,
+        permissionFlags.sale_return_menu,
+        permissionFlags.sale_node_menu,
+        permissionFlags.reports,
+        permissionFlags.camera_settings,
+        permissionFlags.wb_settings
+      ]);
 
       res.json({ message: 'Permissions updated successfully' });
     } catch (error) {
@@ -1720,33 +1776,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all user roles with user information
   app.get('/api/user-roles', async (req, res) => {
     try {
-      // First, ensure the user_roles table exists
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS user_roles (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER NOT NULL,
-          role VARCHAR(50) NOT NULL,
-          permissions TEXT[] DEFAULT '{}',
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-      `);
-
       const result = await pool.query(`
         SELECT 
-          ur.user_id as userId,
+          u.userid as userId,
           u.username as userName,
           b.branch_name as branchName,
-          ur.role,
-          ur.permissions,
-          ur.created_at as createdAt
-        FROM user_roles ur
-        LEFT JOIN users u ON ur.user_id = u.userid
-        LEFT JOIN branches b ON u.branch_id = b.branch_id
-        ORDER BY ur.created_at DESC
+          r.role_name as role,
+          ARRAY[
+            CASE WHEN r.home_menu = 1 THEN 'home' END,
+            CASE WHEN r.pur_form_menu = 1 THEN 'purchase_form' END,
+            CASE WHEN r.pur_form_online = 1 THEN 'purchase_online' END,
+            CASE WHEN r.pur_form_offline = 1 THEN 'purchase_offline' END,
+            CASE WHEN r.sale_form_menu = 1 THEN 'sales_form' END,
+            CASE WHEN r.sale_form_online = 1 THEN 'sales_online' END,
+            CASE WHEN r.sale_form_offline = 1 THEN 'sales_offline' END,
+            CASE WHEN r.sale_return_menu = 1 THEN 'sale_return' END,
+            CASE WHEN r.sale_node_menu = 1 THEN 'sale_node' END,
+            CASE WHEN r.reports = 1 THEN 'reports' END,
+            CASE WHEN r.camera_settings = 1 THEN 'camera_settings' END,
+            CASE WHEN r.wb_settings = 1 THEN 'weighbridge_settings' END
+          ]::TEXT[] as permissions,
+          CURRENT_TIMESTAMP as createdAt
+        FROM users u
+        LEFT JOIN branches b ON u.branchid = b.branch_id
+        LEFT JOIN role r ON u.userid = r.roleid
+        WHERE r.roleid IS NOT NULL
+        ORDER BY u.userid DESC
       `);
 
-      res.json(result.rows);
+      // Filter out NULL values from permissions array
+      const processedRows = result.rows.map(row => ({
+        ...row,
+        permissions: row.permissions.filter(p => p !== null)
+      }));
+
+      res.json(processedRows);
     } catch (error) {
       console.error('Error fetching user roles:', error);
       res.status(500).json({ message: 'Internal server error' });
