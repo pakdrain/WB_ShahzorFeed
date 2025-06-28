@@ -65,6 +65,14 @@ export default function Sidebar() {
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
   
+  // Helper function to extract query parameters from URL
+  const getQueryParam = (url: string, param: string) => {
+    const urlParts = url.split('?');
+    if (urlParts.length < 2) return null;
+    const params = new URLSearchParams(urlParts[1]);
+    return params.get(param);
+  };
+  
   // Check if user is admin (you can adjust this logic based on your admin identification)
   const isAdmin = user?.userName === 'admin' || user?.userid === 1;
   const navigation = getNavigation(isAdmin);
@@ -152,14 +160,6 @@ export default function Sidebar() {
   const handleLogout = async () => {
     await logout();
     setIsMobileMenuOpen(false);
-  };
-
-  // Helper function to extract query parameters from URL
-  const getQueryParam = (url: string, param: string) => {
-    const urlParts = url.split('?');
-    if (urlParts.length < 2) return null;
-    const params = new URLSearchParams(urlParts[1]);
-    return params.get(param);
   };
 
   return (
@@ -255,10 +255,8 @@ export default function Sidebar() {
                                 onClick={(e) => {
                                   e.preventDefault();
                                   setIsMobileMenuOpen(false);
-                                  // Force navigation with a small delay to ensure proper state update
-                                  setTimeout(() => {
-                                    setLocation(subItem.href);
-                                  }, 10);
+                                  // Use window.location.href for reliable navigation
+                                  window.location.href = subItem.href;
                                 }}
                               >
                                 <subItem.icon className="mr-3 h-4 w-4" />
