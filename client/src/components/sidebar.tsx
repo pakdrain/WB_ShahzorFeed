@@ -163,6 +163,12 @@ export default function Sidebar() {
           if (!expandedItems.includes(item.name)) {
             setExpandedItems(prev => [...prev, item.name]);
           }
+        } else if ((currentPath === '/sales-form' && item.name === 'Purchase Form') ||
+                   (currentPath === '/purchase-form' && item.name === 'Sale Form')) {
+          // Close the other form when navigating to a different form type
+          if (expandedItems.includes(item.name)) {
+            setExpandedItems(prev => prev.filter(name => name !== item.name));
+          }
         }
       }
     });
