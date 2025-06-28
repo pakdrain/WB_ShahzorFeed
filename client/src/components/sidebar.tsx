@@ -155,21 +155,6 @@ export default function Sidebar() {
         if (hasActiveSubItem && !expandedItems.includes(item.name)) {
           setExpandedItems(prev => [...prev, item.name]);
         }
-
-        // Also check if we're on purchase-form or sales-form pages to keep them expanded
-        const currentPath = location.split('?')[0];
-        if ((currentPath === '/purchase-form' && item.name === 'Purchase Form') ||
-            (currentPath === '/sales-form' && item.name === 'Sale Form')) {
-          if (!expandedItems.includes(item.name)) {
-            setExpandedItems(prev => [...prev, item.name]);
-          }
-        } else if ((currentPath === '/sales-form' && item.name === 'Purchase Form') ||
-                   (currentPath === '/purchase-form' && item.name === 'Sale Form')) {
-          // Close the other form when navigating to a different form type
-          if (expandedItems.includes(item.name)) {
-            setExpandedItems(prev => prev.filter(name => name !== item.name));
-          }
-        }
       }
     });
   }, [location, expandedItems]);
