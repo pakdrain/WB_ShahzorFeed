@@ -89,18 +89,31 @@ export default function Sidebar() {
           const currentPath = location.split('?')[0];
           const currentParams = new URLSearchParams(location.split('?')[1] || '');
           const subItemParams = new URLSearchParams(subItem.href.split('?')[1] || '');
-          return currentPath === basePath && 
+          const isMatch = currentPath === basePath && 
             currentParams.get('type') === subItemParams.get('type');
+          console.log('useEffect Active check:', {
+            itemName: item.name,
+            subItemName: subItem.name,
+            currentPath,
+            basePath,
+            currentType: currentParams.get('type'),
+            expectedType: subItemParams.get('type'),
+            isMatch,
+            location
+          });
+          return isMatch;
         });
 
         if (hasActiveSubItem) {
           activeSection = item.name;
+          console.log('Active section found:', activeSection);
         }
       }
     });
 
     // Set only the active section to be expanded
     if (activeSection && !expandedItems.includes(activeSection)) {
+      console.log('Setting expanded items to:', [activeSection]);
       setExpandedItems([activeSection]);
     }
   }, [location]);
@@ -148,8 +161,9 @@ export default function Sidebar() {
                   const currentPath = location.split('?')[0];
                   const currentParams = new URLSearchParams(location.split('?')[1] || '');
                   const subItemParams = new URLSearchParams(subItem.href.split('?')[1] || '');
-                  return currentPath === basePath && 
+                  const isMatch = currentPath === basePath && 
                     currentParams.get('type') === subItemParams.get('type');
+                  return isMatch;
                 });
 
                 return (
