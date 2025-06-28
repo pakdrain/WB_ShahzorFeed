@@ -194,114 +194,190 @@ export default function RoleManagement() {
 
   if (currentView === 'assign') {
     return (
-      <div className="container mx-auto p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">
-            {editingUser ? 'Edit User Permissions' : 'Assign User Permissions'}
-          </h1>
-          <Button variant="outline" onClick={() => {
-            resetForm();
-            setCurrentView('list');
-          }}>
-            Back to Role List
-          </Button>
-        </div>
-
-        <Card className="max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle>User Role Assignment</CardTitle>
-            <CardDescription>
-              {editingUser ? 'Edit permissions for the selected user' : 'Assign permissions to a user'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+        <div className="container mx-auto max-w-4xl">
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <Label htmlFor="user-id">User ID</Label>
-              <Input
-                id="user-id"
-                value={userId}
-                onChange={(e) => setUserId(e.target.value)}
-                placeholder="Enter User ID"
-                disabled={!!editingUser}
-              />
+              <h1 className="text-4xl font-bold text-gray-800 mb-2">
+                {editingUser ? 'Edit User Permissions' : 'Assign User Permissions'}
+              </h1>
+              <p className="text-gray-600">
+                {editingUser ? 'Modify existing user access rights' : 'Grant access permissions to users'}
+              </p>
             </div>
-
-            <div className="space-y-3">
-              <Label>Menu Permissions</Label>
-              <div className="grid grid-cols-1 gap-3">
-                {Object.entries(permissionLabels).map(([key, label]) => (
-                  <div key={key} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={key}
-                      checked={permissions[key as keyof typeof permissions]}
-                      onCheckedChange={(checked) => handlePermissionChange(key, !!checked)}
-                    />
-                    <Label htmlFor={key} className="text-sm font-medium">
-                      {label}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <Button onClick={handleSavePermissions} className="w-full" disabled={!userId.trim()}>
-              {editingUser ? 'Update Permissions' : 'Save Permissions'}
+            <Button 
+              variant="outline" 
+              size="lg"
+              className="bg-white hover:bg-gray-50 border-2 border-gray-300 font-semibold text-gray-700 px-6 py-3"
+              onClick={() => {
+                resetForm();
+                setCurrentView('list');
+              }}
+            >
+              ← Back to Role List
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+
+          <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+            <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
+              <CardTitle className="text-2xl font-bold">User Role Assignment</CardTitle>
+              <CardDescription className="text-blue-100">
+                {editingUser ? 'Edit permissions for the selected user' : 'Assign permissions to a user'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              <div className="bg-gray-50 p-6 rounded-lg border">
+                <Label htmlFor="user-id" className="text-lg font-semibold text-gray-700 mb-3 block">
+                  User ID
+                </Label>
+                <Input
+                  id="user-id"
+                  value={userId}
+                  onChange={(e) => setUserId(e.target.value)}
+                  placeholder="Enter User ID"
+                  disabled={!!editingUser}
+                  className="text-lg p-4 border-2 focus:border-blue-500 rounded-lg"
+                />
+              </div>
+
+              <div className="space-y-6">
+                <div className="border-b pb-4">
+                  <Label className="text-xl font-bold text-gray-800">Menu Permissions</Label>
+                  <p className="text-gray-600 mt-2">Select which menu items this user can access</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(permissionLabels).map(([key, label]) => (
+                    <div key={key} className="bg-white p-4 rounded-lg border-2 hover:border-blue-300 transition-colors">
+                      <div className="flex items-center space-x-3">
+                        <Checkbox
+                          id={key}
+                          checked={permissions[key as keyof typeof permissions]}
+                          onCheckedChange={(checked) => handlePermissionChange(key, !!checked)}
+                          className="w-5 h-5"
+                        />
+                        <Label htmlFor={key} className="text-base font-medium text-gray-700 cursor-pointer">
+                          {label}
+                        </Label>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="pt-6 border-t">
+                <Button 
+                  onClick={handleSavePermissions} 
+                  className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg py-4 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200" 
+                  disabled={!userId.trim()}
+                  size="lg"
+                >
+                  {editingUser ? '✓ UPDATE PERMISSIONS' : '✓ SAVE PERMISSIONS'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold">Role List</h1>
-        <Button onClick={() => {
-          resetForm();
-          setCurrentView('assign');
-        }}>
-          Add New User
-        </Button>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="container mx-auto max-w-6xl">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">Role Management</h1>
+            <p className="text-gray-600">Manage user permissions and access rights</p>
+          </div>
+          <Button 
+            onClick={() => {
+              resetForm();
+              setCurrentView('assign');
+            }}
+            className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold text-lg py-3 px-6 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200"
+            size="lg"
+          >
+            + ADD NEW USER
+          </Button>
+        </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>User Permissions Management</CardTitle>
-          <CardDescription>View and manage user permissions</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {savedUsers.length > 0 ? (
-              savedUsers.map((userPermissions) => (
-                <div key={userPermissions.userId} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h3 className="font-semibold">
-                      {userPermissions.userName} (ID: {userPermissions.userId})
-                    </h3>
-                    <p className="text-sm text-gray-600">
-                      Permissions: {userPermissions.permissions.length > 0 
-                        ? userPermissions.permissions.map(p => permissionLabels[p as keyof typeof permissionLabels]).join(', ')
-                        : 'No permissions assigned'}
-                    </p>
+        <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
+          <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-t-lg">
+            <CardTitle className="text-2xl font-bold">User Permissions Management</CardTitle>
+            <CardDescription className="text-blue-100">
+              View and manage user permissions across the system
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-8">
+            <div className="space-y-4">
+              {savedUsers.length > 0 ? (
+                savedUsers.map((userPermissions) => (
+                  <div key={userPermissions.userId} className="bg-white p-6 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all duration-200 shadow-sm hover:shadow-md">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-3">
+                          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold text-lg">
+                              {userPermissions.userName.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-800">
+                              {userPermissions.userName}
+                            </h3>
+                            <p className="text-sm text-gray-500">ID: {userPermissions.userId}</p>
+                          </div>
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <p className="text-sm font-medium text-gray-700 mb-2">Assigned Permissions:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {userPermissions.permissions.length > 0 ? (
+                              userPermissions.permissions.map(p => (
+                                <span key={p} className="bg-blue-100 text-blue-800 text-xs font-medium px-3 py-1 rounded-full">
+                                  {permissionLabels[p as keyof typeof permissionLabels]}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="bg-red-100 text-red-800 text-xs font-medium px-3 py-1 rounded-full">
+                                No permissions assigned
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="lg"
+                        className="bg-white hover:bg-blue-50 border-2 border-blue-300 text-blue-600 font-bold px-6 py-3 ml-6"
+                        onClick={() => handleEditUser(userPermissions)}
+                      >
+                        ✏️ EDIT
+                      </Button>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-16">
+                  <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-4xl text-gray-400">👥</span>
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-600 mb-2">No Users Found</h3>
+                  <p className="text-gray-500 mb-6">Get started by adding your first user with permissions</p>
                   <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => handleEditUser(userPermissions)}
+                    onClick={() => {
+                      resetForm();
+                      setCurrentView('assign');
+                    }}
+                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold px-8 py-3 rounded-lg"
                   >
-                    Edit
+                    + Add First User
                   </Button>
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                No users found. Click "Add New User" to assign permissions.
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

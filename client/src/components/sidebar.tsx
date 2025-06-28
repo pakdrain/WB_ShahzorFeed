@@ -100,14 +100,20 @@ export default function Sidebar() {
 
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => {
+      const expandableItems = ['Purchase Form', 'Sale Form'];
+      
       // If clicking on the same item that's already expanded, collapse it
       if (prev.includes(itemName)) {
         return prev.filter(name => name !== itemName);
       } else {
-        // If clicking on a different item, close other expandable items and open this one
-        const otherExpandableItems = ['Purchase Form', 'Sale Form'];
-        const filteredItems = prev.filter(name => !otherExpandableItems.includes(name));
-        return [...filteredItems, itemName];
+        // If clicking on an expandable item, close all other expandable items and open this one
+        if (expandableItems.includes(itemName)) {
+          const filteredItems = prev.filter(name => !expandableItems.includes(name));
+          return [...filteredItems, itemName];
+        } else {
+          // For non-expandable items, close all expandable items
+          return prev.filter(name => !expandableItems.includes(name));
+        }
       }
     });
   };
