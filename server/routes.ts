@@ -1669,7 +1669,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (permissionsResult.rows.length > 0) {
         const roleData = permissionsResult.rows[0];
         role = roleData.role_name || '';
-        
+
         // Build permissions array based on role table columns
         if (roleData.home_menu === 1) permissions.push('home');
         if (roleData.pur_form_menu === 1) permissions.push('purchase_form');
@@ -1773,49 +1773,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all user roles with user information
-  app.get('/api/user-roles', async (req, res) => {
-    try {
-      const result = await pool.query(`
-        SELECT 
-          u.userid as userId,
-          u.username as userName,
-          b.branch_name as branchName,
-          r.role_name as role,
-          ARRAY[
-            CASE WHEN r.home_menu = 1 THEN 'home' END,
-            CASE WHEN r.pur_form_menu = 1 THEN 'purchase_form' END,
-            CASE WHEN r.pur_form_online = 1 THEN 'purchase_online' END,
-            CASE WHEN r.pur_form_offline = 1 THEN 'purchase_offline' END,
-            CASE WHEN r.sale_form_menu = 1 THEN 'sales_form' END,
-            CASE WHEN r.sale_form_online = 1 THEN 'sales_online' END,
-            CASE WHEN r.sale_form_offline = 1 THEN 'sales_offline' END,
-            CASE WHEN r.sale_return_menu = 1 THEN 'sale_return' END,
-            CASE WHEN r.sale_node_menu = 1 THEN 'sale_node' END,
-            CASE WHEN r.reports = 1 THEN 'reports' END,
-            CASE WHEN r.camera_settings = 1 THEN 'camera_settings' END,
-            CASE WHEN r.wb_settings = 1 THEN 'weighbridge_settings' END
-          ]::TEXT[] as permissions,
-          CURRENT_TIMESTAMP as createdAt
-        FROM users u
-        LEFT JOIN branches b ON u.branchid = b.branch_id
-        LEFT JOIN role r ON u.userid = r.roleid
-        WHERE r.roleid IS NOT NULL
-        ORDER BY u.userid DESC
+  // Create role table if it doesn't exist
+app.post('/api/create-role-table', async (req: Request, res: Response) => {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS role (
+        roleid SERIAL PRIMARY KEY,
+        role_name VARCHAR(100),
+        home_menu INTEGER DEFAULT 0,
+        pur_form_menu INTEGER DEFAULT 0,
+        pur_form_online INTEGER DEFAULT 0,
+        pur_form_offline INTEGER DEFAULT 0,
+        sale_form_menu INTEGER DEFAULT 0,
+        sale_form_online INTEGER DEFAULT 0,
+        sale_form_offline INTEGER DEFAULT 0,
+        sale_return_menu INTEGER DEFAULT 0,
+        sale_node_menu INTEGER DEFAULT 0,
+        reports INTEGER DEFAULT 0,
+        camera_settings INTEGER DEFAULT 0,
+        wb_settings INTEGER DEFAULT 0
+      )
+    `);
+
+    // Insert default roles if table is empty
+    const existingRoles = await pool.query('SELECT COUNT(*) FROM role');
+    if (parseInt(existingRoles.rows[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO role (role_name, home_menu, pur_form_menu, pur_form_online, pur_form_offline, sale_form_menu, sale_form_online, sale_form_offline, sale_return_menu, sale_node_menu, reports, camera_settings, wb_settings)
+        VALUES 
+        ('Admin', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
+        ('Office', 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0),
+        ('HOD', 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0),
+        ('Employee', 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0)
       `);
-
-      // Filter out NULL values from permissions array
-      const processedRows = result.rows.map(row => ({
-        ...row,
-        permissions: row.permissions.filter(p => p !== null)
-      }));
-
-      res.json(processedRows);
-    } catch (error) {
-      console.error('Error fetching user roles:', error);
-      res.status(500).json({ message: 'Internal server error' });
     }
-  });
+
+    res.json({ success: true, message: 'Role table created successfully' });
+  } catch (error) {
+    console.error('Error creating role table:', error);
+    res.status(500).json({ message: 'Failed to create role table' });
+  }
+});
+
+// Role management endpoint
+app.get('/api/user-roles', async (req: Request, res: Response) => {
+  try {
+    // Ensure role table exists first
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS role (
+        roleid SERIAL PRIMARY KEY,
+        role_name VARCHAR(100),
+        home_menu INTEGER DEFAULT 0,
+        pur_form_menu INTEGER DEFAULT 0,
+        pur_form_online INTEGER DEFAULT 0,
+        pur_form_offline INTEGER DEFAULT 0,
+        sale_form_menu INTEGER DEFAULT 0,
+        sale_form_online INTEGER DEFAULT 0,
+        sale_form_offline INTEGER DEFAULT 0,
+        sale_return_menu INTEGER DEFAULT 0,
+        sale_node_menu INTEGER DEFAULT 0,
+        reports INTEGER DEFAULT 0,
+        camera_settings INTEGER DEFAULT 0,
+        wb_settings INTEGER DEFAULT 0
+      )
+    `);
+
+    const result = await pool.query('SELECT * FROM role ORDER BY roleid');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching user roles:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Save role assignment endpoint
+app.post('/api/save-role', async (req: Request, res: Response) => {
+  try {
+    const { roleName, permissions } = req.body;
+
+    const query = `
+      INSERT INTO role (role_name, home_menu, pur_form_menu, pur_form_online, pur_form_offline, sale_form_menu, sale_form_online, sale_form_offline, sale_return_menu, sale_node_menu, reports, camera_settings, wb_settings)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING roleid
+    `;
+
+    const values = [
+      roleName,
+      permissions.homeMenu ? 1 : 0,
+      permissions.purFormMenu ? 1 : 0,
+      permissions.purFormOnline ? 1 : 0,
+      permissions.purFormOffline ? 1 : 0,
+      permissions.saleFormMenu ? 1 : 0,
+      permissions.saleFormOnline ? 1 : 0,
+      permissions.saleFormOffline ? 1 : 0,
+      permissions.saleReturnMenu ? 1 : 0,
+      permissions.saleNodeMenu ? 1 : 0,
+      permissions.reports ? 1 : 0,
+      permissions.cameraSettings ? 1 : 0,
+      permissions.wbSettings ? 1 : 0
+    ];
+
+    const result = await pool.query(query, values);
+    res.json({ success: true, roleId: result.rows[0].roleid });
+  } catch (error) {
+    console.error('Error saving role:', error);
+    res.status(500).json({ message: 'Failed to save role' });
+  }
+});
 
   // Static file serving for captured images is already handled above
 

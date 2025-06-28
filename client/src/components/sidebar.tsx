@@ -82,11 +82,13 @@ export default function Sidebar() {
   useEffect(() => {
     const storedExpandedItems = localStorage.getItem('expandedItems');
     if (storedExpandedItems) {
-      // Filter out Purchase Form and Sale Form to keep them collapsed by default
-      const filteredItems = JSON.parse(storedExpandedItems).filter(
-        (item: string) => item !== 'Purchase Form' && item !== 'Sale Form'
-      );
-      setExpandedItems(filteredItems);
+      try {
+        const parsedItems = JSON.parse(storedExpandedItems);
+        setExpandedItems(Array.isArray(parsedItems) ? parsedItems : []);
+      } catch (error) {
+        console.error('Error parsing stored expanded items:', error);
+        setExpandedItems([]);
+      }
     }
   }, []);
 
@@ -99,20 +101,7 @@ export default function Sidebar() {
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => {
       if (!prev.includes(itemName)) {
-        // If expanding this item, only close other expandable items if they're not Purchase or Sale forms
-        if (itemName === 'Purchase Form') {
-          // Close Sale Form when opening Purchase Form, but keep other items
-          const filteredItems = prev.filter(name => name !== 'Sale Form');
-          return [...filteredItems, itemName];
-        } else if (itemName === 'Sale Form') {
-          // Close Purchase Form when opening Sale Form, but keep other items
-          const filteredItems = prev.filter(name => name !== 'Purchase Form');
-          return [...filteredItems, itemName];
-        } else {
-          // For other items, close Purchase and Sale forms
-          const filteredItems = prev.filter(name => name !== 'Purchase Form' && name !== 'Sale Form');
-          return [...filteredItems, itemName];
-        }
+        return [...prev, itemName];
       } else {
         return prev.filter(name => name !== itemName);
       }
@@ -141,37 +130,25 @@ export default function Sidebar() {
           const expectedType = getQueryParam(subItem.href, 'type');
           const currentType = getQueryParam(location, 'type');
 
-          console.log('useEffect Active check:', {
-            itemName: item.name,
-            subItemName: subItem.name,
-            currentPath,
-            basePath,
-            currentType,
-            expectedType,
-            isMatch: currentPath === basePath && currentType === expectedType,
-            location
-          });
-
           return currentPath === basePath && currentType === expectedType;
         });
 
+        // Keep Purchase and Sales forms expanded when on their respective pages
         if (hasActiveSubItem && !expandedItems.includes(item.name)) {
-          setExpandedItems(prev => {
-            // Only remove the opposite form type, keep other expanded items
-            if (item.name === 'Purchase Form') {
-              const filteredItems = prev.filter(name => name !== 'Sale Form');
-              return [...filteredItems, item.name];
-            } else if (item.name === 'Sale Form') {
-              const filteredItems = prev.filter(name => name !== 'Purchase Form');
-              return [...filteredItems, item.name];
-            } else {
-              return [...prev, item.name];
-            }
-          });
+          setExpandedItems(prev => [...prev, item.name]);
+        }
+        
+        // Also check if we're on purchase-form or sales-form pages to keep them expanded
+        const currentPath = location.split('?')[0];
+        if ((currentPath === '/purchase-form' && item.name === 'Purchase Form') ||
+            (currentPath === '/sales-form' && item.name === 'Sale Form')) {
+          if (!expandedItems.includes(item.name)) {
+            setExpandedItems(prev => [...prev, item.name]);
+          }
         }
       }
     });
-  }, [location]);
+  }, [location, expandedItems]);
 
   const handleLogout = async () => {
     await logout();
@@ -299,12 +276,6 @@ export default function Sidebar() {
                       )}
                       onClick={() => {
                         setIsMobileMenuOpen(false);
-                        // Only close Purchase and Sale forms when clicking other form items
-                        if (item.name !== 'Purchase Form' && item.name !== 'Sale Form' && 
-                            (item.name === 'Role' || item.name === 'Reports' || item.name === 'Image Upload' || 
-                             item.name === 'Camera Settings' || item.name === 'Weighbridge Settings')) {
-                          setExpandedItems(prev => prev.filter(name => name !== 'Purchase Form' && name !== 'Sale Form'));
-                        }
                       }}
                     >
                       <item.icon className="mr-3 h-5 w-5" />
