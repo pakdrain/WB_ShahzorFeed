@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,7 +101,7 @@ export default function RoleManagement() {
       // Get username from database
       const response = await fetch(`/api/users/${userId}`);
       let userName = `User ${userId}`;
-      
+
       if (response.ok) {
         const userData = await response.json();
         userName = userData.username || userName;
@@ -121,7 +120,7 @@ export default function RoleManagement() {
       // Update or add user
       const updatedUsers = savedUsers.filter(u => u.userId !== userId);
       updatedUsers.push(userPermissions);
-      
+
       setSavedUsers(updatedUsers);
       localStorage.setItem('userPermissions', JSON.stringify(updatedUsers));
 
@@ -149,7 +148,7 @@ export default function RoleManagement() {
   const handleEditUser = (userPermissions: UserPermissions) => {
     setEditingUser(userPermissions);
     setUserId(userPermissions.userId);
-    
+
     // Set checkboxes based on saved permissions
     const newPermissions = {
       home: false,
