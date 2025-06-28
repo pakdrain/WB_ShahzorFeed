@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'wouter';
 import { 
   Home, 
@@ -55,19 +55,33 @@ export default function Sidebar() {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [location, setLocation] = useLocation();
   const { user, logout } = useAuth();
+  const sidebarRef = useRef(null);
+
+  // Load expanded items from localStorage on component mount
+  useEffect(() => {
+    const storedExpandedItems = localStorage.getItem('expandedItems');
+    if (storedExpandedItems) {
+      setExpandedItems(JSON.parse(storedExpandedItems));
+    }
+  }, []);
+
+  // Save expanded items to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('expandedItems', JSON.stringify(expandedItems));
+  }, [expandedItems]);
+
 
   const toggleExpanded = (itemName: string) => {
     setExpandedItems(prev => {
-      // When expanding a new section, collapse all others
       if (!prev.includes(itemName)) {
-        return [itemName]; // Only keep the newly expanded item
+        return [...prev, itemName];
       } else {
-        return prev.filter(name => name !== itemName); // Collapse the clicked item
+        return prev.filter(name => name !== itemName);
       }
     });
   };
 
-  // Helper function to check if a path is active
+
   const isActive = (path: string, queryParam?: string) => {
     const currentPath = location.split('?')[0];
     const currentQuery = new URLSearchParams(location.split('?')[1] || '');
@@ -79,7 +93,6 @@ export default function Sidebar() {
     return currentPath === path;
   };
 
-  // Auto-expand sections that have active sub-items and collapse others
   useEffect(() => {
     let activeSection = '';
     navigation.forEach(item => {
@@ -87,19 +100,17 @@ export default function Sidebar() {
         const hasActiveSubItem = item.subItems?.some(subItem => {
           const basePath = subItem.href.split('?')[0];
           const currentPath = location.split('?')[0];
-          
-          // Get the expected parameters from sub-item href
+
           const subItemParts = subItem.href.split('?');
           const subItemParams = new URLSearchParams(subItemParts[1] || '');
           const expectedType = subItemParams.get('type');
-          
-          // Get current URL parameters
+
           const currentParts = location.split('?');
           const currentParams = new URLSearchParams(currentParts[1] || '');
           const currentType = currentParams.get('type');
-          
+
           const isMatch = currentPath === basePath && currentType === expectedType;
-          
+
           return isMatch;
         });
 
@@ -108,14 +119,6 @@ export default function Sidebar() {
         }
       }
     });
-
-    // Set only the active section to be expanded
-    if (activeSection && !expandedItems.includes(activeSection)) {
-      setExpandedItems([activeSection]);
-    } else if (activeSection === '' && expandedItems.length > 0) {
-      // Collapse all if no active section found
-      setExpandedItems([]);
-    }
   }, [location]);
 
   const handleLogout = async () => {
@@ -138,10 +141,13 @@ export default function Sidebar() {
       </div>
 
       {/* Sidebar */}
-      <div className={cn(
-        "fixed inset-y-0 left-0 z-40 w-64 bg-monitoring-slate border-r border-monitoring-gray transform transition-transform duration-200 ease-in-out lg:translate-x-0",
-        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-      )}>
+      <div
+        ref={sidebarRef}
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 w-64 bg-monitoring-slate border-r border-monitoring-gray transform transition-transform duration-200 ease-in-out lg:translate-x-0",
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+        )}
+      >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-monitoring-gray">
@@ -159,19 +165,17 @@ export default function Sidebar() {
                 const hasActiveSubItem = item.subItems?.some(subItem => {
                   const basePath = subItem.href.split('?')[0];
                   const currentPath = location.split('?')[0];
-                  
-                  // Get the expected parameters from sub-item href
+
                   const subItemParts = subItem.href.split('?');
                   const subItemParams = new URLSearchParams(subItemParts[1] || '');
                   const expectedType = subItemParams.get('type');
-                  
-                  // Get current URL parameters
+
                   const currentParts = location.split('?');
                   const currentParams = new URLSearchParams(currentParts[1] || '');
                   const currentType = currentParams.get('type');
-                  
+
                   const isMatch = currentPath === basePath && currentType === expectedType;
-                  
+
                   return isMatch;
                 });
 
@@ -203,18 +207,15 @@ export default function Sidebar() {
                         {item.subItems?.map((subItem) => {
                           const basePath = subItem.href.split('?')[0];
                           const currentPath = location.split('?')[0];
-                          
-                          // Get the expected parameters from sub-item href
+
                           const subItemParts = subItem.href.split('?');
                           const subItemParams = new URLSearchParams(subItemParts[1] || '');
                           const expectedType = subItemParams.get('type');
-                          
-                          // Get current URL parameters
+
                           const currentParts = location.split('?');
                           const currentParams = new URLSearchParams(currentParts[1] || '');
                           const currentType = currentParams.get('type');
 
-                          // Check if this sub-item matches the current route
                           const isSubActive = currentPath === basePath && currentType === expectedType;
 
                           return (
@@ -229,7 +230,6 @@ export default function Sidebar() {
                                 )}
                                 onClick={() => {
                                   setIsMobileMenuOpen(false);
-                                  // Force navigation to ensure the route loads
                                   setTimeout(() => {
                                     if (window.location.href !== subItem.href) {
                                       window.location.href = subItem.href;
@@ -248,14 +248,14 @@ export default function Sidebar() {
                   </div>
                 );
               } else {
-                const isActive = location === item.href;
+                const isItemActive = location === item.href;
                 return (
                   <Link key={item.name} href={item.href}>
                     <Button
                       variant="ghost"
                       className={cn(
                         "w-full justify-start text-left h-12 px-4",
-                        isActive
+                        isItemActive
                           ? "bg-blue-600 text-white hover:bg-blue-700"
                           : "text-gray-300 hover:bg-monitoring-gray hover:text-white"
                       )}
