@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -5,12 +6,14 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useQuery } from '@tanstack/react-query';
 
 export default function RoleManagement() {
   const [selectedRole, setSelectedRole] = useState('');
   const [roleName, setRoleName] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [existingRoles, setExistingRoles] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [permissions, setPermissions] = useState({
     homeMenu: false,
     purFormMenu: false,
@@ -26,33 +29,39 @@ export default function RoleManagement() {
     wbSettings: false,
   });
 
-  // Fetch existing roles from API
-  const { data: existingRoles = [], refetch, isLoading, error } = useQuery({
-    queryKey: ['/api/user-roles'],
-  });
-
-  // Create role table if it doesn't exist
-  useEffect(() => {
-    const initializeTable = async () => {
-      try {
-        const response = await fetch('/api/create-role-table', { method: 'POST' });
-        if (response.ok) {
-          console.log('Role table initialized successfully');
-          refetch();
-        } else {
-          console.error('Failed to initialize role table');
-        }
-      } catch (error) {
-        console.error('Error initializing role table:', error);
-      }
-    };
-
-    initializeTable();
-  }, [refetch]);
-
   const roles = ['Admin', 'Office', 'HOD', 'Employee'];
 
-  const handlePermissionChange = (permission: string, checked: boolean) => {
+  // Fetch existing roles
+  const fetchRoles = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      // First ensure table exists
+      await fetch('/api/create-role-table', { method: 'POST' });
+      
+      // Then fetch roles
+      const response = await fetch('/api/user-roles');
+      if (response.ok) {
+        const data = await response.json();
+        setExistingRoles(data);
+      } else {
+        throw new Error('Failed to fetch roles');
+      }
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      setError(error.message);
+      setExistingRoles([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
+
+  const handlePermissionChange = (permission, checked) => {
     setPermissions(prev => ({
       ...prev,
       [permission]: checked
@@ -60,6 +69,11 @@ export default function RoleManagement() {
   };
 
   const handleSave = async () => {
+    if (!roleName.trim()) {
+      alert('Please enter a role name');
+      return;
+    }
+
     try {
       const response = await fetch('/api/save-role', {
         method: 'POST',
@@ -90,13 +104,13 @@ export default function RoleManagement() {
           wbSettings: false,
         });
         setShowForm(false);
-        refetch();
+        fetchRoles();
       } else {
-        alert('Failed to save role');
+        throw new Error('Failed to save role');
       }
     } catch (error) {
       console.error('Error saving role:', error);
-      alert('Error saving role');
+      alert('Error saving role: ' + error.message);
     }
   };
 
@@ -154,7 +168,7 @@ export default function RoleManagement() {
                     <Checkbox
                       id={key}
                       checked={value}
-                      onCheckedChange={(checked) => handlePermissionChange(key, checked as boolean)}
+                      onCheckedChange={(checked) => handlePermissionChange(key, checked)}
                     />
                     <Label htmlFor={key} className="text-sm">
                       {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
@@ -169,30 +183,6 @@ export default function RoleManagement() {
             </Button>
           </CardContent>
         </Card>
-      </div>
-    );
-  }
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="text-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-2 text-gray-600">Loading roles...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto p-6">
-        <div className="text-center py-8">
-          <p className="text-red-600">Error loading roles. Please try refreshing the page.</p>
-          <Button onClick={() => refetch()} className="mt-2">
-            Retry
-          </Button>
-        </div>
       </div>
     );
   }
@@ -227,32 +217,46 @@ export default function RoleManagement() {
           <CardDescription>View and manage user roles and permissions</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {existingRoles.length > 0 ? (
-              existingRoles
-                .filter((role: any) => !selectedRole || role.role_name === selectedRole)
-                .map((role: any) => (
-                <div key={role.roleid} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h3 className="font-semibold">{role.role_name}</h3>
-                    <p className="text-sm text-gray-600">
-                      Permissions: {Object.entries(role)
-                        .filter(([key, value]) => key !== 'roleid' && key !== 'role_name' && value === 1)
-                        .map(([key]) => key.replace(/_/g, ' '))
-                        .join(', ')}
-                    </p>
+          {isLoading ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-600">Loading roles...</p>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <p className="text-red-600 mb-4">Error loading roles: {error}</p>
+              <Button onClick={fetchRoles} variant="outline">
+                Try Again
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {existingRoles.length > 0 ? (
+                existingRoles
+                  .filter((role) => !selectedRole || role.role_name === selectedRole)
+                  .map((role) => (
+                  <div key={role.roleid} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <h3 className="font-semibold">{role.role_name}</h3>
+                      <p className="text-sm text-gray-600">
+                        Permissions: {Object.entries(role)
+                          .filter(([key, value]) => key !== 'roleid' && key !== 'role_name' && value === 1)
+                          .map(([key]) => key.replace(/_/g, ' '))
+                          .join(', ') || 'No permissions assigned'}
+                      </p>
+                    </div>
+                    <Button variant="outline" size="sm">
+                      Edit
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm">
-                    Edit
-                  </Button>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No roles found. Click "New Role" to create one.
                 </div>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                No roles found. Click "New Role" to create one.
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
