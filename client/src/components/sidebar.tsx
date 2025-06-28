@@ -250,8 +250,11 @@ export default function Sidebar() {
                                     ? "bg-blue-600 text-white hover:bg-blue-700"
                                     : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
                                 )}
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.preventDefault();
                                   setIsMobileMenuOpen(false);
+                                  // Force navigation by updating location directly
+                                  setLocation(subItem.href);
                                 }}
                               >
                                 <subItem.icon className="mr-3 h-4 w-4" />

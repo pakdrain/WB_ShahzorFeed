@@ -54,7 +54,12 @@ export default function RoleManagement() {
   }, [isAdmin]);
 
   const fetchUserPermissions = async (userId: string) => {
-    if (!userId) return;
+    if (!userId || !userId.trim()) {
+      setSelectedPermissions([]);
+      setUserInfo(null);
+      setMessage(null);
+      return;
+    }
     
     setIsLoading(true);
     try {
@@ -177,49 +182,49 @@ export default function RoleManagement() {
           </Alert>
         )}
 
-        {/* User Selection */}
+        {/* Complete Role Management Form */}
         <Card className="bg-monitoring-slate border-monitoring-gray">
           <CardHeader>
             <CardTitle className="text-white flex items-center">
               <Users className="mr-2 h-5 w-5" />
-              Select User
+              User Role Management
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="userId" className="text-gray-300">User ID</Label>
-              <Input
-                id="userId"
-                type="number"
-                value={targetUserId}
-                onChange={(e) => handleUserIdChange(e.target.value)}
-                placeholder="Enter user ID to manage permissions"
-                className="bg-monitoring-gray border-monitoring-gray text-white placeholder:text-gray-500 focus:border-monitoring-blue"
-                disabled={isLoading}
-              />
-            </div>
-            
-            {userInfo && (
-              <div className="p-3 bg-monitoring-gray/50 rounded-md border border-monitoring-gray">
-                <p className="text-white font-medium">{userInfo.userName}</p>
-                <p className="text-gray-400 text-sm">{userInfo.branchName}</p>
+          <CardContent className="space-y-6">
+            {/* User Selection Section */}
+            <div className="space-y-4 p-4 bg-monitoring-gray/20 rounded-md border border-monitoring-gray">
+              <div className="space-y-2">
+                <Label htmlFor="userId" className="text-gray-300 font-medium">User ID</Label>
+                <Input
+                  id="userId"
+                  type="number"
+                  value={targetUserId}
+                  onChange={(e) => handleUserIdChange(e.target.value)}
+                  placeholder="Enter user ID to manage permissions"
+                  className="bg-monitoring-gray border-monitoring-gray text-white placeholder:text-gray-500 focus:border-monitoring-blue"
+                  disabled={isLoading}
+                />
               </div>
-            )}
-          </CardContent>
-        </Card>
+              
+              {userInfo && (
+                <div className="p-3 bg-green-900/20 rounded-md border border-green-700">
+                  <p className="text-white font-medium">{userInfo.userName}</p>
+                  <p className="text-gray-400 text-sm">{userInfo.branchName}</p>
+                </div>
+              )}
+            </div>
 
-        {/* Permissions */}
-        {userInfo && (
-          <Card className="bg-monitoring-slate border-monitoring-gray">
-            <CardHeader>
+            {/* Permissions Section - Always Visible */}
+            <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-white">Permissions</CardTitle>
+                <h3 className="text-white text-lg font-medium">Menu Permissions</h3>
                 <div className="space-x-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleSelectAll}
                     className="border-monitoring-gray text-gray-300 hover:bg-monitoring-gray hover:text-white"
+                    disabled={isLoading}
                   >
                     Select All
                   </Button>
@@ -228,13 +233,13 @@ export default function RoleManagement() {
                     size="sm"
                     onClick={handleClearAll}
                     className="border-monitoring-gray text-gray-300 hover:bg-monitoring-gray hover:text-white"
+                    disabled={isLoading}
                   >
                     Clear All
                   </Button>
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {availablePermissions.map((permission) => (
                   <div key={permission.id} className="flex items-start space-x-3 p-3 rounded-md border border-monitoring-gray bg-monitoring-gray/20">
@@ -243,6 +248,7 @@ export default function RoleManagement() {
                       checked={selectedPermissions.includes(permission.id)}
                       onCheckedChange={(checked) => handlePermissionChange(permission.id, checked as boolean)}
                       className="mt-1"
+                      disabled={isLoading}
                     />
                     <div className="flex-1">
                       <Label
@@ -260,15 +266,20 @@ export default function RoleManagement() {
               <div className="mt-6 pt-4 border-t border-monitoring-gray">
                 <Button
                   onClick={handleSavePermissions}
-                  disabled={isLoading || !userInfo}
-                  className="w-full bg-monitoring-blue hover:bg-monitoring-blue/90 text-white"
+                  disabled={isLoading || !userInfo || !targetUserId}
+                  className="w-full bg-monitoring-blue hover:bg-monitoring-blue/90 text-white disabled:opacity-50"
                 >
                   {isLoading ? 'Saving...' : 'Save Permissions'}
                 </Button>
+                {!userInfo && targetUserId && (
+                  <p className="text-gray-400 text-sm text-center mt-2">
+                    Enter a valid User ID to enable saving permissions
+                  </p>
+                )}
               </div>
-            </CardContent>
-          </Card>
-        )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
