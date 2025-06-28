@@ -53,7 +53,7 @@ const getNavigation = (isAdmin: boolean) => {
   ];
 
   if (isAdmin) {
-    baseNavigation.splice(-2, 0, { name: 'Role Management', href: '/role-management', icon: Users });
+    baseNavigation.splice(-2, 0, { name: 'Role', href: '/role-management', icon: Users });
   }
 
   return baseNavigation;
