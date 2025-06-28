@@ -906,8 +906,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log(`Fetched latest master record: WB_ID ${result.rows[0].wb_id}`);
-      res.json(result.rows[0]);
-        } catch (error: any) {
+      res.json(result.rows[0]);        } catch (error: any) {
       console.error('Error fetching latest master record:', error);
       res.status(500).json({ error: 'Failed to fetch latest master record' });
     }
@@ -1637,78 +1636,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // User Permissions Routes
-  app.get('/api/users/:userId/permissions', async (req, res) => {
+  // Get user permissions
+  app.get('/api/users/:userId/permissions', async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
 
-      // First check if user exists and get user info
-      const userQuery = 'SELECT u.userid, u.username, b.branch_name FROM users u LEFT JOIN branches b ON u.branchid = b.branch_id WHERE u.userid = $1';
-      const userResult = await pool.query(userQuery, [userId]);
+      // First get user info
+      const userResult = await pool.query(
+        'SELECT username, (SELECT branch_name FROM branches WHERE branch_id = users.branchid) as branch_name FROM users WHERE userid = $1',
+        [userId]
+      );
 
       if (userResult.rows.length === 0) {
-        return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ message: 'User not found' });
       }
 
-      const user = userResult.rows[0];
+      // Get user permissions from user_roles table
+      const permissionsResult = await pool.query(
+        'SELECT role, permissions FROM user_roles WHERE user_id = $1',
+        [userId]
+      );
 
-      // Get user permissions
-      const permissionsQuery = 'SELECT permission_id FROM user_permissions WHERE userid = $1';
-      const permissionsResult = await pool.query(permissionsQuery, [userId]);
-
-      const permissions = permissionsResult.rows.map(row => row.permission_id);
+      const permissions = permissionsResult.rows.length > 0 ? permissionsResult.rows[0].permissions : [];
+      const role = permissionsResult.rows.length > 0 ? permissionsResult.rows[0].role : '';
 
       res.json({
         userInfo: {
-          userName: user.username,
-          branchName: user.branch_name || 'Unknown Branch'
+          userName: userResult.rows[0].username,
+          branchName: userResult.rows[0].branch_name
         },
-        permissions
+        permissions: permissions || [],
+        role: role
       });
     } catch (error) {
       console.error('Error fetching user permissions:', error);
-      res.status(500).json({ error: 'Failed to fetch user permissions' });
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
 
-  app.put('/api/users/:userId/permissions', async (req, res) => {
+  // Update user permissions
+  app.put('/api/users/:userId/permissions', async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
-      const { permissions } = req.body;
+      const { permissions, role } = req.body;
 
       // Check if user exists
-      const userQuery = 'SELECT userid FROM users WHERE userid = $1';
-      const userResult = await pool.query(userQuery, [userId]);
-
+      const userResult = await pool.query('SELECT userid FROM users WHERE userid = $1', [userId]);
       if (userResult.rows.length === 0) {
-        return res.status(404).json({ error: 'User not found' });
+        return res.status(404).json({ message: 'User not found' });
       }
 
-      // Create user_permissions table if it doesn't exist
+      // Create user_roles table if it doesn't exist
       await pool.query(`
-        CREATE TABLE IF NOT EXISTS user_permissions (
+        CREATE TABLE IF NOT EXISTS user_roles (
           id SERIAL PRIMARY KEY,
-          userid INTEGER REFERENCES users(userid) ON DELETE CASCADE,
-          permission_id VARCHAR(100) NOT NULL,
+          user_id INTEGER REFERENCES users(userid),
+          role VARCHAR(50) NOT NULL,
+          permissions TEXT[] DEFAULT '{}',
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE(userid, permission_id)
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(user_id)
         )
       `);
 
-      // Delete existing permissions for this user
-      await pool.query('DELETE FROM user_permissions WHERE userid = $1', [userId]);
+      // Insert or update user permissions
+      await pool.query(`
+        INSERT INTO user_roles (user_id, role, permissions, updated_at)
+        VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+        ON CONFLICT (user_id)
+        DO UPDATE SET 
+          role = EXCLUDED.role,
+          permissions = EXCLUDED.permissions,
+          updated_at = EXCLUDED.updated_at
+      `, [userId, role, permissions]);
 
-      // Insert new permissions
-      if (permissions && permissions.length > 0) {
-        const insertQuery = 'INSERT INTO user_permissions (userid, permission_id) VALUES ($1, $2)';
-        for (const permission of permissions) {
-          await pool.query(insertQuery, [userId, permission]);
-        }
-      }
-
-      res.json({ success: true, message: 'Permissions updated successfully' });
+      res.json({ message: 'Permissions updated successfully' });
     } catch (error) {
       console.error('Error updating user permissions:', error);
-      res.status(500).json({ error: 'Failed to update user permissions' });
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Get all user roles
+  app.get('/api/user-roles', async (req: Request, res: Response) => {
+    try {
+      // Create user_roles table if it doesn't exist
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS user_roles (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(userid),
+          role VARCHAR(50) NOT NULL,
+          permissions TEXT[] DEFAULT '{}',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(user_id)
+        )
+      `);
+
+      const result = await pool.query(`
+        SELECT 
+          ur.user_id as "userId",
+          u.username as "userName",
+          b.branch_name as "branchName",
+          ur.role,
+          ur.permissions,
+          ur.created_at as "createdAt"
+        FROM user_roles ur
+        JOIN users u ON ur.user_id = u.userid
+        LEFT JOIN branches b ON u.branchid = b.branch_id
+        ORDER BY ur.created_at DESC
+      `);
+
+      res.json(result.rows);
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
 

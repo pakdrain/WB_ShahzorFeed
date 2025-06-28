@@ -82,7 +82,11 @@ export default function Sidebar() {
   useEffect(() => {
     const storedExpandedItems = localStorage.getItem('expandedItems');
     if (storedExpandedItems) {
-      setExpandedItems(JSON.parse(storedExpandedItems));
+      // Filter out Purchase Form and Sale Form to keep them collapsed by default
+      const filteredItems = JSON.parse(storedExpandedItems).filter(
+        (item: string) => item !== 'Purchase Form' && item !== 'Sale Form'
+      );
+      setExpandedItems(filteredItems);
     }
   }, []);
 
