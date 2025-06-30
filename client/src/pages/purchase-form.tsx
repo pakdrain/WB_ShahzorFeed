@@ -93,11 +93,8 @@ export default function PurchaseForm() {
   // Function to load data by wb_id for editing
   const loadDataByWbId = async (wbId: number) => {
     try {
-      console.log('loadDataByWbId called with wbId:', wbId);
       const response = await fetch(`/api/purchase/by-wbid/${wbId}`);
-      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Response data:', data);
       if (data && data.master) {
         const master = data.master;
         const details = data.details && data.details.length > 0 ? data.details[0] : {};
@@ -162,7 +159,6 @@ export default function PurchaseForm() {
               igp_qty: details.igp_qty || '',
               balance_qty: details.balance_qty || ''
             }]);
-            console.log('IGP items set from saved detail fields in wb_id loading');
           }
         }, 100);
         
@@ -992,8 +988,6 @@ export default function PurchaseForm() {
   };
 
   const toggleOnlineMode = (isOnline: boolean) => {
-    console.log('toggleOnlineMode called with:', isOnline, 'Current onlineMode:', onlineMode);
-    
     // Update state immediately
     setOnlineMode(isOnline);
     
@@ -1009,15 +1003,11 @@ export default function PurchaseForm() {
       onlineEntry: isOnline ? 'Yes' : 'No',
       offlineEntry: isOnline ? 'No' : 'Yes'
     }));
-    
-    console.log('Mode changed to:', isOnline ? 'ONLINE' : 'OFFLINE');
   };
 
   const readLicensePlate = async () => {
     setPlateReading(true);
     try {
-      console.log('Starting enhanced license plate recognition...');
-      
       // First configure camera for optimal ANPR (one-time setup)
       try {
         await fetch('/api/cameras/configure-anpr', {
@@ -1025,9 +1015,8 @@ export default function PurchaseForm() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ cameraId: 1 })
         });
-        console.log('Camera ANPR configuration sent');
       } catch (configError) {
-        console.log('ANPR configuration warning:', configError);
+        // ANPR configuration optional
       }
       
       // Use enhanced plate reading with auto-capture
@@ -1039,11 +1028,9 @@ export default function PurchaseForm() {
       
       if (response.ok) {
         const result = await response.json();
-        console.log('Enhanced OCR Response:', result);
         
         if (result.success && result.plateNumber) {
           setFormData(prev => ({ ...prev, vehicleNo: result.plateNumber }));
-          console.log('License plate detected:', result.plateNumber, 'Method:', result.method);
           
           // Show success message with method info and image capture status
           const methodText = result.method === 'camera_anpr_api' ? 'Camera ANPR' : 'Computer Vision OCR';
@@ -1051,12 +1038,10 @@ export default function PurchaseForm() {
           
           alert(`✅ License plate detected: ${result.plateNumber}\nMethod: ${methodText}\nConfidence: ${(result.confidence * 100).toFixed(0)}%${captureText}`);
         } else {
-          console.log('No license plate detected:', result.error);
           alert(`❌ License plate recognition failed:\n${result.error}\n\n📋 Troubleshooting:\n- Ensure vehicle is positioned in camera view\n- Check license plate is clearly visible and well-lit\n- Verify camera network connectivity (${camera?.ip || '10.10.10.146'})\n- Confirm camera ANPR feature is enabled`);
         }
       } else {
         const errorText = await response.text();
-        console.error('API error:', errorText);
         alert('❌ Failed to process camera image - check network connection');
       }
     } catch (error) {
@@ -1104,8 +1089,6 @@ export default function PurchaseForm() {
     const typeMode = urlParams.get('type');
     const offlineEditSlip = urlParams.get('offline_edit');
     
-    console.log('URL parameters:', { editWbId, formType, typeMode, offlineEditSlip });
-    
     // Set form type based on URL parameter
     if (formType === 'sales') {
       setSelectedForm('sales');
@@ -1115,11 +1098,9 @@ export default function PurchaseForm() {
     
     // Set online/offline mode based on type parameter - IMMEDIATE UPDATE
     if (typeMode === 'offline') {
-      console.log('Setting OFFLINE mode from URL parameter');
       setOnlineMode(false);
       setSelectedForm('purchase');
     } else if (typeMode === 'online') {
-      console.log('Setting ONLINE mode from URL parameter');
       setOnlineMode(true);
       setSelectedForm('purchase');
     }

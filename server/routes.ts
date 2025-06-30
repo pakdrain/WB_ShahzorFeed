@@ -850,180 +850,190 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 // Camera ANPR configuration endpoint
-app.post('/api/cameras/configure-anpr', async (req: Request, res: Response) => {
-  try {
-    const { cameraId, settings } = req.body;
-    
-    // Get camera details
-    const camera = await storage.getCamera(cameraId);
-    if (!camera) {
-      return res.status(404).json({ error: 'Camera not found' });
-    }
+  app.post('/api/cameras/configure-anpr', async (req: Request, res: Response) => {
+    try {
+      const { cameraId, settings } = req.body;
+      
+      // Get camera details
+      const camera = await storage.getCamera(cameraId);
+      if (!camera) {
+        return res.status(404).json({ error: 'Camera not found' });
+      }
 
-    const { ip, username = 'admin', password = 'admin123' } = camera;
-    
-    // Configuration URLs for ANPR optimization
-    const configCommands = [
-      // Enable ANPR/Vehicle detection
-      `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].Enable=true`,
-      `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].RuleType=TrafficCar`,
+      const { ip, username = 'admin', password = 'admin123' } = camera;
       
-      // Set capture mode to video for continuous detection
-      `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.CaptureMode=Video`,
-      
-      // Enable unlicensed vehicle snapshot
-      `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.UnlicensedVehicleSnapshot=true`,
-      
-      // Set high sensitivity
-      `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.Sensitivity=High`,
-      
-      // Configure snapshot interval
-      `http://{username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.SnapshotInterval=3`,
-    ];
+      // Configuration URLs for ANPR optimization
+      const configCommands = [
+        // Enable ANPR/Vehicle detection
+        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].Enable=true`,
+        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].RuleType=TrafficCar`,
+        
+        // Set capture mode to video for continuous detection
+        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.CaptureMode=Video`,
+        
+        // Enable unlicensed vehicle snapshot
+        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.UnlicensedVehicleSnapshot=true`,
+        
+        // Set high sensitivity
+        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.Sensitivity=High`,
+        
+        // Configure snapshot interval
+        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.SnapshotInterval=3`,
+      ];
 
-    const results = [];
-    
-    for (const url of configCommands) {
-      try {
-        const response = await fetch(url, {
-          method: 'GET',
-          timeout: 5000
-        });
-        results.push({
-          url: url.replace(password, '****'),
-          status: response.status,
-          success: response.ok
-        });
-      } catch (error) {
-        results.push({
-          url: url.replace(password, '****'),
-
-
-// Vehicle image capture endpoint
-app.post('/api/capture/vehicle-image', async (req: Request, res: Response) => {
-  try {
-    const { plateNumber, cameraId, timestamp } = req.body;
-    
-    // Get camera details
-    const camera = await storage.getCamera(cameraId);
-    if (!camera) {
-      return res.status(404).json({ error: 'Camera not found' });
-    }
-
-    const { ip, username = 'admin', password = 'admin123' } = camera;
-    
-    // Create vehicle images directory
-    const vehicleImagesDir = './captured_images/vehicles';
-    await fs.mkdir(vehicleImagesDir, { recursive: true });
-    
-    // Generate filename with plate number and timestamp
-    const cleanPlateNumber = plateNumber.replace(/[^a-zA-Z0-9]/g, '');
-    const timeStr = new Date(timestamp).toISOString().replace(/[:.]/g, '-');
-    const filename = `vehicle_${cleanPlateNumber}_${timeStr}.jpg`;
-    const imagePath = path.join(vehicleImagesDir, filename);
-    
-    // Capture image from camera
-    const captureUrl = `http://${username}:${password}@${ip}/cgi-bin/snapshot.cgi`;
-    
-    const response = await fetch(captureUrl, { timeout: 10000 });
-    
-    if (response.ok && response.body) {
-      const buffer = await response.arrayBuffer();
-      await fs.writeFile(imagePath, Buffer.from(buffer));
+      const results = [];
       
-      log(`📸 Vehicle image captured: ${filename}`);
-      
+      for (const url of configCommands) {
+        try {
+          const response = await fetch(url, {
+            method: 'GET',
+            timeout: 5000
+          });
+          results.push({
+            url: url.replace(password, '****'),
+            status: response.status,
+            success: response.ok
+          });
+        } catch (error: any) {
+          results.push({
+            url: url.replace(password, '****'),
+            status: 'error',
+            success: false,
+            error: error.message
+          });
+        }
+      }
+
       res.json({
         success: true,
-        message: 'Vehicle image captured successfully',
-        imagePath,
-        filename,
-        plateNumber
+        message: 'ANPR configuration attempted',
+        results
       });
-    } else {
-      throw new Error(`Failed to capture image: ${response.status}`);
+
+    } catch (error) {
+      console.error('Error configuring camera ANPR:', error);
+      res.status(500).json({ error: 'Failed to configure camera ANPR' });
     }
-    
-  } catch (error: any) {
-    console.error('Error capturing vehicle image:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: `Failed to capture vehicle image: ${error.message}` 
-    });
-  }
-});
+  });
 
-
-          status: 'error',
-          success: false,
-          error: error.message
-        });
+  // Vehicle image capture endpoint
+  app.post('/api/capture/vehicle-image', async (req: Request, res: Response) => {
+    try {
+      const { plateNumber, cameraId, timestamp } = req.body;
+      
+      // Get camera details
+      const camera = await storage.getCamera(cameraId);
+      if (!camera) {
+        return res.status(404).json({ error: 'Camera not found' });
       }
-    }
 
-    res.json({
-      success: true,
-      message: 'ANPR configuration attempted',
-      results
-    });
-
-  } catch (error) {
-    console.error('Error configuring camera ANPR:', error);
-    res.status(500).json({ error: 'Failed to configure camera ANPR' });
-  }
-});
-
-// Enhanced license plate reading with auto-capture
-app.post('/api/cameras/read-plate-enhanced', async (req: Request, res: Response) => {
-  try {
-    const { cameraId } = req.body;
-    
-    // First, try to read the license plate
-    const plateResponse = await fetch('/api/cameras/read-plate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cameraId })
-    });
-    
-    const plateResult = await plateResponse.json();
-    
-    // If successful, capture vehicle image
-    if (plateResult.success && plateResult.plateNumber) {
-      try {
-        // Auto-capture vehicle image after successful plate reading
-        const captureResponse = await fetch('/api/capture/vehicle-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            plateNumber: plateResult.plateNumber,
-            cameraId,
-            timestamp: new Date().toISOString()
-          })
-        });
+      const { ip, username = 'admin', password = 'admin123' } = camera;
+      
+      // Create vehicle images directory
+      const vehicleImagesDir = './captured_images/vehicles';
+      await fs.mkdir(vehicleImagesDir, { recursive: true });
+      
+      // Generate filename with plate number and timestamp
+      const cleanPlateNumber = plateNumber.replace(/[^a-zA-Z0-9]/g, '');
+      const timeStr = new Date(timestamp).toISOString().replace(/[:.]/g, '-');
+      const filename = `vehicle_${cleanPlateNumber}_${timeStr}.jpg`;
+      const imagePath = path.join(vehicleImagesDir, filename);
+      
+      // Capture image from camera
+      const captureUrl = `http://${username}:${password}@${ip}/cgi-bin/snapshot.cgi`;
+      
+      const response = await fetch(captureUrl, { timeout: 10000 });
+      
+      if (response.ok && response.body) {
+        const buffer = await response.arrayBuffer();
+        await fs.writeFile(imagePath, Buffer.from(buffer));
         
-        if (captureResponse.ok) {
-          const captureResult = await captureResponse.json();
-          plateResult.vehicleImageCaptured = true;
-          plateResult.imagePath = captureResult.imagePath;
-        }
-      } catch (captureError) {
-        console.log('Vehicle image capture failed:', captureError);
-        plateResult.vehicleImageCaptured = false;
+        res.json({
+          success: true,
+          message: 'Vehicle image captured successfully',
+          imagePath,
+          filename,
+          plateNumber
+        });
+      } else {
+        throw new Error(`Failed to capture image: ${response.status}`);
       }
+      
+    } catch (error: any) {
+      console.error('Error capturing vehicle image:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: `Failed to capture vehicle image: ${error.message}` 
+      });
     }
-    
-    res.json(plateResult);
-    
-  } catch (error) {
-    console.error('Error in enhanced plate reading:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Enhanced plate reading failed' 
-    });
-  }
-});
+  });
 
+  // Enhanced license plate reading with auto-capture
+  app.post('/api/cameras/read-plate-enhanced', async (req: Request, res: Response) => {
+    try {
+      const { cameraId } = req.body;
+      
+      // First, try to read the license plate
+      const plateResponse = await fetch('/api/cameras/read-plate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cameraId })
+      });
+      
+      const plateResult = await plateResponse.json();
+      
+      // If successful, capture vehicle image
+      if (plateResult.success && plateResult.plateNumber) {
+        try {
+          // Auto-capture vehicle image after successful plate reading
+          const captureResponse = await fetch('/api/capture/vehicle-image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              plateNumber: plateResult.plateNumber,
+              cameraId,
+              timestamp: new Date().toISOString()
+            })
+          });
+          
+          if (captureResponse.ok) {
+            const captureResult = await captureResponse.json();
+            plateResult.vehicleImageCaptured = true;
+            plateResult.imagePath = captureResult.imagePath;
+          }
+        } catch (captureError) {
+          plateResult.vehicleImageCaptured = false;
+        }
+      }
+      
+      res.json(plateResult);
+      
+    } catch (error) {
+      console.error('Error in enhanced plate reading:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Enhanced plate reading failed' 
+      });
+    }
+  });
 
+  // Second weight image capture endpoints continued
+  app.post('/api/capture/second-weight', async (req: Request, res: Response) => {
+    try {
+      const { slipNo, cameraIp, cameraPort, username, password } = req.body;
+
+      if (!slipNo || !cameraIp || !cameraPort) {
+        return res.status(400).json({ 
+          error: 'Missing required fields: slipNo, cameraIp, cameraPort' 
+        });
+      }
+
+      const imagePath = await imageCaptureService.captureSecondWeightImage({
+        slipNo,
+        cameraIp,
+        cameraPort,
+        username,
+        password
       });
 
       res.json({ 
