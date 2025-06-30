@@ -847,7 +847,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cameraPort,
         username,
         password
+      });
 
+      res.json({ 
+        success: true, 
+        imagePath: imagePath,
+        message: 'Second weight image captured successfully' 
+      });
+
+    } catch (error) {
+      console.error('Error capturing second weight image:', error);
+      res.status(500).json({ 
+        error: 'Failed to capture second weight image',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 
 // Camera ANPR configuration endpoint
   app.post('/api/cameras/configure-anpr', async (req: Request, res: Response) => {
