@@ -1016,8 +1016,22 @@ export default function PurchaseForm() {
   const readLicensePlate = async () => {
     setPlateReading(true);
     try {
-      console.log('Starting license plate recognition...');
-      const response = await fetch('/api/cameras/read-plate', {
+      console.log('Starting enhanced license plate recognition...');
+      
+      // First configure camera for optimal ANPR (one-time setup)
+      try {
+        await fetch('/api/cameras/configure-anpr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cameraId: 1 })
+        });
+        console.log('Camera ANPR configuration sent');
+      } catch (configError) {
+        console.log('ANPR configuration warning:', configError);
+      }
+      
+      // Use enhanced plate reading with auto-capture
+      const response = await fetch('/api/cameras/read-plate-enhanced', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cameraId: 1 })
@@ -1025,27 +1039,29 @@ export default function PurchaseForm() {
       
       if (response.ok) {
         const result = await response.json();
-        console.log('OCR Response:', result);
+        console.log('Enhanced OCR Response:', result);
         
         if (result.success && result.plateNumber) {
           setFormData(prev => ({ ...prev, vehicleNo: result.plateNumber }));
           console.log('License plate detected:', result.plateNumber, 'Method:', result.method);
           
-          // Show success message with method info
+          // Show success message with method info and image capture status
           const methodText = result.method === 'camera_anpr_api' ? 'Camera ANPR' : 'Computer Vision OCR';
-          alert(`License plate detected: ${result.plateNumber}\nMethod: ${methodText}\nConfidence: ${(result.confidence * 100).toFixed(0)}%`);
+          const captureText = result.vehicleImageCaptured ? '\n✅ Vehicle image captured automatically' : '\n⚠️ Image capture failed';
+          
+          alert(`✅ License plate detected: ${result.plateNumber}\nMethod: ${methodText}\nConfidence: ${(result.confidence * 100).toFixed(0)}%${captureText}`);
         } else {
           console.log('No license plate detected:', result.error);
-          alert(`License plate recognition failed:\n${result.error}\n\nPlease ensure:\n- Camera is connected and accessible\n- Vehicle with license plate is visible in camera view\n- Camera has clear view of the license plate`);
+          alert(`❌ License plate recognition failed:\n${result.error}\n\n📋 Troubleshooting:\n- Ensure vehicle is positioned in camera view\n- Check license plate is clearly visible and well-lit\n- Verify camera network connectivity (${camera?.ip || '10.10.10.146'})\n- Confirm camera ANPR feature is enabled`);
         }
       } else {
         const errorText = await response.text();
         console.error('API error:', errorText);
-        alert('Failed to process camera image');
+        alert('❌ Failed to process camera image - check network connection');
       }
     } catch (error) {
       console.error('Error reading license plate:', error);
-      alert('Error connecting to camera system');
+      alert('❌ Error connecting to camera system - verify camera is accessible');
     }
     setPlateReading(false);
   };
