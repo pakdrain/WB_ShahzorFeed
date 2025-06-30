@@ -1022,7 +1022,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Second weight image capture endpoints continued
+  app.post('/api/capture/second-weight', async (req: Request, res: Response) => {
+    try {
+      const { slipNo, cameraIp, cameraPort, username, password } = req.body;
 
+      if (!slipNo || !cameraIp || !cameraPort) {
+        return res.status(400).json({ 
+          error: 'Missing required fields: slipNo, cameraIp, cameraPort' 
+        });
+      }
+
+      const imagePath = await imageCaptureService.captureSecondWeightImage({
+        slipNo,
+        cameraIp,
+        cameraPort,
+        username,
+        password
       });
 
       res.json({ 
