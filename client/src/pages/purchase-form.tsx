@@ -1179,26 +1179,34 @@ export default function PurchaseForm() {
     // Fetch branches for dropdown
     fetch('/api/branches')
       .then(res => res.json())
-      .then((data: any[]) => {
-        setBranches(data);
-        console.log('Branches fetched:', data);
-        
-        // Set default branch based on logged-in user's branch
-        if (data.length > 0 && (!formData.branchId || formData.branchId === '')) {
-          const userBranchId = user?.branchId;
-          const defaultBranch = userBranchId ? 
-            data.find(b => b.branch_id === userBranchId) || data[0] : 
-            data[0];
-          setFormData(prev => ({
-            ...prev,
-            branchId: String(defaultBranch.branch_id),
-            branch: String(defaultBranch.branch_id),
-            createdBy: String(user?.userid || '')
-          }));
+      .then((data: any) => {
+        // Check if data is an array (success) or error object
+        if (Array.isArray(data)) {
+          setBranches(data);
+          console.log('Branches fetched:', data);
+          
+          // Set default branch based on logged-in user's branch
+          if (data.length > 0 && (!formData.branchId || formData.branchId === '')) {
+            const userBranchId = user?.branchId;
+            const defaultBranch = userBranchId ? 
+              data.find(b => b.branch_id === userBranchId) || data[0] : 
+              data[0];
+            setFormData(prev => ({
+              ...prev,
+              branchId: String(defaultBranch.branch_id),
+              branch: String(defaultBranch.branch_id),
+              createdBy: String(user?.userid || '')
+            }));
+          }
+        } else {
+          // Handle error response
+          console.error('Branches API error:', data);
+          setBranches([]);
         }
       })
       .catch((err: any) => {
         console.error('Error fetching branches:', err);
+        setBranches([]);
       });
 
     const now = new Date().toISOString();
