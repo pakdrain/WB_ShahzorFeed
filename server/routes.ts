@@ -495,6 +495,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
+  // Database wake-up endpoint
+  app.get("/api/db/wake", async (req, res) => {
+    try {
+      const result = await pool.query('SELECT NOW()');
+      res.json({ 
+        status: "Database is awake", 
+        timestamp: result.rows[0].now,
+        message: "Database connection successful"
+      });
+    } catch (error: any) {
+      console.error('Database wake-up error:', error);
+      res.status(500).json({ 
+        status: "Database wake-up failed", 
+        error: error.message 
+      });
+    }
+  });
+
   // Weight API endpoints use imported variables from weight-state
 
   // Weight data endpoint
