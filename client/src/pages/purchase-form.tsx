@@ -13,7 +13,7 @@ import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/lib/auth';
 
 
-export default function PurchaseForm() {
+function PurchaseForm() {
   const [location, setLocation] = useLocation();
   const [type, setType] = useState('');
   const { user } = useAuth();
@@ -3857,3 +3857,5 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
     </div>
   );
 }
+
+export default PurchaseForm;
