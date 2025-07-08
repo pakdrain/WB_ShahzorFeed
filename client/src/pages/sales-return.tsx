@@ -16,7 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 
-export default function SalesReturnForm() {
+function SalesReturnForm() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const [searchSlipNo, setSearchSlipNo] = useState("");
@@ -1899,3 +1899,5 @@ export default function SalesReturnForm() {
     </div>
   );
 }
+
+export default SalesReturnForm;

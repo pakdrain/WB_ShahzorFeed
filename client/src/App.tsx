@@ -36,7 +36,7 @@ function ProtectedApp() {
           <Route path="/voucher-entry" component={VoucherEntry} />
           <Route path="/voucher-view" component={VoucherView} />
           <Route path="/sales-form" component={SalesForm} />
-          <Route path="/sale-return" component={SalesReturn} />
+          <Route path="/sales-return" component={SalesReturn} />
           <Route path="/purchase-return" component={PurchaseReturn} />
           <Route path="/sale-node" component={SaleNode} />
           <Route path="/reports" component={Reports} />
