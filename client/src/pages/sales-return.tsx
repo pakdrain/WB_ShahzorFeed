@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 
-export default function SalesReturnForm() {
+function SalesReturnForm() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const [searchSlipNo, setSearchSlipNo] = useState("");
@@ -1500,7 +1499,7 @@ export default function SalesReturnForm() {
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
-          </button>
+          </Button>
           <button
             className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
             onClick={() => toggleOnlineMode(false)}
@@ -1742,7 +1741,7 @@ export default function SalesReturnForm() {
                   const urlParams = new URLSearchParams(window.location.search);
                   const typeMode = urlParams.get("type") || "online";
                   const targetUrl = `/sales-form?type=${typeMode}`;
-                  window.history.replaceState({}, "", targetUrl);
+                  window.history.pushState({}, "", targetUrl);
                   setLocation(targetUrl);
                   setTimeout(() => {
                     window.location.href = targetUrl;
@@ -2157,3 +2156,5 @@ export default function SalesReturnForm() {
     </div>
   );
 }
+
+export default SalesReturnForm;
