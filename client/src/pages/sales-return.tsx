@@ -820,7 +820,7 @@ export default function SalesReturnForm() {
 
     if (editWbId) {
       // Load record for editing by wb_id
-      //loadDataByWbId(parseInt(editWbId));  //Commented out because method definition is missing
+      loadDataByWbId(parseInt(editWbId)); //Calling the loadDataByWbId because it has been commented, now uncommented
     } else {
       // Reset form to clean state for new sales return - delay to ensure proper initialization
       setTimeout(() => {
@@ -1050,6 +1050,132 @@ export default function SalesReturnForm() {
     }
   };
 
+  // Function to load data by wb_id for editing
+  const loadDataByWbId = async (wbId: number) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/purchases/${wbId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data for wbId: ${wbId}`);
+      }
+      const data = await response.json();
+
+      // Ensure the data is properly structured
+      if (data && data.masterData) {
+        const masterData = data.masterData;
+        const salesData = data.salesData || [];
+
+        // Format date strings correctly
+        masterData.slipInTime = formatDatetimeLocal(masterData.slip_in_time);
+        masterData.slipOutTime = formatDatetimeLocal(masterData.slip_out_time);
+        masterData.slipDate = formatDatetimeLocal(masterData.slip_date);
+        masterData.returnDate = formatDatetimeLocal(masterData.return_date);
+
+        setFormData({
+          slipNo: masterData.slip_no || "",
+          slipInTime: masterData.slipInTime || "",
+          slipOutTime: masterData.slipOutTime || "",
+          slipDate: masterData.slipDate || "",
+          status: masterData.status || "",
+          entryType: masterData.entry_type || "Sales Return",
+          firstWeight: masterData.first_weight ? String(masterData.first_weight) : "",
+          secondWeight: masterData.second_weight ? String(masterData.second_weight) : "",
+          netWeight: masterData.net_weight ? String(masterData.net_weight) : "",
+          bardanaWeight: masterData.bardana_weight ? String(masterData.bardana_weight) : "",
+          grossWeight: masterData.gross_weight ? String(masterData.gross_weight) : "",
+          supplierWeight: masterData.supplier_weight ? String(masterData.supplier_weight) : "",
+          supplierWeightMinusBardana: masterData.supplier_weight_minus_bardana ? String(masterData.supplier_weight_minus_bardana) : "",
+          supplierWeightMinusOutWeight: masterData.supplier_weight_minus_out_weight ? String(masterData.supplier_weight_minus_out_weight) : "",
+          qualityDeduction: masterData.quality_deduction ? String(masterData.quality_deduction) : "",
+          vehicleNo: masterData.vehicle_no || "",
+          driverName: masterData.driver_name || "",
+          returnReason: masterData.return_reason || "",
+          returnDate: masterData.returnDate || "",
+          originalSlipNo: masterData.original_slip_no || "",
+          customerName: masterData.customer_name || "",
+          wbId: String(masterData.wb_id) || "",
+          companyId: String(masterData.company_id) || "",
+          branchId: String(masterData.branch_id) || "",
+          branch: String(masterData.branch_id) || "",
+          onlineEntry: masterData.online_entry || "Yes",
+          offlineEntry: masterData.offline_entry || "No",
+          createdBy: String(masterData.created_by) || "",
+          creationDate: masterData.creation_date || "",
+          lastUpdatedBy: String(masterData.last_updated_by) || "",
+          lastUpdatedDate: masterData.last_updated_date || "",
+          manualDcNo: masterData.manual_dc_no || "",
+          doId: masterData.do_id || "",
+          doNo: masterData.do_no || "",
+          doDate: masterData.do_date || "",
+          freight: masterData.freight ? String(masterData.freight) : "",
+          remarks: masterData.remarks || "",
+          igpNo: masterData.igp_no || "",
+          igpDate: masterData.igp_date || "",
+          poNo: masterData.po_no || "",
+          po_no: masterData.po_no || "",
+          itemCode: masterData.item_code || "",
+          itemDesc: masterData.item_desc || "",
+          poQty: masterData.po_qty || "",
+          igpQty: masterData.igp_qty || "",
+          balanceQty: masterData.balance_qty || "",
+          bardanaType: masterData.bardana_type || "",
+          wtPerBag: masterData.wt_per_bag ? String(masterData.wt_per_bag) : "",
+          noOfBags: masterData.no_of_bags ? String(masterData.no_of_bags) : "",
+          bagCondition: masterData.bag_condition || "",
+          bardanaTypeId: String(masterData.bardana_type_id) || "",
+          vendor: masterData.vendor || "",
+          vendorName: masterData.vendor_name || "",
+          customerId: String(masterData.customer_id) || "",
+          qualityDed: masterData.quality_ded || "",
+          weight: masterData.weight || "",
+          bags: masterData.bags || "",
+          wbItemPId: String(masterData.wb_item_p_id) || "",
+          itemId: String(masterData.item_id) || "",
+          poId: String(masterData.po_id) || "",
+          baradanaType: masterData.baradana_type || "",
+          manualIgpNo: masterData.manual_igp_no || "",
+          igpId: String(masterData.igp_id) || "",
+          vendorId: String(masterData.vendor_id) || "",
+          weightPerBags: masterData.weight_per_bags || "",
+          dcQty: masterData.dc_qty || "",
+          supWeightWithoutBardana: masterData.sup_weight_without_bardana || "",
+          netSupplierWeight: masterData.net_supplier_weight || "",
+          isPercentageMode: masterData.is_percentage_mode || false,
+        });
+
+        // Set sales data
+        setSalesData(
+          salesData.map((item: any) => ({
+            doId: item.do_id || "",
+            dcNo: item.dc_no || "",
+            doNo: item.do_no || "",
+            customerName: item.customer_name || "",
+            vehicleNo: item.vehicle_no || "",
+            doDate: item.do_date || "",
+            itemDescription: item.item_description || "",
+            dcQty: item.dc_qty ? String(item.dc_qty) : "",
+            doQty: item.do_qty ? String(item.do_qty) : "",
+            branch: item.branch || "",
+            dcId: item.dc_id || "",
+            customerId: item.customer_id || "",
+            itemId: item.item_id || "",
+            itemCode: item.item_code || "",
+          }))
+        );
+
+        setIsEditMode(true);
+        setEditingWbId(wbId);
+      } else {
+        alert("Invalid data format received for editing.");
+      }
+    } catch (error: any) {
+      console.error("Error loading data for editing:", error);
+      alert(`Error loading data for editing: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
@@ -1114,6 +1240,13 @@ export default function SalesReturnForm() {
                       console.log("wb_id:", record.wb_id);
                       console.log("entry_type:", record.entry_type);
                       // Load the data for editing if needed
+                      loadDataByWbId(record.wb_id);
+                      // Navigate to edit mode by updating URL - SAME PAGE RELOAD
+                      const urlParams = new URLSearchParams(window.location.search);
+                      urlParams.set("edit", record.wb_id);
+                      const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                      window.history.pushState({}, "", newUrl);
+                      setLocation(newUrl);
                     }}
                   >
                     {record.slip_no || "---"}
@@ -1224,6 +1357,14 @@ export default function SalesReturnForm() {
           >
             Clear
           </Button>
+          {isEditMode && (
+            <Button
+              className="h-8 px-2 text-sm bg-gray-500 hover:bg-gray-600 text-white font-medium"
+              onClick={cancelEdit}
+            >
+              Cancel Edit
+            </Button>
+          )}
         </div>
         <div className="flex gap-1 items-center">
           {/* Weight Display - positioned on left side with bolder text */}
@@ -1545,8 +1686,7 @@ export default function SalesReturnForm() {
                           autoComplete="off"
                           autoCorrect="off"
                           autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
+                          spellCheck="false                          data-form-type="other"
                         />
                       </div>
                       <div className="bg-white border border-gray-300 p-1">

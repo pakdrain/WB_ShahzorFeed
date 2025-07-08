@@ -1599,14 +1599,15 @@ app.get('/api/sales', async (req: Request, res: Response) => {
           bardana_weight, gross_weight, freight, remarks, driver_name, company_id,
           branch_id, online_entry, offline_entry, created_by, creation_date,
           last_updated_by, last_updated_date, manual_dc_no, entry_type,
-          slip_out_time, status, slip_date
+          slip_out_time, status, slip_date, return_reason, return_date, 
+          original_slip_no, customer_name
         )
         VALUES (
           $1, $2, $3, $4, $5, $6,
           $7, $8, $9, $10, $11, $12,
           $13, $14, $15, $16, $17,
           $18, $19, $20, $21,
-          $22, $23, $24
+          $22, $23, $24, $25, $26, $27, $28
         )
         RETURNING *;
       `;
@@ -1635,7 +1636,11 @@ app.get('/api/sales', async (req: Request, res: Response) => {
         'Sales Return',
         slip_out_time,
         status,
-        slip_date
+        slip_date,
+        return_reason,
+        return_date,
+        original_slip_no,
+        customer_name
       ];
 
       const masterResult = await pool.query(masterQuery, masterValues);

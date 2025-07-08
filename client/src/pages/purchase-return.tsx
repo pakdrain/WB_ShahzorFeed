@@ -11,6 +11,7 @@ import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/lib/auth';
+import { imageCaptureService } from '@/lib/image-capture';
 
 export default function PurchaseReturnForm() {
   const [location, setLocation] = useLocation();
@@ -939,7 +940,7 @@ export default function PurchaseReturnForm() {
                         2nd WHT
                       </Button>
                     </div>
-                    
+
                     {/* Camera Feed - below weight buttons */}
                     <div className="h-24 w-full overflow-hidden rounded">
                       <VideoStreamFullscreen
