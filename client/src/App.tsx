@@ -18,6 +18,7 @@ import ImageUpload from "@/pages/image-upload";
 import NotFound from "@/pages/not-found";
 import SaleReturn from "@/pages/sale-return";
 import SaleNode from "@/pages/sale-node";
+import PurchaseReturn from "@/pages/purchase-return";
 import VoucherEntry from "./pages/voucher-entry";
 import VoucherView from "./pages/voucher-view";
 
@@ -36,6 +37,7 @@ function ProtectedApp() {
           <Route path="/voucher-view" component={VoucherView} />
           <Route path="/sales-form" component={SalesForm} />
           <Route path="/sale-return" component={SaleReturn} />
+          <Route path="/purchase-return" component={PurchaseReturn} />
           <Route path="/sale-node" component={SaleNode} />
           <Route path="/reports" component={Reports} />
           <Route path="/image-upload" component={ImageUpload} />

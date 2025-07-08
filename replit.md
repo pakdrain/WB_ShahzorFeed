@@ -124,6 +124,15 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
 - **Database URLs**: Flexible PostgreSQL connection string support
 
 ## Changelog
+- July 08, 2025. Added Sale Return and Purchase Return forms with separate slip number sequences:
+  - Created comprehensive Sale Return form with return-specific fields (return reason, return date)
+  - Created comprehensive Purchase Return form based on Purchase form structure with additional return fields
+  - Added hierarchical "Returns" section in sidebar with Sale Return and Purchase Return sub-items
+  - Implemented separate slip number generation for SALE_RETURN and PURCHASE_RETURN entry types
+  - Added API endpoints `/api/sale-return/records` and `/api/purchase-return/records` for record fetching
+  - Updated database entry_type field to save "SALE_RETURN" and "PURCHASE_RETURN" appropriately
+  - Both return forms include complete weighbridge functionality with weight capture and form validation
+  - Return forms maintain same UI structure as original forms but with red-themed styling to indicate returns
 - June 25, 2025. Implemented real license plate recognition with computer vision:
   - Created Python-based OCR service using OpenCV and Tesseract for actual license plate detection
   - Added comprehensive image preprocessing for better OCR accuracy (grayscale, blur, threshold, morphology)

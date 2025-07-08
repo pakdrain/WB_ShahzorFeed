@@ -1522,6 +1522,58 @@ app.get('/api/sales', async (req: Request, res: Response) => {
     }
   });
 
+  // GET Sale Return records
+  app.get('/api/sale-return/records', async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT DISTINCT ON (slip_no) 
+          wb.wb_id,
+          wb.slip_no,
+          wb.entry_type,
+          wb.first_weight,
+          wb.second_weight,
+          wb.slip_in_time,
+          COALESCE(sd.vehicle_no, '') as vehicle_no
+        FROM wb_weighbridge wb 
+        LEFT JOIN sales_details sd ON wb.wb_id = sd.wb_id
+        WHERE wb.entry_type = 'SALE_RETURN'
+        ORDER BY slip_no DESC, wb.wb_id DESC
+      `;
+      
+      const result = await pool.query(query);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('Error fetching sale return records:', error);
+      res.status(500).json({ error: 'Failed to fetch sale return records' });
+    }
+  });
+
+  // GET Purchase Return records
+  app.get('/api/purchase-return/records', async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT DISTINCT ON (slip_no) 
+          wb.wb_id,
+          wb.slip_no,
+          wb.entry_type,
+          wb.first_weight,
+          wb.second_weight,
+          wb.slip_in_time,
+          COALESCE(wbi.vehicle_no, '') as vehicle_no
+        FROM wb_weighbridge wb 
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
+        WHERE wb.entry_type = 'PURCHASE_RETURN'
+        ORDER BY slip_no DESC, wb.wb_id DESC
+      `;
+      
+      const result = await pool.query(query);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('Error fetching purchase return records:', error);
+      res.status(500).json({ error: 'Failed to fetch purchase return records' });
+    }
+  });
+
   // GET endpoint for fetching deduction data by WB_ID
   app.get('/api/deduction/:wbId', async (req, res) => {
     try {

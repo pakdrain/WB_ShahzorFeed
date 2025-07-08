@@ -62,7 +62,23 @@ const getNavigation = (isAdmin: boolean) => {
     },
     { name: "Voucher Entry", href: "/voucher-entry", icon: FileText },
     { name: "Voucher View", href: "/voucher-view", icon: FileText },
-    { name: "Sale Return", href: "/sale-return", icon: RotateCcw },
+    {
+      name: "Returns",
+      icon: RotateCcw,
+      hasSubItems: true,
+      subItems: [
+        {
+          name: "Sale Return",
+          href: "/sale-return",
+          icon: RotateCcw,
+        },
+        {
+          name: "Purchase Return",
+          href: "/purchase-return",
+          icon: RotateCcw,
+        },
+      ],
+    },
     { name: "Sale Node", href: "/sale-node", icon: Network },
     { name: "Reports", href: "/reports", icon: BarChart3 },
     { name: "Camera Settings", href: "/settings", icon: Settings },
