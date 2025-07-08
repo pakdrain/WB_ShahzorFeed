@@ -969,8 +969,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const params: any[] = [];
       if (entry_type) {
-        query += ' AND wb.entry_type = $1';
-        params.push(entry_type);
+        // Handle different entry type formats
+        if (entry_type === 'SALE_RETURN') {
+          query += ' AND wb.entry_type = $1';
+          params.push('Sales Return');
+        } else if (entry_type === 'PURCHASE_RETURN') {
+          query += ' AND wb.entry_type = $1';
+          params.push('Purchase Return');
+        } else {
+          query += ' AND wb.entry_type = $1';
+          params.push(entry_type);
+        }
       }
 
       query += ' ORDER BY wb.wb_id DESC LIMIT 20';
@@ -1505,6 +1514,14 @@ app.get('/api/sales', async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'entry_type query parameter is required' });
       }
 
+      // Map entry types to database values
+      let dbEntryType = entry_type.toUpperCase();
+      if (entry_type === 'SALE_RETURN') {
+        dbEntryType = 'Sales Return';
+      } else if (entry_type === 'PURCHASE_RETURN') {
+        dbEntryType = 'Purchase Return';
+      }
+
       const query = `
         SELECT slip_no FROM wb_weighbridge 
         WHERE entry_type = $1 AND slip_no ~ '^[0-9]+$'
@@ -1512,7 +1529,7 @@ app.get('/api/sales', async (req: Request, res: Response) => {
         LIMIT 1
       `;
 
-      const result = await pool.query(query, [entry_type.toUpperCase()]);
+      const result = await pool.query(query, [dbEntryType]);
 
       let nextSlipNo = '1';
       if (result.rows.length > 0 && result.rows[0].slip_no) {
@@ -1522,11 +1539,168 @@ app.get('/api/sales', async (req: Request, res: Response) => {
         }
       }
 
-      console.log(`Generated next slip number for ${entry_type}: ${nextSlipNo}`);
+      console.log(`Generated next slip number for ${entry_type} (${dbEntryType}): ${nextSlipNo}`);
       res.json({ nextSlipNo });
     } catch (error: any) {
       console.error('Error generating next slip number:', error);
       res.status(500).json({ error: 'Failed to generate next slip number' });
+    }
+  });
+
+  // POST Sales Return - save master record and sales details
+  app.post('/api/sales-return/save', async (req: Request, res: Response) => {
+    try {
+      const { masterData, salesData } = req.body;
+      console.log('Incoming sales return data:', { masterData, salesData });
+
+      if (!masterData) {
+        return res.status(400).json({ error: 'Master data is required' });
+      }
+
+      const WB_ID = await generateWBID();
+
+      // Prepare master data payload with proper null handling for numeric fields
+      const {
+        slip_no = null,
+        slip_in_time = null,
+        first_weight = null,
+        second_weight = null,
+        net_weight = null,
+        bardana_weight = null,
+        gross_weight = null,
+        freight = null,
+        remarks = null,
+        driver_name = null,
+        company_id = null,
+        branch_id = null,
+        online_entry = null,
+        offline_entry = null,
+        created_by = null,
+        creation_date = null,
+        last_updated_by = null,
+        last_updated_date = null,
+        manual_dc_no = null,
+        slip_out_time = null,
+        status = null,
+        slip_date = null,
+        return_reason = null,
+        return_date = null,
+        original_slip_no = null,
+        customer_name = null
+      } = masterData;
+
+      // Convert online/offline entries to string
+      const onlineEntryStr = (online_entry === 'Yes' || online_entry === true) ? 'Yes' : null;
+      const offlineEntryStr = (offline_entry === 'Yes' || offline_entry === true) ? 'Yes' : null;
+
+      const masterQuery = `
+        INSERT INTO wb_weighbridge (
+          wb_id, slip_no, slip_in_time, first_weight, second_weight, net_weight,
+          bardana_weight, gross_weight, freight, remarks, driver_name, company_id,
+          branch_id, online_entry, offline_entry, created_by, creation_date,
+          last_updated_by, last_updated_date, manual_dc_no, entry_type,
+          slip_out_time, status, slip_date
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6,
+          $7, $8, $9, $10, $11, $12,
+          $13, $14, $15, $16, $17,
+          $18, $19, $20, $21,
+          $22, $23, $24
+        )
+        RETURNING *;
+      `;
+
+      const masterValues = [
+        WB_ID,
+        slip_no,
+        slip_in_time,
+        first_weight ? parseFloat(first_weight) : null,
+        second_weight ? parseFloat(second_weight) : null,
+        net_weight ? parseFloat(net_weight) : null,
+        bardana_weight ? parseFloat(bardana_weight) : null,
+        gross_weight ? parseFloat(gross_weight) : null,
+        freight ? parseFloat(freight) : null,
+        remarks,
+        driver_name,
+        company_id ? parseInt(company_id) : null,
+        branch_id ? parseInt(branch_id) : null,
+        onlineEntryStr,
+        offlineEntryStr,
+        created_by,
+        creation_date,
+        last_updated_by,
+        last_updated_date,
+        manual_dc_no,
+        'Sales Return',
+        slip_out_time,
+        status,
+        slip_date
+      ];
+
+      const masterResult = await pool.query(masterQuery, masterValues);
+      console.log('Sales return master data saved successfully:', masterResult.rows[0]);
+
+      // Save sales detail records for each non-empty row
+      if (salesData && Array.isArray(salesData) && salesData.length > 0) {
+        const nonEmptyRows = salesData.filter(row => 
+          row.dcNo || row.doNo || row.customerName || row.vehicleNo || 
+          row.itemDescription || row.dcQty || row.doQty
+        );
+
+        for (const row of nonEmptyRows) {
+          const salesItemPayload = {
+            wb_id: WB_ID,
+            bardana_type: null,
+            igp_no: row.dcNo || null,
+            vehicle_no: row.vehicleNo || null,
+            weight_per_bags: null,
+            igp_date: row.doDate || null,
+            supplier_weight: null,
+            quality_deduction: null,
+            bardana_weight: null,
+            no_of_bags: null,
+            vendor_name: row.customerName || null,
+            bag_condition: null,
+            po_no: row.doNo || null,
+            item_code: row.itemCode || null,
+            item_desc: row.itemDescription || null,
+            po_qty: row.doQty && row.doQty.trim() !== '' ? parseFloat(row.doQty) : null,
+            igp_qty: row.dcQty && row.dcQty.trim() !== '' ? parseFloat(row.dcQty) : null,
+            balance_qty: null,
+            customer_name: row.customerName || null,
+            do_no: row.doNo || null,
+            do_qty: row.doQty && row.doQty.trim() !== '' ? parseFloat(row.doQty) : null,
+            dc_qty: row.dcQty && row.dcQty.trim() !== '' ? parseFloat(row.dcQty) : null
+          };
+
+          const salesItemResponse = await fetch('/api/purchase-items', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(salesItemPayload),
+          });
+
+          if (!salesItemResponse.ok) {
+            console.error('Failed to save sales return item:', row);
+          }
+        }
+        console.log('Sales return details saved successfully');
+      }
+
+      res.json({ 
+        success: true, 
+        wb_id: WB_ID,
+        message: 'Sales return data saved successfully',
+        data: masterResult.rows[0] 
+      });
+    } catch (error: any) {
+      console.error('Error saving sales return data:', error);
+      res.status(500).json({ 
+        error: 'Failed to save sales return data',
+        details: error.message 
+      });
     }
   });
 

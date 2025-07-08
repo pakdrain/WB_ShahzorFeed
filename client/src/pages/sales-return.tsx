@@ -968,15 +968,83 @@ export default function SalesReturnForm() {
     }
 
     try {
+      // Prepare master data payload
+      const masterDataPayload = {
+        slip_no: formData.slipNo || null,
+        slip_in_time: formatISODate(formData.slipInTime),
+        first_weight: formData.firstWeight && formData.firstWeight.trim() !== "" 
+          ? parseFloat(formData.firstWeight) : null,
+        second_weight: formData.secondWeight && formData.secondWeight.trim() !== "" 
+          ? parseFloat(formData.secondWeight) : null,
+        net_weight: formData.netWeight && formData.netWeight.trim() !== "" 
+          ? parseFloat(formData.netWeight) : null,
+        bardana_weight: formData.bardanaWeight && formData.bardanaWeight.trim() !== "" 
+          ? parseFloat(formData.bardanaWeight) : null,
+        gross_weight: formData.grossWeight && formData.grossWeight.trim() !== "" 
+          ? parseFloat(formData.grossWeight) : null,
+        freight: formData.freight && formData.freight.trim() !== "" 
+          ? parseFloat(formData.freight) : null,
+        remarks: formData.remarks || null,
+        driver_name: formData.driverName || null,
+        company_id: formData.companyId && formData.companyId !== "undefined" && formData.companyId.trim() !== "" 
+          ? parseInt(formData.companyId, 10) : null,
+        branch_id: formData.branchId && formData.branchId !== "undefined" && formData.branchId.trim() !== "" 
+          ? parseInt(formData.branchId, 10) : null,
+        online_entry: formData.onlineEntry === "Yes" || formData.onlineEntry === true ? "Yes" : null,
+        offline_entry: formData.offlineEntry === "Yes" || formData.offlineEntry === true ? "Yes" : null,
+        created_by: user?.userid || null,
+        creation_date: formData.creationDate || null,
+        last_updated_by: formData.lastUpdatedBy && formData.lastUpdatedBy !== "undefined" && formData.lastUpdatedBy.trim() !== "" 
+          ? parseInt(formData.lastUpdatedBy, 10) : null,
+        last_updated_date: formData.lastUpdatedDate || null,
+        manual_dc_no: formData.manualDcNo || null,
+        slip_out_time: formatISODate(formData.slipOutTime),
+        status: formData.status || null,
+        slip_date: formData.slipDate || null,
+        return_reason: formData.returnReason || null,
+        return_date: formatISODate(formData.returnDate),
+        original_slip_no: formData.originalSlipNo || null,
+        customer_name: formData.customerName || null
+      };
+
+      // Filter non-empty sales rows
+      const nonEmptyRows = salesData.filter(
+        (row) =>
+          row.dcNo ||
+          row.doNo ||
+          row.customerName ||
+          row.vehicleNo ||
+          row.itemDescription ||
+          row.dcQty ||
+          row.doQty,
+      );
+
+      // Save to backend
+      const response = await fetch("/api/sales-return/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          masterData: masterDataPayload,
+          salesData: nonEmptyRows
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to save sales return data: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log("Sales return data saved successfully:", result);
       alert("Sales return data saved successfully!");
-      console.log("Sales return form data:", formData);
-      console.log("Sales return data:", salesData);
 
       // Reset form to clean state
       resetFormToInitial();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving sales return data:", error);
-      alert("Failed to save sales return data");
+      alert(`Failed to save sales return data: ${error.message}`);
     } finally {
       setLoading(false);
     }
