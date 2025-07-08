@@ -16,7 +16,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 
-function PurchaseReturnForm() {
+export default function PurchaseReturnForm() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const [searchSlipNo, setSearchSlipNo] = useState("");
@@ -1147,4 +1147,3 @@ function PurchaseReturnForm() {
   );
 }
 
-export default PurchaseReturnForm;
