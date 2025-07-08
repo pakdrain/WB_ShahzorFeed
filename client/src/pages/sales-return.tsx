@@ -17,7 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 
-function SalesReturnForm() {
+export default function SalesReturnForm() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const [searchSlipNo, setSearchSlipNo] = useState("");
@@ -1504,7 +1504,7 @@ function SalesReturnForm() {
           {/* Left Side - Main Form (Columns 1-8) */}
           <div className="col-span-8">
             {/* Master Table Section */}
-            <div className="bg-blue-50 p-2 rounded border mb-3">
+            <div className="bg-red-50 p-2 rounded border mb-3">
               <div className="grid grid-cols-9 gap-1">
                 {/* Column 1 - Left Form Fields */}
                 <div className="col-span-3 space-y-1">
@@ -1694,8 +1694,8 @@ function SalesReturnForm() {
               <div
                 className={`inline-block px-8 py-3 rounded-lg shadow-md ${
                   onlineMode === true
-                    ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
-                    : "bg-gradient-to-r from-red-500 to-red-600 text-white"
+                    ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
+                    : "bg-gradient-to-r from-red-700 to-red-800 text-white"
                 }`}
               >
                 <h2 className="text-3xl font-bold tracking-wide">
@@ -1738,13 +1738,13 @@ function SalesReturnForm() {
               >
                 Sales
               </Button>
-              <Button className="h-6 text-xs px-3 bg-blue-600 text-white">
+              <Button className="h-6 text-xs px-3 bg-red-600 text-white">
                 Sales Return
               </Button>
             </div>
 
             {/* Sales Return Details Section */}
-            <div className="bg-blue-50 p-2 rounded border">
+            <div className="bg-red-50 p-2 rounded border">
               <div className="h-full flex flex-col">
                 {/* Sales Table Header - with delete action column */}
                 <div
@@ -1755,34 +1755,34 @@ function SalesReturnForm() {
                     width: "1250px",
                   }}
                 >
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                  <div className="bg-red-100 p-1 text-center border border-gray-400 text-black">
                     DC #
                   </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                  <div className="bg-red-100 p-1 text-center border border-gray-400 text-black">
                     DO #
                   </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                  <div className="bg-red-100 p-1 text-center border border-gray-400 text-black">
                     Customer Name
                   </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                  <div className="bg-red-100 p-1 text-center border border-gray-400 text-black">
                     Vehicle No
                   </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                  <div className="bg-red-100 p-1 text-center border border-gray-400 text-black">
                     Do Date
                   </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                  <div className="bg-red-100 p-1 text-center border border-gray-400 text-black">
                     Item Description
                   </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                  <div className="bg-red-100 p-1 text-center border border-gray-400 text-black">
                     DC Qty
                   </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                  <div className="bg-red-100 p-1 text-center border border-gray-400 text-black">
                     DO Qty
                   </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                  <div className="bg-red-100 p-1 text-center border border-gray-400 text-black">
                     Branch
                   </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                  <div className="bg-red-100 p-1 text-center border border-gray-400 text-black">
                     ✖
                   </div>
                 </div>
@@ -2127,5 +2127,3 @@ function SalesReturnForm() {
     </div>
   );
 }
-
-export default SalesReturnForm;
