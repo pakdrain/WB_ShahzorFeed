@@ -448,7 +448,7 @@ export default function SalesReturnForm() {
 
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(isEditMode);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
 
   const [onlineMode, setOnlineMode] = useState(() => {

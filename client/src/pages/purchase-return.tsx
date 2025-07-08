@@ -39,7 +39,6 @@ export default function PurchaseReturnForm() {
     const returnParam = searchParams.get("return");
     console.log("Type param changed:", currentType);
     console.log("Return param:", returnParam);
-    setType(currentType ?? "");
     setIsReturnMode(true); // Always true for return form
   }, [location]);
 
