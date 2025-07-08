@@ -17,6 +17,23 @@ interface PurchaseRecord {
   branch_id: number;
   online_entry: string;
   offline_entry: string;
+
+  igp_no: string;
+  freight: string;
+  item_desc: string;
+ no_of_bags: string;
+  bag_condition: string;
+  bardana_type: string;
+  wt_per_bag: string;
+  remarks: string;
+
+  first_weight: string;
+  second_weight: string;
+  gross_weight: string;
+  bardana_weight: string;
+  quality_deduction: string;
+  net_weight: string;
+
 }
 
 interface SaleRecord {
@@ -61,22 +78,27 @@ export default function Reports() {
 
   // Fetch sales records
   const { data: salesData, refetch: refetchSales, error: salesError } = useQuery({
-    queryKey: ['/api/sales', selectedBranch],
-    queryFn: async () => {
-      const url = (selectedBranch && selectedBranch !== 'all') 
-        ? `/api/sales?branch_id=${selectedBranch}` 
-        : '/api/sales';
-      const response = await fetch(url);
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch sales data');
-      }
-      return data;
-    },
-  });
+  queryKey: ['/api/sales', selectedBranch],
+  queryFn: async () => {
+    const url = (selectedBranch && selectedBranch !== 'all') 
+      ? `/api/sales?branch_id=${selectedBranch}` 
+      : '/api/sales';
+    console.log("Fetching sales from:", url);
+    const response = await fetch(url);
+    const data = await response.json();
+    console.log("Sales API Response:", data);
+    if (!response.ok) {
+      console.error("Sales API error:", data);
+      throw new Error(data.error || 'Failed to fetch sales data');
+    }
+    return data;
+  },
+});
 
-  // Ensure salesRecords is always an array
-  const salesRecords = Array.isArray(salesData) ? salesData : [];
+const salesRecords = Array.isArray(salesData) ? salesData.filter(
+  (r) => r.entry_type?.toUpperCase() === "SALE"
+) : [];
+
 
   // Fetch offline entries
   const { data: offlineData, refetch: refetchOffline, error: offlineError } = useQuery({
@@ -132,10 +154,10 @@ export default function Reports() {
       if (!response.ok) {
         throw new Error('Failed to fetch complete record data');
       }
-      
+
       const completeData = await response.json();
       console.log('Complete record data for print:', completeData);
-      
+
       // Generate print report with complete data
       const printWindow = window.open('', '_blank');
       if (!printWindow) {
@@ -153,16 +175,19 @@ export default function Reports() {
     }
   };
 
-  const generateDetailedReportHTML = (data: any) => {
-    // Extract master and details data from the API response
-    const record = data.master || data;
-    const details = data.details && data.details.length > 0 ? data.details[0] : {};
-    const currentDate = new Date().toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: '2-digit'
-    }).toUpperCase().replace(/\s/g, '-');
-    
+const generateDetailedReportHTML = (data: any) => {
+  // ✅ Merge master + details[0] into one object
+  const record = {
+    ...(data.master || {}),
+    ...(data.details?.[0] || {})
+  };
+
+  const currentDate = new Date().toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: '2-digit'
+  }).toUpperCase().replace(/\s/g, '-');
+
     const currentTime = new Date().toLocaleTimeString('en-GB', {
       hour12: false
     });
@@ -176,583 +201,379 @@ export default function Reports() {
       day: '2-digit', month: 'short', year: '2-digit', 
       hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
     }).toUpperCase().replace(/,/, '') : '';
+  return `
+   <!DOCTYPE html>
+  <html>
+  <head>
+    <title>Weighbridge Slip - ${record.slip_no}</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 10px; font-size: 10px; }
+      .page-container { height: 150vh; display: flex; flex-direction: column; }
 
-    return `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Weighbridge Slip - ${record.slip_no}</title>
-        <style>
-          body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; 
-            padding: 5mm; 
-            font-size: 11px;
-            line-height: 1.2;
-          }
-          .page-container {
-            width: 210mm;
-            margin: 0 auto;
-            border: 3px solid #000;
-          }
-          .slip { 
-            border-bottom: 2px solid #000; 
-            padding: 8mm; 
-            height: 90mm;
-            position: relative;
-            box-sizing: border-box;
-          }
-          .slip:last-child { 
-            border-bottom: none; 
-          }
-          .slip-header { 
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 8px;
-            border-bottom: 2px solid #000;
-            padding-bottom: 6px;
-          }
-          .header-left {
-            font-weight: bold;
-            font-size: 12px;
-          }
-          .header-center {
-            text-align: center;
-            flex: 1;
-          }
-          .header-right {
-            font-size: 10px;
-            text-align: right;
-          }
-          .company-name {
-            font-size: 16px;
-            font-weight: bold;
-            margin: 2px 0;
-          }
-          .slip-title {
-            font-size: 13px;
-            font-weight: bold;
-            text-decoration: underline;
-          }
-          .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8mm;
-            margin-bottom: 8mm;
-          }
-          .images-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8mm;
-            margin-bottom: 35mm;
-          }
-          .image-title {
-            font-weight: bold;
-            font-size: 12px;
-            text-align: center;
-            padding: 4px;
-            background-color: #f0f0f0;
-            border-bottom: 2px solid #000;
-          }
-          .left-panel, .right-panel {
-            border: 2px solid #000;
-            padding: 4mm;
-            display: flex;
-            flex-direction: column;
-          }
-          .field-group {
-            margin-bottom: 6px;
-          }
-          .field-row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 3px;
-            padding: 1px 0;
-            border-bottom: 1px dotted #999;
-          }
-          .field-label {
-            font-weight: bold;
-            min-width: 50px;
-          }
-          .field-value {
-            flex: 1;
-            text-align: right;
-            font-weight: bold;
-          }
-          .commodity-section {
-            border: 2px solid #000;
-            padding: 3mm;
-            margin: 4mm 0;
-            flex: 1;
-          }
-          .commodity-header {
-            font-weight: bold;
-            text-align: center;
-            border-bottom: 1px solid #000;
-            padding-bottom: 2px;
-            margin-bottom: 4px;
-          }
-          .weight-section {
-            border: 2px solid #000;
-            padding: 3mm;
-            margin: 4mm 0;
-            flex: 1;
-          }
-          .weight-header {
-            font-weight: bold;
-            text-align: center;
-            border-bottom: 1px solid #000;
-            padding-bottom: 2px;
-            margin-bottom: 4px;
-          }
-          .image-box {
-            border: 3px solid #000;
-            height: 25mm;
-            margin: 3mm 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #f8f8f8;
-            font-size: 10px;
-            font-weight: bold;
-            text-align: center;
-            overflow: hidden;
-            position: relative;
-          }
-          .image-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            display: block;
-          }
-          .image-fallback {
-            display: none;
-            text-align: center;
-            padding: 20px;
-            font-weight: bold;
-            color: #666;
-          }
-          .signatures {
-            position: absolute;
-            bottom: 8mm;
-            left: 8mm;
-            right: 8mm;
-            display: flex;
-            justify-content: space-between;
-            border-top: 2px solid #000;
-            padding-top: 4mm;
-          }
-          .signature {
-            text-align: center;
-            width: 30%;
-            font-size: 10px;
-          }
-          .signature-line {
-            border-bottom: 1px solid #000;
-            height: 5mm;
-            margin-bottom: 2mm;
-          }
-          @media print {
-            body { margin: 0; padding: 0; }
-            .page-container { width: 100%; }
-            .slip { page-break-inside: avoid; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="page-container">
-          <!-- Head Office Copy -->
-          <div class="slip">
-            <div class="slip-header">
-              <div class="header-left">Head Office Copy</div>
-              <div class="header-center">
-                <div class="company-name">Shahzor Feed Mill</div>
-                <div class="slip-title">WEIGH BRIDGE SLIP</div>
-              </div>
-              <div class="header-right">Print Date: ${currentDate}<br>${currentTime}</div>
+      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+      .copy-label { font-weight: bold; }
+      .print-date { font-size: 10px; }
+
+      .slip-section { 
+        border: 2px solid #000; 
+        margin-bottom: 10px; 
+        padding: 10px; 
+        height: 150vh;
+        box-sizing: border-box;
+      }
+
+      .image-box {
+        border: 1px solid #ccc;
+        width: 150px;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f8f8;
+        font-size: 10px;
+        font-weight: bold;
+        text-align: center;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .image-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .company-name { font-size: 14px; font-weight: bold; margin-bottom: 3px; text-align: center; }
+      .slip-title { font-size: 12px; font-weight: bold; margin-bottom: 8px; text-align: center; }
+
+      .two-column { display: flex; justify-content: space-between; margin-bottom: 5px; }
+      .left-section, .right-section { 
+        width: 45%; 
+        border: 1px solid #666; 
+        padding: 5px; 
+        border-radius: 3px;
+      }
+
+      .commodity-gross-row {
+        display: flex; 
+        justify-content: space-between; 
+        gap: 20px; 
+        margin: 20px 0;
+      }
+
+      .section-box {
+        flex: 1;
+        border: 1px solid #666;
+        padding: 10px;
+        border-radius: 3px;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .fields {
+        display: grid; 
+        row-gap: 6px;
+      }
+
+      .fields div {
+        display: flex;
+        gap: 4px;
+      }
+
+      .label {
+        font-weight: bold;
+        width: 160px;
+      }
+
+      .value {
+        font-weight: bold;
+      }
+
+      .signatures {
+        margin-top: 30px;
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        text-align: center;
+      }
+
+      .signature-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .signature-line {
+        border-bottom: 1px solid #000;
+        width: 100px;
+        margin-bottom: 5px;
+      }
+
+      @media print { 
+        body { margin: 0; } 
+        .slip-section { page-break-inside: avoid; }
+        .page-container { page-break-after: auto; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-container">
+
+      <!-- Head Office Copy -->
+      <div class="slip-section">
+        <div class="header">
+          <div class="copy-label">Head Office Copy</div>
+          <div class="print-date">Print Date: ${currentDate} ${currentTime}</div>
+        </div>
+        <div class="company-name">Shahzor  Feed  Mill</div>
+        <div style="height: 10px;"></div>
+        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+
+        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${record.igp_no || ''}</span></div>
+
+        <div class="two-column">
+          <div class="left-section">
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_no || ''}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.vehicle_no || ''}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${record.freight || ''}</div>
+          </div>
+          <div class="right-section">
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${record.vendor_name || ''}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+          </div>
+        </div>
+
+        <!-- Commodity + Gross Weight Section in One Row -->
+        <div class="commodity-gross-row">
+          <!-- Commodity Section -->
+          <div class="section-box">
+            <div class="fields">
+              <div><span class="label">COMMODITY</span><span class="value">${record.item_desc || ''}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.bag_condition || ''}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${record.wt_per_bag || ''}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
             </div>
-            
-            <div class="content-grid">
-              <div class="left-panel">
-                <div class="field-group">
-                  <div class="field-row">
-                    <span class="field-label">IGP #</span>
-                    <span class="field-value">${record.slip_no || ''}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">W.B #</span>
-                    <span class="field-value">${record.wb_id || ''}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Truck #</span>
-                    <span class="field-value">${record.vehicle_no || ''}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Freight Payment</span>
-                    <span class="field-value"></span>
-                  </div>
-                </div>
-                
-                <div class="commodity-section">
-                  <div class="commodity-header">Commodity</div>
-                  <div class="field-row">
-                    <span class="field-label">Item</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Quantity</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Bag Condition</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Bag Type</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Avg. Weight</span>
-                    <span class="field-value"></span>
-                  </div>
-                </div>
-                
-                <div class="field-row">
-                  <span class="field-label">Remarks</span>
-                  <span class="field-value"></span>
-                </div>
-                
-                <div class="image-box">
-                  <div style="font-weight: bold; font-size: 10px; margin-bottom: 2px;">First Weight Image</div>
-                  <div style="font-size: 8px; color: #666; margin-bottom: 2px;">C:\\Users\\Wajid Ali\\Downloads\\CameraStreamMonitor\\captured_images\\first_weight</div>
-                  <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg" 
-                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                       style="width: 100%; height: 100%; object-fit: cover;" 
-                       alt="First Weight Image" />
-                  <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
-                </div>
-              </div>
-              
-              <div class="right-panel">
-                <div class="field-group">
-                  <div class="field-row">
-                    <span class="field-label">Party</span>
-                    <span class="field-value">${'vendor_name' in record ? record.vendor_name || '' : 'customer_name' in record ? record.customer_name || '' : ''}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Time IN</span>
-                    <span class="field-value">${inTime}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Time OUT</span>
-                    <span class="field-value">${outTime}</span>
-                  </div>
-                </div>
-                
-                <div class="weight-section">
-                  <div class="weight-header">WEIGHTS</div>
-                  <div class="field-row">
-                    <span class="field-label">GROSS WEIGHT</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">TARE WEIGHT</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">WITH BARDANA WEIGHT</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">BARDANA WEIGHT</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">QUALITY DEDUCTION</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">NET WEIGHT</span>
-                    <span class="field-value"></span>
-                  </div>
-                </div>
-                
-                <div class="image-box">
-                  <div style="font-weight: bold; font-size: 10px; margin-bottom: 2px;">Second Weight Image</div>
-                  <div style="font-size: 8px; color: #666; margin-bottom: 2px;">C:\\Users\\Wajid Ali\\Downloads\\CameraStreamMonitor\\captured_images\\second_weight</div>
-                  <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg" 
-                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                       style="width: 100%; height: 100%; object-fit: cover;" 
-                       alt="Second Weight Image" />
-                  <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="signatures">
-              <div class="signature">
-                <div class="signature-line"></div>
-                <div>Weight By:</div>
-              </div>
-              <div class="signature">
-                <div class="signature-line"></div>
-                <div>Checked By:</div>
-              </div>
-              <div class="signature">
-                <div class="signature-line"></div>
-                <div>Production Manager:</div>
-              </div>
+            <div class="image-box">
+              <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                   alt="First Weight Image" />
+              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
             </div>
           </div>
 
-          <!-- Feed Mill Copy -->
+          <!-- Gross Weight Section -->
+          <div class="section-box">
+            <div class="fields">
+              <div><span class="label">GROSS WEIGHT</span> ${record.first_weight || '0'}</div>
+              <div><span class="label">TARE WEIGHT</span> ${record.second_weight || '0'}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${record.gross_weight || '0'}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${record.bardana_weight || '0'}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${record.quality_deduction || '0'}</div>
+              <div><span class="label">NET WEIGHT</span> ${record.net_weight || '0'}</div>
+            </div>
+            <div class="image-box">
+              <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                   alt="Second Weight Image" />
+              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Signatures -->
+        <div class="signatures">
+          <div class="signature-block">
+            <div class="signature-line"></div>
+            <div>Weight By</div>
+          </div>
+          <div class="signature-block">
+            <div class="signature-line"></div>
+            <div>Checked By</div>
+          </div>
+          <div class="signature-block">
+            <div class="signature-line"></div>
+            <div>Production Manager</div>
+          </div>
+         </div>
+          <hr style="border: 1px solid #000; margin: 20px 0;" />
+           <!-- Feed Mill Copy -->
           <div class="slip">
             <div class="slip-header">
               <div class="header-left">Feed Mill Copy</div>
               <div class="header-center">
-                <div class="company-name">Shahzor Feed Mill</div>
-                <div class="slip-title">WEIGH BRIDGE SLIP</div>
+               <div class="company-name">Shahzor  Feed  Mill</div>
+        <div style="height: 10px;"></div>
+        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
               </div>
               <div class="header-right"></div>
             </div>
-            
-            <div class="content-grid">
-              <div class="left-panel">
-                <div class="field-group">
-                  <div class="field-row">
-                    <span class="field-label">IGP #</span>
-                    <span class="field-value">${record.slip_no || ''}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">W.B #</span>
-                    <span class="field-value">${record.wb_id || ''}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Truck #</span>
-                    <span class="field-value">${record.vehicle_no || ''}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Freight Payment</span>
-                    <span class="field-value"></span>
-                  </div>
-                </div>
-                
-                <div class="commodity-section">
-                  <div class="commodity-header">Commodity</div>
-                  <div class="field-row">
-                    <span class="field-label">Item</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Quantity</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Bag Condition</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Bag Type</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Avg. Weight</span>
-                    <span class="field-value"></span>
-                  </div>
-                </div>
-                
-                <div class="field-row">
-                  <span class="field-label">Remarks</span>
-                  <span class="field-value"></span>
-                </div>
-                
-                <div class="image-box">
-                  <div style="font-weight: bold; font-size: 10px; margin-bottom: 2px;">First Weight Image</div>
-                  <div style="font-size: 8px; color: #666; margin-bottom: 2px;">C:\\Users\\Wajid Ali\\Downloads\\CameraStreamMonitor\\captured_images\\first_weight</div>
-                  <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg" 
-                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                       style="width: 100%; height: 100%; object-fit: cover;" 
-                       alt="First Weight Image" />
-                  <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
-                </div>
-              </div>
-              
-              <div class="right-panel">
-                <div class="field-group">
-                  <div class="field-row">
-                    <span class="field-label">Party</span>
-                    <span class="field-value">${'vendor_name' in record ? record.vendor_name || '' : 'customer_name' in record ? record.customer_name || '' : ''}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Time IN</span>
-                    <span class="field-value">${inTime}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Time OUT</span>
-                    <span class="field-value">${outTime}</span>
-                  </div>
-                </div>
-                
-                <div class="weight-section">
-                  <div class="weight-header">WEIGHTS</div>
-                  <div class="field-row">
-                    <span class="field-label">GROSS WEIGHT</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">TARE WEIGHT</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">WITH BARDANA WEIGHT</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">BARDANA WEIGHT</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">QUALITY DEDUCTION</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">NET WEIGHT</span>
-                    <span class="field-value"></span>
-                  </div>
-                </div>
-                
-                <div class="image-box">
-                  <div style="font-weight: bold; font-size: 10px; margin-bottom: 2px;">Second Weight Image</div>
-                  <div style="font-size: 8px; color: #666; margin-bottom: 2px;">C:\\Users\\Wajid Ali\\Downloads\\CameraStreamMonitor\\captured_images\\second_weight</div>
-                  <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg" 
-                       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                       style="width: 100%; height: 100%; object-fit: cover;" 
-                       alt="Second Weight Image" />
-                  <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
-                </div>
-              </div>
+           <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${record.igp_no || ''}</span></div>
+
+        <div class="two-column">
+          <div class="left-section">
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_no || ''}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.vehicle_no || ''}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${record.freight || ''}</div>
+          </div>
+          <div class="right-section">
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${record.vendor_name || ''}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+          </div>
+        </div>
+
+        <!-- Commodity + Gross Weight Section in One Row -->
+        <div class="commodity-gross-row">
+          <!-- Commodity Section -->
+          <div class="section-box">
+            <div class="fields">
+              <div><span class="label">COMMODITY</span><span class="value">${record.item_desc || ''}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.bag_condition || ''}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${record.wt_per_bag || ''}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
             </div>
-            
-            <div class="signatures">
-              <div class="signature">
-                <div class="signature-line"></div>
-                <div>Weight By:</div>
-              </div>
-              <div class="signature">
-                <div class="signature-line"></div>
-                <div>Checked By:</div>
-              </div>
-              <div class="signature">
-                <div class="signature-line"></div>
-                <div>Production Manager:</div>
-              </div>
+            <div class="image-box">
+              <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                   alt="First Weight Image" />
+              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
             </div>
           </div>
 
-          <!-- Customer Copy -->
+          <!-- Gross Weight Section -->
+          <div class="section-box">
+            <div class="fields">
+              <div><span class="label">GROSS WEIGHT</span> ${record.first_weight || '0'}</div>
+              <div><span class="label">TARE WEIGHT</span> ${record.second_weight || '0'}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${record.gross_weight || '0'}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${record.bardana_weight || '0'}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${record.quality_deduction || '0'}</div>
+              <div><span class="label">NET WEIGHT</span> ${record.net_weight || '0'}</div>
+            </div>
+            <div class="image-box">
+              <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                   alt="Second Weight Image" />
+              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Signatures -->
+        <div class="signatures">
+          <div class="signature-block">
+            <div class="signature-line"></div>
+            <div>Weight By</div>
+          </div>
+          <div class="signature-block">
+            <div class="signature-line"></div>
+            <div>Checked By</div>
+          </div>
+          <div class="signature-block">
+            <div class="signature-line"></div>
+            <div>Production Manager</div>
+          </div>
+         </div>
+          <hr style="border: 1px solid #000; margin: 20px 0;" />
+           <!-- Customer Copy -->
           <div class="slip">
             <div class="slip-header">
               <div class="header-left">Customer Copy</div>
               <div class="header-center">
-                <div class="company-name">Shahzor Feed Mill</div>
-                <div class="slip-title">IGP SLIP</div>
+               <div class="company-name">Shahzor  Feed  Mill</div>
+        <div style="height: 10px;"></div>
+        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
               </div>
-              <div class="header-right">Slip Date:<br>${inTime}</div>
+        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${record.igp_no || ''}</span></div>
+
+        <div class="two-column">
+          <div class="left-section">
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_no || ''}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.vehicle_no || ''}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${record.freight || ''}</div>
+          </div>
+          <div class="right-section">
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${record.vendor_name || ''}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+          </div>
+        </div>
+
+        <!-- Commodity + Gross Weight Section in One Row -->
+        <div class="commodity-gross-row">
+          <!-- Commodity Section -->
+          <div class="section-box">
+            <div class="fields">
+              <div><span class="label">COMMODITY</span><span class="value">${record.item_desc || ''}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.bag_condition || ''}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${record.wt_per_bag || ''}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
             </div>
-            
-            <div class="content-grid">
-              <div class="left-panel">
-                <div class="field-group">
-                  <div class="field-row">
-                    <span class="field-label">W.B #</span>
-                    <span class="field-value">${record.wb_id || ''}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Party</span>
-                    <span class="field-value">${'vendor_name' in record ? record.vendor_name || '' : 'customer_name' in record ? record.customer_name || '' : ''}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Commodity</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Truck #</span>
-                    <span class="field-value">${record.vehicle_no || ''}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">Freight Payment</span>
-                    <span class="field-value">232</span>
-                  </div>
-                </div>
-                
-              </div>
-              
-              <div class="right-panel">
-                <div class="field-group">
-                  <div class="field-row">
-                    <span class="field-label">Slip Date</span>
-                    <span class="field-value">${inTime}</span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">QUANTITY</span>
-                    <span class="field-value"></span>
-                  </div>
-                  <div class="field-row">
-                    <span class="field-label">NET WEIGHT</span>
-                    <span class="field-value">12110</span>
-                  </div>
-                </div>
-              </div>
+            <div class="image-box">
+              <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                   alt="First Weight Image" />
+              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
             </div>
-            
-            <div class="images-section">
-              <div class="image-box">
-                <div class="image-title">First Weight Image</div>
-                <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg" 
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                     style="width: 100%; height: 100%; object-fit: cover;" 
-                     alt="First Weight Image" />
-                <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
-              </div>
-              
-              <div class="image-box">
-                <div class="image-title">Second Weight Image</div>
-                <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg" 
-                     onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                     style="width: 100%; height: 100%; object-fit: cover;" 
-                     alt="Second Weight Image" />
-                <div style="display: none; text-align: center; padding: 10px; color: #666; font-size: 10px;">No Image Available</div>
-              </div>
+          </div>
+
+          <!-- Gross Weight Section -->
+          <div class="section-box">
+            <div class="fields">
+              <div><span class="label">GROSS WEIGHT</span> ${record.first_weight || '0'}</div>
+              <div><span class="label">TARE WEIGHT</span> ${record.second_weight || '0'}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${record.gross_weight || '0'}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${record.bardana_weight || '0'}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${record.quality_deduction || '0'}</div>
+              <div><span class="label">NET WEIGHT</span> ${record.net_weight || '0'}</div>
             </div>
-            
-            <div class="signatures">
-              <div class="signature">
-                <div class="signature-line"></div>
-                <div>Weight By:</div>
-              </div>
-              <div class="signature">
-                <div class="signature-line"></div>
-                <div>Checked By:</div>
-              </div>
-              <div class="signature">
-                <div class="signature-line"></div>
-                <div>Production Manager:</div>
-              </div>
+            <div class="image-box">
+              <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg"
+                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                   alt="Second Weight Image" />
+              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
             </div>
           </div>
         </div>
-      </body>
-      </html>
-    `;
-  };
 
+        <!-- Signatures -->
+        <div class="signatures">
+          <div class="signature-block">
+            <div class="signature-line"></div>
+            <div>Weight By</div>
+          </div>
+          <div class="signature-block">
+            <div class="signature-line"></div>
+            <div>Checked By</div>
+          </div>
+          <div class="signature-block">
+            <div class="signature-line"></div>
+            <div>Production Manager</div>
+          </div>
+         </div>
+
+
+      </div> <!-- .slip-section ends -->
+    </div> <!-- .page-container ends -->
+  </body>
+  </html>
+`;
+
+  };
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
       <div className="mb-4">
         <h1 className="text-2xl font-bold mb-4 text-black">Reports</h1>
-        
+
         {/* Branch Selection */}
         <div className="mb-4 flex items-center gap-4">
           <label className="text-sm font-medium text-black">Filter by Branch:</label>
@@ -801,7 +622,10 @@ export default function Reports() {
                   </tr>
                 </thead>
                 <tbody>
-                  {purchaseRecords.map((record: PurchaseRecord) => (
+                 {purchaseRecords
+  .filter((record) => record.entry_type?.toUpperCase() === "PURCHASE")
+  .map((record: PurchaseRecord) => (
+
                     <tr key={record.wb_id} className="hover:bg-gray-50">
                       <td className="px-4 py-2 border border-black text-black">{record.slip_no}</td>
                       <td className="px-4 py-2 border border-black text-black">
@@ -825,8 +649,7 @@ export default function Reports() {
                           onError={(e) => {
                             console.log(`First weight image error for slip ${record.slip_no}`);
                             const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            target.nextElementSibling!.textContent = 'No Image';
+                            target.style.display = 'none';                            target.nextElementSibling!.textContent = 'No Image';
                           }}
                         />
                         <span className="text-xs text-gray-500"></span>
@@ -905,7 +728,10 @@ export default function Reports() {
                   </tr>
                 </thead>
                 <tbody>
-                  {salesRecords.map((record: SaleRecord) => (
+                  {salesRecords
+  .filter((record) => record.entry_type?.toUpperCase() === "SALE")
+  .map((record: SaleRecord) => (
+
                     <tr key={record.wb_id} className="hover:bg-gray-50">
                       <td className="px-4 py-2 border border-black text-black">{record.slip_no}</td>
                       <td className="px-4 py-2 border border-black text-black">
@@ -919,6 +745,38 @@ export default function Reports() {
                       </td>
                       <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
                       <td className="px-4 py-2 border border-black text-black">{record.customer_name || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-center">
+                        <img 
+                          src={`/captured_images/first_weight/slip_${record.slip_no}.jpg`}
+                          alt="First Weight"
+                          className="w-16 h-12 object-cover mx-auto cursor-pointer"
+                          onClick={() => window.open(`/captured_images/first_weight/slip_${record.slip_no}.jpg`, '_blank')}
+                          onLoad={() => console.log(`First weight image loaded for slip ${record.slip_no}`)}
+                          onError={(e) => {
+                            console.log(`First weight image error for slip ${record.slip_no}`);
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.nextElementSibling!.textContent = 'No Image';
+                          }}
+                        />
+                        <span className="text-xs text-gray-500"></span>
+                      </td>
+                      <td className="px-4 py-2 border border-black text-center">
+                        <img 
+                          src={`/captured_images/second_weight/slip_${record.slip_no}.jpg`}
+                          alt="Second Weight"
+                          className="w-16 h-12 object-cover mx-auto cursor-pointer"
+                          onClick={() => window.open(`/captured_images/second_weight/slip_${record.slip_no}.jpg`, '_blank')}
+                          onLoad={() => console.log(`Second weight image loaded for slip ${record.slip_no}`)}
+                          onError={(e) => {
+                            console.log(`Second weight image error for slip ${record.slip_no}`);
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            target.nextElementSibling!.textContent = 'No Image';
+                          }}
+                        />
+                        <span className="text-xs text-gray-500"></span>
+                      </td>
                       <td className="px-4 py-2 border border-black">
                         <div className="flex gap-2">
                           <Button 
