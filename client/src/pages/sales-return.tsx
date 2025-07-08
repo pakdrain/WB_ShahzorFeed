@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 
-export default function SalesForm() {
+export default function SalesReturnForm() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const [searchSlipNo, setSearchSlipNo] = useState("");
@@ -211,9 +212,9 @@ export default function SalesForm() {
           <div class="copy-label">Head Office Copy</div>
           <div class="print-date">Print Date: ${currentDate} ${currentTime}</div>
         </div>
-        <div class="company-name">Shahzor  Feed  Mill</div>
+        <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
 
         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
@@ -311,14 +312,14 @@ export default function SalesForm() {
         </div>
         <hr style="border: 1px solid #000; margin: 20px 0;" />
 
-        <!-- Feed Mill Copy -->
+         <!-- Feed Mill Copy -->
           <div class="slip">
             <div class="slip-header">
               <div class="header-left">Feed Mill Copy</div>
               <div class="header-center">
-               <div class="company-name">Shahzor  Feed  Mill</div>
+               <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
               </div>
               <div class="header-right"></div>
             </div>
@@ -423,9 +424,9 @@ export default function SalesForm() {
             <div class="slip-header">
               <div class="header-left">Customer Copy</div>
               <div class="header-center">
-               <div class="company-name">Shahzor  Feed  Mill</div>
+               <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
               </div>
 
               <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
@@ -652,7 +653,7 @@ export default function SalesForm() {
           slipOutTime: master.slip_out_time
             ? formatDatetimeLocal(master.slip_out_time)
             : "",
-          entryType: master.entry_type || "SALE",
+          entryType: master.entry_type || "Sales Return",
           branch: master.branch_id ? String(master.branch_id) : "",
           branchId: master.branch_id ? String(master.branch_id) : "",
         }));
@@ -666,7 +667,7 @@ export default function SalesForm() {
 
         // Load sales data from details if it's a sales record
         if (
-          master.entry_type === "SALE" &&
+          master.entry_type === "Sales Return" &&
           data.details &&
           data.details.length > 0
         ) {
@@ -709,7 +710,7 @@ export default function SalesForm() {
           }
 
           setSalesData(salesRows);
-          console.log("✅ Sales data loaded in edit mode:", salesRows);
+          console.log("✅ Sales return data loaded in edit mode:", salesRows);
         }
       }
     } catch (error) {
@@ -731,7 +732,7 @@ export default function SalesForm() {
     slipOutTime: "",
     slipDate: "",
     status: "",
-    entryType: "SALE",
+    entryType: "Sales Return",
     // Weight measurements
     firstWeight: "",
     secondWeight: "",
@@ -934,9 +935,9 @@ export default function SalesForm() {
       setOnlineMode(true);
     }
 
-    // Fetch next slip number for SALE entry type
+    // Fetch next slip number for Sales Return entry type
     try {
-      const response = await fetch("/api/purchases/next-slip?entry_type=SALE");
+      const response = await fetch("/api/purchases/next-slip?entry_type=Sales Return");
       const data = await response.json();
 
       setFormData({
@@ -945,21 +946,21 @@ export default function SalesForm() {
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "SALE",
+        entryType: "Sales Return",
         creationDate: new Date().toISOString(),
         lastUpdatedDate: new Date().toISOString(),
         slipDate: new Date().toISOString(),
       });
     } catch (error) {
       console.error("Error fetching next slip number:", error);
-      // Fallback - fetch next SALE slip number
+      // Fallback - fetch next Sales Return slip number
       setFormData({
         ...initialFormData,
         slipNo: "1",
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "SALE",
+        entryType: "Sales Return",
         creationDate: new Date().toISOString(),
         lastUpdatedDate: new Date().toISOString(),
         slipDate: new Date().toISOString(),
@@ -1176,7 +1177,7 @@ export default function SalesForm() {
       // Load record for editing by wb_id
       loadDataByWbId(parseInt(editWbId));
     } else {
-      // Reset form to clean state for new sales - delay to ensure proper initialization
+      // Reset form to clean state for new sales return - delay to ensure proper initialization
       setTimeout(() => {
         resetFormToInitial();
       }, 100);
@@ -1210,8 +1211,8 @@ export default function SalesForm() {
   }, [location, onlineMode]);
 
   useEffect(() => {
-    // Fetch next slip number specific to SALE entry type
-    fetch("/api/purchases/next-slip?entry_type=SALE")
+    // Fetch next slip number specific to Sales Return entry type
+    fetch("/api/purchases/next-slip?entry_type=Sales Return")
       .then((res) => res.json())
       .then((data: any) => {
         setFormData((prev) => ({ ...prev, slipNo: data.nextSlipNo }));
@@ -1321,7 +1322,7 @@ export default function SalesForm() {
     }
 
     try {
-      // Generate WB_ID for the sales record
+      // Generate WB_ID for the sales return record
       const wbIdResponse = await fetch("/api/purchases", {
         method: "GET",
       });
@@ -1392,7 +1393,7 @@ export default function SalesForm() {
             : null,
         last_updated_date: formData.lastUpdatedDate || null,
         manual_dc_no: formData.manualDcNo || null,
-        entry_type: "SALE",
+        entry_type: "Sales Return",
         slip_out_time: formatISODate(formData.slipOutTime),
         status: formData.status || null,
         slip_date: formData.slipDate || null,
@@ -1408,7 +1409,7 @@ export default function SalesForm() {
 
       if (!masterResponse.ok) {
         const errorText = await masterResponse.text();
-        throw new Error(`Failed to save master sales record: ${errorText}`);
+        throw new Error(`Failed to save master sales return record: ${errorText}`);
       }
 
       // Save sales detail records for each non-empty row
@@ -1462,12 +1463,12 @@ export default function SalesForm() {
         });
 
         if (!salesItemResponse.ok) {
-          console.error("Failed to save sales item:", row);
+          console.error("Failed to save sales return item:", row);
         }
       }
 
-      console.log("Sales data saved successfully");
-      alert("Sales data saved successfully!");
+      console.log("Sales return data saved successfully");
+      alert("Sales return data saved successfully!");
 
       // Reset sales data table after successful save
       setSalesData(
@@ -1490,7 +1491,7 @@ export default function SalesForm() {
         })),
       );
 
-      console.log("Sales data table cleared after save");
+      console.log("Sales return data table cleared after save");
 
       const currentDate = new Date()
         .toLocaleDateString("en-GB", {
@@ -1508,450 +1509,7 @@ export default function SalesForm() {
       // Auto-print after successful save
       setTimeout(() => {
         try {
-          const printHTML = `
- <!DOCTYPE html>
-  <html>
-  <head>
-    <title>Weighbridge Slip - ${formData.slipNo}</title>
-    <style>
-      body { font-family: Arial, sans-serif; margin: 10px; font-size: 10px; }
-      .page-container { height: 150vh; display: flex; flex-direction: column; }
-
-      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-      .copy-label { font-weight: bold; }
-      .print-date { font-size: 10px; }
-
-      .slip-section { 
-        border: 2px solid #000; 
-        margin-bottom: 10px; 
-        padding: 10px; 
-        height: 150vh;
-        box-sizing: border-box;
-      }
-
-      .image-box {
-        border: 1px solid #ccc;
-        width: 150px;
-        height: 120px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8f8f8;
-        font-size: 10px;
-        font-weight: bold;
-        text-align: center;
-        overflow: hidden;
-        position: relative;
-      }
-
-      .image-box img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-
-      .company-name { font-size: 14px; font-weight: bold; margin-bottom: 3px; text-align: center; }
-      .slip-title { font-size: 12px; font-weight: bold; margin-bottom: 8px; text-align: center; }
-
-      .two-column { display: flex; justify-content: space-between; margin-bottom: 5px; }
-      .left-section, .right-section { 
-        width: 45%; 
-        border: 1px solid #666; 
-        padding: 5px; 
-        border-radius: 3px;
-      }
-
-      .commodity-gross-row {
-        display: flex; 
-        justify-content: space-between; 
-        gap: 20px; 
-        margin: 20px 0;
-      }
-
-      .section-box {
-        flex: 1;
-        border: 1px solid #666;
-        padding: 10px;
-        border-radius: 3px;
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-      }
-
-      .fields {
-        display: grid; 
-        row-gap: 6px;
-      }
-
-      .fields div {
-        display: flex;
-        gap: 4px;
-      }
-
-      .label {
-        font-weight: bold;
-        width: 160px;
-      }
-
-      .value {
-        font-weight: bold;
-      }
-
-      .signatures {
-        margin-top: 30px;
-        margin-bottom: 30px;
-        display: flex;
-        justify-content: space-between;
-        text-align: center;
-      }
-
-      .signature-block {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .signature-line {
-        border-bottom: 1px solid #000;
-        width: 100px;
-        margin-bottom: 5px;
-      }
-
-      @media print { 
-        body { margin: 0; } 
-        .slip-section { page-break-inside: avoid; }
-        .page-container { page-break-after: auto; }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="page-container">
-
-      <!-- Head Office Copy -->
-      <div class="slip-section">
-        <div class="header">
-          <div class="copy-label">Head Office Copy</div>
-          <div class="print-date">Print Date: ${currentDate} ${currentTime}</div>
-        </div>
-        <div class="company-name">Shahzor  Feed  Mill</div>
-        <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
-
-        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
-        <div class="two-column">
-          <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
-          </div>
-          <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-          </div>
-        </div>
-
-        <!-- Commodity + Gross Weight Section in One Row -->
- <<div class="commodity-gross-row">
-  <div class="section-box">
-    <div class="fields">
-
-      <div>
-        <span class="label">DC #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Customer Name</span>
-        <span class="value">${nonEmptyRows.map((row) => row.customerName || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Item Description</span>
-        <span class="value">${nonEmptyRows.map((row) => row.itemDescription || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DC Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-    </div>
-
-            <div class="image-box">
-              <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="First Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-
-          <!-- Gross Weight Section -->
-          <div class="section-box">
-            <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
-            </div>
-            <div class="image-box">
-              <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="Second Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Signatures -->
-        <div class="signatures">
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Weight By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Checked By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Production Manager</div>
-          </div>
-        </div>
-        <hr style="border: 1px solid #000; margin: 20px 0;" />
-   <!-- Feed Mill Copy -->
-          <div class="slip">
-            <div class="slip-header">
-              <div class="header-left">Feed Mill Copy</div>
-              <div class="header-center">
-               <div class="company-name">Shahzor  Feed  Mill</div>
-        <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
-              </div>
-              <div class="header-right"></div>
-            </div>
- <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
-        <div class="two-column">
-          <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
-          </div>
-          <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-          </div>
-        </div>
-
-        <!-- Commodity + Gross Weight Section in One Row -->
- <<div class="commodity-gross-row">
-  <div class="section-box">
-    <div class="fields">
-
-      <div>
-        <span class="label">DC #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Customer Name</span>
-        <span class="value">${nonEmptyRows.map((row) => row.customerName || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Item Description</span>
-        <span class="value">${nonEmptyRows.map((row) => row.itemDescription || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DC Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-    </div>
-
-            <div class="image-box">
-              <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="First Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-
-          <!-- Gross Weight Section -->
-          <div class="section-box">
-            <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
-            </div>
-            <div class="image-box">
-              <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="Second Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Signatures -->
-        <div class="signatures">
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Weight By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Checked By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Production Manager</div>
-          </div>
-        </div>
-        <hr style="border: 1px solid #000; margin: 20px 0;" />
-
-         <!-- Customer Copy -->
-          <div class="slip">
-            <div class="slip-header">
-              <div class="header-left">Customer Copy</div>
-              <div class="header-center">
-               <div class="company-name">Shahzor  Feed  Mill</div>
-        <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
-              </div>
-
-              <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
-        <div class="two-column">
-          <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
-          </div>
-          <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-          </div>
-        </div>
-
-        <!-- Commodity + Gross Weight Section in One Row -->
- <<div class="commodity-gross-row">
-  <div class="section-box">
-    <div class="fields">
-
-      <div>
-        <span class="label">DC #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Customer Name</span>
-        <span class="value">${nonEmptyRows.map((row) => row.customerName || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Item Description</span>
-        <span class="value">${nonEmptyRows.map((row) => row.itemDescription || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DC Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-    </div>
-
-            <div class="image-box">
-              <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="First Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-
-          <!-- Gross Weight Section -->
-          <div class="section-box">
-            <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
-            </div>
-            <div class="image-box">
-              <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="Second Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Signatures -->
-        <div class="signatures">
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Weight By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Checked By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Production Manager</div>
-          </div>
-        </div>
-        <hr style="border: 1px solid #000; margin: 20px 0;" />
-
-
-           </div> <!-- .slip-section ends -->
-    </div> <!-- .page-container ends -->
-  </body>
-  </html>
-`;
+          const printHTML = generateReportHTML();
 
           const printWindow = window.open("", "_blank");
           if (printWindow) {
@@ -1967,7 +1525,7 @@ export default function SalesForm() {
       // Reset form to clean state and increment slip number for next entry
       resetFormToInitial();
     } catch (err: any) {
-      const errorMessage = err.message || "Failed to save sales data.";
+      const errorMessage = err.message || "Failed to save sales return data.";
       alert(errorMessage);
       console.error("Save error:", err);
     } finally {
@@ -2051,7 +1609,7 @@ export default function SalesForm() {
                     {record.vehicle_no || "---"}
                   </div>
                   <div className="p-1 text-center text-xs text-blue-600 font-semibold bg-white">
-                    {record.entry_type || "SALE"}
+                    {record.entry_type || "Sales Return"}
                   </div>
                 </div>
               ))
@@ -2093,7 +1651,7 @@ export default function SalesForm() {
       <div className="flex justify-between items-center bg-white border rounded p-1 mb-1">
         <div className="flex gap-1 text-xs">
           <Button
-            className="h-8 px-2 text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white"
+            className="h-8 px-2 text-sm font-medium bg-gray-300 hover:bg-gray-400 text-black"
             onClick={() => {
               // Navigate to purchase form with same type
               const urlParams = new URLSearchParams(window.location.search);
@@ -2105,8 +1663,21 @@ export default function SalesForm() {
           >
             Purchase
           </Button>
-          <Button className="h-8 px-2 text-sm font-medium bg-rose-700 text-white">
+          <Button
+            className="h-8 px-2 text-sm font-medium bg-gray-300 hover:bg-gray-400 text-black"
+            onClick={() => {
+              // Navigate to sales form with same type
+              const urlParams = new URLSearchParams(window.location.search);
+              const typeMode = urlParams.get("type") || "online";
+              const targetUrl = `/sales-form?type=${typeMode}`;
+              window.history.pushState({}, "", targetUrl);
+              setLocation(targetUrl);
+            }}
+          >
             Sale
+          </Button>
+          <Button className="h-8 px-2 text-sm font-medium bg-rose-700 text-white">
+            Sale Return
           </Button>
           <Button
             className="h-8 px-2 text-sm font-medium bg-amber-600 hover:bg-amber-700 text-white"
@@ -2373,7 +1944,7 @@ export default function SalesForm() {
                 }`}
               >
                 <h2 className="text-3xl font-bold tracking-wide">
-                  {onlineMode === true ? "Sale Online" : "Sale Offline"}
+                  {onlineMode === true ? "Sales Return Online" : "Sales Return Offline"}
                 </h2>
               </div>
             </div>
@@ -2396,21 +1967,37 @@ export default function SalesForm() {
               >
                 Purchase
               </Button>
-              <Button className="h-6 text-xs px-3 bg-blue-600 text-white">
+              <Button
+                className="h-6 text-xs px-3 bg-gray-300 text-black"
+                onClick={() => {
+                  // Navigate to sales form with same type
+                  const urlParams = new URLSearchParams(window.location.search);
+                  const typeMode = urlParams.get("type") || "online";
+                  const targetUrl = `/sales-form?type=${typeMode}`;
+                  window.history.replaceState({}, "", targetUrl);
+                  setLocation(targetUrl);
+                  setTimeout(() => {
+                    window.location.href = targetUrl;
+                  }, 50);
+                }}
+              >
                 Sales
+              </Button>
+              <Button className="h-6 text-xs px-3 bg-blue-600 text-white">
+                Sales Return
               </Button>
               <Button
                 className="h-6 text-xs px-3 bg-gray-300 text-black"
                 onClick={() => {
-                  // Navigate to purchase form offline tab
+                  // Navigate to offline form
                   window.history.replaceState(
                     {},
                     "",
-                    "/purchase-form?type=offline&tab=offline",
+                    "/purchase-form?type=offline",
                   );
-                  setLocation("/purchase-form?type=offline&tab=offline");
+                  setLocation("/purchase-form?type=offline");
                   setTimeout(() => {
-                    window.location.href = "/purchase-form?type=offline&tab=offline";
+                    window.location.href = "/purchase-form?type=offline";
                   }, 50);
                 }}
               >
