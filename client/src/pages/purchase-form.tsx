@@ -107,12 +107,24 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
     refetchInterval: 3000, // Refresh every 3 seconds
   });
 
-  // Filter records based on search criteria
-  const filteredRecords = Array.isArray(firstWeightRecords) ? firstWeightRecords.filter((record: any) => {
-    const matchesSlipNo = !searchSlipNo || (record.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
-    const matchesVehicleNo = !searchVehicleNo || (record.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
-    return matchesSlipNo && matchesVehicleNo;
-  }) : [];
+  // Filter records based on search criteria and form type
+  const filteredRecords = (() => {
+    let records = [];
+    
+    if (selectedForm === 'offline') {
+      // Show offline records when offline tab is selected
+      records = Array.isArray(offlineRecords) ? offlineRecords : [];
+    } else {
+      // Show all first weight records for other tabs
+      records = Array.isArray(firstWeightRecords) ? firstWeightRecords : [];
+    }
+    
+    return records.filter((record: any) => {
+      const matchesSlipNo = !searchSlipNo || (record.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
+      const matchesVehicleNo = !searchVehicleNo || (record.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
+      return matchesSlipNo && matchesVehicleNo;
+    });
+  })();
 
   // Function to load data by wb_id for editing
   const loadDataByWbId = async (wbId: number) => {
@@ -903,6 +915,12 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
 
   // IGP Data Fetching Function
   const fetchIgpData = async () => {
+    // Don't fetch IGP data in edit mode for offline entries that were switched to online
+    if (isEditMode) {
+      console.log('Skipping IGP fetch in edit mode');
+      return;
+    }
+    
     if (!formData.igpNo) {
       alert('Please enter IGP No');
       return;

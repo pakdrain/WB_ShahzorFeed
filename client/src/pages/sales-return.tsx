@@ -232,255 +232,34 @@ export default function SalesReturnForm() {
         </div>
 
         <!-- Commodity + Gross Weight Section in One Row -->
- <<div class="commodity-gross-row">
-  <div class="section-box">
-    <div class="fields">
-
-      <div>
-        <span class="label">DC #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Customer Name</span>
-        <span class="value">${nonEmptyRows.map((row) => row.customerName || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Item Description</span>
-        <span class="value">${nonEmptyRows.map((row) => row.itemDescription || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DC Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-    </div>
-
-            <div class="image-box">
-              <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="First Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-
-          <!-- Gross Weight Section -->
+        <div class="commodity-gross-row">
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
-            </div>
-            <div class="image-box">
-              <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="Second Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Signatures -->
-        <div class="signatures">
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Weight By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Checked By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Production Manager</div>
-          </div>
-        </div>
-        <hr style="border: 1px solid #000; margin: 20px 0;" />
-
-         <!-- Feed Mill Copy -->
-          <div class="slip">
-            <div class="slip-header">
-              <div class="header-left">Feed Mill Copy</div>
-              <div class="header-center">
-               <div class="company-name">Shahzor  Feed  Mill</div>
-        <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+              <div>
+                <span class="label">DC #</span>
+                <span class="value">${nonEmptyRows.map((row) => row.dcNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
               </div>
-              <div class="header-right"></div>
-            </div>
- <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
-        <div class="two-column">
-          <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
-          </div>
-          <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-          </div>
-        </div>
-
-        <!-- Commodity + Gross Weight Section in One Row -->
- <<div class="commodity-gross-row">
-  <div class="section-box">
-    <div class="fields">
-
-      <div>
-        <span class="label">DC #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Customer Name</span>
-        <span class="value">${nonEmptyRows.map((row) => row.customerName || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Item Description</span>
-        <span class="value">${nonEmptyRows.map((row) => row.itemDescription || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DC Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-    </div>
-
-            <div class="image-box">
-              <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="First Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-
-          <!-- Gross Weight Section -->
-          <div class="section-box">
-            <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
-            </div>
-            <div class="image-box">
-              <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="Second Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Signatures -->
-        <div class="signatures">
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Weight By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Checked By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Production Manager</div>
-          </div>
-        </div>
-        <hr style="border: 1px solid #000; margin: 20px 0;" />
-
-         <!-- Customer Copy -->
-          <div class="slip">
-            <div class="slip-header">
-              <div class="header-left">Customer Copy</div>
-              <div class="header-center">
-               <div class="company-name">Shahzor  Feed  Mill</div>
-        <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+              <div>
+                <span class="label">DO #</span>
+                <span class="value">${nonEmptyRows.map((row) => row.doNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
               </div>
-
-              <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
-        <div class="two-column">
-          <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
-          </div>
-          <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-          </div>
-        </div>
-
-        <!-- Commodity + Gross Weight Section in One Row -->
- <<div class="commodity-gross-row">
-  <div class="section-box">
-    <div class="fields">
-
-      <div>
-        <span class="label">DC #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Customer Name</span>
-        <span class="value">${nonEmptyRows.map((row) => row.customerName || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Item Description</span>
-        <span class="value">${nonEmptyRows.map((row) => row.itemDescription || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DC Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-    </div>
-
+              <div>
+                <span class="label">Customer Name</span>
+                <span class="value">${nonEmptyRows.map((row) => row.customerName || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
+              </div>
+              <div>
+                <span class="label">Item Description</span>
+                <span class="value">${nonEmptyRows.map((row) => row.itemDescription || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
+              </div>
+              <div>
+                <span class="label">DC Qty</span>
+                <span class="value">${nonEmptyRows.map((row) => row.dcQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
+              </div>
+              <div>
+                <span class="label">DO Qty</span>
+                <span class="value">${nonEmptyRows.map((row) => row.doQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
+              </div>
+            </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
                    onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
@@ -488,7 +267,6 @@ export default function SalesReturnForm() {
               <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
             </div>
           </div>
-
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
@@ -507,7 +285,6 @@ export default function SalesReturnForm() {
             </div>
           </div>
         </div>
-
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
@@ -523,11 +300,8 @@ export default function SalesReturnForm() {
             <div>Production Manager</div>
           </div>
         </div>
-        <hr style="border: 1px solid #000; margin: 20px 0;" />
-
-
-           </div> <!-- .slip-section ends -->
-    </div> <!-- .page-container ends -->
+      </div>
+    </div>
   </body>
   </html>
 `;
@@ -567,15 +341,9 @@ export default function SalesReturnForm() {
     });
   };
 
-  // Fetch all first weight records
+  // Fetch all first weight records for Sales Return
   const { data: firstWeightRecords = [] } = useQuery({
-    queryKey: ["/api/purchase/first-weight-records"],
-    refetchInterval: 10000, // Refresh every 10 seconds
-  });
-
-  // Fetch offline records specifically
-  const { data: offlineRecords = [] } = useQuery({
-    queryKey: ["/api/purchases/offline"],
+    queryKey: ["/api/purchase/first-weight-records?entry_type=Sales Return"],
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 

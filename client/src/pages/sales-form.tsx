@@ -711,6 +711,18 @@ export default function SalesForm() {
           setSalesData(salesRows);
           console.log("✅ Sales data loaded in edit mode:", salesRows);
         }
+        
+        // Set branch name properly in edit mode
+        if (master.branch_id) {
+          const branch = branches.find(b => b.branch_id === master.branch_id);
+          if (branch) {
+            setFormData(prev => ({
+              ...prev,
+              branch: branch.branch_name,
+              branchId: String(master.branch_id)
+            }));
+          }
+        }
       }
     } catch (error) {
       console.error("Error loading data by wb_id:", error);
@@ -2402,15 +2414,14 @@ export default function SalesForm() {
               <Button
                 className="h-6 text-xs px-3 bg-gray-300 text-black"
                 onClick={() => {
-                  // Navigate to purchase form offline tab
-                  window.history.replaceState(
-                    {},
-                    "",
-                    "/purchase-form?type=offline&tab=offline",
-                  );
-                  setLocation("/purchase-form?type=offline&tab=offline");
+                  // Navigate to purchase form offline form section
+                  const urlParams = new URLSearchParams(window.location.search);
+                  const typeMode = urlParams.get("type") || "online";
+                  const targetUrl = `/purchase-form?type=${typeMode}&form=offline`;
+                  window.history.replaceState({}, "", targetUrl);
+                  setLocation(targetUrl);
                   setTimeout(() => {
-                    window.location.href = "/purchase-form?type=offline&tab=offline";
+                    window.location.href = targetUrl;
                   }, 50);
                 }}
               >
