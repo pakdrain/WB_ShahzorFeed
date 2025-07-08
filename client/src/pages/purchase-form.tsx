@@ -21,6 +21,7 @@ function PurchaseForm() {
   const [searchVehicleNo, setSearchVehicleNo] = useState('');
   const [activeTab, setActiveTab] = useState('purchase');
 const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline'>('purchase'); // Controls which form section is shown
+  const [isReturnMode, setIsReturnMode] = useState(false);
 
   // Deduction/Bag table state
   const [bagTableData, setBagTableData] = useState<any[]>([]);
@@ -29,8 +30,11 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   useEffect(() => {
     const searchParams = new URLSearchParams(location.split('?')[1]);
     const currentType = searchParams.get('type');
+    const returnParam = searchParams.get('return');
     console.log('Type param changed:', currentType);
+    console.log('Return param:', returnParam);
     setType(currentType ?? "");
+    setIsReturnMode(returnParam === 'true');
 
   }, [location]); // 👈 Every time URL changes
 
@@ -1348,8 +1352,9 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   }, [location, onlineMode]);
 
   useEffect(() => {
-    // Fetch next slip number for PURCHASE entry type
-    fetch('/api/purchases/next-slip?entry_type=PURCHASE')
+    // Fetch next slip number based on return mode
+    const entryType = isReturnMode ? 'PURCHASE_RETURN' : 'PURCHASE';
+    fetch(`/api/purchases/next-slip?entry_type=${entryType}`)
       .then(res => res.json())
       .then((data: any) => {
         setFormData(prev => ({ ...prev, slipNo: data.nextSlipNo }));
@@ -1393,7 +1398,7 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
       slipDate: now,
     }));
     // Don't force online mode - let URL parameter control the initial state
-  }, []);
+  }, [isReturnMode]);
 
   const resetForm = () => {
     // When Clear button is pressed, clear everything except Slip No
@@ -1542,8 +1547,13 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   return;
 }
 
-    // Determine entry type based on selected form
-    const currentEntryType = selectedForm === 'sales' ? 'SALE' : 'PURCHASE';
+    // Determine entry type based on selected form and return mode
+    let currentEntryType = 'PURCHASE';
+    if (selectedForm === 'sales') {
+      currentEntryType = isReturnMode ? 'SALE_RETURN' : 'SALE';
+    } else {
+      currentEntryType = isReturnMode ? 'PURCHASE_RETURN' : 'PURCHASE';
+    }
 
     // Check if a record with this slip number already exists
     let existingRecord = null;
@@ -3181,7 +3191,10 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                   : 'bg-gradient-to-r from-red-500 to-red-600 text-white'
               }`}>
                 <h2 className="text-3xl font-bold tracking-wide">
-                  {onlineMode === true ? 'Purchase Online' : 'Purchase Offline'}
+                  {isReturnMode 
+                    ? (onlineMode === true ? 'Purchase Return Online' : 'Purchase Return Offline')
+                    : (onlineMode === true ? 'Purchase Online' : 'Purchase Offline')
+                  }
                 </h2>
               </div>
             </div>

@@ -74,7 +74,7 @@ const getNavigation = (isAdmin: boolean) => {
         },
         {
           name: "Purchase Return",
-          href: "/purchase-return",
+          href: "/purchase-form?type=online&return=true",
           icon: RotateCcw,
         },
       ],
