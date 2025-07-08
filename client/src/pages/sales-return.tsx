@@ -579,7 +579,9 @@ export default function SalesReturnForm() {
 
     // Fetch next slip number for Sales Return entry type
     try {
-      const response = await fetch("/api/purchases/next-slip?entry_type=SALE_RETURN");
+      const response = await fetch(
+        "/api/purchases/next-slip?entry_type=SALE_RETURN",
+      );
       const data = await response.json();
 
       setFormData({
@@ -592,7 +594,7 @@ export default function SalesReturnForm() {
         creationDate: new Date().toISOString(),
         lastUpdatedDate: new Date().toISOString(),
         slipDate: new Date().toISOString(),
-        returnDate: new Date().toISOString().slice(0, 16)
+        returnDate: new Date().toISOString().slice(0, 16),
       });
     } catch (error) {
       console.error("Error fetching next slip number:", error);
@@ -606,7 +608,7 @@ export default function SalesReturnForm() {
         creationDate: new Date().toISOString(),
         lastUpdatedDate: new Date().toISOString(),
         slipDate: new Date().toISOString(),
-        returnDate: new Date().toISOString().slice(0, 16)
+        returnDate: new Date().toISOString().slice(0, 16),
       });
     }
 
@@ -900,11 +902,11 @@ export default function SalesReturnForm() {
       creationDate: now,
       lastUpdatedDate: now,
       slipDate: now,
-      returnDate: now.slice(0, 16)
+      returnDate: now.slice(0, 16),
     }));
   }, []);
 
-  const resetForm = ()=> {
+  const resetForm = () => {
     // When Clear button is pressed, clear everything except Slip No
     const currentSlipNo = formData.slipNo;
     setFormData({
@@ -966,15 +968,15 @@ export default function SalesReturnForm() {
     }
 
     try {
-      alert('Sales return data saved successfully!');
-      console.log('Sales return form data:', formData);
-      console.log('Sales return data:', salesData);
+      alert("Sales return data saved successfully!");
+      console.log("Sales return form data:", formData);
+      console.log("Sales return data:", salesData);
 
       // Reset form to clean state
-       resetFormToInitial();
+      resetFormToInitial();
     } catch (error) {
-      console.error('Error saving sales return data:', error);
-      alert('Failed to save sales return data');
+      console.error("Error saving sales return data:", error);
+      alert("Failed to save sales return data");
     } finally {
       setLoading(false);
     }
@@ -1196,7 +1198,9 @@ export default function SalesReturnForm() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-black">Original Slip No</Label>
+                    <Label className="text-xs text-black">
+                      Original Slip No
+                    </Label>
                     <Input
                       name="originalSlipNo"
                       value={formData.originalSlipNo}
@@ -1363,7 +1367,9 @@ export default function SalesReturnForm() {
                 }`}
               >
                 <h2 className="text-3xl font-bold tracking-wide">
-                  {onlineMode === true ? "Sales Return Online" : "Sales Return Offline"}
+                  {onlineMode === true
+                    ? "Sales Return Online"
+                    : "Sales Return Offline"}
                 </h2>
               </div>
             </div>
@@ -1597,8 +1603,12 @@ export default function SalesReturnForm() {
                           value={
                             // Use formData.branch for consistent branch display
                             branches.find(
-                              (b) => b.branch_id.toString() === formData.branchId?.toString()
-                            )?.branch_name || formData.branch || ""
+                              (b) =>
+                                b.branch_id.toString() ===
+                                formData.branchId?.toString(),
+                            )?.branch_name ||
+                            formData.branch ||
+                            ""
                           }
                           onChange={(e) =>
                             handleSalesDataChange(
@@ -1680,3 +1690,4 @@ export default function SalesReturnForm() {
     </div>
   );
 }
+
