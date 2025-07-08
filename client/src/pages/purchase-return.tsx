@@ -925,7 +925,7 @@ export default function PurchaseReturnForm() {
                     </Select>
                   </div>
                   <div className="mt-6">
-                    <div className="grid grid-cols-2 gap-1 mb-1">
+                    <div className="grid grid-cols-2 gap-1 mb-2">
                       <Button
                         className="h-5 bg-green-600 text-xs"
                         onClick={captureFirstWeight}
@@ -938,6 +938,20 @@ export default function PurchaseReturnForm() {
                       >
                         2nd WHT
                       </Button>
+                    </div>
+                    
+                    {/* Camera Feed - below weight buttons */}
+                    <div className="h-24 w-full overflow-hidden rounded">
+                      <VideoStreamFullscreen
+                        camera={{
+                          id: 1,
+                          name: "Camera 01",
+                          ip: "10.10.10.146",
+                          port: 554,
+                        }}
+                        isConnected={true}
+                        isStreaming={true}
+                      />
                     </div>
                   </div>
                 </div>
@@ -1057,20 +1071,9 @@ export default function PurchaseReturnForm() {
             </div>
           </div>
 
-          {/* Right Side - Camera Feed */}
+          {/* Right Side - Empty for now */}
           <div className="col-span-4">
-            <div className="h-[200px] w-full overflow-hidden rounded">
-              <VideoStreamFullscreen
-                camera={{
-                  id: 1,
-                  name: "Camera 01",
-                  ip: "10.10.10.146",
-                  port: 554,
-                }}
-                isConnected={true}
-                isStreaming={true}
-              />
-            </div>
+            {/* Additional components can be added here if needed */}
           </div>
         </div>
       </div>
