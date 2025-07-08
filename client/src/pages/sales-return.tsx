@@ -1362,8 +1362,8 @@ function SalesReturnForm() {
               <div
                 className={`inline-block px-8 py-3 rounded-lg shadow-md ${
                   onlineMode === true
-                    ? "bg-gradient-to-r from-red-500 to-red-600 text-white"
-                    : "bg-gradient-to-r from-red-700 to-red-800 text-white"
+                    ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
+                    : "bg-gradient-to-r from-red-500 to-red-600 text-white"
                 }`}
               >
                 <h2 className="text-3xl font-bold tracking-wide">
