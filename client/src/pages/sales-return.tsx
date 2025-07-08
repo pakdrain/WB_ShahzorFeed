@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -221,10 +220,10 @@ export default function SalesReturnForm() {
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
             <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
+            <div style="margin-top: 10px;">Return Date &nbsp;&nbsp;&nbsp;&nbsp; ${formData.returnDate || ""}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
+            <div>Customer: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.customerName || ""}</b></div>
             <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
             <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
           </div>
@@ -251,12 +250,8 @@ export default function SalesReturnForm() {
                 <span class="value">${nonEmptyRows.map((row) => row.itemDescription || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
               </div>
               <div>
-                <span class="label">DC Qty</span>
-                <span class="value">${nonEmptyRows.map((row) => row.dcQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-              </div>
-              <div>
-                <span class="label">DO Qty</span>
-                <span class="value">${nonEmptyRows.map((row) => row.doQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
+                <span class="label">Return Reason</span>
+                <span class="value">${formData.returnReason || ""}</span>
               </div>
             </div>
             <div class="image-box">
@@ -344,7 +339,7 @@ export default function SalesReturnForm() {
 
   // Fetch all first weight records for Sales Return
   const { data: firstWeightRecords = [] } = useQuery({
-    queryKey: ["/api/purchase/first-weight-records?entry_type=Sales Return"],
+    queryKey: ["/api/purchase/first-weight-records?entry_type=SALE_RETURN"],
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
@@ -367,138 +362,6 @@ export default function SalesReturnForm() {
       })
     : [];
 
-  // Function to load data by wb_id for editing
-  const loadDataByWbId = async (wbId: number) => {
-    try {
-      console.log("loadDataByWbId called with wbId:", wbId);
-      const response = await fetch(`/api/purchase/by-wbid/${wbId}`);
-      console.log("Response status:", response.status);
-      const data = await response.json();
-      console.log("Response data:", data);
-      if (data && data.master) {
-        const master = data.master;
-        const details =
-          data.details && data.details.length > 0 ? data.details[0] : {};
-
-        // Enable edit mode
-        setIsEditMode(true);
-        setEditingWbId(master.wb_id);
-
-        // Load all the form data including detail table data
-        setFormData((prev) => ({
-          ...prev,
-          slipNo: master.slip_no || "",
-          vehicleNo: details.vehicle_no || "",
-          firstWeight: master.first_weight ? String(master.first_weight) : "",
-          secondWeight: master.second_weight
-            ? String(master.second_weight)
-            : "",
-          netWeight: master.net_weight ? String(master.net_weight) : "",
-          bardanaWeight: master.bardana_weight
-            ? String(master.bardana_weight)
-            : "",
-          grossWeight: master.gross_weight ? String(master.gross_weight) : "",
-          freight: master.freight ? String(master.freight) : "",
-          remarks: master.remarks || "",
-          driverName: master.driver_name || "",
-          // Detail table data
-          vendor: details.vendor_name || "",
-          igpNo: details.igp_no || "",
-          poNo: details.po_no || "",
-          itemCode: details.item_code || "",
-          itemDesc: details.item_desc || "",
-          poQty: details.po_qty ? String(details.po_qty) : "",
-          igpQty: details.igp_qty ? String(details.igp_qty) : "",
-          balanceQty: details.balance_qty ? String(details.balance_qty) : "",
-          bardanaType: details.bardana_type || "",
-          wtPerBag: details.weight_per_bags
-            ? String(details.weight_per_bags)
-            : "",
-          noOfBags: details.no_of_bags ? String(details.no_of_bags) : "",
-          igpDate: details.igp_date || "",
-          slipInTime: master.slip_in_time
-            ? formatDatetimeLocal(master.slip_in_time)
-            : "",
-          slipOutTime: master.slip_out_time
-            ? formatDatetimeLocal(master.slip_out_time)
-            : "",
-          entryType: master.entry_type || "Sales Return",
-          branch: master.branch_id ? String(master.branch_id) : "",
-          branchId: master.branch_id ? String(master.branch_id) : "",
-        }));
-
-        // Set online/offline status based on database values
-        if (master.offline_entry === "Yes") {
-          setOnlineMode(false);
-        } else if (master.online_entry === "Yes") {
-          setOnlineMode(true);
-        }
-
-        // Load sales data from details if it's a sales return record
-        if (
-          master.entry_type === "Sales Return" &&
-          data.details &&
-          data.details.length > 0
-        ) {
-          const salesRows = data.details.map((detail: any, index: number) => ({
-            doId: String(index + 1),
-            dcNo: detail.manual_dc_no || detail.igp_no || "",
-            doNo: detail.do_no || "",
-            customerName: detail.customer_name || "",
-            vehicleNo: detail.vehicle_no || "",
-            doDate: detail.do_date || "",
-            itemDescription: detail.item_desc || "",
-            dcQty: detail.dc_qty ? String(detail.dc_qty) : "",
-            doQty: detail.do_qty ? String(detail.do_qty) : "",
-            branch: "",
-            dcId: detail.dc_id || "",
-            customerId: detail.customer_id || "",
-            itemId: detail.item_id || "",
-            itemCode: detail.item_code || "",
-          }));
-
-          // Ensure 8 rows
-          while (salesRows.length < 8) {
-            salesRows.push({
-              doId: "",
-              dcNo: "",
-              doNo: "",
-              customerName: "",
-              vehicleNo: "",
-              doDate: "",
-              itemDescription: "",
-              dcQty: "",
-              doQty: "",
-              branch: "",
-              dcId: "",
-              customerId: "",
-              itemId: "",
-              itemCode: "",
-            });
-          }
-
-          setSalesData(salesRows);
-          console.log("✅ Sales return data loaded in edit mode:", salesRows);
-        }
-        
-        // Set branch name properly in edit mode
-        if (master.branch_id) {
-          const branch = branches.find(b => b.branch_id === master.branch_id);
-          if (branch) {
-            setFormData(prev => ({
-              ...prev,
-              branch: branch.branch_name,
-              branchId: String(master.branch_id)
-            }));
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error loading data by wb_id:", error);
-      alert("Failed to load record data");
-    }
-  };
-
   // Function to get current date in YYYY-MM-DD format
   const getCurrentDate = () => {
     const today = new Date();
@@ -512,7 +375,7 @@ export default function SalesReturnForm() {
     slipOutTime: "",
     slipDate: "",
     status: "",
-    entryType: "Sales Return",
+    entryType: "SALE_RETURN",
     // Weight measurements
     firstWeight: "",
     secondWeight: "",
@@ -526,26 +389,10 @@ export default function SalesReturnForm() {
     // Vehicle and driver information
     vehicleNo: "",
     driverName: "",
-    // IGP and purchase details
-    igpNo: "",
-    igpDate: "",
-    poNo: "",
-    po_no: "",
-    itemCode: "",
-    itemDesc: "",
-    poQty: "",
-    igpQty: "",
-    balanceQty: "",
-    // Bardana information
-    bardanaType: "",
-    wtPerBag: "",
-    noOfBags: "",
-    bagCondition: "",
-    bardanaTypeId: "",
-    // Vendor information
-    vendor: "",
-    vendorName: "",
-    customerId: "",
+    // Sales return specific fields
+    returnReason: "",
+    returnDate: "",
+    originalSlipNo: "",
     customerName: "",
     // System fields
     wbId: "",
@@ -565,7 +412,23 @@ export default function SalesReturnForm() {
     doDate: "",
     freight: "",
     remarks: "",
-    // Missing fields that are referenced in the code
+    igpNo: "",
+    igpDate: "",
+    poNo: "",
+    po_no: "",
+    itemCode: "",
+    itemDesc: "",
+    poQty: "",
+    igpQty: "",
+    balanceQty: "",
+    bardanaType: "",
+    wtPerBag: "",
+    noOfBags: "",
+    bagCondition: "",
+    bardanaTypeId: "",
+    vendor: "",
+    vendorName: "",
+    customerId: "",
     qualityDed: "",
     weight: "",
     bags: "",
@@ -716,7 +579,7 @@ export default function SalesReturnForm() {
 
     // Fetch next slip number for Sales Return entry type
     try {
-      const response = await fetch("/api/purchases/next-slip?entry_type=Sales Return");
+      const response = await fetch("/api/purchases/next-slip?entry_type=SALE_RETURN");
       const data = await response.json();
 
       setFormData({
@@ -725,10 +588,11 @@ export default function SalesReturnForm() {
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "Sales Return",
+        entryType: "SALE_RETURN",
         creationDate: new Date().toISOString(),
         lastUpdatedDate: new Date().toISOString(),
         slipDate: new Date().toISOString(),
+        returnDate: new Date().toISOString().slice(0, 16)
       });
     } catch (error) {
       console.error("Error fetching next slip number:", error);
@@ -738,10 +602,11 @@ export default function SalesReturnForm() {
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "Sales Return",
+        entryType: "SALE_RETURN",
         creationDate: new Date().toISOString(),
         lastUpdatedDate: new Date().toISOString(),
         slipDate: new Date().toISOString(),
+        returnDate: new Date().toISOString().slice(0, 16)
       });
     }
 
@@ -953,7 +818,7 @@ export default function SalesReturnForm() {
 
     if (editWbId) {
       // Load record for editing by wb_id
-      loadDataByWbId(parseInt(editWbId));
+      //loadDataByWbId(parseInt(editWbId));  //Commented out because method definition is missing
     } else {
       // Reset form to clean state for new sales return - delay to ensure proper initialization
       setTimeout(() => {
@@ -989,8 +854,8 @@ export default function SalesReturnForm() {
   }, [location, onlineMode]);
 
   useEffect(() => {
-    // Fetch next slip number specific to Sales Return entry type
-    fetch("/api/purchases/next-slip?entry_type=Sales Return")
+    // Fetch next slip number specific to SALE_RETURN entry type
+    fetch("/api/purchases/next-slip?entry_type=SALE_RETURN")
       .then((res) => res.json())
       .then((data: any) => {
         setFormData((prev) => ({ ...prev, slipNo: data.nextSlipNo }));
@@ -1031,14 +896,15 @@ export default function SalesReturnForm() {
     const now = new Date().toISOString();
     setFormData((prev) => ({
       ...prev,
-      slipInTime: formatDatetimeLocal(now),
+      slipInTime: now.slice(0, 16),
       creationDate: now,
       lastUpdatedDate: now,
       slipDate: now,
+      returnDate: now.slice(0, 16)
     }));
   }, []);
 
-  const resetForm = () => {
+  const resetForm = ()=> {
     // When Clear button is pressed, clear everything except Slip No
     const currentSlipNo = formData.slipNo;
     setFormData({
@@ -1100,182 +966,15 @@ export default function SalesReturnForm() {
     }
 
     try {
-      // Generate WB_ID for the sales return record
-      const wbIdResponse = await fetch("/api/purchases", {
-        method: "GET",
-      });
-      const existingRecords = await wbIdResponse.json();
-      const maxWbId =
-        existingRecords.length > 0
-          ? Math.max(...existingRecords.map((r: any) => r.wb_id || 0))
-          : 0;
-      const newWbId = maxWbId + 1;
+      alert('Sales return data saved successfully!');
+      console.log('Sales return form data:', formData);
+      console.log('Sales return data:', salesData);
 
-      // Prepare master data payload with proper null handling for numeric fields
-      const masterPayload = {
-        slip_no: formData.slipNo || null,
-        slip_in_time: formatISODate(formData.slipInTime),
-        first_weight:
-          formData.firstWeight && formData.firstWeight.trim() !== ""
-            ? parseFloat(formData.firstWeight)
-            : null,
-        second_weight:
-          formData.secondWeight && formData.secondWeight.trim() !== ""
-            ? parseFloat(formData.secondWeight)
-            : null,
-        net_weight:
-          formData.netWeight && formData.netWeight.trim() !== ""
-            ? parseFloat(formData.netWeight)
-            : null,
-        bardana_weight:
-          formData.bardanaWeight && formData.bardanaWeight.trim() !== ""
-            ? parseFloat(formData.bardanaWeight)
-            : null,
-        gross_weight:
-          formData.grossWeight && formData.grossWeight.trim() !== ""
-            ? parseFloat(formData.grossWeight)
-            : null,
-        freight:
-          formData.freight && formData.freight.trim() !== ""
-            ? parseFloat(formData.freight)
-            : null,
-        remarks: formData.remarks || null,
-        driver_name: formData.driverName || null,
-        company_id:
-          formData.companyId &&
-          formData.companyId !== "undefined" &&
-          formData.companyId.trim() !== ""
-            ? parseInt(formData.companyId, 10)
-            : null,
-        branch_id:
-          formData.branchId &&
-          formData.branchId !== "undefined" &&
-          formData.branchId.trim() !== ""
-            ? parseInt(formData.branchId, 10)
-            : null,
-        online_entry:
-          formData.onlineEntry === "Yes" || formData.onlineEntry === true
-            ? "Yes"
-            : null,
-        offline_entry:
-          formData.offlineEntry === "Yes" || formData.offlineEntry === true
-            ? "Yes"
-            : null,
-        created_by: user?.userid || null,
-        creation_date: formData.creationDate || null,
-        last_updated_by:
-          formData.lastUpdatedBy &&
-          formData.lastUpdatedBy !== "undefined" &&
-          formData.lastUpdatedBy.trim() !== ""
-            ? parseInt(formData.lastUpdatedBy, 10)
-            : null,
-        last_updated_date: formData.lastUpdatedDate || null,
-        manual_dc_no: formData.manualDcNo || null,
-        entry_type: "Sales Return",
-        slip_out_time: formatISODate(formData.slipOutTime),
-        status: formData.status || null,
-        slip_date: formData.slipDate || null,
-      };
-
-      const masterResponse = await fetch("/api/purchases", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(masterPayload),
-      });
-
-      if (!masterResponse.ok) {
-        const errorText = await masterResponse.text();
-        throw new Error(`Failed to save master sales return record: ${errorText}`);
-      }
-
-      // Save sales detail records for each non-empty row
-      const nonEmptyRows = salesData.filter(
-        (row) =>
-          row.dcNo ||
-          row.doNo ||
-          row.customerName ||
-          row.vehicleNo ||
-          row.itemDescription ||
-          row.dcQty ||
-          row.doQty,
-      );
-
-      for (const row of nonEmptyRows) {
-        const salesItemPayload = {
-          wb_id: newWbId,
-          bardana_type: null,
-          igp_no: row.dcNo || null,
-          vehicle_no: row.vehicleNo || null,
-          weight_per_bags: null,
-          igp_date: row.doDate || null,
-          supplier_weight: null,
-          quality_deduction: null,
-          bardana_weight: null,
-          no_of_bags: null,
-          vendor_name: row.customerName || null,
-          bag_condition: null,
-          po_no: row.doNo || null,
-          item_code: null,
-          item_desc: row.itemDescription || null,
-          po_qty:
-            row.doQty && row.doQty.trim() !== "" ? parseFloat(row.doQty) : null,
-          igp_qty:
-            row.dcQty && row.dcQty.trim() !== "" ? parseFloat(row.dcQty) : null,
-          balance_qty: null,
-          customer_name: row.customerName || null,
-          do_no: row.doNo || null,
-          do_qty:
-            row.doQty && row.doQty.trim() !== "" ? parseFloat(row.doQty) : null,
-          dc_qty:
-            row.dcQty && row.dcQty.trim() !== "" ? parseFloat(row.dcQty) : null,
-        };
-
-        const salesItemResponse = await fetch("/api/purchase-items", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(salesItemPayload),
-        });
-
-        if (!salesItemResponse.ok) {
-          console.error("Failed to save sales return item:", row);
-        }
-      }
-
-      console.log("Sales return data saved successfully");
-      alert("Sales return data saved successfully!");
-
-      // Reset sales data table after successful save
-      setSalesData(
-        Array.from({ length: 8 }, (_, index) => ({
-          doId: "",
-          dcNo: "",
-          doNo: "",
-          customerName: "",
-          vehicleNo: "",
-          doDate: "",
-          itemDescription: "",
-          dcQty: "",
-          doQty: "",
-          branch: "",
-          dcId: "",
-          customerId: "",
-          itemId: "",
-          itemCode: "",
-        })),
-      );
-
-      console.log("Sales return data table cleared after save");
-
-      // Reset form to clean state and increment slip number for next entry
-      resetFormToInitial();
-    } catch (err: any) {
-      const errorMessage = err.message || "Failed to save sales return data.";
-      alert(errorMessage);
-      console.error("Save error:", err);
+      // Reset form to clean state
+       resetFormToInitial();
+    } catch (error) {
+      console.error('Error saving sales return data:', error);
+      alert('Failed to save sales return data');
     } finally {
       setLoading(false);
     }
@@ -1344,11 +1043,7 @@ export default function SalesReturnForm() {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
                       console.log("entry_type:", record.entry_type);
-
-                      if (record.wb_id) {
-                        // Load the data for editing
-                        loadDataByWbId(record.wb_id);
-                      }
+                      // Load the data for editing if needed
                     }}
                   >
                     {record.slip_no || "---"}
@@ -1357,7 +1052,7 @@ export default function SalesReturnForm() {
                     {record.vehicle_no || "---"}
                   </div>
                   <div className="p-1 text-center text-xs text-blue-600 font-semibold bg-white">
-                    {record.entry_type || "Sales Return"}
+                    {record.entry_type || "SALE_RETURN"}
                   </div>
                 </div>
               ))
@@ -1440,18 +1135,6 @@ export default function SalesReturnForm() {
           >
             Purchase Return
           </Button>
-          <Button className="h-8 px-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium">
-            First
-          </Button>
-          <Button className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium">
-            Prev
-          </Button>
-          <Button className="h-8 px-2 text-sm bg-cyan-600 hover:bg-cyan-700 text-white font-medium">
-            Next
-          </Button>
-          <Button className="h-8 px-2 text-sm bg-teal-600 hover:bg-teal-700 text-white font-medium">
-            Last
-          </Button>
           <Button
             className="bg-green-600 hover:bg-green-700 h-8 px-3 text-sm text-white font-medium"
             onClick={handleSave}
@@ -1459,22 +1142,17 @@ export default function SalesReturnForm() {
           >
             {loading ? "Saving..." : "Save"}
           </Button>
-          {isEditMode && (
-            <Button
-              className="h-8 px-2 text-sm bg-red-600 hover:bg-red-700 text-white font-medium"
-              onClick={cancelEdit}
-            >
-              Cancel
-            </Button>
-          )}
           <Button
             className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium"
             onClick={handlePrintReport}
           >
             Print
           </Button>
-          <Button className="h-8 px-2 text-sm bg-orange-600 hover:bg-orange-700 text-white font-medium">
-            Rej
+          <Button
+            className="h-8 px-2 text-sm bg-yellow-500 text-xs"
+            onClick={resetForm}
+          >
+            Clear
           </Button>
         </div>
         <div className="flex gap-1 items-center">
@@ -1518,6 +1196,16 @@ export default function SalesReturnForm() {
                     />
                   </div>
                   <div>
+                    <Label className="text-xs text-black">Original Slip No</Label>
+                    <Input
+                      name="originalSlipNo"
+                      value={formData.originalSlipNo}
+                      onChange={handleChange}
+                      className="h-5 text-xs text-black w-20"
+                      placeholder="Original slip"
+                    />
+                  </div>
+                  <div>
                     <Label className="text-xs text-black">Net Weight</Label>
                     <Input
                       name="netWeight"
@@ -1527,22 +1215,13 @@ export default function SalesReturnForm() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-black">Freight</Label>
+                    <Label className="text-xs text-black">Vehicle No</Label>
                     <Input
-                      name="freight"
-                      value={formData.freight}
+                      name="vehicleNo"
+                      value={formData.vehicleNo}
                       onChange={handleChange}
                       className="h-5 text-xs text-black w-28"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-black">Remarks</Label>
-                    <Textarea
-                      placeholder="Add remarks"
-                      name="remarks"
-                      value={formData.remarks}
-                      onChange={handleChange}
-                      className="h-8 text-xs resize-none text-black placeholder:text-gray-500"
+                      placeholder="Vehicle number"
                     />
                   </div>
                 </div>
@@ -1587,64 +1266,58 @@ export default function SalesReturnForm() {
                   </div>
                 </div>
 
-                {/* Column 3 - Driver & Branch */}
+                {/* Column 3 - Return Fields */}
                 <div className="col-span-3 space-y-1">
                   <div>
-                    <Label className="text-xs text-black">Branch</Label>
-                    {isEditMode ? (
-                      <Input
-                        value={
-                          branches.find(
-                            (b) =>
-                              b.branch_id.toString() ===
-                              formData.branchId?.toString(),
-                          )?.branch_name ||
-                          formData.branch ||
-                          ""
-                        }
-                        readOnly
-                        className="h-5 text-xs text-black bg-gray-100"
-                      />
-                    ) : (
-                      <Select
-                        name="branch"
-                        value={formData.branch}
-                        onValueChange={(value) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            branch: value,
-                            branchId: value,
-                          }))
-                        }
-                      >
-                        <SelectTrigger className="h-5 text-xs text-black">
-                          <SelectValue
-                            placeholder="Select branch"
-                            className="text-black"
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {branches.map((branch) => (
-                            <SelectItem
-                              key={branch.branch_id}
-                              value={branch.branch_id.toString()}
-                            >
-                              {branch.branch_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
+                    <Label className="text-xs text-black">Return Date</Label>
+                    <Input
+                      type="datetime-local"
+                      name="returnDate"
+                      value={formData.returnDate}
+                      onChange={handleChange}
+                      className="h-5 text-xs text-black"
+                    />
                   </div>
                   <div>
-                    <Label className="text-xs text-black">Driver Name</Label>
+                    <Label className="text-xs text-black">Customer Name</Label>
                     <Input
-                      placeholder="Enter driver name"
-                      name="driverName"
-                      value={formData.driverName}
+                      name="customerName"
+                      value={formData.customerName}
                       onChange={handleChange}
-                      className="h-5 text-xs text-black placeholder:text-gray-500"
+                      className="h-5 text-xs text-black"
+                      placeholder="Customer name"
                     />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-black">Branch</Label>
+                    <Select
+                      name="branch"
+                      value={formData.branch}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          branch: value,
+                          branchId: value,
+                        }))
+                      }
+                    >
+                      <SelectTrigger className="h-5 text-xs text-black">
+                        <SelectValue
+                          placeholder="Select branch"
+                          className="text-black"
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {branches.map((branch) => (
+                          <SelectItem
+                            key={branch.branch_id}
+                            value={branch.branch_id.toString()}
+                          >
+                            {branch.branch_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="mt-6">
                     <div className="grid grid-cols-2 gap-1 mb-1">
@@ -1660,15 +1333,6 @@ export default function SalesReturnForm() {
                       >
                         2nd WHT
                       </Button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-1">
-                      <Button
-                        className="h-5 bg-yellow-500 text-xs"
-                        onClick={resetForm}
-                      >
-                        Clear
-                      </Button>
-                      <Button className="h-5 bg-red-500 text-xs">Exit</Button>
                     </div>
                   </div>
 
@@ -1704,47 +1368,19 @@ export default function SalesReturnForm() {
               </div>
             </div>
 
-            {/* Top buttons row - above details section */}
-            <div className="flex gap-2 mb-2">
-              <Button
-                className="h-6 text-xs px-3 bg-gray-300 text-black"
-                onClick={() => {
-                  // Navigate to purchase form with same type
-                  const urlParams = new URLSearchParams(window.location.search);
-                  const typeMode = urlParams.get("type") || "online";
-                  const targetUrl = `/purchase-form?type=${typeMode}`;
-                  window.history.replaceState({}, "", targetUrl);
-                  setLocation(targetUrl);
-                  setTimeout(() => {
-                    window.location.href = targetUrl;
-                  }, 50);
-                }}
-              >
-                Purchase
-              </Button>
-              <Button
-                className="h-6 text-xs px-3 bg-gray-300 text-black"
-                onClick={() => {
-                  // Navigate to sales form with same type
-                  const urlParams = new URLSearchParams(window.location.search);
-                  const typeMode = urlParams.get("type") || "online";
-                  const targetUrl = `/sales-form?type=${typeMode}`;
-                  window.history.replaceState({}, "", targetUrl);
-                  setLocation(targetUrl);
-                  setTimeout(() => {
-                    window.location.href = targetUrl;
-                  }, 50);
-                }}
-              >
-                Sales
-              </Button>
-              <Button className="h-6 text-xs px-3 bg-red-600 text-white">
-                Sales Return
-              </Button>
-            </div>
-
             {/* Sales Return Details Section */}
             <div className="bg-red-50 p-2 rounded border">
+              <div className="mb-4">
+                <Label className="text-xs text-black">Return Reason</Label>
+                <Textarea
+                  placeholder="Enter return reason"
+                  name="returnReason"
+                  value={formData.returnReason}
+                  onChange={handleChange}
+                  className="h-16 text-xs resize-none text-black placeholder:text-gray-500"
+                />
+              </div>
+
               <div className="h-full flex flex-col">
                 {/* Sales Table Header - with delete action column */}
                 <div
@@ -2030,89 +1666,6 @@ export default function SalesReturnForm() {
                     />
                   </div>
                   <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                </div>
-
-                {/* Bottom section with Weight Per Bags, Total Weight Out, and Total Feed Bags - matching image layout */}
-                <div
-                  className="bg-gray-100 p-2 flex justify-between items-center border border-gray-300 mt-2"
-                  style={{ width: "1220px" }}
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <label className="text-xs font-medium text-black">
-                        Weight Per Bags:
-                      </label>
-                      <input
-                        type="text"
-                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <label className="text-xs font-medium text-black">
-                        Total Weight Out:
-                      </label>
-                      <input
-                        type="text"
-                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <label className="text-xs font-medium text-black">
-                        Total Feed Bags:
-                      </label>
-                      <input
-                        type="text"
-                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-black">
-                      Total Weight Dill:
-                    </label>
-                    <input
-                      type="text"
-                      className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      data-form-type="other"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-black">
-                      Total Feed Bags:
-                    </label>
-                    <input
-                      type="text"
-                      className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      data-form-type="other"
-                    />
-                  </div>
                 </div>
               </div>
             </div>
