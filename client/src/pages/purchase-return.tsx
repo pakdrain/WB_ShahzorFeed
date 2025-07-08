@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -113,7 +112,7 @@ export default function PurchaseReturnForm() {
   // Filter records based on search criteria and form type
   const filteredRecords = (() => {
     let records = [];
-    
+
     if (selectedForm === 'offline') {
       // Show offline records when offline tab is selected
       records = Array.isArray(offlineRecords) ? offlineRecords : [];
@@ -121,7 +120,7 @@ export default function PurchaseReturnForm() {
       // Show all first weight records for other tabs
       records = Array.isArray(firstWeightRecords) ? firstWeightRecords : [];
     }
-    
+
     return records.filter((record: any) => {
       const matchesSlipNo = !searchSlipNo || (record.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
       const matchesVehicleNo = !searchVehicleNo || (record.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
@@ -661,7 +660,7 @@ export default function PurchaseReturnForm() {
     try {
       alert('Purchase return data saved successfully!');
       console.log('Purchase return form data:', formData);
-      
+
       // Reset form to clean state
       setFormData(initialFormData);
     } catch (error) {
@@ -737,7 +736,7 @@ export default function PurchaseReturnForm() {
               // Navigate to sales return form with same type
               const urlParams = new URLSearchParams(window.location.search);
               const typeMode = urlParams.get('type') || 'online';
-              const targetUrl = `/sales-return?type=${typeMode}`;
+              const targetUrl = `/sale-return?type=${typeMode}`;
               window.history.pushState({}, '', targetUrl);
               setLocation(targetUrl);
             }}
@@ -818,15 +817,6 @@ export default function PurchaseReturnForm() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-black">Net Weight</Label>
-                    <Input
-                      name="netWeight"
-                      value={formData.netWeight}
-                      onChange={handleChange}
-                      className="h-5 text-xs bg-yellow-200 text-black w-20"
-                    />
-                  </div>
-                  <div>
                     <Label className="text-xs text-black">Vehicle No</Label>
                     <Input
                       name="vehicleNo"
@@ -834,6 +824,16 @@ export default function PurchaseReturnForm() {
                       onChange={handleChange}
                       className="h-5 text-xs text-black w-28"
                       placeholder="Vehicle number"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-black">Return Reason</Label>
+                    <Textarea
+                      placeholder="Enter return reason"
+                      name="returnReason"
+                      value={formData.returnReason}
+                      onChange={handleChange}
+                      className="h-8 text-xs resize-none text-black placeholder:text-gray-500"
                     />
                   </div>
                 </div>
@@ -876,6 +876,15 @@ export default function PurchaseReturnForm() {
                       className="h-5 text-xs text-black"
                     />
                   </div>
+                  <div>
+                    <Label className="text-xs text-black">Net Weight</Label>
+                    <Input
+                      name="netWeight"
+                      value={formData.netWeight}
+                      onChange={handleChange}
+                      className="h-5 text-xs bg-yellow-200 text-black w-20"
+                    />
+                  </div>
                 </div>
 
                 {/* Column 3 - Return Fields */}
@@ -915,16 +924,6 @@ export default function PurchaseReturnForm() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div>
-                    <Label className="text-xs text-black">Return Reason</Label>
-                    <Textarea
-                      placeholder="Enter return reason"
-                      name="returnReason"
-                      value={formData.returnReason}
-                      onChange={handleChange}
-                      className="h-8 text-xs resize-none text-black placeholder:text-gray-500"
-                    />
-                  </div>
                   <div className="mt-6">
                     <div className="grid grid-cols-2 gap-1 mb-1">
                       <Button
@@ -950,8 +949,8 @@ export default function PurchaseReturnForm() {
               <div
                 className={`inline-block px-8 py-3 rounded-lg shadow-md ${
                   onlineMode === true
-                    ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white"
-                    : "bg-gradient-to-r from-orange-700 to-orange-800 text-white"
+                    ? "bg-green-500 text-white"
+                    : "bg-red-500 text-white"
                 }`}
               >
                 <h2 className="text-3xl font-bold tracking-wide">
@@ -1044,7 +1043,7 @@ export default function PurchaseReturnForm() {
                   />
                 </div>
               </div>
-              
+
               <div className="mt-4">
                 <Label className="text-xs text-black">Remarks</Label>
                 <Textarea
@@ -1060,7 +1059,7 @@ export default function PurchaseReturnForm() {
 
           {/* Right Side - Camera Feed */}
           <div className="col-span-4">
-            <div className="h-full w-full overflow-hidden rounded">
+            <div className="h-[200px] w-full overflow-hidden rounded">
               <VideoStreamFullscreen
                 camera={{
                   id: 1,
