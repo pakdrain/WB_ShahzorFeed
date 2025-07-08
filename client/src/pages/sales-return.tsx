@@ -12,13 +12,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import WeightIndicator from "@/components/weight-indicator";
-import WeightDisplayTable from "@/components/weight-display-table";
 import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 
-export default function SalesReturnForm() {
+function SalesReturnForm() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const [searchSlipNo, setSearchSlipNo] = useState("");
@@ -90,7 +89,7 @@ export default function SalesReturnForm() {
    <!DOCTYPE html>
   <html>
   <head>
-    <title>Weighbridge Slip - ${formData.slipNo}</title>
+    <title>Sales Return Slip - ${formData.slipNo}</title>
     <style>
       body { font-family: Arial, sans-serif; margin: 10px; font-size: 10px; }
       .page-container { height: 150vh; display: flex; flex-direction: column; }
@@ -209,14 +208,14 @@ export default function SalesReturnForm() {
       <!-- Head Office Copy -->
       <div class="slip-section">
         <div class="header">
-          <div class="copy-label">Head Office Copy</div>
+          <div class="copy-label">Head Office Copy - Sales Return</div>
           <div class="print-date">Print Date: ${currentDate} ${currentTime}</div>
         </div>
         <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">SALES RETURN SLIP</div>
 
-        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
+        <div><b>Return #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
@@ -267,6 +266,7 @@ export default function SalesReturnForm() {
               <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
             </div>
           </div>
+
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
@@ -285,6 +285,7 @@ export default function SalesReturnForm() {
             </div>
           </div>
         </div>
+
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
@@ -479,6 +480,18 @@ export default function SalesReturnForm() {
           setSalesData(salesRows);
           console.log("✅ Sales return data loaded in edit mode:", salesRows);
         }
+        
+        // Set branch name properly in edit mode
+        if (master.branch_id) {
+          const branch = branches.find(b => b.branch_id === master.branch_id);
+          if (branch) {
+            setFormData(prev => ({
+              ...prev,
+              branch: branch.branch_name,
+              branchId: String(master.branch_id)
+            }));
+          }
+        }
       }
     } catch (error) {
       console.error("Error loading data by wb_id:", error);
@@ -624,7 +637,7 @@ export default function SalesReturnForm() {
     formData.noOfBags,
   ]);
 
-  // DC Data Fetching Function for Sales
+  // DC Data Fetching Function for Sales Return
   const fetchDcData = async (dcNo: string, rowIndex: number) => {
     if (!dcNo || dcNo.trim() === "") {
       alert("Please enter DC No");
@@ -644,9 +657,8 @@ export default function SalesReturnForm() {
       console.log("DC API Response:", data);
 
       if (data && data.items && data.items.length > 0) {
-        const item = data.items[0]; // ✅ Single DC No for one row
+        const item = data.items[0];
 
-        // ✅ Use branch name directly from formData.branch
         const branchName = formData.branch || "";
 
         setSalesData((prev) => {
@@ -662,8 +674,8 @@ export default function SalesReturnForm() {
             itemDescription: item.item_desc || "",
             dcQty: item.dc_qty ? String(item.dc_qty) : "",
             doQty: item.del_qty ? String(item.del_qty) : "",
-            branch: branchName, // 👈 For UI
-            branchId: formData.branchId, // 👈 For backend
+            branch: branchName,
+            branchId: formData.branchId,
             dcId: item.dc_id || "",
             customerId: item.customer_id || "",
             itemId: item.item_id || "",
@@ -720,7 +732,6 @@ export default function SalesReturnForm() {
       });
     } catch (error) {
       console.error("Error fetching next slip number:", error);
-      // Fallback - fetch next Sales Return slip number
       setFormData({
         ...initialFormData,
         slipNo: "1",
@@ -1250,7 +1261,6 @@ export default function SalesReturnForm() {
           dcQty: "",
           doQty: "",
           branch: "",
-          // Hidden columns for database storage
           dcId: "",
           customerId: "",
           itemId: "",
@@ -1259,35 +1269,6 @@ export default function SalesReturnForm() {
       );
 
       console.log("Sales return data table cleared after save");
-
-      const currentDate = new Date()
-        .toLocaleDateString("en-GB", {
-          day: "2-digit",
-          month: "short",
-          year: "2-digit",
-        })
-        .toUpperCase()
-        .replace(/\s/g, "-");
-
-      const currentTime = new Date().toLocaleTimeString("en-GB", {
-        hour12: false,
-      });
-
-      // Auto-print after successful save
-      setTimeout(() => {
-        try {
-          const printHTML = generateReportHTML();
-
-          const printWindow = window.open("", "_blank");
-          if (printWindow) {
-            printWindow.document.write(printHTML);
-            printWindow.document.close();
-            printWindow.print();
-          }
-        } catch (printError) {
-          console.error("Auto-print error:", printError);
-        }
-      }, 500);
 
       // Reset form to clean state and increment slip number for next entry
       resetFormToInitial();
@@ -1410,7 +1391,7 @@ export default function SalesReturnForm() {
       {/* Edit Mode Indicator */}
       {isEditMode && (
         <div className="bg-blue-600 text-white p-2 rounded mb-2 text-center text-sm font-medium">
-          EDIT MODE: Slip No. {formData.slipNo} (ID: {editingWbId})
+          EDIT MODE: Sales Return Slip No. {formData.slipNo} (ID: {editingWbId})
         </div>
       )}
 
@@ -1444,13 +1425,20 @@ export default function SalesReturnForm() {
             Sale
           </Button>
           <Button className="h-8 px-2 text-sm font-medium bg-rose-700 text-white">
-            Sale Return
+            Sales Return
           </Button>
           <Button
-            className="h-8 px-2 text-sm font-medium bg-amber-600 hover:bg-amber-700 text-white"
-            onClick={() => toggleOnlineMode(false)}
+            className="h-8 px-2 text-sm font-medium bg-gray-300 hover:bg-gray-400 text-black"
+            onClick={() => {
+              // Navigate to purchase return form with same type
+              const urlParams = new URLSearchParams(window.location.search);
+              const typeMode = urlParams.get("type") || "online";
+              const targetUrl = `/purchase-return?type=${typeMode}`;
+              window.history.pushState({}, "", targetUrl);
+              setLocation(targetUrl);
+            }}
           >
-            Offline
+            Purchase Return
           </Button>
           <Button className="h-8 px-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium">
             First
@@ -1741,7 +1729,7 @@ export default function SalesReturnForm() {
                   const urlParams = new URLSearchParams(window.location.search);
                   const typeMode = urlParams.get("type") || "online";
                   const targetUrl = `/sales-form?type=${typeMode}`;
-                  window.history.pushState({}, "", targetUrl);
+                  window.history.replaceState({}, "", targetUrl);
                   setLocation(targetUrl);
                   setTimeout(() => {
                     window.location.href = targetUrl;
@@ -1753,26 +1741,9 @@ export default function SalesReturnForm() {
               <Button className="h-6 text-xs px-3 bg-blue-600 text-white">
                 Sales Return
               </Button>
-              <Button
-                className="h-6 text-xs px-3 bg-gray-300 text-black"
-                onClick={() => {
-                  // Navigate to offline form
-                  window.history.replaceState(
-                    {},
-                    "",
-                    "/purchase-form?type=offline",
-                  );
-                  setLocation("/purchase-form?type=offline");
-                  setTimeout(() => {
-                    window.location.href = "/purchase-form?type=offline";
-                  }, 50);
-                }}
-              >
-                Offline
-              </Button>
             </div>
 
-            {/* Sales Details Section */}
+            {/* Sales Return Details Section */}
             <div className="bg-blue-50 p-2 rounded border">
               <div className="h-full flex flex-col">
                 {/* Sales Table Header - with delete action column */}
@@ -1986,21 +1957,29 @@ export default function SalesReturnForm() {
                       <div className="bg-white border border-gray-300 p-1">
                         <input
                           type="text"
-                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                          value={salesData[index]?.branch || ""}
-                          readOnly
-                          placeholder="Auto-filled"
+                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
+                          value={
+                            // Use formData.branch for consistent branch display
+                            branches.find(
+                              (b) => b.branch_id.toString() === formData.branchId?.toString()
+                            )?.branch_name || formData.branch || ""
+                          }
+                          onChange={(e) =>
+                            handleSalesDataChange(
+                              index,
+                              "branch",
+                              e.target.value,
+                            )
+                          }
                           autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
                         />
                       </div>
+
                       <div className="bg-white border border-gray-300 p-1 flex items-center justify-center">
                         <button
+                          type="button"
                           onClick={() => handleSalesRowDelete(index)}
-                          className="text-red-500 hover:text-red-700 text-xs font-bold"
+                          className="text-red-500 hover:text-red-700 text-lg font-bold"
                           title="Delete row"
                         >
                           ✖
@@ -2009,29 +1988,138 @@ export default function SalesReturnForm() {
                     </div>
                   ))}
                 </div>
+
+                {/* Total Row */}
+                <div
+                  className="grid gap-px text-xs font-semibold mb-4"
+                  style={{
+                    gridTemplateColumns:
+                      "100px 100px 240px 140px 120px 180px 100px 100px 140px",
+                    width: "1220px",
+                    height: "30px",
+                  }}
+                >
+                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                  <div className="bg-gray-200 border border-gray-400 p-1 flex items-center justify-end">
+                    <span className="text-black">Total:</span>
+                  </div>
+                  <div className="bg-white border border-gray-400 p-1">
+                    <input
+                      type="text"
+                      className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
+                      readOnly
+                      value={salesData.reduce(
+                        (sum, row) => sum + (parseFloat(row.dcQty) || 0),
+                        0,
+                      )}
+                    />
+                  </div>
+                  <div className="bg-white border border-gray-400 p-1">
+                    <input
+                      type="text"
+                      className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
+                      readOnly
+                      value={salesData.reduce(
+                        (sum, row) => sum + (parseFloat(row.doQty) || 0),
+                        0,
+                      )}
+                    />
+                  </div>
+                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                </div>
+
+                {/* Bottom section with Weight Per Bags, Total Weight Out, and Total Feed Bags - matching image layout */}
+                <div
+                  className="bg-gray-100 p-2 flex justify-between items-center border border-gray-300 mt-2"
+                  style={{ width: "1220px" }}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <label className="text-xs font-medium text-black">
+                        Weight Per Bags:
+                      </label>
+                      <input
+                        type="text"
+                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-form-type="other"
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <label className="text-xs font-medium text-black">
+                        Total Weight Out:
+                      </label>
+                      <input
+                        type="text"
+                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-form-type="other"
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <label className="text-xs font-medium text-black">
+                        Total Feed Bags:
+                      </label>
+                      <input
+                        type="text"
+                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-form-type="other"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <label className="text-sm font-medium text-black">
+                      Total Weight Dill:
+                    </label>
+                    <input
+                      type="text"
+                      className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      data-form-type="other"
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <label className="text-sm font-medium text-black">
+                      Total Feed Bags:
+                    </label>
+                    <input
+                      type="text"
+                      className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck="false"
+                      data-form-type="other"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Right Side - Weight Display and Camera */}
-          <div className="col-span-4 space-y-1 h-full overflow-hidden">
-            {/* Weight Indicator */}
-            <div className="bg-white p-2 rounded border">
-              <WeightIndicator comPort="COM6" />
-            </div>
-
-            {/* Camera Feed */}
-            <div className="bg-white p-2 rounded border flex-1 overflow-hidden">
-              <VideoStreamFullscreen
-                camera={{
-                  id: 1,
-                  name: "Camera 01",
-                  ip: "10.10.10.146",
-                  port: 554,
-                }}
-                isConnected={true}
-                isStreaming={true}
-              />
+            {/* Right Side - Weight Display and Bag Table (Columns 9-12) */}
+            <div className="col-span-4">
+              {/* This section will contain the right side components */}
             </div>
           </div>
         </div>
@@ -2039,3 +2127,5 @@ export default function SalesReturnForm() {
     </div>
   );
 }
+
+export default SalesReturnForm;
