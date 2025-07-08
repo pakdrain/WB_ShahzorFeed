@@ -1078,5 +1078,3 @@ export default function PurchaseReturnForm() {
     </div>
   );
 }
-
-export default PurchaseReturnForm;
