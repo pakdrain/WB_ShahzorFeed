@@ -18,6 +18,8 @@ import ImageUpload from "@/pages/image-upload";
 import NotFound from "@/pages/not-found";
 import SaleReturn from "@/pages/sale-return";
 import SaleNode from "@/pages/sale-node";
+import VoucherEntry from "./pages/voucher-entry";
+import VoucherView from "./pages/voucher-view";
 
 function ProtectedApp() {
   return (
@@ -30,6 +32,8 @@ function ProtectedApp() {
           <Route path="/weighbridge-settings" component={WeighbridgeSettings} />
           <Route path="/role-management" component={RoleManagement} />
           <Route path="/purchase-form" component={PurchaseForm} />
+          <Route path="/voucher-entry" component={VoucherEntry} />
+          <Route path="/voucher-view" component={VoucherView} />
           <Route path="/sales-form" component={SalesForm} />
           <Route path="/sale-return" component={SaleReturn} />
           <Route path="/sale-node" component={SaleNode} />

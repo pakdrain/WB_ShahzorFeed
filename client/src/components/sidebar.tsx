@@ -1,59 +1,84 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'wouter';
-import { 
-  Home, 
-  Settings, 
-  Video, 
-  Menu, 
-  X, 
-  Scale, 
-  FileText, 
-  LogOut, 
-  User, 
-  BarChart3, 
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useLocation } from "wouter";
+import {
+  Home,
+  Settings,
+  Video,
+  Menu,
+  X,
+  Scale,
+  FileText,
+  LogOut,
+  User,
+  BarChart3,
   Upload,
   ShoppingCart,
   RotateCcw,
   Network,
   ChevronDown,
   ChevronRight,
-  Users
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/auth';
+  Users,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
 
 const getNavigation = (isAdmin: boolean) => {
   const baseNavigation = [
-    { name: 'Home', href: '/', icon: Home },
-    { 
-      name: 'Purchase Form', 
-      icon: FileText, 
+    { name: "Home", href: "/", icon: Home },
+    {
+      name: "Purchase Form",
+      icon: FileText,
       hasSubItems: true,
       subItems: [
-        { name: 'Purchase Online', href: '/purchase-form?type=online', icon: FileText },
-        { name: 'Purchase Offline', href: '/purchase-form?type=offline', icon: FileText },
-      ]
+        {
+          name: "Purchase Online",
+          href: "/purchase-form?type=online",
+          icon: FileText,
+        },
+        {
+          name: "Purchase Offline",
+          href: "/purchase-form?type=offline",
+          icon: FileText,
+        },
+      ],
     },
-    { 
-      name: 'Sale Form', 
-      icon: ShoppingCart, 
+    {
+      name: "Sale Form",
+      icon: ShoppingCart,
       hasSubItems: true,
       subItems: [
-        { name: 'Sales Online', href: '/sales-form?type=online', icon: ShoppingCart },
-        { name: 'Sales Offline', href: '/sales-form?type=offline', icon: ShoppingCart },
-      ]
+        {
+          name: "Sales Online",
+          href: "/sales-form?type=online",
+          icon: ShoppingCart,
+        },
+        {
+          name: "Sales Offline",
+          href: "/sales-form?type=offline",
+          icon: ShoppingCart,
+        },
+      ],
     },
-    { name: 'Sale Return', href: '/sale-return', icon: RotateCcw },
-    { name: 'Sale Node', href: '/sale-node', icon: Network },
-    { name: 'Reports', href: '/reports', icon: BarChart3 },
-    { name: 'Image Upload', href: '/image-upload', icon: Upload },
-    { name: 'Camera Settings', href: '/settings', icon: Settings },
-    { name: 'Weighbridge Settings', href: '/weighbridge-settings', icon: Scale },
+    { name: "Voucher Entry", href: "/voucher-entry", icon: FileText },
+    { name: "Voucher View", href: "/voucher-view", icon: FileText },
+    { name: "Sale Return", href: "/sale-return", icon: RotateCcw },
+    { name: "Sale Node", href: "/sale-node", icon: Network },
+    { name: "Reports", href: "/reports", icon: BarChart3 },
+    { name: "Camera Settings", href: "/settings", icon: Settings },
+    {
+      name: "Weighbridge Settings",
+      href: "/weighbridge-settings",
+      icon: Scale,
+    },
   ];
 
   if (isAdmin) {
-    baseNavigation.splice(-2, 0, { name: 'Role', href: '/role-management', icon: Users });
+    baseNavigation.splice(-2, 0, {
+      name: "Role",
+      href: "/role-management",
+      icon: Users,
+    });
   }
 
   return baseNavigation;
@@ -62,102 +87,62 @@ const getNavigation = (isAdmin: boolean) => {
 export default function Sidebar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [location, setLocation] = useLocation();
+  const [, setLocation] = useLocation(); // unused now
   const { user, logout } = useAuth();
-
-  // Helper function to extract query parameters from URL
-  const getQueryParam = (url: string, param: string) => {
-    const urlParts = url.split('?');
-    if (urlParts.length < 2) return null;
-    const params = new URLSearchParams(urlParts[1]);
-    return params.get(param);
-  };
-
-  // Check if user is admin (you can adjust this logic based on your admin identification)
-  const isAdmin = user?.userName === 'admin' || user?.userid === 1;
-  const navigation = getNavigation(isAdmin);
   const sidebarRef = useRef(null);
 
-  // Load expanded items from localStorage on component mount
+  const isActive = (href: string) => {
+    try {
+      const currentUrl = new URL(window.location.href);
+      const targetUrl = new URL(href, window.location.origin);
+      return (
+        currentUrl.pathname === targetUrl.pathname &&
+        currentUrl.search === targetUrl.search
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  const isAdmin = user?.userName === "admin" || user?.userid === 1;
+  const navigation = getNavigation(isAdmin);
+
   useEffect(() => {
-    const storedExpandedItems = localStorage.getItem('expandedItems');
+    const storedExpandedItems = localStorage.getItem("expandedItems");
     if (storedExpandedItems) {
       try {
         const parsedItems = JSON.parse(storedExpandedItems);
         setExpandedItems(Array.isArray(parsedItems) ? parsedItems : []);
-      } catch (error) {
-        console.error('Error parsing stored expanded items:', error);
+      } catch {
         setExpandedItems([]);
       }
     }
   }, []);
 
-  // Save expanded items to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('expandedItems', JSON.stringify(expandedItems));
+    localStorage.setItem("expandedItems", JSON.stringify(expandedItems));
   }, [expandedItems]);
 
-
   const toggleExpanded = (itemName: string) => {
-    setExpandedItems(prev => {
-      const expandableItems = ['Purchase Form', 'Sale Form'];
-
-      // If clicking on the same item that's already expanded, collapse it
+    setExpandedItems((prev) => {
+      const expandableItems = ["Purchase Form", "Sale Form"];
       if (prev.includes(itemName)) {
-        return prev.filter(name => name !== itemName);
+        return prev.filter((name) => name !== itemName);
       } else {
-        // If clicking on an expandable item, close all other expandable items and open this one
-        if (expandableItems.includes(itemName)) {
-          const filteredItems = prev.filter(name => !expandableItems.includes(name));
-          return [...filteredItems, itemName];
-        } else {
-          // For non-expandable items, close all expandable items
-          return prev.filter(name => !expandableItems.includes(name));
-        }
+        const filteredItems = prev.filter(
+          (name) => !expandableItems.includes(name),
+        );
+        return [...filteredItems, itemName];
       }
     });
   };
 
   const handleNavigation = (href: string) => {
-    // Close all expandable items when navigating to a non-expandable route
-    const expandableItems = ['Purchase Form', 'Sale Form'];
-    setExpandedItems(prev => prev.filter(name => !expandableItems.includes(name)));
-    setIsMobileMenuOpen(false);
-    window.location.href = href;
-  };
-
-
-  const isActive = (path: string, queryParam?: string) => {
-    const currentPath = location.split('?')[0];
-    const currentQuery = new URLSearchParams(location.split('?')[1] || '');
-
-    if (queryParam) {
-      const expectedParam = queryParam.split('=');
-      return currentPath === path && currentQuery.get(expectedParam[0]) === expectedParam[1];
+    if (href !== window.location.pathname + window.location.search) {
+      window.location.href = href; // 👈 Force reload
     }
-    return currentPath === path;
+    setIsMobileMenuOpen(false);
   };
-
-  useEffect(() => {
-    navigation.forEach(item => {
-      if (item.hasSubItems) {
-        const hasActiveSubItem = item.subItems?.some(subItem => {
-          const basePath = subItem.href.split('?')[0];
-          const currentPath = location.split('?')[0];
-
-          const expectedType = getQueryParam(subItem.href, 'type');
-          const currentType = getQueryParam(location, 'type');
-
-          return currentPath === basePath && currentType === expectedType;
-        });
-
-        // Keep Purchase and Sales forms expanded when on their respective pages
-        if (hasActiveSubItem && !expandedItems.includes(item.name)) {
-          setExpandedItems(prev => [...prev, item.name]);
-        }
-      }
-    });
-  }, [location, expandedItems]);
 
   const handleLogout = async () => {
     await logout();
@@ -174,7 +159,11 @@ export default function Sidebar() {
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           className="bg-monitoring-slate border-monitoring-gray text-white hover:bg-monitoring-gray"
         >
-          {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          {isMobileMenuOpen ? (
+            <X className="h-4 w-4" />
+          ) : (
+            <Menu className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
@@ -183,16 +172,15 @@ export default function Sidebar() {
         ref={sidebarRef}
         className={cn(
           "fixed inset-y-0 left-0 z-40 w-64 bg-monitoring-slate border-r border-monitoring-gray transform transition-transform duration-200 ease-in-out lg:translate-x-0",
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          isMobileMenuOpen
+            ? "translate-x-0"
+            : "-translate-x-full lg:translate-x-0",
         )}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-monitoring-gray">
-            <div className="flex items-center space-x-2">
-              <Video className="h-8 w-8 text-monitoring-blue" />
-              <h1 className="text-xl font-bold text-white">CCTV Monitor</h1>
-            </div>
+            <h1 className="text-xl font-bold text-white">Weighbridge System</h1>
           </div>
 
           {/* Navigation */}
@@ -200,15 +188,9 @@ export default function Sidebar() {
             {navigation.map((item) => {
               if (item.hasSubItems) {
                 const isExpanded = expandedItems.includes(item.name);
-                const hasActiveSubItem = item.subItems?.some(subItem => {
-                  const basePath = subItem.href.split('?')[0];
-                  const currentPath = location.split('?')[0];
-
-                  const expectedType = getQueryParam(subItem.href, 'type');
-                  const currentType = getQueryParam(location, 'type');
-
-                  return currentPath === basePath && currentType === expectedType;
-                });
+                const hasActiveSubItem = item.subItems?.some((subItem) =>
+                  isActive(subItem.href),
+                );
 
                 return (
                   <div key={item.name} className="space-y-1">
@@ -218,12 +200,9 @@ export default function Sidebar() {
                         "w-full justify-between text-left h-12 px-4",
                         hasActiveSubItem
                           ? "bg-blue-600 text-white hover:bg-blue-700"
-                          : "text-gray-300 hover:bg-monitoring-gray hover:text-white"
+                          : "text-gray-300 hover:bg-monitoring-gray hover:text-white",
                       )}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        toggleExpanded(item.name);
-                      }}
+                      onClick={() => toggleExpanded(item.name)}
                     >
                       <div className="flex items-center">
                         <item.icon className="mr-3 h-5 w-5" />
@@ -239,35 +218,23 @@ export default function Sidebar() {
                     {isExpanded && (
                       <div className="ml-4 space-y-1">
                         {item.subItems?.map((subItem) => {
-                          const basePath = subItem.href.split('?')[0];
-                          const currentPath = location.split('?')[0];
-
-                          const expectedType = getQueryParam(subItem.href, 'type');
-                          const currentType = getQueryParam(location, 'type');
-
-                          const isSubActive = currentPath === basePath && currentType === expectedType;
+                          const isSubActive = isActive(subItem.href);
 
                           return (
-                            <Link key={subItem.name} href={subItem.href}>
-                              <Button
-                                variant="ghost"
-                                className={cn(
-                                  "w-full justify-start text-left h-10 px-4 ml-2",
-                                  isSubActive
-                                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                                    : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white"
-                                )}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  setIsMobileMenuOpen(false);
-                                  // Use window.location.href for reliable navigation
-                                  window.location.href = subItem.href;
-                                }}
-                              >
-                                <subItem.icon className="mr-3 h-4 w-4" />
-                                {subItem.name}
-                              </Button>
-                            </Link>
+                            <Button
+                              key={subItem.name}
+                              variant="ghost"
+                              className={cn(
+                                "w-full justify-start text-left h-10 px-4 ml-2",
+                                isSubActive
+                                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                                  : "text-gray-400 hover:bg-monitoring-gray/70 hover:text-white",
+                              )}
+                              onClick={() => handleNavigation(subItem.href)}
+                            >
+                              <subItem.icon className="mr-3 h-4 w-4" />
+                              {subItem.name}
+                            </Button>
                           );
                         })}
                       </div>
@@ -275,26 +242,23 @@ export default function Sidebar() {
                   </div>
                 );
               } else {
-                const isItemActive = location === item.href;
+                const isItemActive = isActive(item.href ?? "");
+
                 return (
-                  <Link key={item.name} href={item.href}>
-                    <Button
-                      variant="ghost"
-                      className={cn(
-                        "w-full justify-start text-left h-12 px-4",
-                        isItemActive
-                          ? "bg-blue-600 text-white hover:bg-blue-700"
-                          : "text-gray-300 hover:bg-monitoring-gray hover:text-white"
-                      )}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleNavigation(item.href);
-                      }}
-                    >
-                      <item.icon className="mr-3 h-5 w-5" />
-                      {item.name}
-                    </Button>
-                  </Link>
+                  <Button
+                    key={item.name}
+                    variant="ghost"
+                    className={cn(
+                      "w-full justify-start text-left h-12 px-4",
+                      isItemActive
+                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                        : "text-gray-300 hover:bg-monitoring-gray hover:text-white",
+                    )}
+                    onClick={() => handleNavigation(item.href ?? "")}
+                  >
+                    <item.icon className="mr-3 h-5 w-5" />
+                    {item.name}
+                  </Button>
                 );
               }
             })}
@@ -302,22 +266,17 @@ export default function Sidebar() {
 
           {/* User Info & Logout */}
           <div className="p-4 border-t border-monitoring-gray space-y-3">
-            {/* User Info */}
             <div className="flex items-center space-x-3 px-2">
               <div className="flex items-center justify-center w-8 h-8 bg-monitoring-blue rounded-full">
                 <User className="h-4 w-4 text-white" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
-                  {user?.userName || 'User'}
+                  {user?.userName || "User"}
                 </p>
-                <p className="text-xs text-gray-400">
-                  Authenticated
-                </p>
+                <p className="text-xs text-gray-400">Authenticated</p>
               </div>
             </div>
-
-            {/* Logout Button */}
             <Button
               variant="ghost"
               onClick={handleLogout}
@@ -326,7 +285,6 @@ export default function Sidebar() {
               <LogOut className="mr-3 h-4 w-4" />
               Logout
             </Button>
-
             <div className="text-xs text-gray-400 text-center pt-2">
               Live Camera Monitoring System
             </div>
