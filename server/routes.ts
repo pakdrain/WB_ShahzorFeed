@@ -1097,6 +1097,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 });
 
+  // GET purchase data by wb_id for edit mode
+  app.get('/api/purchases/:wbId', async (req: Request, res: Response) => {
+    try {
+      const { wbId } = req.params;
+
+      const masterQuery = 'SELECT * FROM wb_weighbridge WHERE wb_id = $1';
+      const masterResult = await pool.query(masterQuery, [parseInt(wbId)]);
+
+      if (masterResult.rows.length === 0) {
+        return res.status(404).json({ message: 'No record found for this wb_id' });
+      }
+
+      const master = masterResult.rows[0];
+
+      const detailsQuery = 'SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1';
+      const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
+
+      console.log(`Fetched purchase record for wb_id ${wbId}`);
+      res.json({
+        masterData: master,
+        salesData: detailsResult.rows
+      });
+    } catch (error: any) {
+      console.error('Error fetching purchase by wb_id:', error);
+      res.status(500).json({ error: 'Failed to fetch purchase record' });
+    }
+  });
+
   // PUT update purchase record
   app.put('/api/purchase/update/:wbId', async (req: Request, res: Response) => {
     try {

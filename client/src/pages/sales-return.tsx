@@ -448,7 +448,7 @@ export default function SalesReturnForm() {
 
   const [formData, setFormData] = useState(initialFormData);
   const [loading, setLoading] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(isEditMode);
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
 
   const [onlineMode, setOnlineMode] = useState(() => {
@@ -1041,7 +1041,7 @@ export default function SalesReturnForm() {
       alert("Sales return data saved successfully!");
 
       // Reset form to clean state
-      resetFormToInitial();
+      await resetFormToInitial();
     } catch (error: any) {
       console.error("Error saving sales return data:", error);
       alert(`Failed to save sales return data: ${error.message}`);
