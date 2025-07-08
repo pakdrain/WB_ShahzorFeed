@@ -10,9 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import WeightIndicator from "@/components/weight-indicator";
-import WeightDisplayTable from "@/components/weight-display-table";
 import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
@@ -20,7 +18,6 @@ import { useAuth } from "@/lib/auth";
 
 export default function PurchaseReturnForm() {
   const [location, setLocation] = useLocation();
-  const [type, setType] = useState("");
   const { user } = useAuth();
   const [searchSlipNo, setSearchSlipNo] = useState("");
   const [searchVehicleNo, setSearchVehicleNo] = useState("");
@@ -835,13 +832,13 @@ export default function PurchaseReturnForm() {
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
-          </button>
+          </Button>
           <button
             className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
-          </button>
+          </Button>
         </div>
         <div className="text-2xl text-green-600 font-bold">2500</div>
       </div>
