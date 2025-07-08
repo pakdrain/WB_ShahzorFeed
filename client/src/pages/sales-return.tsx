@@ -1686,7 +1686,8 @@ export default function SalesReturnForm() {
                           autoComplete="off"
                           autoCorrect="off"
                           autoCapitalize="off"
-                          spellCheck="false                          data-form-type="other"
+                          spellCheck="false"
+                          data-form-type="other"
                         />
                       </div>
                       <div className="bg-white border border-gray-300 p-1">

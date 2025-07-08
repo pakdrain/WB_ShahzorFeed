@@ -13,7 +13,7 @@ import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/lib/auth';
 import { imageCaptureService } from '@/lib/image-capture';
 
-export default function PurchaseReturnForm() {
+export default export default function PurchaseReturnForm() {
   const [location, setLocation] = useLocation();
   const [type, setType] = useState('');
   const { user } = useAuth();
