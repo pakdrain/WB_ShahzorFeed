@@ -379,7 +379,7 @@ export default function PurchaseReturnForm() {
     slipOutTime: '',
     slipDate: '',
     status: '',
-    entryType: 'PURCHASE_RETURN',
+    entryType: 'Purchase Return',
     // Weight measurements
     firstWeight: '',
     secondWeight: '',

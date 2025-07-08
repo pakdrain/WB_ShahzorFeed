@@ -375,7 +375,7 @@ function SalesReturnForm() {
     slipOutTime: "",
     slipDate: "",
     status: "",
-    entryType: "SALE_RETURN",
+    entryType: "Sales Return",
     // Weight measurements
     firstWeight: "",
     secondWeight: "",
@@ -590,7 +590,7 @@ function SalesReturnForm() {
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "SALE_RETURN",
+        entryType: "Sales Return",
         creationDate: new Date().toISOString(),
         lastUpdatedDate: new Date().toISOString(),
         slipDate: new Date().toISOString(),
@@ -604,7 +604,7 @@ function SalesReturnForm() {
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "SALE_RETURN",
+        entryType: "Sales Return",
         creationDate: new Date().toISOString(),
         lastUpdatedDate: new Date().toISOString(),
         slipDate: new Date().toISOString(),
@@ -1692,4 +1692,3 @@ function SalesReturnForm() {
 }
 
 export default SalesReturnForm;
-

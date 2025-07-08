@@ -951,7 +951,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET first weight records for display table (all entry types)
   app.get('/api/purchase/first-weight-records', async (req: Request, res: Response) => {
     try {
-      const query = `
+      const { entry_type } = req.query;
+      
+      let query = `
         SELECT 
           wb.wb_id,
           wb.slip_no,
@@ -963,13 +965,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
         WHERE wb.first_weight IS NOT NULL 
           AND wb.first_weight > 0
-        ORDER BY wb.wb_id DESC 
-        LIMIT 20
       `;
 
-      const result = await pool.query(query);
+      const params: any[] = [];
+      if (entry_type) {
+        query += ' AND wb.entry_type = $1';
+        params.push(entry_type);
+      }
 
-      console.log(`Fetched ${result.rows.length} first weight records (all entry types)`);
+      query += ' ORDER BY wb.wb_id DESC LIMIT 20';
+
+      const result = await pool.query(query, params);
+
+      console.log(`Fetched ${result.rows.length} first weight records (entry_type: ${entry_type || 'all'})`);
       res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching first weight records:', error);
@@ -1533,10 +1541,10 @@ app.get('/api/sales', async (req: Request, res: Response) => {
           wb.first_weight,
           wb.second_weight,
           wb.slip_in_time,
-          COALESCE(sd.vehicle_no, '') as vehicle_no
+          COALESCE(wbi.vehicle_no, '') as vehicle_no
         FROM wb_weighbridge wb 
-        LEFT JOIN sales_details sd ON wb.wb_id = sd.wb_id
-        WHERE wb.entry_type = 'SALE_RETURN'
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
+        WHERE wb.entry_type = 'Sales Return'
         ORDER BY slip_no DESC, wb.wb_id DESC
       `;
       
@@ -1562,7 +1570,7 @@ app.get('/api/sales', async (req: Request, res: Response) => {
           COALESCE(wbi.vehicle_no, '') as vehicle_no
         FROM wb_weighbridge wb 
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
-        WHERE wb.entry_type = 'PURCHASE_RETURN'
+        WHERE wb.entry_type = 'Purchase Return'
         ORDER BY slip_no DESC, wb.wb_id DESC
       `;
       
