@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 
-function SalesReturnForm() {
+export default function SalesReturnForm() {
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const [searchSlipNo, setSearchSlipNo] = useState("");
@@ -432,7 +433,7 @@ function SalesReturnForm() {
           setOnlineMode(true);
         }
 
-        // Load sales data from details if it's a sales record
+        // Load sales data from details if it's a sales return record
         if (
           master.entry_type === "Sales Return" &&
           data.details &&
@@ -440,17 +441,16 @@ function SalesReturnForm() {
         ) {
           const salesRows = data.details.map((detail: any, index: number) => ({
             doId: String(index + 1),
-            dcNo: detail.manual_dc_no || detail.igp_no || "", // Depending on source
+            dcNo: detail.manual_dc_no || detail.igp_no || "",
             doNo: detail.do_no || "",
             customerName: detail.customer_name || "",
             vehicleNo: detail.vehicle_no || "",
-            doDate: detail.do_date || "", // May be null
+            doDate: detail.do_date || "",
             itemDescription: detail.item_desc || "",
             dcQty: detail.dc_qty ? String(detail.dc_qty) : "",
             doQty: detail.do_qty ? String(detail.do_qty) : "",
             branch: "",
-            // Hidden / internal fields
-            dcId: detail.dc_id || "", // if applicable
+            dcId: detail.dc_id || "",
             customerId: detail.customer_id || "",
             itemId: detail.item_id || "",
             itemCode: detail.item_code || "",
@@ -1499,7 +1499,7 @@ function SalesReturnForm() {
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
-          </Button>
+          </button>
           <button
             className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
             onClick={() => toggleOnlineMode(false)}
@@ -1841,7 +1841,7 @@ function SalesReturnForm() {
                             if (e.key === "Enter") {
                               const dcNo = salesData[index]?.dcNo;
                               if (dcNo && dcNo.trim() !== "") {
-                                fetchDcData(dcNo.trim(), index); // ✅ index pass kar rahe hain
+                                fetchDcData(dcNo.trim(), index);
                               }
                             }
                           }}
@@ -1986,29 +1986,21 @@ function SalesReturnForm() {
                       <div className="bg-white border border-gray-300 p-1">
                         <input
                           type="text"
-                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
-                          value={
-                            // Use formData.branch for consistent branch display
-                            branches.find(
-                              (b) => b.branch_id.toString() === formData.branchId?.toString()
-                            )?.branch_name || formData.branch || ""
-                          }
-                          onChange={(e) =>
-                            handleSalesDataChange(
-                              index,
-                              "branch",
-                              e.target.value,
-                            )
-                          }
+                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                          value={salesData[index]?.branch || ""}
+                          readOnly
+                          placeholder="Auto-filled"
                           autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          data-form-type="other"
                         />
                       </div>
-
                       <div className="bg-white border border-gray-300 p-1 flex items-center justify-center">
                         <button
-                          type="button"
                           onClick={() => handleSalesRowDelete(index)}
-                          className="text-red-500 hover:text-red-700 text-lg font-bold"
+                          className="text-red-500 hover:text-red-700 text-xs font-bold"
                           title="Delete row"
                         >
                           ✖
@@ -2017,138 +2009,29 @@ function SalesReturnForm() {
                     </div>
                   ))}
                 </div>
-
-                {/* Total Row */}
-                <div
-                  className="grid gap-px text-xs font-semibold mb-4"
-                  style={{
-                    gridTemplateColumns:
-                      "100px 100px 240px 140px 120px 180px 100px 100px 140px",
-                    width: "1220px",
-                    height: "30px",
-                  }}
-                >
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                  <div className="bg-gray-200 border border-gray-400 p-1 flex items-center justify-end">
-                    <span className="text-black">Total:</span>
-                  </div>
-                  <div className="bg-white border border-gray-400 p-1">
-                    <input
-                      type="text"
-                      className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
-                      readOnly
-                      value={salesData.reduce(
-                        (sum, row) => sum + (parseFloat(row.dcQty) || 0),
-                        0,
-                      )}
-                    />
-                  </div>
-                  <div className="bg-white border border-gray-400 p-1">
-                    <input
-                      type="text"
-                      className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
-                      readOnly
-                      value={salesData.reduce(
-                        (sum, row) => sum + (parseFloat(row.doQty) || 0),
-                        0,
-                      )}
-                    />
-                  </div>
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                </div>
-
-                {/* Bottom section with Weight Per Bags, Total Weight Out, and Total Feed Bags - matching image layout */}
-                <div
-                  className="bg-gray-100 p-2 flex justify-between items-center border border-gray-300 mt-2"
-                  style={{ width: "1220px" }}
-                >
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      <label className="text-xs font-medium text-black">
-                        Weight Per Bags:
-                      </label>
-                      <input
-                        type="text"
-                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <label className="text-xs font-medium text-black">
-                        Total Weight Out:
-                      </label>
-                      <input
-                        type="text"
-                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <label className="text-xs font-medium text-black">
-                        Total Feed Bags:
-                      </label>
-                      <input
-                        type="text"
-                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-black">
-                      Total Weight Dill:
-                    </label>
-                    <input
-                      type="text"
-                      className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      data-form-type="other"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-black">
-                      Total Feed Bags:
-                    </label>
-                    <input
-                      type="text"
-                      className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      data-form-type="other"
-                    />
-                  </div>
-                </div>
               </div>
             </div>
+          </div>
 
-            {/* Right Side - Weight Display and Bag Table (Columns 9-12) */}
-            <div className="col-span-4">
-              {/* This section will contain the right side components */}
+          {/* Right Side - Weight Display and Camera */}
+          <div className="col-span-4 space-y-1 h-full overflow-hidden">
+            {/* Weight Indicator */}
+            <div className="bg-white p-2 rounded border">
+              <WeightIndicator comPort="COM6" />
+            </div>
+
+            {/* Camera Feed */}
+            <div className="bg-white p-2 rounded border flex-1 overflow-hidden">
+              <VideoStreamFullscreen
+                camera={{
+                  id: 1,
+                  name: "Camera 01",
+                  ip: "10.10.10.146",
+                  port: 554,
+                }}
+                isConnected={true}
+                isStreaming={true}
+              />
             </div>
           </div>
         </div>
@@ -2156,5 +2039,3 @@ function SalesReturnForm() {
     </div>
   );
 }
-
-export default SalesReturnForm;
