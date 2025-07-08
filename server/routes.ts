@@ -290,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const result = await pool.query(
-        'INSERT INTO users (username, userpassword, branchid) VALUES ($1, $2, $3) RETURNING userid, username, branchid',
+        'INSERT INTO users (username, userpassword, branch_id) VALUES ($1, $2, $3) RETURNING userid, username, branch_id',
         [userName, userPassword, parseInt(branchId)]
       );
 
@@ -324,9 +324,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     try {
       const result = await pool.query(
-        `SELECT u.userid, u.username, u.userpassword, u.branchid, b.branch_name as branchName 
+        `SELECT u.userid, u.username, u.userpassword, u.branch_id, b.branch_name as branchName 
          FROM users u 
-         LEFT JOIN branches b ON u.branchid = b.branch_id 
+         LEFT JOIN branches b ON u.branch_id = b.branch_id 
          WHERE u.username = $1`,
         [userName]
       );
@@ -388,7 +388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userid SERIAL PRIMARY KEY,
           username VARCHAR(1000),
           userpassword VARCHAR(1000),
-          branchid INTEGER
+          branch_id INTEGER
         );
       `);
 
@@ -850,208 +850,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       res.json({ 
-        success: true, 
-        imagePath: imagePath,
-        message: 'Second weight image captured successfully' 
-      });
-
-    } catch (error) {
-      console.error('Error capturing second weight image:', error);
-      res.status(500).json({ 
-        error: 'Failed to capture second weight image',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      });
-    }
-  });
-
-// Camera ANPR configuration endpoint
-  app.post('/api/cameras/configure-anpr', async (req: Request, res: Response) => {
-    try {
-      const { cameraId, settings } = req.body;
-      
-      // Get camera details
-      const camera = await storage.getCamera(cameraId);
-      if (!camera) {
-        return res.status(404).json({ error: 'Camera not found' });
-      }
-
-      const { ip, username = 'admin', password = 'admin123' } = camera;
-      
-      // Configuration URLs for ANPR optimization
-      const configCommands = [
-        // Enable ANPR/Vehicle detection
-        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].Enable=true`,
-        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].RuleType=TrafficCar`,
-        
-        // Set capture mode to video for continuous detection
-        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.CaptureMode=Video`,
-        
-        // Enable unlicensed vehicle snapshot
-        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.UnlicensedVehicleSnapshot=true`,
-        
-        // Set high sensitivity
-        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.Sensitivity=High`,
-        
-        // Configure snapshot interval
-        `http://${username}:${password}@${ip}/cgi-bin/configManager.cgi?action=setConfig&VideoAnalyseRule[0][0].TrafficCar.SnapshotInterval=3`,
-      ];
-
-      const results = [];
-      
-      for (const url of configCommands) {
-        try {
-          const response = await fetch(url, {
-            method: 'GET',
-            timeout: 5000
-          });
-          results.push({
-            url: url.replace(password, '****'),
-            status: response.status,
-            success: response.ok
-          });
-        } catch (error: any) {
-          results.push({
-            url: url.replace(password, '****'),
-            status: 'error',
-            success: false,
-            error: error.message
-          });
-        }
-      }
-
-      res.json({
-        success: true,
-        message: 'ANPR configuration attempted',
-        results
-      });
-
-    } catch (error) {
-      console.error('Error configuring camera ANPR:', error);
-      res.status(500).json({ error: 'Failed to configure camera ANPR' });
-    }
-  });
-
-  // Vehicle image capture endpoint
-  app.post('/api/capture/vehicle-image', async (req: Request, res: Response) => {
-    try {
-      const { plateNumber, cameraId, timestamp } = req.body;
-      
-      // Get camera details
-      const camera = await storage.getCamera(cameraId);
-      if (!camera) {
-        return res.status(404).json({ error: 'Camera not found' });
-      }
-
-      const { ip, username = 'admin', password = 'admin123' } = camera;
-      
-      // Create vehicle images directory
-      const vehicleImagesDir = './captured_images/vehicles';
-      await fs.mkdir(vehicleImagesDir, { recursive: true });
-      
-      // Generate filename with plate number and timestamp
-      const cleanPlateNumber = plateNumber.replace(/[^a-zA-Z0-9]/g, '');
-      const timeStr = new Date(timestamp).toISOString().replace(/[:.]/g, '-');
-      const filename = `vehicle_${cleanPlateNumber}_${timeStr}.jpg`;
-      const imagePath = path.join(vehicleImagesDir, filename);
-      
-      // Capture image from camera
-      const captureUrl = `http://${username}:${password}@${ip}/cgi-bin/snapshot.cgi`;
-      
-      const response = await fetch(captureUrl, { timeout: 10000 });
-      
-      if (response.ok && response.body) {
-        const buffer = await response.arrayBuffer();
-        await fs.writeFile(imagePath, Buffer.from(buffer));
-        
-        res.json({
-          success: true,
-          message: 'Vehicle image captured successfully',
-          imagePath,
-          filename,
-          plateNumber
-        });
-      } else {
-        throw new Error(`Failed to capture image: ${response.status}`);
-      }
-      
-    } catch (error: any) {
-      console.error('Error capturing vehicle image:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: `Failed to capture vehicle image: ${error.message}` 
-      });
-    }
-  });
-
-  // Enhanced license plate reading with auto-capture
-  app.post('/api/cameras/read-plate-enhanced', async (req: Request, res: Response) => {
-    try {
-      const { cameraId } = req.body;
-      
-      // First, try to read the license plate
-      const plateResponse = await fetch('/api/cameras/read-plate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cameraId })
-      });
-      
-      const plateResult = await plateResponse.json();
-      
-      // If successful, capture vehicle image
-      if (plateResult.success && plateResult.plateNumber) {
-        try {
-          // Auto-capture vehicle image after successful plate reading
-          const captureResponse = await fetch('/api/capture/vehicle-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              plateNumber: plateResult.plateNumber,
-              cameraId,
-              timestamp: new Date().toISOString()
-            })
-          });
-          
-          if (captureResponse.ok) {
-            const captureResult = await captureResponse.json();
-            plateResult.vehicleImageCaptured = true;
-            plateResult.imagePath = captureResult.imagePath;
-          }
-        } catch (captureError) {
-          plateResult.vehicleImageCaptured = false;
-        }
-      }
-      
-      res.json(plateResult);
-      
-    } catch (error) {
-      console.error('Error in enhanced plate reading:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: 'Enhanced plate reading failed' 
-      });
-    }
-  });
-
-  // Second weight image capture endpoints continued
-  app.post('/api/capture/second-weight', async (req: Request, res: Response) => {
-    try {
-      const { slipNo, cameraIp, cameraPort, username, password } = req.body;
-
-      if (!slipNo || !cameraIp || !cameraPort) {
-        return res.status(400).json({ 
-          error: 'Missing required fields: slipNo, cameraIp, cameraPort' 
-        });
-      }
-
-      const imagePath = await imageCaptureService.captureSecondWeightImage({
-        slipNo,
-        cameraIp,
-        cameraPort,
-        username,
-        password
-      });
-
-      res.json({ 
         message: 'Second weight image captured successfully',
         imagePath,
         slipNo 
@@ -1229,32 +1027,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET purchase by slip number
-  app.get('/api/purchase/by-slip/:slipNo', async (req: Request, res: Response) => {
-    try {
-      const { slipNo } = req.params;
+ app.get('/api/purchase/by-slip/:slipNo', async (req: Request, res: Response) => {
+  try {
+    const { slipNo } = req.params;
+    const { entry_type } = req.query;
 
-      const masterQuery = 'SELECT * FROM wb_weighbridge WHERE slip_no = $1';
-      const masterResult = await pool.query(masterQuery, [slipNo]);
-
-      if (masterResult.rows.length === 0) {
-        return res.status(404).json({ message: 'No record found for this slip number' });
-      }
-
-      const master = masterResult.rows[0];
-
-      const detailsQuery = 'SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1';
-      const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
-
-      console.log(`Fetched purchase record for slip ${slipNo}`);
-      res.json({
-        master,
-        details: detailsResult.rows
-      });
-    } catch (error: any) {
-      console.error('Error fetching purchase by slip number:', error);
-      res.status(500).json({ error: 'Failed to fetch purchase record' });
+    if (!entry_type) {
+      return res.status(400).json({ error: 'entry_type query parameter is required' });
     }
-  });
+
+    const masterQuery = `
+      SELECT * FROM wb_weighbridge 
+      WHERE slip_no = $1 AND entry_type = $2
+    `;
+    const masterResult = await pool.query(masterQuery, [slipNo, entry_type]);
+
+    if (masterResult.rows.length === 0) {
+      return res.status(404).json({ message: 'No record found for this slip number and entry type' });
+    }
+
+    const master = masterResult.rows[0];
+
+    const detailsQuery = 'SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1';
+    const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
+
+    console.log(`Fetched purchase record for slip ${slipNo}, type ${entry_type}`);
+    res.json({
+      master,
+      details: detailsResult.rows,
+    });
+  } catch (error: any) {
+    console.error('Error fetching purchase by slip number and entry type:', error);
+    res.status(500).json({ error: 'Failed to fetch purchase record' });
+  }
+});
 
   // PUT update purchase record
   app.put('/api/purchase/update/:wbId', async (req: Request, res: Response) => {
@@ -1484,189 +1290,100 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post('/api/sales/save', async (req: Request, res: Response) => {
-    try {
-      const { salesData, entryType } = req.body;
+  try {
+    const { salesData, wbId, createdBy } = req.body;
 
-      if (!salesData || !entryType) {
-        return res.status(400).json({ error: 'Sales data and entry type are required' });
-      }
+    if (!salesData || !Array.isArray(salesData) || salesData.length === 0 || !wbId) {
+      return res.status(400).json({ error: 'Sales data and wbId are required' });
+    }
 
-      const {
-        do_id,
-        do_date,
-        customer_name,
-        customer_address,
-        customer_phone,
-        vehicle_no,
-        driver_name,
-        driver_phone,
-        item_code,
-        item_desc,
-        do_qty,
-        unit_price,
-        total_amount,
-        payment_terms,
-        delivery_terms,
-        remarks,
-        first_weight,
-        second_weight,
-        net_weight,
-        tare_weight,
-        gross_weight,
-        slip_no,
-        slip_date,
-        slip_time,
-        weighbridge_operator,
-        quality_remarks,
-        moisture_content,
-        foreign_matter,
-        broken_grains,
-        total_deduction,
-        final_weight,
-        rate_per_kg,
-        total_value
-      } = salesData;
+    const insertQuery = `
+      INSERT INTO wb_weighbridge_items_purchase (
+        wb_id, manual_dc_no, do_id, do_no,
+        customer_id, customer_name, vehicle_no, do_date,
+        item_id, item_code, item_desc,
+        dc_qty, do_qty,
+        created_by, creation_date
+      )
+      VALUES (
+        $1, $2, $3, $4,
+        $5, $6, $7, $8,
+        $9, $10, $11,
+        $12, $13,
+        $14, CURRENT_TIMESTAMP
+      )
+    `;
 
-      const query = `
-        INSERT INTO sales_details (
-          do_id, do_date, customer_name, customer_address, customer_phone,
-          vehicle_no, driver_name, driver_phone, item_code, item_desc,
-          do_qty, unit_price, total_amount, payment_terms, delivery_terms,
-          remarks, first_weight, second_weight, net_weight, tare_weight,
-          gross_weight, slip_no, slip_date, slip_time, weighbridge_operator,
-          quality_remarks, moisture_content, foreign_matter, broken_grains,
-          total_deduction, final_weight, rate_per_kg, total_value, entry_type,
-          created_date
-        )
-        VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-          $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-          $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-          $31, $32, $33, $34, CURRENT_TIMESTAMP
-        )
-        RETURNING *;
-      `;
-
+    for (const item of salesData) {
       const values = [
-        do_id,
-        do_date,
-        customer_name,
-        customer_address,
-        customer_phone,
-        vehicle_no,
-        driver_name,
-        driver_phone,
-        item_code,
-        item_desc,
-        parseFloat(do_qty) || null,
-        parseFloat(unit_price) || null,
-        parseFloat(total_amount) || null,
-        payment_terms,
-        delivery_terms,
-        remarks,
-        parseFloat(first_weight) || null,
-        parseFloat(second_weight) || null,
-        parseFloat(net_weight) || null,
-        parseFloat(tare_weight) || null,
-        parseFloat(gross_weight) || null,
-        slip_no,
-        slip_date,
-        slip_time,
-        weighbridge_operator,
-        quality_remarks,
-        parseFloat(moisture_content) || null,
-        parseFloat(foreign_matter) || null,
-        parseFloat(broken_grains) || null,
-        parseFloat(total_deduction) || null,
-        parseFloat(final_weight) || null,
-        parseFloat(rate_per_kg) || null,
-        parseFloat(total_value) || null,
-        entryType
+        parseInt(wbId),                          // wb_id (from request)
+        item.dcNo || '',                         // manual_dc_no
+        item.doId ? parseInt(item.doId) : null,  // do_id
+        item.doNo || '',                         // do_no
+        item.customerId || null,                // customer_id
+        item.customerName || '',                // customer_name
+        item.vehicleNo || '',                   // vehicle_no
+        item.doDate ? new Date(item.doDate) : null, // do_date
+        item.itemId || null,                    // item_id
+        item.itemCode || '',                    // item_code
+        item.itemDescription || '',             // item_desc
+        item.dcQty ? parseFloat(item.dcQty) : null, // dc_qty
+        item.doQty ? parseFloat(item.doQty) : null, // do_qty
+        createdBy || null                       // created_by (pass this from frontend)
       ];
 
-      const result = await pool.query(query, values);
-      console.log('Sales data saved successfully:', result.rows[0]);
-      res.json(result.rows[0]);
-    } catch (error: any) {
-      console.error('Error saving sales data:', error);
-      res.status(500).json({ error: 'Failed to save sales data' });
+      await pool.query(insertQuery, values);
     }
-  });
 
-  // GET all sales data with branch filtering
-  app.get('/api/sales', async (req: Request, res: Response) => {
-    try {
-      const { branch_id } = req.query;
-      let query = `
-        SELECT 
-          sd.wb_id,
-          wb.slip_no,
-          sd.vehicle_no,
-          sd.customer_name,
-          wb.slip_in_time, 
-          wb.slip_out_time, 
-          wb.entry_type, 
-          wb.branch_id 
-        FROM sales_details sd 
-        JOIN wb_weighbridge wb ON sd.wb_id = wb.wb_id
-        WHERE wb.entry_type = 'SALE' AND wb.online_entry = 'Yes'
-      `;
-      const params: any[] = [];
+    console.log('✅ Sales items inserted into wb_weighbridge_items_purchase');
+    res.status(200).json({ message: 'Sales data saved successfully' });
+  } catch (error: any) {
+    console.error('❌ Error saving to wb_weighbridge_items_purchase:', error);
+    res.status(500).json({ error: 'Failed to save sales data' });
+  }
+});
 
-      if (branch_id && branch_id !== 'all') {
-        query += ' AND wb.branch_id = $1';
-        params.push(parseInt(branch_id as string));
-      }
 
-      query += ' ORDER BY sd.id DESC';
+// GET all sales data with branch filtering
+app.get('/api/sales', async (req: Request, res: Response) => {
+  try {
+    const { branch_id } = req.query;
 
-      const result = await pool.query(query, params);
+    let query = `
+      SELECT 
+        wb.wb_id,
+        wb.slip_no,
+        wb.entry_type,
+        wb.first_weight,
+        wb.second_weight,
+        COALESCE(wbi.vehicle_no, '') as vehicle_no
+      FROM wb_weighbridge wb 
+      LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
+      WHERE wb.entry_type = 'SALE' 
+        AND wb.first_weight IS NOT NULL 
+        AND wb.first_weight > 0
+        AND wb.online_entry = 'Yes'
+    `;
+    const params: any[] = [];
 
-      console.log(`Fetched ${result.rows.length} sales records`);
-      res.json(result.rows);
-    } catch (error: any) {
-      console.error('Error fetching sales data:', error);
-      res.status(500).json({ error: 'Failed to fetch sales data' });
+    if (branch_id && branch_id !== 'all') {
+      query += ' AND wb.branch_id = $1';
+      params.push(parseInt(branch_id as string));
     }
-  });
 
-  // GET purchase records for reports with branch filtering (online entries only)
-  app.get('/api/purchases', async (req: Request, res: Response) => {
-    try {
-      const { branch_id } = req.query;
-      let query = `
-        SELECT 
-          wb.wb_id,
-          wb.slip_no,
-          wb.slip_in_time,
-          wb.slip_out_time,
-          wb.entry_type,
-          wb.online_entry,
-          wb.branch_id,
-          COALESCE(wbi.vendor_name, '') as vendor_name,
-          COALESCE(wbi.vehicle_no, '') as vehicle_no
-        FROM wb_weighbridge wb 
-        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
-        WHERE wb.online_entry = 'Yes' AND wb.entry_type = 'PURCHASE'
-      `;
-      const params: any[] = [];
+    query += ' ORDER BY wb.wb_id DESC';
 
-      if (branch_id && branch_id !== 'all') {
-        query += ' AND wb.branch_id = $1';
-        params.push(parseInt(branch_id as string));
-      }
+    console.log('Running query:', query, params);
 
-      query += ' ORDER BY wb.wb_id DESC';
+    const result = await pool.query(query, params);
 
-      const result = await pool.query(query, params);
-
-      console.log(`Fetched ${result.rows.length} online purchase records`);
-      res.json(result.rows);
-    } catch (error: any) {
-      console.error('Error fetching purchase records:', error);
-      res.status(500).json({ error: 'Failed to fetch purchase records' });
-    }
-  });
+    console.log(`Fetched ${result.rows.length} sales records`);
+    res.json(result.rows);
+  } catch (error: any) {
+    console.error('Error fetching sales data:', error);
+    res.status(500).json({ error: 'Failed to fetch sales data' });
+  }
+});
 
   // GET offline purchase records for reports with branch filtering
   app.get('/api/purchases/offline', async (req: Request, res: Response) => {
@@ -1905,13 +1622,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/users/:userId', async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
-      
+
       const result = await pool.query('SELECT username FROM users WHERE userid = $1', [userId]);
-      
+
       if (result.rows.length === 0) {
         return res.status(404).json({ message: 'User not found' });
       }
-      
+
       res.json({ username: result.rows[0].username });
     } catch (error) {
       console.error('Error fetching user:', error);
