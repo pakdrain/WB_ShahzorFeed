@@ -1488,7 +1488,7 @@ export default function SalesReturnForm() {
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
-          </Button>
+          </button>
         </div>
         <div className="text-2xl text-green-600 font-bold">2500</div>
       </div>
