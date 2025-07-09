@@ -582,12 +582,18 @@ export default function SalesReturnForm() {
       const response = await fetch(
         "/api/purchases/next-slip?entry_type=Sales%20Return",
       );
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
       console.log("Reset form - next slip response:", data);
+      const nextSlip = data.nextSlipNo || Date.now().toString().slice(-6);
 
       setFormData({
         ...initialFormData,
-        slipNo: data.nextSlipNo,
+        slipNo: nextSlip,
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
@@ -599,9 +605,11 @@ export default function SalesReturnForm() {
       });
     } catch (error) {
       console.error("Error fetching next slip number:", error);
+      // Generate a timestamp-based slip number as fallback
+      const fallbackSlip = Date.now().toString().slice(-6);
       setFormData({
         ...initialFormData,
-        slipNo: "1",
+        slipNo: fallbackSlip,
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
@@ -860,14 +868,22 @@ export default function SalesReturnForm() {
   useEffect(() => {
     // Fetch next slip number specific to Sales Return entry type
     fetch("/api/purchases/next-slip?entry_type=Sales%20Return")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data: any) => {
         console.log("Next slip number response:", data);
-        setFormData((prev) => ({ ...prev, slipNo: data.nextSlipNo }));
+        const nextSlip = data.nextSlipNo || '1';
+        setFormData((prev) => ({ ...prev, slipNo: nextSlip }));
       })
       .catch((err: any) => {
         console.error("Error fetching next slip number:", err);
-        setFormData((prev) => ({ ...prev, slipNo: "1" }));
+        // Generate a timestamp-based slip number as fallback
+        const fallbackSlip = Date.now().toString().slice(-6);
+        setFormData((prev) => ({ ...prev, slipNo: fallbackSlip }));
       });
 
     // Fetch branches for dropdown

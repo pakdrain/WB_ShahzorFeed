@@ -608,13 +608,21 @@ export default function PurchaseReturnForm() {
     // Fetch next slip number based on return mode
     const entryType = "PURCHASE_RETURN";
     fetch(`/api/purchases/next-slip?entry_type=${entryType}`)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data: any) => {
-        setFormData((prev) => ({ ...prev, slipNo: data.nextSlipNo }));
+        const nextSlip = data.nextSlipNo || '1';
+        setFormData((prev) => ({ ...prev, slipNo: nextSlip }));
       })
       .catch((err: any) => {
         console.error("Error fetching next slip number:", err);
-        setFormData((prev) => ({ ...prev, slipNo: "1" }));
+        // Generate a timestamp-based slip number as fallback
+        const fallbackSlip = Date.now().toString().slice(-6);
+        setFormData((prev) => ({ ...prev, slipNo: fallbackSlip }));
       });
 
     // Fetch branches for dropdown
