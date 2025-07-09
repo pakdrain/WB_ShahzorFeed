@@ -971,7 +971,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (entry_type) {
         // Handle different entry type formats
         console.log(`First weight records query for entry_type: ${entry_type}`);
-        if (entry_type === 'SALE_RETURN' || entry_type === 'Sales%20Return') {
+        if (entry_type === 'SALE_RETURN' || entry_type === 'Sales%20Return' || entry_type === 'Sales Return') {
           query += ' AND wb.entry_type = $1';
           params.push('Sales Return');
         } else if (entry_type === 'PURCHASE_RETURN') {
@@ -1545,7 +1545,7 @@ app.get('/api/sales', async (req: Request, res: Response) => {
 
       // Map entry types to database values
       let dbEntryType = entry_type;
-      if (entry_type === 'SALE_RETURN') {
+      if (entry_type === 'SALE_RETURN' || entry_type === 'Sales%20Return') {
         dbEntryType = 'Sales Return';
       } else if (entry_type === 'PURCHASE_RETURN') {
         dbEntryType = 'Purchase Return';

@@ -339,7 +339,7 @@ export default function SalesReturnForm() {
 
   // Fetch all first weight records for Sales Return
   const { data: firstWeightRecords = [] } = useQuery({
-    queryKey: ["/api/purchase/first-weight-records?entry_type=SALE_RETURN"],
+    queryKey: ["/api/purchase/first-weight-records?entry_type=Sales%20Return"],
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
@@ -580,7 +580,7 @@ export default function SalesReturnForm() {
     // Fetch next slip number for Sales Return entry type
     try {
       const response = await fetch(
-        "/api/purchases/next-slip?entry_type=SALE_RETURN",
+        "/api/purchases/next-slip?entry_type=Sales%20Return",
       );
       const data = await response.json();
       console.log("Reset form - next slip response:", data);
@@ -858,7 +858,7 @@ export default function SalesReturnForm() {
 
   useEffect(() => {
     // Fetch next slip number specific to Sales Return entry type
-    fetch("/api/purchases/next-slip?entry_type=SALE_RETURN")
+    fetch("/api/purchases/next-slip?entry_type=Sales%20Return")
       .then((res) => res.json())
       .then((data: any) => {
         console.log("Next slip number response:", data);
@@ -1350,8 +1350,12 @@ export default function SalesReturnForm() {
           <Button 
             className="h-8 px-2 text-sm font-medium bg-rose-700 text-white"
             onClick={() => {
-              // Already on Sales Return page - just refresh to clear form
-              resetFormToInitial();
+              // Navigate to sales return form with same type
+              const urlParams = new URLSearchParams(window.location.search);
+              const typeMode = urlParams.get("type") || "online";
+              const targetUrl = `/sales-return?type=${typeMode}`;
+              window.history.pushState({}, "", targetUrl);
+              setLocation(targetUrl);
             }}
           >
             Sales Return
