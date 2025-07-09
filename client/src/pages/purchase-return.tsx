@@ -603,11 +603,38 @@ export default function PurchaseReturnForm() {
     console.log("Mode changed to:", isOnline ? "ONLINE" : "OFFLINE");
   };
 
-  // Initialize form data
+  // Handle URL parameters for edit mode and form type
   useEffect(() => {
-    // Fetch next slip number based on return mode with retry logic
-    const entryType = "PURCHASE_RETURN";
-    
+    const urlParams = new URLSearchParams(window.location.search);
+    const editWbId = urlParams.get("edit");
+    const typeMode = urlParams.get("type");
+
+    console.log("URL parameters:", { editWbId, typeMode });
+
+    // Set online/offline mode based on type parameter
+    if (typeMode === "offline") {
+      console.log("Setting OFFLINE mode from URL parameter");
+      setOnlineMode(false);
+    } else if (typeMode === "online") {
+      console.log("Setting ONLINE mode from URL parameter");
+      setOnlineMode(true);
+    }
+
+    if (editWbId) {
+      // Load record for editing by wb_id
+      loadDataByWbId(parseInt(editWbId));
+    } else {
+      // Reset form to clean state for new purchase return
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
+    }
+  }, [location]);
+
+  useEffect(() => {
+    // Fetch next slip number based on return mode with enhanced retry logic
+    const entryType = 'PURCHASE_RETURN';
+
     const fetchSlipNumber = async (retryCount = 0) => {
       try {
         // First try to wake up database
@@ -624,14 +651,14 @@ export default function PurchaseReturnForm() {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         const nextSlip = data.nextSlipNo || '1';
         console.log(`✅ Fetched next slip number for Purchase Return: ${nextSlip}`);
         setFormData((prev) => ({ ...prev, slipNo: nextSlip }));
       } catch (err: any) {
         console.error(`Error fetching next slip number for Purchase Return (attempt ${retryCount + 1}):`, err);
-        
+
         if (retryCount < 2) {
           // Retry after delay
           setTimeout(() => fetchSlipNumber(retryCount + 1), (retryCount + 1) * 1000);
@@ -1176,4 +1203,3 @@ export default function PurchaseReturnForm() {
     </div>
   );
 }
-

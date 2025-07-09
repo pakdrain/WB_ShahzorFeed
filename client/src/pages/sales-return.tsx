@@ -580,13 +580,13 @@ export default function SalesReturnForm() {
     // Fetch next slip number for Sales Return entry type
     try {
       const response = await fetch(
-        "/api/purchases/next-slip?entry_type=Sales%20Return",
+        "/api/purchases/next-slip?entry_type=SALES_RETURN",
       );
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log("Reset form - next slip response:", data);
       const nextSlip = data.nextSlipNo || Date.now().toString().slice(-6);
@@ -879,11 +879,11 @@ export default function SalesReturnForm() {
           }
         }
 
-        const response = await fetch("/api/purchases/next-slip?entry_type=Sales%20Return");
+        const response = await fetch("/api/purchases/next-slip?entry_type=SALES_RETURN");
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log("Next slip number response for Sales Return:", data);
         const nextSlip = data.nextSlipNo || '1';
@@ -891,7 +891,7 @@ export default function SalesReturnForm() {
         setFormData((prev) => ({ ...prev, slipNo: nextSlip }));
       } catch (err: any) {
         console.error(`Error fetching next slip number for Sales Return (attempt ${retryCount + 1}):`, err);
-        
+
         if (retryCount < 2) {
           // Retry after delay
           setTimeout(() => fetchSlipNumber(retryCount + 1), (retryCount + 1) * 1000);
@@ -1973,4 +1973,3 @@ export default function SalesReturnForm() {
     </div>
   );
 }
-
