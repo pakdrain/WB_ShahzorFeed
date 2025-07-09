@@ -1829,7 +1829,7 @@ app.get('/api/sales', async (req: Request, res: Response) => {
           offline_entry = $14, last_updated_by = $15, last_updated_date = $16, 
           manual_dc_no = $17, slip_out_time = $18, status = $19, 
           slip_date = $20, return_reason = $21, return_date = $22, 
-          original_slip_no = $23, customer_name = $24, vehicle_no = $25
+          original_slip_no = $23, customer_name = $24
         WHERE wb_id = $1 AND entry_type = 'SALES_RETURN'
       `;
 
@@ -1857,8 +1857,7 @@ app.get('/api/sales', async (req: Request, res: Response) => {
         masterData.return_reason,
         masterData.return_date,
         masterData.original_slip_no,
-        masterData.customer_name,
-        masterData.vehicle_no
+        masterData.customer_name
       ];
 
       await pool.query(updateMasterQuery, updateMasterValues);
