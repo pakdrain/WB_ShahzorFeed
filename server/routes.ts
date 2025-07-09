@@ -189,7 +189,109 @@ app.post('/api/create-role-table', async (req: Request, res: Response) => {
   }
 });
 
-// Role management endpoint
+// Create branches table if it doesn't exist
+app.post('/api/create-branches-table', async (req: Request, res: Response) => {
+  try {
+    // Check if branches table exists
+    const branchTableExists = await pool.query(`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        AND table_name = 'branches'
+      )
+    `);
+
+    if (!branchTableExists.rows[0].exists) {
+      await pool.query(`
+        CREATE TABLE branches (
+          branch_id SERIAL PRIMARY KEY,
+          branch_name VARCHAR(100) NOT NULL,
+          branch_code VARCHAR(20),
+          address TEXT,
+          phone VARCHAR(20),
+          email VARCHAR(100),
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      // Insert default branches
+      await pool.query(`
+        INSERT INTO branches (branch_name, branch_code, address)
+        VALUES 
+        ('Head Office', 'HO', 'Main Office Address'),
+        ('Branch 1', 'BR1', 'Branch 1 Address'),
+        ('Branch 2', 'BR2', 'Branch 2 Address'),
+        ('Warehouse', 'WH', 'Warehouse Address')
+      `);
+    }
+
+    res.json({ success: true, message: 'Branches table ready' });
+  } catch (error) {
+    console.error('Error with branches table:', error);
+    res.status(500).json({ message: 'Failed to setup branches table' });
+  }
+});
+
+// Branches endpoint 
+app.get('/api/branches', async (req: Request, res: Response) => {
+  try {
+    // First ensure branches table exists
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS branches (
+        branch_id SERIAL PRIMARY KEY,
+        branch_name VARCHAR(100) NOT NULL,
+        branch_code VARCHAR(20),
+        address TEXT,
+        phone VARCHAR(20),
+        email VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // Check if table has data, if not insert defaults
+    const countResult = await pool.query('SELECT COUNT(*) FROM branches');
+    if (parseInt(countResult.rows[0].count) === 0) {
+      await pool.query(`
+        INSERT INTO branches (branch_name, branch_code, address)
+        VALUES 
+        ('Head Office', 'HO', 'Main Office Address'),
+        ('Branch 1', 'BR1', 'Branch 1 Address'),
+        ('Branch 2', 'BR2', 'Branch 2 Address'),
+        ('Warehouse', 'WH', 'Warehouse Address')
+      `);
+    }
+
+    const result = await pool.query('SELECT * FROM branches ORDER BY branch_id');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching branches:', error);
+    res.status(500).json({ error: 'Failed to fetch branches' });
+  }
+});
+
+// Get next slip number endpoint
+  app.get('/api/purchases/next-slip', async (req: Request, res: Response) => {
+    try {
+      const entryType = req.query.entry_type as string || 'PURCHASE';
+      
+      // Get the highest slip number for this entry type
+      const result = await pool.query(
+        'SELECT MAX(CAST(slip_no AS INTEGER)) as max_slip FROM wb_weighbridge_master WHERE entry_type = $1',
+        [entryType]
+      );
+      
+      const maxSlip = result.rows[0]?.max_slip || 0;
+      const nextSlipNo = (maxSlip + 1).toString();
+      
+      console.log(`Next slip number for ${entryType}: ${nextSlipNo}`);
+      res.json({ nextSlipNo });
+    } catch (error) {
+      console.error('Error fetching next slip number:', error);
+      res.status(500).json({ error: 'Failed to fetch next slip number', nextSlipNo: '1' });
+    }
+  });
+
+  // Role management endpoint
 app.get('/api/user-roles', async (req: Request, res: Response) => {
   try {
     // Check if table exists
@@ -250,6 +352,17 @@ app.post('/api/save-role', async (req: Request, res: Response) => {
 });
 
   // Static file serving for captured images is already handled above
+
+  // Database ping endpoint to wake up sleeping database
+  app.get('/api/ping-db', async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query('SELECT 1 as ping');
+      res.json({ success: true, ping: result.rows[0].ping });
+    } catch (error) {
+      console.error('Database ping failed:', error);
+      res.status(500).json({ error: 'Database ping failed' });
+    }
+  });
 
   return httpServer;
 }

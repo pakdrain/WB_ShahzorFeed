@@ -580,18 +580,18 @@ export default function SalesReturnForm() {
     // Fetch next slip number for Sales Return entry type
     try {
       const response = await fetch(
-        "/api/purchases/next-slip?entry_type=Sales%20Return",
+        "/api/purchases/next-slip?entry_type=SALE_RETURN",
       );
       const data = await response.json();
       console.log("Reset form - next slip response:", data);
 
       setFormData({
         ...initialFormData,
-        slipNo: data.nextSlipNo,
+        slipNo: data.nextSlipNo || "1",
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "Sales Return",
+        entryType: "SALE_RETURN",
         creationDate: new Date().toISOString(),
         lastUpdatedDate: new Date().toISOString(),
         slipDate: new Date().toISOString(),
@@ -605,7 +605,7 @@ export default function SalesReturnForm() {
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "Sales Return",
+        entryType: "SALE_RETURN",
         creationDate: new Date().toISOString(),
         lastUpdatedDate: new Date().toISOString(),
         slipDate: new Date().toISOString(),
@@ -858,11 +858,11 @@ export default function SalesReturnForm() {
 
   useEffect(() => {
     // Fetch next slip number specific to Sales Return entry type
-    fetch("/api/purchases/next-slip?entry_type=Sales%20Return")
+    fetch("/api/purchases/next-slip?entry_type=SALE_RETURN")
       .then((res) => res.json())
       .then((data: any) => {
         console.log("Next slip number response:", data);
-        setFormData((prev) => ({ ...prev, slipNo: data.nextSlipNo }));
+        setFormData((prev) => ({ ...prev, slipNo: data.nextSlipNo || "1" }));
       })
       .catch((err: any) => {
         console.error("Error fetching next slip number:", err);
