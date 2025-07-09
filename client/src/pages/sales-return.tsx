@@ -450,6 +450,7 @@ export default function SalesReturnForm() {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
+  const [isLoadingEditData, setIsLoadingEditData] = useState(false);
 
   const [onlineMode, setOnlineMode] = useState(() => {
     // Initialize based on URL parameter immediately
@@ -561,7 +562,7 @@ export default function SalesReturnForm() {
   const cancelEdit = () => {
     setIsEditMode(false);
     setEditingWbId(null);
-    
+
     // Clear edit parameter from URL
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.delete("edit");
@@ -569,7 +570,7 @@ export default function SalesReturnForm() {
       `${window.location.pathname}?${urlParams.toString()}` : 
       window.location.pathname;
     window.history.replaceState({}, "", newUrl);
-    
+
     resetFormToInitial();
   };
 
@@ -839,11 +840,14 @@ export default function SalesReturnForm() {
 
     if (editWbId) {
       // Load record for editing by wb_id
+      setIsLoadingEditData(true);
       loadDataByWbId(parseInt(editWbId));
     } else {
       // Reset to fresh form only when not in edit mode
       setTimeout(() => {
-        resetFormToInitial();
+        if (!isLoadingEditData) {
+          resetFormToInitial();
+        }
       }, 100);
     }
   }, [location]);
@@ -1097,7 +1101,7 @@ export default function SalesReturnForm() {
         // In edit mode, exit edit mode and clear URL parameter
         setIsEditMode(false);
         setEditingWbId(null);
-        
+
         // Clear edit parameter from URL
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.delete("edit");
@@ -1105,7 +1109,7 @@ export default function SalesReturnForm() {
           `${window.location.pathname}?${urlParams.toString()}` : 
           window.location.pathname;
         window.history.replaceState({}, "", newUrl);
-        
+
         // Reset form to clean state
         await resetFormToInitial();
       } else {
@@ -1478,13 +1482,13 @@ export default function SalesReturnForm() {
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
-          </button>
+          </Button>
           <button
             className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
-          </button>
+          </Button>
         </div>
         <div className="text-2xl text-green-600 font-bold">2500</div>
       </div>
