@@ -34,6 +34,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL || `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || '@1122'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'WB'}`,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
   });
 
   // Test database connection and log status
@@ -43,6 +46,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     client.release();
   } catch (err) {
     console.error('❌ Failed to connect to PostgreSQL database:', err);
+    // Retry connection after 3 seconds
+    setTimeout(async () => {
+      try {
+        const client = await pool.connect();
+        console.log('✅ PostgreSQL database reconnected successfully');
+        client.release();
+      } catch (retryErr) {
+        console.error('❌ Database reconnection failed:', retryErr);
+      }
+    }, 3000);
   }
 
   // Camera update endpoint
@@ -512,6 +525,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
   });
+
+  // Wake up database on startup
+  (async () => {
+    try {
+      await pool.query('SELECT NOW()');
+      console.log('✅ Database connection verified on startup');
+    } catch (error: any) {
+      console.error('❌ Database startup verification failed:', error);
+    }
+  })();
 
   // Weight API endpoints use imported variables from weight-state
 
@@ -1800,6 +1823,44 @@ app.get('/api/sales', async (req: Request, res: Response) => {
       });
     } catch (error: any) {
       console.error('Error fetching sales return data:', error);
+      res.status(500).json({ error: 'Failed to fetch sales return data' });
+    }
+  });
+
+  // GET Sales Return by slip number for loading in form
+  app.get('/api/sales-return/by-slip/:slipNo', async (req: Request, res: Response) => {
+    try {
+      const { slipNo } = req.params;
+      
+      // Get master data
+      const masterQuery = `
+        SELECT * FROM wb_weighbridge 
+        WHERE slip_no = $1 AND entry_type = 'Sales Return'
+        ORDER BY wb_id DESC
+        LIMIT 1
+      `;
+      const masterResult = await pool.query(masterQuery, [slipNo]);
+      
+      if (masterResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Sales return record not found' });
+      }
+
+      const master = masterResult.rows[0];
+
+      // Get sales items data
+      const salesQuery = `
+        SELECT * FROM wb_weighbridge_items_purchase 
+        WHERE wb_id = $1
+        ORDER BY wb_item_p_id
+      `;
+      const salesResult = await pool.query(salesQuery, [master.wb_id]);
+
+      res.json({
+        masterData: master,
+        salesData: salesResult.rows
+      });
+    } catch (error: any) {
+      console.error('Error fetching sales return by slip:', error);
       res.status(500).json({ error: 'Failed to fetch sales return data' });
     }
   });
