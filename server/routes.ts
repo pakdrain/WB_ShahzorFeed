@@ -1763,40 +1763,6 @@ app.get('/api/sales', async (req: Request, res: Response) => {
     }
   });
 
-  // GET Sales Return by wb_id with sales items
-  app.get('/api/sales-return/:wbId', async (req: Request, res: Response) => {
-    try {
-      const { wbId } = req.params;
-      
-      // Get master data
-      const masterQuery = `
-        SELECT * FROM wb_weighbridge 
-        WHERE wb_id = $1 AND entry_type = 'Sales Return'
-      `;
-      const masterResult = await pool.query(masterQuery, [wbId]);
-      
-      if (masterResult.rows.length === 0) {
-        return res.status(404).json({ error: 'Sales return record not found' });
-      }
-
-      // Get sales items data
-      const salesQuery = `
-        SELECT * FROM wb_weighbridge_items_purchase 
-        WHERE wb_id = $1
-        ORDER BY wb_item_p_id
-      `;
-      const salesResult = await pool.query(salesQuery, [wbId]);
-
-      res.json({
-        masterData: masterResult.rows[0],
-        salesData: salesResult.rows
-      });
-    } catch (error: any) {
-      console.error('Error fetching sales return data:', error);
-      res.status(500).json({ error: 'Failed to fetch sales return data' });
-    }
-  });
-
   // GET Purchase Return records
   app.get('/api/purchase-return/records', async (req: Request, res: Response) => {
     try {
