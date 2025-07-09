@@ -16,7 +16,7 @@ import SalesForm from "@/pages/sales-form";
 import Reports from "@/pages/reports";
 import ImageUpload from "@/pages/image-upload";
 import NotFound from "@/pages/not-found";
-import SalesReturn from "@/pages/sales-return";
+import SalesReturnForm from "@/pages/sales-return";
 import SaleNode from "@/pages/sale-node";
 import PurchaseReturn from "@/pages/purchase-return";
 import VoucherEntry from "./pages/voucher-entry";
@@ -36,7 +36,7 @@ function ProtectedApp() {
           <Route path="/voucher-entry" component={VoucherEntry} />
           <Route path="/voucher-view" component={VoucherView} />
           <Route path="/sales-form" component={SalesForm} />
-          <Route path="/sales-return" component={SalesReturn} />
+          <Route path="/sales-return" component={SalesReturnForm} />
           <Route path="/purchase-return" component={PurchaseReturn} />
           <Route path="/sale-node" component={SaleNode} />
           <Route path="/reports" component={Reports} />

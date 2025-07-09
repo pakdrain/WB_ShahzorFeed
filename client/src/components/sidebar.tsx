@@ -69,7 +69,7 @@ const getNavigation = (isAdmin: boolean) => {
       subItems: [
         {
           name: "Sale Return",
-          href: "/sale-return",
+          href: "/sales-return",
           icon: RotateCcw,
         },
         {
