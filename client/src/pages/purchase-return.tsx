@@ -613,8 +613,8 @@ export default function PurchaseReturnForm() {
     if (editWbId) {
       // Load record for editing by wb_id
       loadDataByWbId(parseInt(editWbId));
-    } else {
-      // Reset form to clean state for new purchase return
+    } else if (!isEditMode && !editingWbId) {
+      // Reset form to clean state for new purchase return only when not in edit mode
       setTimeout(() => {
         resetFormToInitial();
       }, 100);
@@ -935,6 +935,8 @@ export default function PurchaseReturnForm() {
   // Function to load data by wb_id for editing
   const loadDataByWbId = async (wbId: number) => {
     setLoading(true);
+    setIsEditMode(true);
+    setEditingWbId(wbId);
     try {
       const response = await fetch(`/api/purchase-return/${wbId}`);
       if (!response.ok) {
@@ -1027,9 +1029,6 @@ export default function PurchaseReturnForm() {
           netSupplierWeight: masterData.net_supplier_weight || "",
           isPercentageMode: masterData.is_percentage_mode || false,
         });
-
-        setIsEditMode(true);
-        setEditingWbId(wbId);
       } else {
         alert("Invalid data format received for editing.");
       }

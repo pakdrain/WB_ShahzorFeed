@@ -845,7 +845,7 @@ export default function SalesReturnForm() {
       // Load record for editing by wb_id
       setIsLoadingEditData(true);
       loadDataByWbId(parseInt(editWbId));
-    } else {
+    } else if (!isEditMode && !editingWbId) {
       // Reset to fresh form only when not in edit mode
       setTimeout(() => {
         resetFormToInitial();
@@ -1128,6 +1128,8 @@ export default function SalesReturnForm() {
   // Function to load data by wb_id for editing
   const loadDataByWbId = async (wbId: number) => {
     setLoading(true);
+    setIsEditMode(true);
+    setEditingWbId(wbId);
     try {
       const response = await fetch(`/api/sales-return/${wbId}`);
       if (!response.ok) {
@@ -1260,9 +1262,6 @@ export default function SalesReturnForm() {
         }
 
         setSalesData(paddedSalesData);
-
-        setIsEditMode(true);
-        setEditingWbId(wbId);
       } else {
         alert("Invalid data format received for editing.");
       }
