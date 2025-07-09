@@ -1482,7 +1482,7 @@ export default function SalesReturnForm() {
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
-          </Button>
+          </button>
           <button
             className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
             onClick={() => toggleOnlineMode(false)}
