@@ -1,62 +1,4 @@
-import type { Express, Request, Response } from "express";
-import { createServer } from "http";
-import pkg from "pg";
-import { spawn } from "child_process";
-import path from "path";
-import fs from "fs";
-
-const { Pool } = pkg;
-
-// Database connection
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
-});
-
-// Test database connection
-async function testDatabaseConnection() {
-  try {
-    const client = await pool.connect();
-    console.log("✅ Successfully connected to PostgreSQL database");
-    client.release();
-  } catch (error) {
-    console.error("❌ Failed to connect to PostgreSQL database:", error);
-    throw error;
-  }
-}
-
-export async function registerRoutes(app: Express) {
-  // Test database connection before setting up routes (but don't fail if it's not available)
-  try {
-    await testDatabaseConnection();
-  } catch (error) {
-    console.warn("⚠️ Database connection failed, but continuing with application startup");
-  }
-
-  // Set up user permissions check
-  const checkUserPermissions = async (userId: string) => {
-    try {
-      const userResult = await pool.query(`
-        SELECT u.username, b.branch_name 
-        FROM users u 
-        LEFT JOIN branches b ON u.branchid = b.branch_id
-        WHERE u.userid = $1
-      `, [userId]);
-
-      if (userResult.rows.length === 0) {
-        throw new Error('User not found');
-      }
-
-      const permissionsResult = await pool.query(`
-        SELECT r.role_name, r.home_menu, r.pur_form_menu, r.pur_form_online, r.pur_form_offline,
-               r.sale_form_menu, r.sale_form_online, r.sale_form_offline, r.sale_return_menu, 
-               r.sale_node_menu, r.reports, r.camera_settings, r.wb_settings
-        FROM users u
-        LEFT JOIN role r ON u.userid = r.roleid
-        WHERE u.userid = $1
-      `, [userId]);
-
-      let permissions: string[] = [];
+ermissions = [];
       let role = '';
 
       if (permissionsResult.rows.length > 0) {
@@ -78,26 +20,14 @@ export async function registerRoutes(app: Express) {
         if (roleData.wb_settings === 1) permissions.push('weighbridge_settings');
       }
 
-      return {
+      res.json({
         userInfo: {
           userName: userResult.rows[0].username,
           branchName: userResult.rows[0].branch_name
         },
         permissions: permissions,
         role: role
-      };
-    } catch (error) {
-      console.error('Error fetching user permissions:', error);
-      throw error;
-    }
-  };
-
-  // Get user permissions endpoint
-  app.get('/api/users/:userId/permissions', async (req: Request, res: Response) => {
-    try {
-      const { userId } = req.params;
-      const result = await checkUserPermissions(userId);
-      res.json(result);
+      });
     } catch (error) {
       console.error('Error fetching user permissions:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -320,8 +250,6 @@ app.post('/api/save-role', async (req: Request, res: Response) => {
 });
 
   // Static file serving for captured images is already handled above
-  
-  // Create HTTP server
-  const httpServer = createServer(app);
+
   return httpServer;
 }
