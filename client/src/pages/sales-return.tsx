@@ -837,15 +837,10 @@ export default function SalesReturnForm() {
       setOnlineMode(true);
     }
 
-    if (editWbId) {
-      // Load record for editing by wb_id
-      loadDataByWbId(parseInt(editWbId));
-    } else {
-      // Reset form to clean state for new sales return - delay to ensure proper initialization
-      setTimeout(() => {
-        resetFormToInitial();
-      }, 100);
-    }
+    // Always reset to fresh form on page reload - fetch maximum slip number
+    setTimeout(() => {
+      resetFormToInitial();
+    }, 100);
   }, [location]);
 
   // Sync form data when onlineMode changes
