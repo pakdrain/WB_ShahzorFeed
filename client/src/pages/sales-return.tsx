@@ -587,48 +587,51 @@ export default function SalesReturnForm() {
       setOnlineMode(true);
     }
 
-    // Fetch next slip number for Sales Return entry type
-    try {
-      const response = await fetch(
-        "/api/purchases/next-slip?entry_type=SALES_RETURN",
-      );
+    // Only fetch next slip number if not in edit mode
+    if (!isEditMode && !editingWbId) {
+      // Fetch next slip number for Sales Return entry type
+      try {
+        const response = await fetch(
+          "/api/purchases/next-slip?entry_type=SALES_RETURN",
+        );
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Reset form - next slip response:", data);
+        const nextSlip = data.nextSlipNo || Date.now().toString().slice(-6);
+
+        setFormData({
+          ...initialFormData,
+          slipNo: nextSlip,
+          slipInTime: new Date().toISOString().slice(0, 16),
+          onlineEntry: isOfflineMode ? "No" : "Yes",
+          offlineEntry: isOfflineMode ? "Yes" : "No",
+          entryType: "Sales Return",
+          creationDate: new Date().toISOString(),
+          lastUpdatedDate: new Date().toISOString(),
+          slipDate: new Date().toISOString(),
+          returnDate: new Date().toISOString().slice(0, 16),
+        });
+      } catch (error) {
+        console.error("Error fetching next slip number:", error);
+        // Generate a timestamp-based slip number as fallback
+        const fallbackSlip = Date.now().toString().slice(-6);
+        setFormData({
+          ...initialFormData,
+          slipNo: fallbackSlip,
+          slipInTime: new Date().toISOString().slice(0, 16),
+          onlineEntry: isOfflineMode ? "No" : "Yes",
+          offlineEntry: isOfflineMode ? "Yes" : "No",
+          entryType: "Sales Return",
+          creationDate: new Date().toISOString(),
+          lastUpdatedDate: new Date().toISOString(),
+          slipDate: new Date().toISOString(),
+          returnDate: new Date().toISOString().slice(0, 16),
+        });
       }
-
-      const data = await response.json();
-      console.log("Reset form - next slip response:", data);
-      const nextSlip = data.nextSlipNo || Date.now().toString().slice(-6);
-
-      setFormData({
-        ...initialFormData,
-        slipNo: nextSlip,
-        slipInTime: new Date().toISOString().slice(0, 16),
-        onlineEntry: isOfflineMode ? "No" : "Yes",
-        offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "Sales Return",
-        creationDate: new Date().toISOString(),
-        lastUpdatedDate: new Date().toISOString(),
-        slipDate: new Date().toISOString(),
-        returnDate: new Date().toISOString().slice(0, 16),
-      });
-    } catch (error) {
-      console.error("Error fetching next slip number:", error);
-      // Generate a timestamp-based slip number as fallback
-      const fallbackSlip = Date.now().toString().slice(-6);
-      setFormData({
-        ...initialFormData,
-        slipNo: fallbackSlip,
-        slipInTime: new Date().toISOString().slice(0, 16),
-        onlineEntry: isOfflineMode ? "No" : "Yes",
-        offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "Sales Return",
-        creationDate: new Date().toISOString(),
-        lastUpdatedDate: new Date().toISOString(),
-        slipDate: new Date().toISOString(),
-        returnDate: new Date().toISOString().slice(0, 16),
-      });
     }
 
     // Reset sales data table
@@ -845,9 +848,7 @@ export default function SalesReturnForm() {
     } else {
       // Reset to fresh form only when not in edit mode
       setTimeout(() => {
-        if (!isLoadingEditData) {
-          resetFormToInitial();
-        }
+        resetFormToInitial();
       }, 100);
     }
   }, [location]);
