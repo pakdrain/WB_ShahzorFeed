@@ -711,7 +711,7 @@ export default function SalesForm() {
           setSalesData(salesRows);
           console.log("✅ Sales data loaded in edit mode:", salesRows);
         }
-        
+
         // Set branch name properly in edit mode
         if (master.branch_id) {
           const branch = branches.find(b => b.branch_id === master.branch_id);
@@ -754,6 +754,7 @@ export default function SalesForm() {
     supplierWeightMinusBardana: "",
     supplierWeightMinusOutWeight: "",
     qualityDeduction: "",
+    //```text
     // Vehicle and driver information
     vehicleNo: "",
     driverName: "",
@@ -1236,19 +1237,17 @@ export default function SalesForm() {
     // Fetch branches for dropdown
     fetch("/api/branches")
       .then((res) => res.json())
-      .then((data: any[]) => {
-        setBranches(data);
+      .then((data: any) => {
+        const branchData = Array.isArray(data) ? data : [];
+        setBranches(branchData);
         console.log("Branches fetched:", data);
 
         // Set default branch based on logged-in user's branch
-        if (
-          data.length > 0 &&
-          (!formData.branchId || formData.branchId === "")
-        ) {
+        if (branchData.length > 0 && (!formData.branchId || formData.branchId === "")) {
           const userBranchId = user?.branchId;
           const defaultBranch = userBranchId
-            ? data.find((b) => b.branch_id === userBranchId) || data[0]
-            : data[0];
+            ? branchData.find((b) => b.branch_id === userBranchId) || branchData[0]
+            : branchData[0];
           setFormData((prev) => ({
             ...prev,
             branchId: String(defaultBranch.branch_id),
@@ -1259,6 +1258,7 @@ export default function SalesForm() {
       })
       .catch((err: any) => {
         console.error("Error fetching branches:", err);
+        setBranches([]);
       });
 
     const now = new Date().toISOString();
