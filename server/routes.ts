@@ -1710,6 +1710,263 @@ app.get('/api/sales', async (req: Request, res: Response) => {
     }
   });
 
+  // Sales Return endpoints
+  app.post('/api/sales-return/save', async (req: Request, res: Response) => {
+    try {
+      const { masterData, salesData } = req.body;
+
+      if (!masterData) {
+        return res.status(400).json({ error: 'Master data is required' });
+      }
+
+      // Generate WB_ID
+      const WB_ID = await generateWBID();
+
+      // Insert master record
+      const masterQuery = `
+        INSERT INTO wb_weighbridge (
+          wb_id, slip_no, slip_in_time, first_weight, second_weight, net_weight,
+          bardana_weight, gross_weight, freight, remarks, driver_name, company_id,
+          branch_id, online_entry, offline_entry, created_by, creation_date,
+          last_updated_by, last_updated_date, manual_dc_no, entry_type,
+          slip_out_time, status, slip_date, return_reason, return_date,
+          original_slip_no, customer_name
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
+          $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28
+        )
+        RETURNING *;
+      `;
+
+      const masterValues = [
+        WB_ID,
+        masterData.slip_no,
+        masterData.slip_in_time,
+        masterData.first_weight,
+        masterData.second_weight,
+        masterData.net_weight,
+        masterData.bardana_weight,
+        masterData.gross_weight,
+        masterData.freight,
+        masterData.remarks,
+        masterData.driver_name,
+        masterData.company_id,
+        masterData.branch_id,
+        masterData.online_entry,
+        masterData.offline_entry,
+        masterData.created_by,
+        masterData.creation_date,
+        masterData.last_updated_by,
+        masterData.last_updated_date,
+        masterData.manual_dc_no,
+        'SALES_RETURN',
+        masterData.slip_out_time,
+        masterData.status,
+        masterData.slip_date,
+        masterData.return_reason,
+        masterData.return_date,
+        masterData.original_slip_no,
+        masterData.customer_name
+      ];
+
+      const masterResult = await pool.query(masterQuery, masterValues);
+
+      // Insert sales data if provided
+      if (salesData && Array.isArray(salesData) && salesData.length > 0) {
+        for (const item of salesData) {
+          const itemQuery = `
+            INSERT INTO wb_weighbridge_items_purchase (
+              wb_id, igp_no, po_no, customer_name, vehicle_no, do_date,
+              item_desc, igp_qty, po_qty, dc_qty, do_qty
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          `;
+
+          const itemValues = [
+            WB_ID,
+            item.dcNo || null,
+            item.doNo || null,
+            item.customerName || null,
+            item.vehicleNo || null,
+            item.doDate || null,
+            item.itemDescription || null,
+            item.dcQty ? parseFloat(item.dcQty) : null,
+            item.doQty ? parseFloat(item.doQty) : null,
+            item.dcQty ? parseFloat(item.dcQty) : null,
+            item.doQty ? parseFloat(item.doQty) : null
+          ];
+
+          await pool.query(itemQuery, itemValues);
+        }
+      }
+
+      console.log('✅ Sales return data saved successfully');
+      res.json({ success: true, wb_id: WB_ID, message: 'Sales return data saved successfully' });
+    } catch (error: any) {
+      console.error('❌ Error saving sales return data:', error);
+      res.status(500).json({ error: 'Failed to save sales return data', details: error.message });
+    }
+  });
+
+  // Get sales return by wb_id
+  app.get('/api/sales-return/:wbId', async (req: Request, res: Response) => {
+    try {
+      const { wbId } = req.params;
+
+      const masterQuery = 'SELECT * FROM wb_weighbridge WHERE wb_id = $1 AND entry_type = $2';
+      const masterResult = await pool.query(masterQuery, [parseInt(wbId), 'SALES_RETURN']);
+
+      if (masterResult.rows.length === 0) {
+        return res.status(404).json({ message: 'No sales return record found for this wb_id' });
+      }
+
+      const master = masterResult.rows[0];
+
+      const detailsQuery = 'SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1';
+      const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
+
+      console.log(`Fetched sales return record for wb_id ${wbId}`);
+      res.json({
+        masterData: master,
+        salesData: detailsResult.rows
+      });
+    } catch (error: any) {
+      console.error('Error fetching sales return by wb_id:', error);
+      res.status(500).json({ error: 'Failed to fetch sales return record' });
+    }
+  });
+
+  // Purchase Return endpoints
+  app.post('/api/purchase-return/save', async (req: Request, res: Response) => {
+    try {
+      const { masterData } = req.body;
+
+      if (!masterData) {
+        return res.status(400).json({ error: 'Master data is required' });
+      }
+
+      // Generate WB_ID
+      const WB_ID = await generateWBID();
+
+      // Insert master record
+      const masterQuery = `
+        INSERT INTO wb_weighbridge (
+          wb_id, slip_no, slip_in_time, first_weight, second_weight, net_weight,
+          bardana_weight, gross_weight, freight, remarks, driver_name, company_id,
+          branch_id, online_entry, offline_entry, created_by, creation_date,
+          last_updated_by, last_updated_date, manual_dc_no, entry_type,
+          slip_out_time, status, slip_date, return_reason, return_date,
+          original_slip_no
+        )
+        VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
+          $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
+        )
+        RETURNING *;
+      `;
+
+      const masterValues = [
+        WB_ID,
+        masterData.slip_no,
+        masterData.slip_in_time,
+        masterData.first_weight,
+        masterData.second_weight,
+        masterData.net_weight,
+        masterData.bardana_weight,
+        masterData.gross_weight,
+        masterData.freight,
+        masterData.remarks,
+        masterData.driver_name,
+        masterData.company_id,
+        masterData.branch_id,
+        masterData.online_entry,
+        masterData.offline_entry,
+        masterData.created_by,
+        masterData.creation_date,
+        masterData.last_updated_by,
+        masterData.last_updated_date,
+        masterData.manual_dc_no,
+        'PURCHASE_RETURN',
+        masterData.slip_out_time,
+        masterData.status,
+        masterData.slip_date,
+        masterData.return_reason,
+        masterData.return_date,
+        masterData.original_slip_no
+      ];
+
+      const masterResult = await pool.query(masterQuery, masterValues);
+
+      // Insert purchase return item data
+      const itemQuery = `
+        INSERT INTO wb_weighbridge_items_purchase (
+          wb_id, igp_no, vendor_name, item_desc, no_of_bags, weight_per_bags,
+          bardana_type, vehicle_no
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `;
+
+      const itemValues = [
+        WB_ID,
+        masterData.igp_no || null,
+        masterData.vendor || null,
+        masterData.item_desc || null,
+        masterData.no_of_bags ? parseInt(masterData.no_of_bags) : null,
+        masterData.wt_per_bag ? parseFloat(masterData.wt_per_bag) : null,
+        masterData.bardana_type || null,
+        masterData.vehicle_no || null
+      ];
+
+      await pool.query(itemQuery, itemValues);
+
+      console.log('✅ Purchase return data saved successfully');
+      res.json({ success: true, wb_id: WB_ID, message: 'Purchase return data saved successfully' });
+    } catch (error: any) {
+      console.error('❌ Error saving purchase return data:', error);
+      res.status(500).json({ error: 'Failed to save purchase return data', details: error.message });
+    }
+  });
+
+  // Get purchase return by wb_id
+  app.get('/api/purchase-return/:wbId', async (req: Request, res: Response) => {
+    try {
+      const { wbId } = req.params;
+
+      const masterQuery = 'SELECT * FROM wb_weighbridge WHERE wb_id = $1 AND entry_type = $2';
+      const masterResult = await pool.query(masterQuery, [parseInt(wbId), 'PURCHASE_RETURN']);
+
+      if (masterResult.rows.length === 0) {
+        return res.status(404).json({ message: 'No purchase return record found for this wb_id' });
+      }
+
+      const master = masterResult.rows[0];
+
+      const detailsQuery = 'SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1';
+      const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
+
+      console.log(`Fetched purchase return record for wb_id ${wbId}`);
+      res.json({
+        masterData: master,
+        details: detailsResult.rows
+      });
+    } catch (error: any) {
+      console.error('Error fetching purchase return by wb_id:', error);
+      res.status(500).json({ error: 'Failed to fetch purchase return record' });
+    }
+  });
+
+  // Database wake-up endpoint for return forms
+  app.get('/api/db/wake', async (req: Request, res: Response) => {
+    try {
+      await pool.query('SELECT 1');
+      res.json({ success: true, message: 'Database is awake' });
+    } catch (error: any) {
+      console.error('Database wake-up failed:', error);
+      res.status(500).json({ error: 'Database wake-up failed' });
+    }
+  });
+
   // Create role table if it doesn't exist
 app.post('/api/create-role-table', async (req: Request, res: Response) => {
   try {
