@@ -339,7 +339,7 @@ export default function SalesReturnForm() {
 
   // Fetch all first weight records for Sales Return
   const { data: firstWeightRecords = [] } = useQuery({
-    queryKey: ["/api/purchase/first-weight-records?entry_type=Sales%20Return"],
+    queryKey: ["/api/purchase/first-weight-records?entry_type=SALE_RETURN"],
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
@@ -583,6 +583,7 @@ export default function SalesReturnForm() {
         "/api/purchases/next-slip?entry_type=SALE_RETURN",
       );
       const data = await response.json();
+      console.log("Reset form - next slip response:", data);
 
       setFormData({
         ...initialFormData,
@@ -860,6 +861,7 @@ export default function SalesReturnForm() {
     fetch("/api/purchases/next-slip?entry_type=SALE_RETURN")
       .then((res) => res.json())
       .then((data: any) => {
+        console.log("Next slip number response:", data);
         setFormData((prev) => ({ ...prev, slipNo: data.nextSlipNo }));
       })
       .catch((err: any) => {
@@ -1144,22 +1146,24 @@ export default function SalesReturnForm() {
         });
 
         // Set sales data - pad with empty rows to always show 8 rows
+        console.log("Raw sales data from database:", salesData);
         const mappedSalesData = salesData.map((item: any) => ({
           doId: item.do_id || "",
           dcNo: item.igp_no || "",  // DC No maps to igp_no in database
           doNo: item.po_no || "",   // DO No maps to po_no in database
           customerName: item.customer_name || item.vendor_name || "",
           vehicleNo: item.vehicle_no || "",
-          doDate: item.igp_date || "",
+          doDate: item.igp_date || item.do_date || "",
           itemDescription: item.item_desc || "",
-          dcQty: item.igp_qty ? String(item.igp_qty) : "",
-          doQty: item.po_qty ? String(item.po_qty) : "",
+          dcQty: item.igp_qty ? String(item.igp_qty) : (item.dc_qty ? String(item.dc_qty) : ""),
+          doQty: item.po_qty ? String(item.po_qty) : (item.do_qty ? String(item.do_qty) : ""),
           branch: item.branch || "",
           dcId: item.dc_id || "",
           customerId: item.customer_id || "",
           itemId: item.item_id || "",
           itemCode: item.item_code || "",
         }));
+        console.log("Mapped sales data:", mappedSalesData);
 
         // Pad with empty rows to always show 8 rows
         const paddedSalesData = [...mappedSalesData];
@@ -1346,8 +1350,8 @@ export default function SalesReturnForm() {
           <Button 
             className="h-8 px-2 text-sm font-medium bg-rose-700 text-white"
             onClick={() => {
-              // Stay on current page - this is already the sales return form
-              window.location.reload();
+              // Already on Sales Return page - just refresh to clear form
+              resetFormToInitial();
             }}
           >
             Sales Return

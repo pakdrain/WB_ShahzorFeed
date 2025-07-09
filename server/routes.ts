@@ -970,6 +970,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const params: any[] = [];
       if (entry_type) {
         // Handle different entry type formats
+        console.log(`First weight records query for entry_type: ${entry_type}`);
         if (entry_type === 'SALE_RETURN' || entry_type === 'Sales%20Return') {
           query += ' AND wb.entry_type = $1';
           params.push('Sales Return');
@@ -1553,6 +1554,8 @@ app.get('/api/sales', async (req: Request, res: Response) => {
       } else if (entry_type === 'SALE') {
         dbEntryType = 'SALE';
       }
+      
+      console.log(`Next slip request: entry_type=${entry_type}, mapped to dbEntryType=${dbEntryType}`);
 
       const query = `
         SELECT slip_no FROM wb_weighbridge 
