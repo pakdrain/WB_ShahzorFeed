@@ -1864,13 +1864,13 @@ app.get('/api/sales', async (req: Request, res: Response) => {
       await pool.query(updateMasterQuery, updateMasterValues);
 
       // Delete existing sales data for this wb_id
-      await pool.query('DELETE FROM wb_purchase_items WHERE wb_id = $1', [parseInt(wbId)]);
+      await pool.query('DELETE FROM wb_weighbridge_items_purchase WHERE wb_id = $1', [parseInt(wbId)]);
 
       // Insert updated sales data
       if (salesData && salesData.length > 0) {
         for (const item of salesData) {
           const itemQuery = `
-            INSERT INTO wb_purchase_items (
+            INSERT INTO wb_weighbridge_items_purchase (
               wb_id, igp_no, po_no, customer_name, vehicle_no, 
               igp_date, item_desc, igp_qty, po_qty, 
               dc_qty, do_qty

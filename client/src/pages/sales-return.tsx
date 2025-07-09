@@ -837,10 +837,10 @@ export default function SalesReturnForm() {
       setOnlineMode(true);
     }
 
-    if (editWbId && !isEditMode) {
-      // Load record for editing by wb_id only if not already in edit mode
+    if (editWbId) {
+      // Load record for editing by wb_id
       loadDataByWbId(parseInt(editWbId));
-    } else if (!editWbId && !isEditMode) {
+    } else {
       // Reset form to clean state for new sales return - delay to ensure proper initialization
       setTimeout(() => {
         resetFormToInitial();
@@ -1332,14 +1332,13 @@ export default function SalesReturnForm() {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
                       console.log("entry_type:", record.entry_type);
-                      // Load the data for editing if needed
-                      loadDataByWbId(record.wb_id);
-                      // Navigate to edit mode by updating URL - SAME PAGE RELOAD
+                      // Navigate to edit mode by updating URL
                       const urlParams = new URLSearchParams(window.location.search);
                       urlParams.set("edit", record.wb_id);
                       const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-                      window.history.pushState({}, "", newUrl);
-                      setLocation(newUrl);
+                      window.history.replaceState({}, "", newUrl);
+                      // Force page reload to ensure clean state
+                      window.location.reload();
                     }}
                   >
                     {record.slip_no || "---"}
