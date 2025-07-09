@@ -30,62 +30,20 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  // PostgreSQL connection setup with enhanced configuration for Replit
+  // PostgreSQL connection setup
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL || `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || '@1122'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'WB'}`,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    max: 5,
-    min: 0,
-    idleTimeoutMillis: 60000,
-    connectionTimeoutMillis: 15000,
-    acquireTimeoutMillis: 15000,
-    statement_timeout: 60000,
-    query_timeout: 60000,
-    allowExitOnIdle: false,
   });
 
-  // Enhanced database connection monitoring with auto-retry
-  const connectWithRetry = async (attempts = 5) => {
-    for (let i = 0; i < attempts; i++) {
-      try {
-        const client = await pool.connect();
-        console.log(`✅ PostgreSQL database connected successfully on attempt ${i + 1}`);
-        
-        // Test the connection with a simple query
-        await client.query('SELECT NOW() as server_time');
-        console.log('✅ Database query test successful');
-        
-        client.release();
-        return true;
-      } catch (err: any) {
-        console.error(`❌ Database connection attempt ${i + 1} failed:`, err.message);
-        if (i < attempts - 1) {
-          const waitTime = (i + 1) * 3000; // Exponential backoff
-          console.log(`⏳ Retrying connection in ${waitTime}ms...`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        }
-      }
-    }
-    console.error('❌ All database connection attempts failed - database may be sleeping');
-    return false;
-  };
-
-  // Initial connection attempt
-  connectWithRetry();
-
-  // Set up periodic connection health check
-  setInterval(async () => {
-    try {
-      const client = await pool.connect();
-      await client.query('SELECT 1');
-      client.release();
-      console.log('🔄 Database health check: OK');
-    } catch (error: any) {
-      console.error('🚨 Database health check failed:', error.message);
-      // Try to reconnect
-      connectWithRetry();
-    }
-  }, 300000); // Check every 5 minutes
+  // Test database connection and log status
+  try {
+    const client = await pool.connect();
+    console.log('✅ PostgreSQL database connected successfully');
+    client.release();
+  } catch (err) {
+    console.error('❌ Failed to connect to PostgreSQL database:', err);
+  }
 
   // Camera update endpoint
   app.patch('/api/cameras/:id', async (req: Request, res: Response) => {
@@ -537,53 +495,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
   });
 
-  // Database wake-up endpoint
-  app.get("/api/db/wake", async (req, res) => {
-    try {
-      // Try multiple times to wake up the database
-      let lastError;
-      for (let i = 0; i < 3; i++) {
-        try {
-          const result = await pool.query('SELECT NOW()');
-          console.log(`✅ Database awakened successfully on attempt ${i + 1}`);
-          res.json({ 
-            status: "Database is awake", 
-            timestamp: result.rows[0].now,
-            message: "Database connection successful",
-            attempts: i + 1
-          });
-          return;
-        } catch (error: any) {
-          lastError = error;
-          console.log(`❌ Database wake attempt ${i + 1} failed:`, error.message);
-          if (i < 2) {
-            await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
-          }
-        }
-      }
-      
-      // If all attempts failed
-      throw lastError;
-    } catch (error: any) {
-      console.error('Database wake-up error after all attempts:', error);
-      res.status(500).json({ 
-        status: "Database wake-up failed", 
-        error: error.message,
-        code: error.code 
-      });
-    }
-  });
-
-  // Wake up database on startup
-  (async () => {
-    try {
-      await pool.query('SELECT NOW()');
-      console.log('✅ Database connection verified on startup');
-    } catch (error: any) {
-      console.error('❌ Database startup verification failed:', error);
-    }
-  })();
-
   // Weight API endpoints use imported variables from weight-state
 
   // Weight data endpoint
@@ -687,14 +598,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('Incoming purchase data:', purchaseData);
 
     try {
-      // Use fallback WB_ID generation when database is unavailable
-      let WB_ID;
-      try {
-        WB_ID = await generateWBID();
-      } catch (error) {
-        console.log('⚠️ Database unavailable, using fallback WB_ID generation');
-        WB_ID = Math.floor(Date.now() / 1000).toString();
-      }
+      const WB_ID = await generateWBID();
 
       // Destructure and prepare values
       const {
@@ -779,21 +683,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error inserting purchase:', err);
       console.error('Error details:', err.message);
       console.error('Error stack:', err.stack);
-      
-      // Fallback: Return success with mock data when database is unavailable
-      if (err.message && err.message.includes('endpoint is disabled')) {
-        console.log('⚠️ Database unavailable, returning success with fallback data');
-        res.json({ 
-          wb_id: Math.floor(Date.now() / 1000).toString(),
-          slip_no: purchaseData.slip_no || '1001',
-          message: 'Data saved successfully (offline mode)'
-        });
-      } else {
-        res.status(500).json({ 
-          error: 'Insert error',
-          details: err.message
-        });
-      }
+      res.status(500).json({ 
+        error: 'Insert error',
+        details: err.message
+      });
     }
   });
 
@@ -870,18 +763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result.rows[0]);
     } catch (err: any) {
       console.error('Error inserting purchase items:', err);
-      
-      // Fallback: Return success when database is unavailable
-      if (err.message && err.message.includes('endpoint is disabled')) {
-        console.log('⚠️ Database unavailable, returning success with fallback data');
-        res.json({ 
-          wb_item_p_id: Math.floor(Date.now() / 1000),
-          wb_id: itemData.wb_id,
-          message: 'Purchase items saved successfully (offline mode)'
-        });
-      } else {
-        res.status(500).json({ error: 'Insert error: ' + err.message });
-      }
+      res.status(500).json({ error: 'Insert error: ' + err.message });
     }
   });
 
@@ -1023,6 +905,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'No master records found' });
       }
 
+      ``````
       console.log(`Fetched latest master record: WB_ID ${result.rows[0].wb_id}`);
       res.json(result.rows[0]);        } catch (error: any) {
       console.error('Error fetching latest master record:', error);
@@ -1051,9 +934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET first weight records for display table (all entry types)
   app.get('/api/purchase/first-weight-records', async (req: Request, res: Response) => {
     try {
-      const { entry_type } = req.query;
-      
-      let query = `
+      const query = `
         SELECT 
           wb.wb_id,
           wb.slip_no,
@@ -1065,29 +946,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
         WHERE wb.first_weight IS NOT NULL 
           AND wb.first_weight > 0
+        ORDER BY wb.wb_id DESC 
+        LIMIT 20
       `;
 
-      const params: any[] = [];
-      if (entry_type) {
-        // Handle different entry type formats
-        console.log(`First weight records query for entry_type: ${entry_type}`);
-        if (entry_type === 'SALE_RETURN' || entry_type === 'Sales%20Return' || entry_type === 'Sales Return') {
-          query += ' AND wb.entry_type = $1';
-          params.push('Sales Return');
-        } else if (entry_type === 'PURCHASE_RETURN') {
-          query += ' AND wb.entry_type = $1';
-          params.push('Purchase Return');
-        } else {
-          query += ' AND wb.entry_type = $1';
-          params.push(entry_type);
-        }
-      }
+      const result = await pool.query(query);
 
-      query += ' ORDER BY wb.wb_id DESC LIMIT 20';
-
-      const result = await pool.query(query, params);
-
-      console.log(`Fetched ${result.rows.length} first weight records (entry_type: ${entry_type || 'all'})`);
+      console.log(`Fetched ${result.rows.length} first weight records (all entry types)`);
       res.json(result.rows);
     } catch (error: any) {
       console.error('Error fetching first weight records:', error);
@@ -1197,85 +1062,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(500).json({ error: 'Failed to fetch purchase record' });
   }
 });
-
-  // GET endpoint for generating next slip number by entry type
-  app.get('/api/purchases/next-slip', async (req, res) => {
-    try {
-      const { entry_type } = req.query;
-
-      if (!entry_type) {
-        return res.status(400).json({ error: 'entry_type query parameter is required' });
-      }
-
-      // Map entry types to database values
-      let dbEntryType = entry_type;
-      if (entry_type === 'SALE_RETURN' || entry_type === 'Sales%20Return') {
-        dbEntryType = 'Sales Return';
-      } else if (entry_type === 'PURCHASE_RETURN') {
-        dbEntryType = 'Purchase Return';
-      } else if (entry_type === 'PURCHASE') {
-        dbEntryType = 'PURCHASE';
-      } else if (entry_type === 'SALE') {
-        dbEntryType = 'SALE';
-      }
-      
-      console.log(`Next slip request: entry_type=${entry_type}, mapped to dbEntryType=${dbEntryType}`);
-
-      // Skip database connection completely and use fallback immediately
-      console.log('⚠️ Database connection disabled, using fallback slip numbers');
-      
-      // Use meaningful slip numbers based on entry type
-      let fallbackSlipNo = "1";
-      
-      // Use different starting numbers for different entry types
-      if (entry_type === 'PURCHASE' || entry_type === 'PURCHASE_RETURN') {
-        fallbackSlipNo = "1001";
-      } else if (entry_type === 'SALE' || entry_type === 'SALE_RETURN') {
-        fallbackSlipNo = "2001";
-      } else if (entry_type === 'Sales%20Return' || entry_type === 'SALE_RETURN') {
-        fallbackSlipNo = "3001";
-      }
-      
-      console.log(`🚨 Using entry-type fallback slip number: ${fallbackSlipNo} for ${entry_type}`);
-      res.json({ nextSlipNo: fallbackSlipNo });
-
-    } catch (error: any) {
-      console.error('❌ Critical error in slip number generation:', error);
-      
-      // Final fallback
-      const fallbackSlipNo = "1";
-      console.log(`🚨 Using absolute fallback slip number: ${fallbackSlipNo}`);
-      res.json({ nextSlipNo: fallbackSlipNo });
-    }
-  });
-
-  // GET purchase data by wb_id for edit mode
-  app.get('/api/purchases/:wbId', async (req: Request, res: Response) => {
-    try {
-      const { wbId } = req.params;
-
-      const masterQuery = 'SELECT * FROM wb_weighbridge WHERE wb_id = $1';
-      const masterResult = await pool.query(masterQuery, [parseInt(wbId)]);
-
-      if (masterResult.rows.length === 0) {
-        return res.status(404).json({ message: 'No record found for this wb_id' });
-      }
-
-      const master = masterResult.rows[0];
-
-      const detailsQuery = 'SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1';
-      const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
-
-      console.log(`Fetched purchase record for wb_id ${wbId}`);
-      res.json({
-        masterData: master,
-        salesData: detailsResult.rows
-      });
-    } catch (error: any) {
-      console.error('Error fetching purchase by wb_id:', error);
-      res.status(500).json({ error: 'Failed to fetch purchase record' });
-    }
-  });
 
   // PUT update purchase record
   app.put('/api/purchase/update/:wbId', async (req: Request, res: Response) => {
@@ -1554,14 +1340,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(200).json({ message: 'Sales data saved successfully' });
   } catch (error: any) {
     console.error('❌ Error saving to wb_weighbridge_items_purchase:', error);
-    
-    // Fallback: Return success when database is unavailable
-    if (error.message && error.message.includes('endpoint is disabled')) {
-      console.log('⚠️ Database unavailable, returning success with fallback data');
-      res.status(200).json({ message: 'Sales data saved successfully (offline mode)' });
-    } else {
-      res.status(500).json({ error: 'Failed to save sales data' });
-    }
+    res.status(500).json({ error: 'Failed to save sales data' });
   }
 });
 
@@ -1692,307 +1471,37 @@ app.get('/api/sales', async (req: Request, res: Response) => {
     }
   });
 
-  // POST Sales Return - save master record and sales details
-  app.post('/api/sales-return/save', async (req: Request, res: Response) => {
+  // GET endpoint for generating next slip number by entry type
+  app.get('/api/purchases/next-slip', async (req, res) => {
     try {
-      const { masterData, salesData } = req.body;
-      console.log('Incoming sales return data:', { masterData, salesData });
+      const { entry_type } = req.query;
 
-      if (!masterData) {
-        return res.status(400).json({ error: 'Master data is required' });
+      if (!entry_type) {
+        return res.status(400).json({ error: 'entry_type query parameter is required' });
       }
 
-      // Use fallback WB_ID generation when database is unavailable
-      let WB_ID;
-      try {
-        WB_ID = await generateWBID();
-      } catch (error) {
-        console.log('⚠️ Database unavailable, using fallback WB_ID generation');
-        WB_ID = Math.floor(Date.now() / 1000).toString();
-      }
-
-      // Prepare master data payload with proper null handling for numeric fields
-      const {
-        slip_no = null,
-        slip_in_time = null,
-        first_weight = null,
-        second_weight = null,
-        net_weight = null,
-        bardana_weight = null,
-        gross_weight = null,
-        freight = null,
-        remarks = null,
-        driver_name = null,
-        company_id = null,
-        branch_id = null,
-        online_entry = null,
-        offline_entry = null,
-        created_by = null,
-        creation_date = null,
-        last_updated_by = null,
-        last_updated_date = null,
-        manual_dc_no = null,
-        slip_out_time = null,
-        status = null,
-        slip_date = null,
-        return_reason = null,
-        return_date = null,
-        original_slip_no = null,
-        customer_name = null
-      } = masterData;
-
-      // Convert online/offline entries to string
-      const onlineEntryStr = (online_entry === 'Yes' || online_entry === true) ? 'Yes' : null;
-      const offlineEntryStr = (offline_entry === 'Yes' || offline_entry === true) ? 'Yes' : null;
-
-      const masterQuery = `
-        INSERT INTO wb_weighbridge (
-          wb_id, slip_no, slip_in_time, first_weight, second_weight, net_weight,
-          bardana_weight, gross_weight, freight, remarks, driver_name, company_id,
-          branch_id, online_entry, offline_entry, created_by, creation_date,
-          last_updated_by, last_updated_date, manual_dc_no, entry_type,
-          slip_out_time, status, slip_date, return_reason, return_date, 
-          original_slip_no, customer_name
-        )
-        VALUES (
-          $1, $2, $3, $4, $5, $6,
-          $7, $8, $9, $10, $11, $12,
-          $13, $14, $15, $16, $17,
-          $18, $19, $20, $21,
-          $22, $23, $24, $25, $26, $27, $28
-        )
-        RETURNING *;
-      `;
-
-      const masterValues = [
-        WB_ID,
-        slip_no,
-        slip_in_time,
-        first_weight ? parseFloat(first_weight) : null,
-        second_weight ? parseFloat(second_weight) : null,
-        net_weight ? parseFloat(net_weight) : null,
-        bardana_weight ? parseFloat(bardana_weight) : null,
-        gross_weight ? parseFloat(gross_weight) : null,
-        freight ? parseFloat(freight) : null,
-        remarks,
-        driver_name,
-        company_id ? parseInt(company_id) : null,
-        branch_id ? parseInt(branch_id) : null,
-        onlineEntryStr,
-        offlineEntryStr,
-        created_by,
-        creation_date,
-        last_updated_by,
-        last_updated_date,
-        manual_dc_no,
-        'Sales Return',
-        slip_out_time,
-        status,
-        slip_date,
-        return_reason,
-        return_date,
-        original_slip_no,
-        customer_name
-      ];
-
-      const masterResult = await pool.query(masterQuery, masterValues);
-      console.log('Sales return master data saved successfully:', masterResult.rows[0]);
-
-      // Save sales detail records for each non-empty row
-      if (salesData && Array.isArray(salesData) && salesData.length > 0) {
-        const nonEmptyRows = salesData.filter(row => 
-          row.dcNo || row.doNo || row.customerName || row.vehicleNo || 
-          row.itemDescription || row.dcQty || row.doQty
-        );
-
-        for (const row of nonEmptyRows) {
-          const salesItemPayload = {
-            wb_id: WB_ID,
-            bardana_type: null,
-            igp_no: row.dcNo || null,
-            vehicle_no: row.vehicleNo || null,
-            weight_per_bags: null,
-            igp_date: row.doDate || null,
-            supplier_weight: null,
-            quality_deduction: null,
-            bardana_weight: null,
-            no_of_bags: null,
-            vendor_name: row.customerName || null,
-            bag_condition: null,
-            po_no: row.doNo || null,
-            item_code: row.itemCode || null,
-            item_desc: row.itemDescription || null,
-            po_qty: row.doQty && row.doQty.trim() !== '' ? parseFloat(row.doQty) : null,
-            igp_qty: row.dcQty && row.dcQty.trim() !== '' ? parseFloat(row.dcQty) : null,
-            balance_qty: null,
-            customer_name: row.customerName || null,
-            do_no: row.doNo || null,
-            do_qty: row.doQty && row.doQty.trim() !== '' ? parseFloat(row.doQty) : null,
-            dc_qty: row.dcQty && row.dcQty.trim() !== '' ? parseFloat(row.dcQty) : null
-          };
-
-          const salesItemResponse = await fetch('/api/purchase-items', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(salesItemPayload),
-          });
-
-          if (!salesItemResponse.ok) {
-            console.error('Failed to save sales return item:', row);
-          }
-        }
-        console.log('Sales return details saved successfully');
-      }
-
-      res.json({ 
-        success: true, 
-        wb_id: WB_ID,
-        message: 'Sales return data saved successfully',
-        data: masterResult.rows[0] 
-      });
-    } catch (error: any) {
-      console.error('Error saving sales return data:', error);
-      
-      // Fallback: Return success when database is unavailable
-      if (error.message && error.message.includes('endpoint is disabled')) {
-        console.log('⚠️ Database unavailable, returning success with fallback data');
-        res.json({ 
-          success: true, 
-          wb_id: Math.floor(Date.now() / 1000).toString(),
-          message: 'Sales return data saved successfully (offline mode)'
-        });
-      } else {
-        res.status(500).json({ 
-          error: 'Failed to save sales return data',
-          details: error.message 
-        });
-      }
-    }
-  });
-
-  // GET Sale Return records
-  app.get('/api/sale-return/records', async (req: Request, res: Response) => {
-    try {
       const query = `
-        SELECT DISTINCT ON (slip_no) 
-          wb.wb_id,
-          wb.slip_no,
-          wb.entry_type,
-          wb.first_weight,
-          wb.second_weight,
-          wb.slip_in_time,
-          COALESCE(wbi.vehicle_no, '') as vehicle_no
-        FROM wb_weighbridge wb 
-        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
-        WHERE wb.entry_type = 'Sales Return'
-        ORDER BY slip_no DESC, wb.wb_id DESC
-      `;
-      
-      const result = await pool.query(query);
-      res.json(result.rows);
-    } catch (error: any) {
-      console.error('Error fetching sale return records:', error);
-      res.status(500).json({ error: 'Failed to fetch sale return records' });
-    }
-  });
-
-  // GET Sales Return by wb_id with sales items
-  app.get('/api/sales-return/:wbId', async (req: Request, res: Response) => {
-    try {
-      const { wbId } = req.params;
-      
-      // Get master data
-      const masterQuery = `
-        SELECT * FROM wb_weighbridge 
-        WHERE wb_id = $1 AND entry_type = 'Sales Return'
-      `;
-      const masterResult = await pool.query(masterQuery, [wbId]);
-      
-      if (masterResult.rows.length === 0) {
-        return res.status(404).json({ error: 'Sales return record not found' });
-      }
-
-      // Get sales items data
-      const salesQuery = `
-        SELECT * FROM wb_weighbridge_items_purchase 
-        WHERE wb_id = $1
-        ORDER BY wb_item_p_id
-      `;
-      const salesResult = await pool.query(salesQuery, [wbId]);
-
-      res.json({
-        masterData: masterResult.rows[0],
-        salesData: salesResult.rows
-      });
-    } catch (error: any) {
-      console.error('Error fetching sales return data:', error);
-      res.status(500).json({ error: 'Failed to fetch sales return data' });
-    }
-  });
-
-  // GET Sales Return by slip number for loading in form
-  app.get('/api/sales-return/by-slip/:slipNo', async (req: Request, res: Response) => {
-    try {
-      const { slipNo } = req.params;
-      
-      // Get master data
-      const masterQuery = `
-        SELECT * FROM wb_weighbridge 
-        WHERE slip_no = $1 AND entry_type = 'Sales Return'
-        ORDER BY wb_id DESC
+        SELECT slip_no FROM wb_weighbridge 
+        WHERE entry_type = $1 AND slip_no ~ '^[0-9]+$'
+        ORDER BY CAST(slip_no AS INTEGER) DESC 
         LIMIT 1
       `;
-      const masterResult = await pool.query(masterQuery, [slipNo]);
-      
-      if (masterResult.rows.length === 0) {
-        return res.status(404).json({ error: 'Sales return record not found' });
+
+      const result = await pool.query(query, [entry_type.toUpperCase()]);
+
+      let nextSlipNo = '1';
+      if (result.rows.length > 0 && result.rows[0].slip_no) {
+        const currentNumber = parseInt(result.rows[0].slip_no, 10);
+        if (!isNaN(currentNumber)) {
+          nextSlipNo = (currentNumber + 1).toString();
+        }
       }
 
-      const master = masterResult.rows[0];
-
-      // Get sales items data
-      const salesQuery = `
-        SELECT * FROM wb_weighbridge_items_purchase 
-        WHERE wb_id = $1
-        ORDER BY wb_item_p_id
-      `;
-      const salesResult = await pool.query(salesQuery, [master.wb_id]);
-
-      res.json({
-        masterData: master,
-        salesData: salesResult.rows
-      });
+      console.log(`Generated next slip number for ${entry_type}: ${nextSlipNo}`);
+      res.json({ nextSlipNo });
     } catch (error: any) {
-      console.error('Error fetching sales return by slip:', error);
-      res.status(500).json({ error: 'Failed to fetch sales return data' });
-    }
-  });
-
-  // GET Purchase Return records
-  app.get('/api/purchase-return/records', async (req: Request, res: Response) => {
-    try {
-      const query = `
-        SELECT DISTINCT ON (slip_no) 
-          wb.wb_id,
-          wb.slip_no,
-          wb.entry_type,
-          wb.first_weight,
-          wb.second_weight,
-          wb.slip_in_time,
-          COALESCE(wbi.vehicle_no, '') as vehicle_no
-        FROM wb_weighbridge wb 
-        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
-        WHERE wb.entry_type = 'Purchase Return'
-        ORDER BY slip_no DESC, wb.wb_id DESC
-      `;
-      
-      const result = await pool.query(query);
-      res.json(result.rows);
-    } catch (error: any) {
-      console.error('Error fetching purchase return records:', error);
-      res.status(500).json({ error: 'Failed to fetch purchase return records' });
+      console.error('Error generating next slip number:', error);
+      res.status(500).json({ error: 'Failed to generate next slip number' });
     }
   });
 
@@ -2185,8 +1694,7 @@ app.get('/api/sales', async (req: Request, res: Response) => {
         permissionFlags.pur_form_menu,
         permissionFlags.pur_form_online,
         permissionFlags.pur_form_offline,
-        permissionFlags.sale_form_menu,
-        permissionFlags.sale_form_online,
+        permissionFlags.sale_form_menu,permissionFlags.sale_form_online,
         permissionFlags.sale_form_offline,
         permissionFlags.sale_return_menu,
         permissionFlags.sale_node_menu,
