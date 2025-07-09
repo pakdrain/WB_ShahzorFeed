@@ -1951,11 +1951,11 @@ app.get('/api/sales', async (req: Request, res: Response) => {
           branch_id, online_entry, offline_entry, created_by, creation_date,
           last_updated_by, last_updated_date, manual_dc_no, entry_type,
           slip_out_time, status, slip_date, return_reason, return_date,
-          original_slip_no
+          original_slip_no, vehicle_no
         )
         VALUES (
           $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17,
-          $18, $19, $20, $21, $22, $23, $24, $25, $26, $27
+          $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28
         )
         RETURNING *;
       `;
@@ -1964,16 +1964,16 @@ app.get('/api/sales', async (req: Request, res: Response) => {
         WB_ID,
         masterData.slip_no,
         masterData.slip_in_time,
-        masterData.first_weight,
-        masterData.second_weight,
-        masterData.net_weight,
-        masterData.bardana_weight,
-        masterData.gross_weight,
-        masterData.freight,
+        masterData.first_weight ? parseFloat(masterData.first_weight) : null,
+        masterData.second_weight ? parseFloat(masterData.second_weight) : null,
+        masterData.net_weight ? parseFloat(masterData.net_weight) : null,
+        masterData.bardana_weight ? parseFloat(masterData.bardana_weight) : null,
+        masterData.gross_weight ? parseFloat(masterData.gross_weight) : null,
+        masterData.freight ? parseFloat(masterData.freight) : null,
         masterData.remarks,
         masterData.driver_name,
-        masterData.company_id,
-        masterData.branch_id,
+        masterData.company_id ? parseInt(masterData.company_id) : null,
+        masterData.branch_id ? parseInt(masterData.branch_id) : null,
         masterData.online_entry,
         masterData.offline_entry,
         masterData.created_by,
@@ -1987,7 +1987,8 @@ app.get('/api/sales', async (req: Request, res: Response) => {
         masterData.slip_date,
         masterData.return_reason,
         masterData.return_date,
-        masterData.original_slip_no
+        masterData.original_slip_no,
+        masterData.vehicle_no
       ];
 
       const masterResult = await pool.query(masterQuery, masterValues);
@@ -2019,6 +2020,93 @@ app.get('/api/sales', async (req: Request, res: Response) => {
     } catch (error: any) {
       console.error('❌ Error saving purchase return data:', error);
       res.status(500).json({ error: 'Failed to save purchase return data', details: error.message });
+    }
+  });
+
+  // Update purchase return by wb_id
+  app.put('/api/purchase-return/update/:wbId', async (req: Request, res: Response) => {
+    try {
+      const { wbId } = req.params;
+      const { masterData } = req.body;
+
+      console.log('🔄 Updating purchase return data for wb_id:', wbId);
+      console.log('📝 Master data:', masterData);
+
+      // Update master record
+      const updateMasterQuery = `
+        UPDATE wb_weighbridge SET 
+          slip_in_time = $2, first_weight = $3, second_weight = $4, 
+          net_weight = $5, bardana_weight = $6, gross_weight = $7, 
+          freight = $8, remarks = $9, driver_name = $10, 
+          company_id = $11, branch_id = $12, online_entry = $13, 
+          offline_entry = $14, last_updated_by = $15, last_updated_date = $16, 
+          manual_dc_no = $17, slip_out_time = $18, status = $19, 
+          slip_date = $20, return_reason = $21, return_date = $22, 
+          original_slip_no = $23, vehicle_no = $24
+        WHERE wb_id = $1 AND entry_type = 'PURCHASE_RETURN'
+      `;
+
+      const updateMasterValues = [
+        parseInt(wbId),
+        masterData.slip_in_time,
+        masterData.first_weight ? parseFloat(masterData.first_weight) : null,
+        masterData.second_weight ? parseFloat(masterData.second_weight) : null,
+        masterData.net_weight ? parseFloat(masterData.net_weight) : null,
+        masterData.bardana_weight ? parseFloat(masterData.bardana_weight) : null,
+        masterData.gross_weight ? parseFloat(masterData.gross_weight) : null,
+        masterData.freight ? parseFloat(masterData.freight) : null,
+        masterData.remarks,
+        masterData.driver_name,
+        masterData.company_id ? parseInt(masterData.company_id) : null,
+        masterData.branch_id ? parseInt(masterData.branch_id) : null,
+        masterData.online_entry,
+        masterData.offline_entry,
+        masterData.last_updated_by,
+        masterData.last_updated_date,
+        masterData.manual_dc_no,
+        masterData.slip_out_time,
+        masterData.status,
+        masterData.slip_date,
+        masterData.return_reason,
+        masterData.return_date,
+        masterData.original_slip_no,
+        masterData.vehicle_no
+      ];
+
+      await pool.query(updateMasterQuery, updateMasterValues);
+
+      // Update the details table
+      const updateDetailsQuery = `
+        UPDATE wb_weighbridge_items_purchase 
+        SET 
+          igp_no = $2,
+          vendor_name = $3,
+          item_desc = $4,
+          no_of_bags = $5,
+          weight_per_bags = $6,
+          bardana_type = $7,
+          vehicle_no = $8
+        WHERE wb_id = $1
+      `;
+
+      const updateDetailsValues = [
+        parseInt(wbId),
+        masterData.igp_no || null,
+        masterData.vendor || null,
+        masterData.item_desc || null,
+        masterData.no_of_bags ? parseInt(masterData.no_of_bags) : null,
+        masterData.wt_per_bag ? parseFloat(masterData.wt_per_bag) : null,
+        masterData.bardana_type || null,
+        masterData.vehicle_no || null
+      ];
+
+      await pool.query(updateDetailsQuery, updateDetailsValues);
+
+      console.log('✅ Purchase return data updated successfully');
+      res.json({ success: true, wb_id: parseInt(wbId), message: 'Purchase return data updated successfully' });
+    } catch (error: any) {
+      console.error('❌ Error updating purchase return data:', error);
+      res.status(500).json({ error: 'Failed to update purchase return data', details: error.message });
     }
   });
 

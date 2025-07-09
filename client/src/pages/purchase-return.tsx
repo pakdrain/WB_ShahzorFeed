@@ -106,10 +106,10 @@ export default function PurchaseReturnForm() {
     });
   };
 
-  // Fetch all first weight records
+  // Fetch all purchase return records
   const { data: firstWeightRecords = [] } = useQuery({
-    queryKey: ["/api/purchase/first-weight-records"],
-    refetchInterval: 3000, // Refresh every 3 seconds
+    queryKey: ["/api/purchase/first-weight-records?entry_type=Purchase%20Return"],
+    refetchInterval: 10000, // Refresh every 10 seconds
   });
 
   // Fetch offline records specifically
@@ -118,34 +118,24 @@ export default function PurchaseReturnForm() {
     refetchInterval: 3000, // Refresh every 3 seconds
   });
 
-  // Filter records based on search criteria and form type
-  const filteredRecords = (() => {
-    let records = [];
-
-    if (selectedForm === "offline") {
-      // Show offline records when offline tab is selected
-      records = Array.isArray(offlineRecords) ? offlineRecords : [];
-    } else {
-      // Show all first weight records for other tabs
-      records = Array.isArray(firstWeightRecords) ? firstWeightRecords : [];
-    }
-
-    return records.filter((record: any) => {
-      const matchesSlipNo =
-        !searchSlipNo ||
-        (record.slip_no || "")
-          .toString()
-          .toLowerCase()
-          .includes(searchSlipNo.toLowerCase());
-      const matchesVehicleNo =
-        !searchVehicleNo ||
-        (record.vehicle_no || "")
-          .toString()
-          .toLowerCase()
-          .includes(searchVehicleNo.toLowerCase());
-      return matchesSlipNo && matchesVehicleNo;
-    });
-  })();
+  // Filter records based on search criteria
+  const filteredRecords = Array.isArray(firstWeightRecords)
+    ? firstWeightRecords.filter((record: any) => {
+        const matchesSlipNo =
+          !searchSlipNo ||
+          (record.slip_no || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchSlipNo.toLowerCase());
+        const matchesVehicleNo =
+          !searchVehicleNo ||
+          (record.vehicle_no || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchVehicleNo.toLowerCase());
+        return matchesSlipNo && matchesVehicleNo;
+      })
+    : [];
 
   // Print report function
   const handlePrintReport = () => {
@@ -770,14 +760,98 @@ export default function PurchaseReturnForm() {
     }
 
     try {
-      alert("Purchase return data saved successfully!");
-      console.log("Purchase return form data:", formData);
+      // Prepare master data payload
+      const masterDataPayload = {
+        slip_no: formData.slipNo || null,
+        slip_in_time: formatISODate(formData.slipInTime),
+        first_weight: formData.firstWeight && formData.firstWeight.trim() !== "" 
+          ? parseFloat(formData.firstWeight) : null,
+        second_weight: formData.secondWeight && formData.secondWeight.trim() !== "" 
+          ? parseFloat(formData.secondWeight) : null,
+        net_weight: formData.netWeight && formData.netWeight.trim() !== "" 
+          ? parseFloat(formData.netWeight) : null,
+        bardana_weight: formData.bardanaWeight && formData.bardanaWeight.trim() !== "" 
+          ? parseFloat(formData.bardanaWeight) : null,
+        gross_weight: formData.grossWeight && formData.grossWeight.trim() !== "" 
+          ? parseFloat(formData.grossWeight) : null,
+        freight: formData.freight && formData.freight.trim() !== "" 
+          ? parseFloat(formData.freight) : null,
+        remarks: formData.remarks || null,
+        driver_name: formData.driverName || null,
+        company_id: formData.companyId && formData.companyId !== "undefined" && formData.companyId.trim() !== "" 
+          ? parseInt(formData.companyId, 10) : null,
+        branch_id: formData.branchId && formData.branchId !== "undefined" && formData.branchId.trim() !== "" 
+          ? parseInt(formData.branchId, 10) : null,
+        online_entry: formData.onlineEntry === "Yes" || formData.onlineEntry === true ? "Yes" : null,
+        offline_entry: formData.offlineEntry === "Yes" || formData.offlineEntry === true ? "Yes" : null,
+        created_by: user?.userid || null,
+        creation_date: formData.creationDate || null,
+        last_updated_by: user?.userid || null,
+        last_updated_date: new Date().toISOString(),
+        manual_dc_no: formData.manualDcNo || null,
+        slip_out_time: formatISODate(formData.slipOutTime),
+        status: formData.status || null,
+        slip_date: formData.slipDate || null,
+        return_reason: formData.returnReason || null,
+        return_date: formatISODate(formData.returnDate),
+        original_slip_no: formData.originalSlipNo || null,
+        vendor: formData.vendor || null,
+        igp_no: formData.igpNo || null,
+        item_desc: formData.itemDesc || null,
+        no_of_bags: formData.noOfBags && formData.noOfBags.trim() !== "" 
+          ? parseInt(formData.noOfBags, 10) : null,
+        wt_per_bag: formData.wtPerBag && formData.wtPerBag.trim() !== "" 
+          ? parseFloat(formData.wtPerBag) : null,
+        bardana_type: formData.bardanaType || null,
+        vehicle_no: formData.vehicleNo || null
+      };
 
-      // Reset form to clean state
-      setFormData(initialFormData);
-    } catch (error) {
-      console.error("Error saving purchase return data:", error);
-      alert("Failed to save purchase return data");
+      // Choose endpoint based on edit mode
+      const endpoint = isEditMode ? `/api/purchase-return/update/${editingWbId}` : "/api/purchase-return/save";
+      const method = isEditMode ? "PUT" : "POST";
+
+      // Save to backend
+      const response = await fetch(endpoint, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          masterData: masterDataPayload
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to ${isEditMode ? 'update' : 'save'} purchase return data: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log(`Purchase return data ${isEditMode ? 'updated' : 'saved'} successfully:`, result);
+      alert(`Purchase return data ${isEditMode ? 'updated' : 'saved'} successfully!`);
+
+      if (isEditMode) {
+        // In edit mode, exit edit mode and clear URL parameter
+        setIsEditMode(false);
+        setEditingWbId(null);
+
+        // Clear edit parameter from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.delete("edit");
+        const newUrl = urlParams.toString() ? 
+          `${window.location.pathname}?${urlParams.toString()}` : 
+          window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+
+        // Reset form to clean state
+        await resetFormToInitial();
+      } else {
+        // For new entries, reset form to clean state
+        await resetFormToInitial();
+      }
+    } catch (error: any) {
+      console.error(`Error ${isEditMode ? 'updating' : 'saving'} purchase return data:`, error);
+      alert(`Failed to ${isEditMode ? 'update' : 'save'} purchase return data: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -794,6 +868,172 @@ export default function PurchaseReturnForm() {
     setEditingWbId(null);
   };
 
+  // Function to reset form to clean state
+  const resetFormToInitial = async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeMode = urlParams.get("type");
+    const isOfflineMode = typeMode === "offline";
+
+    // Sync onlineMode state with URL parameter
+    if (typeMode === "offline") {
+      setOnlineMode(false);
+    } else if (typeMode === "online") {
+      setOnlineMode(true);
+    }
+
+    // Fetch next slip number for Purchase Return entry type
+    try {
+      const response = await fetch(
+        "/api/purchases/next-slip?entry_type=PURCHASE_RETURN",
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Reset form - next slip response:", data);
+      const nextSlip = data.nextSlipNo || Date.now().toString().slice(-6);
+
+      setFormData({
+        ...initialFormData,
+        slipNo: nextSlip,
+        slipInTime: new Date().toISOString().slice(0, 16),
+        onlineEntry: isOfflineMode ? "No" : "Yes",
+        offlineEntry: isOfflineMode ? "Yes" : "No",
+        entryType: "Purchase Return",
+        creationDate: new Date().toISOString(),
+        lastUpdatedDate: new Date().toISOString(),
+        slipDate: new Date().toISOString(),
+        returnDate: new Date().toISOString().slice(0, 16),
+      });
+    } catch (error) {
+      console.error("Error fetching next slip number:", error);
+      // Generate a timestamp-based slip number as fallback
+      const fallbackSlip = Date.now().toString().slice(-6);
+      setFormData({
+        ...initialFormData,
+        slipNo: fallbackSlip,
+        slipInTime: new Date().toISOString().slice(0, 16),
+        onlineEntry: isOfflineMode ? "No" : "Yes",
+        offlineEntry: isOfflineMode ? "Yes" : "No",
+        entryType: "Purchase Return",
+        creationDate: new Date().toISOString(),
+        lastUpdatedDate: new Date().toISOString(),
+        slipDate: new Date().toISOString(),
+        returnDate: new Date().toISOString().slice(0, 16),
+      });
+    }
+
+    setIsEditMode(false);
+    setEditingWbId(null);
+  };
+
+  // Function to load data by wb_id for editing
+  const loadDataByWbId = async (wbId: number) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/purchase-return/${wbId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data for wbId: ${wbId}`);
+      }
+      const data = await response.json();
+
+      // Ensure the data is properly structured
+      if (data && data.masterData) {
+        const masterData = data.masterData;
+
+        // Format date strings correctly
+        masterData.slipInTime = formatDatetimeLocal(masterData.slip_in_time);
+        masterData.slipOutTime = formatDatetimeLocal(masterData.slip_out_time);
+        masterData.slipDate = formatDatetimeLocal(masterData.slip_date);
+        masterData.returnDate = formatDatetimeLocal(masterData.return_date);
+
+        setFormData({
+          slipNo: masterData.slip_no || "",
+          slipInTime: masterData.slipInTime || "",
+          slipOutTime: masterData.slipOutTime || "",
+          slipDate: masterData.slipDate || "",
+          status: masterData.status || "",
+          entryType: masterData.entry_type || "Purchase Return",
+          firstWeight: masterData.first_weight ? String(masterData.first_weight) : "",
+          secondWeight: masterData.second_weight ? String(masterData.second_weight) : "",
+          netWeight: masterData.net_weight ? String(masterData.net_weight) : "",
+          bardanaWeight: masterData.bardana_weight ? String(masterData.bardana_weight) : "",
+          grossWeight: masterData.gross_weight ? String(masterData.gross_weight) : "",
+          supplierWeight: masterData.supplier_weight ? String(masterData.supplier_weight) : "",
+          supplierWeightMinusBardana: masterData.supplier_weight_minus_bardana ? String(masterData.supplier_weight_minus_bardana) : "",
+          supplierWeightMinusOutWeight: masterData.supplier_weight_minus_out_weight ? String(masterData.supplier_weight_minus_out_weight) : "",
+          qualityDeduction: masterData.quality_deduction ? String(masterData.quality_deduction) : "",
+          vehicleNo: masterData.vehicle_no || "",
+          driverName: masterData.driver_name || "",
+          igpNo: masterData.igp_no || "",
+          igpDate: masterData.igp_date || "",
+          poNo: masterData.po_no || "",
+          po_no: masterData.po_no || "",
+          itemCode: masterData.item_code || "",
+          itemDesc: masterData.item_desc || "",
+          poQty: masterData.po_qty || "",
+          igpQty: masterData.igp_qty || "",
+          balanceQty: masterData.balance_qty || "",
+          bardanaType: masterData.bardana_type || "",
+          wtPerBag: masterData.wt_per_bag ? String(masterData.wt_per_bag) : "",
+          noOfBags: masterData.no_of_bags ? String(masterData.no_of_bags) : "",
+          bagCondition: masterData.bag_condition || "",
+          bardanaTypeId: String(masterData.bardana_type_id) || "",
+          vendor: masterData.vendor || "",
+          vendorName: masterData.vendor_name || "",
+          customerId: String(masterData.customer_id) || "",
+          customerName: masterData.customer_name || "",
+          returnReason: masterData.return_reason || "",
+          returnDate: masterData.returnDate || "",
+          originalSlipNo: masterData.original_slip_no || "",
+          wbId: String(masterData.wb_id) || "",
+          companyId: String(masterData.company_id) || "",
+          branchId: String(masterData.branch_id) || "",
+          branch: String(masterData.branch_id) || "",
+          onlineEntry: masterData.online_entry || "Yes",
+          offlineEntry: masterData.offline_entry || "No",
+          createdBy: String(masterData.created_by) || "",
+          creationDate: masterData.creation_date || "",
+          lastUpdatedBy: String(masterData.last_updated_by) || "",
+          lastUpdatedDate: masterData.last_updated_date || "",
+          manualDcNo: masterData.manual_dc_no || "",
+          doId: masterData.do_id || "",
+          doNo: masterData.do_no || "",
+          doDate: masterData.do_date || "",
+          freight: masterData.freight ? String(masterData.freight) : "",
+          remarks: masterData.remarks || "",
+          qualityDed: masterData.quality_ded || "",
+          weight: masterData.weight || "",
+          bags: masterData.bags || "",
+          wbItemPId: String(masterData.wb_item_p_id) || "",
+          itemId: String(masterData.item_id) || "",
+          poId: String(masterData.po_id) || "",
+          baradanaType: masterData.baradana_type || "",
+          manualIgpNo: masterData.manual_igp_no || "",
+          igpId: String(masterData.igp_id) || "",
+          vendorId: String(masterData.vendor_id) || "",
+          weightPerBags: masterData.weight_per_bags || "",
+          dcQty: masterData.dc_qty || "",
+          supWeightWithoutBardana: masterData.sup_weight_without_bardana || "",
+          netSupplierWeight: masterData.net_supplier_weight || "",
+          isPercentageMode: masterData.is_percentage_mode || false,
+        });
+
+        setIsEditMode(true);
+        setEditingWbId(wbId);
+      } else {
+        alert("Invalid data format received for editing.");
+      }
+    } catch (error: any) {
+      console.error("Error loading data for editing:", error);
+      alert(`Error loading data for editing: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatDatetimeLocal = (isoString: string) => {
     if (!isoString) return "";
     return isoString.slice(0, 16);
@@ -806,6 +1046,113 @@ export default function PurchaseReturnForm() {
 
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
+      {/* Weight Display Table - Upper Right Side */}
+      <div className="absolute top-20 right-4 z-50">
+        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72 mb-4">
+          {/* Header Row */}
+          <div className="grid grid-cols-3 border-b border-gray-400">
+            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+              Slip No
+            </div>
+            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+              Vehicle No
+            </div>
+            <div className="bg-gray-200 p-1 text-center text-xs font-semibold text-black">
+              Entry Type
+            </div>
+          </div>
+
+          {/* Search Row - positioned under headers */}
+          <div className="grid grid-cols-3 border-b border-gray-400 bg-blue-50">
+            <div className="border-r border-gray-400 p-1">
+              <Input
+                placeholder="Search Slip No"
+                value={searchSlipNo}
+                onChange={(e) => setSearchSlipNo(e.target.value)}
+                className="h-5 text-xs text-black placeholder:text-gray-500 bg-white border-gray-300"
+              />
+            </div>
+            <div className="border-r border-gray-400 p-1">
+              <Input
+                placeholder="Search Vehicle"
+                value={searchVehicleNo}
+                onChange={(e) => setSearchVehicleNo(e.target.value)}
+                className="h-5 text-xs text-black placeholder:text-gray-500 bg-white border-gray-300"
+              />
+            </div>
+            <div className="p-1">
+              <Button
+                onClick={() => {
+                  setSearchSlipNo("");
+                  setSearchVehicleNo("");
+                }}
+                className="h-5 text-xs bg-gray-500 hover:bg-gray-600 text-white w-full"
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+
+          {/* Data Rows - showing filtered records */}
+          <div className="max-h-48 overflow-y-auto">
+            {filteredRecords && filteredRecords.length > 0 ? (
+              filteredRecords.map((record: any, index: number) => (
+                <div
+                  key={index}
+                  className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50"
+                >
+                  <button
+                    className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
+                    onClick={() => {
+                      console.log("Clicked record:", record);
+                      console.log("wb_id:", record.wb_id);
+                      console.log("entry_type:", record.entry_type);
+                      // Navigate to edit mode by updating URL
+                      const urlParams = new URLSearchParams(window.location.search);
+                      urlParams.set("edit", record.wb_id);
+                      const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                      window.history.replaceState({}, "", newUrl);
+                      // Force page reload to ensure clean state
+                      window.location.reload();
+                    }}
+                  >
+                    {record.slip_no || "---"}
+                  </button>
+                  <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
+                    {record.vehicle_no || "---"}
+                  </div>
+                  <div className="p-1 text-center text-xs text-blue-600 font-semibold bg-white">
+                    {record.entry_type || "PURCHASE_RETURN"}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="grid grid-cols-3 border-b border-gray-400">
+                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
+                  {searchSlipNo || searchVehicleNo
+                    ? "No matches"
+                    : "No records"}
+                </div>
+                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
+                  ---
+                </div>
+                <div className="p-1 text-center text-xs text-gray-500 bg-white">
+                  ---
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Load Data Button */}
+          <button
+            className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 text-xs"
+            onClick={() => window.location.reload()}
+          >
+            Load Data
+          </button>
+        </div>
+      </div>
+
       {/* Edit Mode Indicator */}
       {isEditMode && (
         <div className="bg-blue-600 text-white p-2 rounded mb-2 text-center text-sm font-medium">
