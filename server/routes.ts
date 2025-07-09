@@ -517,17 +517,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Database wake-up endpoint
   app.get("/api/db/wake", async (req, res) => {
     try {
-      const result = await pool.query('SELECT NOW()');
-      res.json({ 
-        status: "Database is awake", 
-        timestamp: result.rows[0].now,
-        message: "Database connection successful"
-      });
+      // Try multiple times to wake up the database
+      let lastError;
+      for (let i = 0; i < 3; i++) {
+        try {
+          const result = await pool.query('SELECT NOW()');
+          console.log(`✅ Database awakened successfully on attempt ${i + 1}`);
+          res.json({ 
+            status: "Database is awake", 
+            timestamp: result.rows[0].now,
+            message: "Database connection successful",
+            attempts: i + 1
+          });
+          return;
+        } catch (error: any) {
+          lastError = error;
+          console.log(`❌ Database wake attempt ${i + 1} failed:`, error.message);
+          if (i < 2) {
+            await new Promise(resolve => setTimeout(resolve, (i + 1) * 1000));
+          }
+        }
+      }
+      
+      // If all attempts failed
+      throw lastError;
     } catch (error: any) {
-      console.error('Database wake-up error:', error);
+      console.error('Database wake-up error after all attempts:', error);
       res.status(500).json({ 
         status: "Database wake-up failed", 
-        error: error.message 
+        error: error.message,
+        code: error.code 
       });
     }
   });
@@ -1586,6 +1605,16 @@ app.get('/api/sales', async (req: Request, res: Response) => {
       
       console.log(`Next slip request: entry_type=${entry_type}, mapped to dbEntryType=${dbEntryType}`);
 
+      // Try to wake up database first
+      try {
+        await pool.query('SELECT 1');
+        console.log('Database connection verified for slip number generation');
+      } catch (wakeError) {
+        console.log('Database wake-up failed, will retry with connection:', wakeError.message);
+        // Wait 2 seconds and try again
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+
       const query = `
         SELECT slip_no FROM wb_weighbridge 
         WHERE entry_type = $1 AND slip_no ~ '^[0-9]+$'
@@ -1593,10 +1622,25 @@ app.get('/api/sales', async (req: Request, res: Response) => {
         LIMIT 1
       `;
 
-      const result = await pool.query(query, [dbEntryType]);
+      let result;
+      let retryCount = 0;
+      const maxRetries = 3;
+
+      while (retryCount < maxRetries) {
+        try {
+          result = await pool.query(query, [dbEntryType]);
+          break;
+        } catch (dbError) {
+          retryCount++;
+          console.log(`Database query attempt ${retryCount} failed:`, dbError.message);
+          if (retryCount < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+          }
+        }
+      }
 
       let nextSlipNo = '1';
-      if (result.rows.length > 0 && result.rows[0].slip_no) {
+      if (result && result.rows.length > 0 && result.rows[0].slip_no) {
         const currentNumber = parseInt(result.rows[0].slip_no, 10);
         if (!isNaN(currentNumber)) {
           nextSlipNo = (currentNumber + 1).toString();

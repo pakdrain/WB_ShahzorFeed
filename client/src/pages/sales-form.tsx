@@ -1230,24 +1230,44 @@ export default function SalesForm() {
   }, [location, onlineMode]);
 
   useEffect(() => {
-    // Fetch next slip number specific to SALE entry type
-    fetch("/api/purchases/next-slip?entry_type=SALE")
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
+    // Fetch next slip number specific to SALE entry type with retry logic
+    const fetchSlipNumber = async (retryCount = 0) => {
+      try {
+        // First try to wake up database
+        if (retryCount === 0) {
+          try {
+            await fetch('/api/db/wake');
+            console.log('Database wake-up initiated for sales form');
+          } catch (wakeError) {
+            console.log('Database wake-up failed, continuing with slip fetch');
+          }
         }
-        return res.json();
-      })
-      .then((data: any) => {
+
+        const response = await fetch("/api/purchases/next-slip?entry_type=SALE");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
         const nextSlip = data.nextSlipNo || '1';
+        console.log(`✅ Fetched next slip number for SALE: ${nextSlip}`);
         setFormData((prev) => ({ ...prev, slipNo: nextSlip }));
-      })
-      .catch((err: any) => {
-        console.error("Error fetching next slip number:", err);
-        // Generate a timestamp-based slip number as fallback
-        const fallbackSlip = Date.now().toString().slice(-6);
-        setFormData((prev) => ({ ...prev, slipNo: fallbackSlip }));
-      });
+      } catch (err: any) {
+        console.error(`Error fetching next slip number for SALE (attempt ${retryCount + 1}):`, err);
+        
+        if (retryCount < 2) {
+          // Retry after delay
+          setTimeout(() => fetchSlipNumber(retryCount + 1), (retryCount + 1) * 1000);
+        } else {
+          // Generate a timestamp-based slip number as fallback
+          const fallbackSlip = Date.now().toString().slice(-6);
+          console.log(`Using fallback slip number for SALE: ${fallbackSlip}`);
+          setFormData((prev) => ({ ...prev, slipNo: fallbackSlip }));
+        }
+      }
+    };
+
+    fetchSlipNumber();
 
     // Fetch branches for dropdown
     fetch("/api/branches")
