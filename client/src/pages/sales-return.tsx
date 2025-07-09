@@ -861,6 +861,7 @@ export default function SalesReturnForm() {
       // Load record for editing by wb_id - do NOT call resetFormToInitial
       setIsLoadingEditData(true);
       loadDataByWbId(parseInt(editWbId));
+      return; // Exit early to prevent any other initialization
     } else if (!isEditMode && !editingWbId) {
       // Reset to fresh form only when not in edit mode
       setTimeout(() => {
@@ -1149,6 +1150,7 @@ export default function SalesReturnForm() {
 
   // Function to load data by wb_id for editing
   const loadDataByWbId = async (wbId: number) => {
+    console.log(`Loading data for edit mode, wb_id: ${wbId}`);
     setLoading(true);
     setIsEditMode(true);
     setEditingWbId(wbId);
