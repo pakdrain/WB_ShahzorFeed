@@ -339,7 +339,7 @@ export default function SalesReturnForm() {
 
   // Fetch all first weight records for Sales Return
   const { data: firstWeightRecords = [] } = useQuery({
-    queryKey: ["/api/purchase/first-weight-records?entry_type=SALE_RETURN"],
+    queryKey: ["/api/purchase/first-weight-records?entry_type=Sales%20Return"],
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
@@ -856,7 +856,7 @@ export default function SalesReturnForm() {
   }, [location, onlineMode]);
 
   useEffect(() => {
-    // Fetch next slip number specific to SALE_RETURN entry type
+    // Fetch next slip number specific to Sales Return entry type
     fetch("/api/purchases/next-slip?entry_type=SALE_RETURN")
       .then((res) => res.json())
       .then((data: any) => {
@@ -1346,12 +1346,8 @@ export default function SalesReturnForm() {
           <Button 
             className="h-8 px-2 text-sm font-medium bg-rose-700 text-white"
             onClick={() => {
-              // Navigate to sales return form with same type
-              const urlParams = new URLSearchParams(window.location.search);
-              const typeMode = urlParams.get("type") || "online";
-              const targetUrl = `/sales-return?type=${typeMode}`;
-              window.history.pushState({}, "", targetUrl);
-              setLocation(targetUrl);
+              // Stay on current page - this is already the sales return form
+              window.location.reload();
             }}
           >
             Sales Return

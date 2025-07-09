@@ -970,7 +970,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const params: any[] = [];
       if (entry_type) {
         // Handle different entry type formats
-        if (entry_type === 'SALE_RETURN') {
+        if (entry_type === 'SALE_RETURN' || entry_type === 'Sales%20Return') {
           query += ' AND wb.entry_type = $1';
           params.push('Sales Return');
         } else if (entry_type === 'PURCHASE_RETURN') {
@@ -1543,11 +1543,15 @@ app.get('/api/sales', async (req: Request, res: Response) => {
       }
 
       // Map entry types to database values
-      let dbEntryType = entry_type.toUpperCase();
+      let dbEntryType = entry_type;
       if (entry_type === 'SALE_RETURN') {
         dbEntryType = 'Sales Return';
       } else if (entry_type === 'PURCHASE_RETURN') {
         dbEntryType = 'Purchase Return';
+      } else if (entry_type === 'PURCHASE') {
+        dbEntryType = 'PURCHASE';
+      } else if (entry_type === 'SALE') {
+        dbEntryType = 'SALE';
       }
 
       const query = `
