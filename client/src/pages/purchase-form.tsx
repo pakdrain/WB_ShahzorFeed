@@ -1264,10 +1264,11 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
         const response = await fetch('/api/entry-types');
         if (response.ok) {
           const entryTypeData = await response.json();
-          setEntryTypes(entryTypeData);
+          setEntryTypes(Array.isArray(entryTypeData) ? entryTypeData : []);
         }
       } catch (error) {
         console.error('Error fetching entry types:', error);
+        setEntryTypes([]);
       }
     };
 
@@ -1276,10 +1277,11 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
         const response = await fetch('/api/branches');
         if (response.ok) {
           const branchData = await response.json();
-          setBranches(branchData);
+          setBranches(Array.isArray(branchData) ? branchData : []);
         }
       } catch (error) {
         console.error('Error fetching branches:', error);
+        setBranches([]);
       }
     };
 
@@ -1367,16 +1369,17 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
     // Fetch branches for dropdown
     fetch('/api/branches')
       .then(res => res.json())
-      .then((data: any[]) => {
-        setBranches(data);
+      .then((data: any) => {
+        const branchData = Array.isArray(data) ? data : [];
+        setBranches(branchData);
         console.log('Branches fetched:', data);
 
         // Set default branch based on logged-in user's branch
-        if (data.length > 0 && (!formData.branchId || formData.branchId === '')) {
+        if (branchData.length > 0 && (!formData.branchId || formData.branchId === '')) {
           const userBranchId = user?.branchId;
           const defaultBranch = userBranchId ? 
-            data.find(b => b.branch_id === userBranchId) || data[0] : 
-            data[0];
+            branchData.find(b => b.branch_id === userBranchId) || branchData[0] : 
+            branchData[0];
           setFormData(prev => ({
             ...prev,
             branchId: String(defaultBranch.branch_id),
@@ -1387,6 +1390,7 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
       })
       .catch((err: any) => {
         console.error('Error fetching branches:', err);
+        setBranches([]);
       });
 
     const now = new Date().toISOString();
