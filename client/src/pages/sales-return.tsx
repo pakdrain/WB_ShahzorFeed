@@ -1054,7 +1054,7 @@ export default function SalesReturnForm() {
   const loadDataByWbId = async (wbId: number) => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/purchases/${wbId}`);
+      const response = await fetch(`/api/sales-return/${wbId}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch data for wbId: ${wbId}`);
       }
@@ -1143,25 +1143,46 @@ export default function SalesReturnForm() {
           isPercentageMode: masterData.is_percentage_mode || false,
         });
 
-        // Set sales data
-        setSalesData(
-          salesData.map((item: any) => ({
-            doId: item.do_id || "",
-            dcNo: item.dc_no || "",
-            doNo: item.do_no || "",
-            customerName: item.customer_name || "",
-            vehicleNo: item.vehicle_no || "",
-            doDate: item.do_date || "",
-            itemDescription: item.item_description || "",
-            dcQty: item.dc_qty ? String(item.dc_qty) : "",
-            doQty: item.do_qty ? String(item.do_qty) : "",
-            branch: item.branch || "",
-            dcId: item.dc_id || "",
-            customerId: item.customer_id || "",
-            itemId: item.item_id || "",
-            itemCode: item.item_code || "",
-          }))
-        );
+        // Set sales data - pad with empty rows to always show 8 rows
+        const mappedSalesData = salesData.map((item: any) => ({
+          doId: item.do_id || "",
+          dcNo: item.igp_no || "",  // DC No maps to igp_no in database
+          doNo: item.po_no || "",   // DO No maps to po_no in database
+          customerName: item.customer_name || item.vendor_name || "",
+          vehicleNo: item.vehicle_no || "",
+          doDate: item.igp_date || "",
+          itemDescription: item.item_desc || "",
+          dcQty: item.igp_qty ? String(item.igp_qty) : "",
+          doQty: item.po_qty ? String(item.po_qty) : "",
+          branch: item.branch || "",
+          dcId: item.dc_id || "",
+          customerId: item.customer_id || "",
+          itemId: item.item_id || "",
+          itemCode: item.item_code || "",
+        }));
+
+        // Pad with empty rows to always show 8 rows
+        const paddedSalesData = [...mappedSalesData];
+        while (paddedSalesData.length < 8) {
+          paddedSalesData.push({
+            doId: "",
+            dcNo: "",
+            doNo: "",
+            customerName: "",
+            vehicleNo: "",
+            doDate: "",
+            itemDescription: "",
+            dcQty: "",
+            doQty: "",
+            branch: "",
+            dcId: "",
+            customerId: "",
+            itemId: "",
+            itemCode: "",
+          });
+        }
+
+        setSalesData(paddedSalesData);
 
         setIsEditMode(true);
         setEditingWbId(wbId);
@@ -1322,7 +1343,17 @@ export default function SalesReturnForm() {
           >
             Sale
           </Button>
-          <Button className="h-8 px-2 text-sm font-medium bg-rose-700 text-white">
+          <Button 
+            className="h-8 px-2 text-sm font-medium bg-rose-700 text-white"
+            onClick={() => {
+              // Navigate to sales return form with same type
+              const urlParams = new URLSearchParams(window.location.search);
+              const typeMode = urlParams.get("type") || "online";
+              const targetUrl = `/sales-return?type=${typeMode}`;
+              window.history.pushState({}, "", targetUrl);
+              setLocation(targetUrl);
+            }}
+          >
             Sales Return
           </Button>
           <Button
