@@ -895,6 +895,7 @@ export default function SalesReturnForm() {
       })
       .catch((err: any) => {
         console.error("Error fetching branches:", err);
+        setBranches([]); // Ensure branches is always an array
       });
 
     const now = new Date().toISOString();
@@ -1556,7 +1557,7 @@ export default function SalesReturnForm() {
                         />
                       </SelectTrigger>
                       <SelectContent>
-                        {branches.map((branch) => (
+                        {Array.isArray(branches) && branches.map((branch) => (
                           <SelectItem
                             key={branch.branch_id}
                             value={branch.branch_id.toString()}
