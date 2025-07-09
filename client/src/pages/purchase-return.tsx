@@ -791,7 +791,7 @@ export default function PurchaseReturnForm() {
               // Navigate to sales return form with same type
               const urlParams = new URLSearchParams(window.location.search);
               const typeMode = urlParams.get("type") || "online";
-              const targetUrl = `/sale-return?type=${typeMode}`;
+              const targetUrl = `/sales-return?type=${typeMode}`;
               window.history.pushState({}, "", targetUrl);
               setLocation(targetUrl);
             }}

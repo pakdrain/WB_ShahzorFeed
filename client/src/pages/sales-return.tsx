@@ -1322,7 +1322,17 @@ export default function SalesReturnForm() {
           >
             Sale
           </Button>
-          <Button className="h-8 px-2 text-sm font-medium bg-rose-700 text-white">
+          <Button
+            className="h-8 px-2 text-sm font-medium bg-gray-300 hover:bg-gray-400 text-black"
+            onClick={() => {
+              // Navigate to sales return form with same type
+              const urlParams = new URLSearchParams(window.location.search);
+              const typeMode = urlParams.get("type") || "online";
+              const targetUrl = `/sales-return?type=${typeMode}`;
+              window.history.pushState({}, "", targetUrl);
+              setLocation(targetUrl);
+            }}
+          >
             Sales Return
           </Button>
           <Button
@@ -1899,4 +1909,3 @@ export default function SalesReturnForm() {
     </div>
   );
 }
-
