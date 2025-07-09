@@ -1259,6 +1259,15 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
 
   // Fetch entry types and branches
   useEffect(() => {
+    // Wake up database first
+    const wakeUpDatabase = async () => {
+      try {
+        await fetch('/api/db/wake');
+      } catch (error) {
+        console.error('Database wake-up failed:', error);
+      }
+    };
+
     const fetchEntryTypes = async () => {
       try {
         const response = await fetch('/api/entry-types');
@@ -1285,8 +1294,10 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
       }
     };
 
-    fetchEntryTypes();
-    fetchBranches();
+    wakeUpDatabase().then(() => {
+      fetchEntryTypes();
+      fetchBranches();
+    });
   }, []);
 
   // Handle URL parameters for edit mode and form type

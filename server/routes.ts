@@ -30,33 +30,39 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  // PostgreSQL connection setup
+  // PostgreSQL connection setup with improved configuration
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL || `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || '@1122'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'WB'}`,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    max: 20,
+    max: 10,
+    min: 1,
     idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 2000,
+    connectionTimeoutMillis: 10000,
+    acquireTimeoutMillis: 10000,
+    statement_timeout: 30000,
+    query_timeout: 30000,
   });
 
-  // Test database connection and log status
-  try {
-    const client = await pool.connect();
-    console.log('✅ PostgreSQL database connected successfully');
-    client.release();
-  } catch (err) {
-    console.error('❌ Failed to connect to PostgreSQL database:', err);
-    // Retry connection after 3 seconds
-    setTimeout(async () => {
+  // Test database connection and log status with improved retry logic
+  const connectWithRetry = async (attempts = 3) => {
+    for (let i = 0; i < attempts; i++) {
       try {
         const client = await pool.connect();
-        console.log('✅ PostgreSQL database reconnected successfully');
+        console.log('✅ PostgreSQL database connected successfully');
         client.release();
-      } catch (retryErr) {
-        console.error('❌ Database reconnection failed:', retryErr);
+        return;
+      } catch (err) {
+        console.error(`❌ Database connection attempt ${i + 1} failed:`, err);
+        if (i < attempts - 1) {
+          console.log(`⏳ Retrying connection in ${(i + 1) * 2} seconds...`);
+          await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000));
+        }
       }
-    }, 3000);
-  }
+    }
+    console.error('❌ All database connection attempts failed');
+  };
+
+  connectWithRetry();
 
   // Camera update endpoint
   app.patch('/api/cameras/:id', async (req: Request, res: Response) => {
@@ -1601,7 +1607,11 @@ app.get('/api/sales', async (req: Request, res: Response) => {
       res.json({ nextSlipNo });
     } catch (error: any) {
       console.error('Error generating next slip number:', error);
-      res.status(500).json({ error: 'Failed to generate next slip number' });
+      
+      // Fallback: Generate a timestamp-based slip number if database fails
+      const fallbackSlipNo = Date.now().toString().slice(-6);
+      console.log(`Using fallback slip number: ${fallbackSlipNo}`);
+      res.json({ nextSlipNo: fallbackSlipNo });
     }
   });
 
