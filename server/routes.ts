@@ -1809,6 +1809,100 @@ app.get('/api/sales', async (req: Request, res: Response) => {
     }
   });
 
+  // Update sales return by wb_id
+  app.put('/api/sales-return/update/:wbId', async (req: Request, res: Response) => {
+    try {
+      const { wbId } = req.params;
+      const { masterData, salesData } = req.body;
+
+      console.log('🔄 Updating sales return data for wb_id:', wbId);
+      console.log('📝 Master data:', masterData);
+      console.log('📋 Sales data:', salesData);
+
+      // Update master record
+      const updateMasterQuery = `
+        UPDATE wb_weighbridge SET 
+          slip_in_time = $2, first_weight = $3, second_weight = $4, 
+          net_weight = $5, bardana_weight = $6, gross_weight = $7, 
+          freight = $8, remarks = $9, driver_name = $10, 
+          company_id = $11, branch_id = $12, online_entry = $13, 
+          offline_entry = $14, last_updated_by = $15, last_updated_date = $16, 
+          manual_dc_no = $17, slip_out_time = $18, status = $19, 
+          slip_date = $20, return_reason = $21, return_date = $22, 
+          original_slip_no = $23, customer_name = $24, vehicle_no = $25
+        WHERE wb_id = $1 AND entry_type = 'SALES_RETURN'
+      `;
+
+      const updateMasterValues = [
+        parseInt(wbId),
+        masterData.slip_in_time,
+        masterData.first_weight,
+        masterData.second_weight,
+        masterData.net_weight,
+        masterData.bardana_weight,
+        masterData.gross_weight,
+        masterData.freight,
+        masterData.remarks,
+        masterData.driver_name,
+        masterData.company_id,
+        masterData.branch_id,
+        masterData.online_entry,
+        masterData.offline_entry,
+        masterData.last_updated_by,
+        masterData.last_updated_date,
+        masterData.manual_dc_no,
+        masterData.slip_out_time,
+        masterData.status,
+        masterData.slip_date,
+        masterData.return_reason,
+        masterData.return_date,
+        masterData.original_slip_no,
+        masterData.customer_name,
+        masterData.vehicle_no
+      ];
+
+      await pool.query(updateMasterQuery, updateMasterValues);
+
+      // Delete existing sales data for this wb_id
+      await pool.query('DELETE FROM wb_purchase_items WHERE wb_id = $1', [parseInt(wbId)]);
+
+      // Insert updated sales data
+      if (salesData && salesData.length > 0) {
+        for (const item of salesData) {
+          const itemQuery = `
+            INSERT INTO wb_purchase_items (
+              wb_id, igp_no, po_no, customer_name, vehicle_no, 
+              igp_date, item_desc, igp_qty, po_qty, 
+              dc_qty, do_qty
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          `;
+
+          const itemValues = [
+            parseInt(wbId),
+            item.dcNo || null,
+            item.doNo || null,
+            item.customerName || null,
+            item.vehicleNo || null,
+            item.doDate || null,
+            item.itemDescription || null,
+            item.dcQty ? parseFloat(item.dcQty) : null,
+            item.doQty ? parseFloat(item.doQty) : null,
+            item.dcQty ? parseFloat(item.dcQty) : null,
+            item.doQty ? parseFloat(item.doQty) : null
+          ];
+
+          await pool.query(itemQuery, itemValues);
+        }
+      }
+
+      console.log('✅ Sales return data updated successfully');
+      res.json({ success: true, wb_id: parseInt(wbId), message: 'Sales return data updated successfully' });
+    } catch (error: any) {
+      console.error('❌ Error updating sales return data:', error);
+      res.status(500).json({ error: 'Failed to update sales return data', details: error.message });
+    }
+  });
+
   // Get sales return by wb_id
   app.get('/api/sales-return/:wbId', async (req: Request, res: Response) => {
     try {

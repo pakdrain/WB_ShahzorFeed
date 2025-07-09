@@ -561,6 +561,15 @@ export default function SalesReturnForm() {
   const cancelEdit = () => {
     setIsEditMode(false);
     setEditingWbId(null);
+    
+    // Clear edit parameter from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.delete("edit");
+    const newUrl = urlParams.toString() ? 
+      `${window.location.pathname}?${urlParams.toString()}` : 
+      window.location.pathname;
+    window.history.replaceState({}, "", newUrl);
+    
     resetFormToInitial();
   };
 
@@ -828,10 +837,10 @@ export default function SalesReturnForm() {
       setOnlineMode(true);
     }
 
-    if (editWbId) {
-      // Load record for editing by wb_id
-      loadDataByWbId(parseInt(editWbId)); //Calling the loadDataByWbId because it has been commented, now uncommented
-    } else {
+    if (editWbId && !isEditMode) {
+      // Load record for editing by wb_id only if not already in edit mode
+      loadDataByWbId(parseInt(editWbId));
+    } else if (!editWbId && !isEditMode) {
       // Reset form to clean state for new sales return - delay to ensure proper initialization
       setTimeout(() => {
         resetFormToInitial();
@@ -1035,9 +1044,8 @@ export default function SalesReturnForm() {
         offline_entry: formData.offlineEntry === "Yes" || formData.offlineEntry === true ? "Yes" : null,
         created_by: user?.userid || null,
         creation_date: formData.creationDate || null,
-        last_updated_by: formData.lastUpdatedBy && formData.lastUpdatedBy !== "undefined" && formData.lastUpdatedBy.trim() !== "" 
-          ? parseInt(formData.lastUpdatedBy, 10) : null,
-        last_updated_date: formData.lastUpdatedDate || null,
+        last_updated_by: user?.userid || null,
+        last_updated_date: new Date().toISOString(),
         manual_dc_no: formData.manualDcNo || null,
         slip_out_time: formatISODate(formData.slipOutTime),
         status: formData.status || null,
@@ -1060,9 +1068,13 @@ export default function SalesReturnForm() {
           row.doQty,
       );
 
+      // Choose endpoint based on edit mode
+      const endpoint = isEditMode ? `/api/sales-return/update/${editingWbId}` : "/api/sales-return/save";
+      const method = isEditMode ? "PUT" : "POST";
+
       // Save to backend
-      const response = await fetch("/api/sales-return/save", {
-        method: "POST",
+      const response = await fetch(endpoint, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -1074,18 +1086,35 @@ export default function SalesReturnForm() {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to save sales return data: ${errorText}`);
+        throw new Error(`Failed to ${isEditMode ? 'update' : 'save'} sales return data: ${errorText}`);
       }
 
       const result = await response.json();
-      console.log("Sales return data saved successfully:", result);
-      alert("Sales return data saved successfully!");
+      console.log(`Sales return data ${isEditMode ? 'updated' : 'saved'} successfully:`, result);
+      alert(`Sales return data ${isEditMode ? 'updated' : 'saved'} successfully!`);
 
-      // Reset form to clean state
-      await resetFormToInitial();
+      if (isEditMode) {
+        // In edit mode, exit edit mode and clear URL parameter
+        setIsEditMode(false);
+        setEditingWbId(null);
+        
+        // Clear edit parameter from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.delete("edit");
+        const newUrl = urlParams.toString() ? 
+          `${window.location.pathname}?${urlParams.toString()}` : 
+          window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+        
+        // Reset form to clean state
+        await resetFormToInitial();
+      } else {
+        // For new entries, reset form to clean state
+        await resetFormToInitial();
+      }
     } catch (error: any) {
-      console.error("Error saving sales return data:", error);
-      alert(`Failed to save sales return data: ${error.message}`);
+      console.error(`Error ${isEditMode ? 'updating' : 'saving'} sales return data:`, error);
+      alert(`Failed to ${isEditMode ? 'update' : 'save'} sales return data: ${error.message}`);
     } finally {
       setLoading(false);
     }
