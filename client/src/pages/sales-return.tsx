@@ -587,7 +587,7 @@ export default function SalesReturnForm() {
       setOnlineMode(true);
     }
 
-    // Only fetch next slip number if not in edit mode
+    // Only fetch next slip number if not in edit mode AND not currently editing
     if (!isEditMode && !editingWbId) {
       // Fetch next slip number for Sales Return entry type
       try {
@@ -615,6 +615,22 @@ export default function SalesReturnForm() {
           slipDate: new Date().toISOString(),
           returnDate: new Date().toISOString().slice(0, 16),
         });
+
+        // Reset sales data table only for new forms
+        setSalesData(
+          Array.from({ length: 8 }, (_, index) => ({
+            doId: "",
+            dcNo: "",
+            doNo: "",
+            customerName: "",
+            vehicleNo: "",
+            doDate: "",
+            itemDescription: "",
+            dcQty: "",
+            doQty: "",
+            branch: "",
+          })),
+        );
       } catch (error) {
         console.error("Error fetching next slip number:", error);
         // Generate a timestamp-based slip number as fallback
@@ -631,24 +647,24 @@ export default function SalesReturnForm() {
           slipDate: new Date().toISOString(),
           returnDate: new Date().toISOString().slice(0, 16),
         });
+
+        // Reset sales data table only for new forms
+        setSalesData(
+          Array.from({ length: 8 }, (_, index) => ({
+            doId: "",
+            dcNo: "",
+            doNo: "",
+            customerName: "",
+            vehicleNo: "",
+            doDate: "",
+            itemDescription: "",
+            dcQty: "",
+            doQty: "",
+            branch: "",
+          })),
+        );
       }
     }
-
-    // Reset sales data table
-    setSalesData(
-      Array.from({ length: 8 }, (_, index) => ({
-        doId: "",
-        dcNo: "",
-        doNo: "",
-        customerName: "",
-        vehicleNo: "",
-        doDate: "",
-        itemDescription: "",
-        dcQty: "",
-        doQty: "",
-        branch: "",
-      })),
-    );
 
     setIsEditMode(false);
     setEditingWbId(null);
@@ -842,7 +858,7 @@ export default function SalesReturnForm() {
     }
 
     if (editWbId) {
-      // Load record for editing by wb_id
+      // Load record for editing by wb_id - do NOT call resetFormToInitial
       setIsLoadingEditData(true);
       loadDataByWbId(parseInt(editWbId));
     } else if (!isEditMode && !editingWbId) {

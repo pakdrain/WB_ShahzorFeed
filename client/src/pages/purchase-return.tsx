@@ -611,7 +611,7 @@ export default function PurchaseReturnForm() {
     }
 
     if (editWbId) {
-      // Load record for editing by wb_id
+      // Load record for editing by wb_id - do NOT call resetFormToInitial
       loadDataByWbId(parseInt(editWbId));
     } else if (!isEditMode && !editingWbId) {
       // Reset form to clean state for new purchase return only when not in edit mode
@@ -881,7 +881,7 @@ export default function PurchaseReturnForm() {
       setOnlineMode(true);
     }
 
-    // Only fetch next slip number if not in edit mode
+    // Only fetch next slip number if not in edit mode AND not currently editing
     if (!isEditMode && !editingWbId) {
       // Fetch next slip number for Purchase Return entry type
       try {
