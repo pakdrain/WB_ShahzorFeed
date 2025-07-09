@@ -934,7 +934,13 @@ export default function SalesReturnForm() {
       }
     };
 
-    fetchSlipNumber();
+    // Only fetch slip number if not in edit mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const editWbId = urlParams.get("edit");
+    
+    if (!editWbId && !isEditMode && !editingWbId) {
+      fetchSlipNumber();
+    }
 
     // Fetch branches for dropdown
     fetch("/api/branches")
