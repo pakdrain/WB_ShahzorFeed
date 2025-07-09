@@ -30,39 +30,62 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
-  // PostgreSQL connection setup with improved configuration
+  // PostgreSQL connection setup with enhanced configuration for Replit
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL || `postgresql://${process.env.PGUSER || 'postgres'}:${process.env.PGPASSWORD || '@1122'}@${process.env.PGHOST || 'localhost'}:${process.env.PGPORT || '5432'}/${process.env.PGDATABASE || 'WB'}`,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-    max: 10,
-    min: 1,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 10000,
-    acquireTimeoutMillis: 10000,
-    statement_timeout: 30000,
-    query_timeout: 30000,
+    max: 5,
+    min: 0,
+    idleTimeoutMillis: 60000,
+    connectionTimeoutMillis: 15000,
+    acquireTimeoutMillis: 15000,
+    statement_timeout: 60000,
+    query_timeout: 60000,
+    allowExitOnIdle: false,
   });
 
-  // Test database connection and log status with improved retry logic
-  const connectWithRetry = async (attempts = 3) => {
+  // Enhanced database connection monitoring with auto-retry
+  const connectWithRetry = async (attempts = 5) => {
     for (let i = 0; i < attempts; i++) {
       try {
         const client = await pool.connect();
-        console.log('✅ PostgreSQL database connected successfully');
+        console.log(`✅ PostgreSQL database connected successfully on attempt ${i + 1}`);
+        
+        // Test the connection with a simple query
+        await client.query('SELECT NOW() as server_time');
+        console.log('✅ Database query test successful');
+        
         client.release();
-        return;
-      } catch (err) {
-        console.error(`❌ Database connection attempt ${i + 1} failed:`, err);
+        return true;
+      } catch (err: any) {
+        console.error(`❌ Database connection attempt ${i + 1} failed:`, err.message);
         if (i < attempts - 1) {
-          console.log(`⏳ Retrying connection in ${(i + 1) * 2} seconds...`);
-          await new Promise(resolve => setTimeout(resolve, (i + 1) * 2000));
+          const waitTime = (i + 1) * 3000; // Exponential backoff
+          console.log(`⏳ Retrying connection in ${waitTime}ms...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }
     }
-    console.error('❌ All database connection attempts failed');
+    console.error('❌ All database connection attempts failed - database may be sleeping');
+    return false;
   };
 
+  // Initial connection attempt
   connectWithRetry();
+
+  // Set up periodic connection health check
+  setInterval(async () => {
+    try {
+      const client = await pool.connect();
+      await client.query('SELECT 1');
+      client.release();
+      console.log('🔄 Database health check: OK');
+    } catch (error: any) {
+      console.error('🚨 Database health check failed:', error.message);
+      // Try to reconnect
+      connectWithRetry();
+    }
+  }, 300000); // Check every 5 minutes
 
   // Camera update endpoint
   app.patch('/api/cameras/:id', async (req: Request, res: Response) => {
@@ -1605,57 +1628,74 @@ app.get('/api/sales', async (req: Request, res: Response) => {
       
       console.log(`Next slip request: entry_type=${entry_type}, mapped to dbEntryType=${dbEntryType}`);
 
-      // Try to wake up database first
-      try {
-        await pool.query('SELECT 1');
-        console.log('Database connection verified for slip number generation');
-      } catch (wakeError) {
-        console.log('Database wake-up failed, will retry with connection:', wakeError.message);
-        // Wait 2 seconds and try again
-        await new Promise(resolve => setTimeout(resolve, 2000));
-      }
+      // Enhanced database wake-up with multiple connection attempts
+      let connectionAttempts = 0;
+      const maxConnectionAttempts = 5;
+      let client;
 
-      const query = `
-        SELECT slip_no FROM wb_weighbridge 
-        WHERE entry_type = $1 AND slip_no ~ '^[0-9]+$'
-        ORDER BY CAST(slip_no AS INTEGER) DESC 
-        LIMIT 1
-      `;
-
-      let result;
-      let retryCount = 0;
-      const maxRetries = 3;
-
-      while (retryCount < maxRetries) {
+      while (connectionAttempts < maxConnectionAttempts) {
         try {
-          result = await pool.query(query, [dbEntryType]);
+          client = await pool.connect();
+          console.log(`✅ Database connection established on attempt ${connectionAttempts + 1}`);
           break;
-        } catch (dbError) {
-          retryCount++;
-          console.log(`Database query attempt ${retryCount} failed:`, dbError.message);
-          if (retryCount < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
+        } catch (connectionError: any) {
+          connectionAttempts++;
+          console.log(`❌ Database connection attempt ${connectionAttempts} failed: ${connectionError.message}`);
+          
+          if (connectionAttempts < maxConnectionAttempts) {
+            const waitTime = connectionAttempts * 2000; // Exponential backoff
+            console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
           }
         }
       }
 
-      let nextSlipNo = '1';
-      if (result && result.rows.length > 0 && result.rows[0].slip_no) {
-        const currentNumber = parseInt(result.rows[0].slip_no, 10);
-        if (!isNaN(currentNumber)) {
-          nextSlipNo = (currentNumber + 1).toString();
-        }
+      if (!client) {
+        throw new Error('Failed to establish database connection after multiple attempts');
       }
 
-      console.log(`Generated next slip number for ${entry_type} (${dbEntryType}): ${nextSlipNo}`);
-      res.json({ nextSlipNo });
+      try {
+        // Query to get the maximum slip number for the entry type
+        const query = `
+          SELECT COALESCE(MAX(CAST(slip_no AS INTEGER)), 0) as max_slip_no
+          FROM wb_weighbridge 
+          WHERE entry_type = $1 AND slip_no ~ '^[0-9]+$'
+        `;
+
+        console.log(`Executing query: ${query} with parameter: ${dbEntryType}`);
+        const result = await client.query(query, [dbEntryType]);
+        
+        const maxSlipNo = result.rows[0]?.max_slip_no || 0;
+        const nextSlipNo = (maxSlipNo + 1).toString();
+
+        console.log(`✅ Database query successful - Max slip: ${maxSlipNo}, Next slip: ${nextSlipNo} for ${dbEntryType}`);
+        
+        client.release();
+        res.json({ nextSlipNo });
+
+      } catch (queryError: any) {
+        console.error('❌ Query execution failed:', queryError);
+        client.release();
+        throw queryError;
+      }
+
     } catch (error: any) {
-      console.error('Error generating next slip number:', error);
+      console.error('❌ Critical error in slip number generation:', error);
       
-      // Fallback: Generate a timestamp-based slip number if database fails
-      const fallbackSlipNo = Date.now().toString().slice(-6);
-      console.log(`Using fallback slip number: ${fallbackSlipNo}`);
-      res.json({ nextSlipNo: fallbackSlipNo });
+      // Enhanced fallback: Try to get next number from any successful connection
+      try {
+        const emergencyQuery = 'SELECT COALESCE(MAX(wb_id), 0) + 1 as next_id FROM wb_weighbridge';
+        const emergencyResult = await pool.query(emergencyQuery);
+        const emergencySlipNo = emergencyResult.rows[0]?.next_id?.toString() || '1';
+        
+        console.log(`🆘 Using emergency fallback slip number: ${emergencySlipNo}`);
+        res.json({ nextSlipNo: emergencySlipNo });
+      } catch (emergencyError) {
+        // Last resort: Use timestamp but make it more reasonable
+        const timestampSlipNo = Math.floor(Date.now() / 1000).toString().slice(-4);
+        console.log(`🚨 Using timestamp fallback slip number: ${timestampSlipNo}`);
+        res.json({ nextSlipNo: timestampSlipNo });
+      }
     }
   });
 

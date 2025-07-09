@@ -1365,41 +1365,61 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   }, [location, onlineMode]);
 
   useEffect(() => {
-    // Fetch next slip number based on return mode with retry logic
+    // Fetch next slip number based on return mode with enhanced retry logic
     const entryType = isReturnMode ? 'PURCHASE_RETURN' : 'PURCHASE';
     
     const fetchSlipNumber = async (retryCount = 0) => {
       try {
-        // First try to wake up database
+        // Always try to wake up database first
         if (retryCount === 0) {
           try {
-            await fetch('/api/db/wake');
-            console.log('Database wake-up initiated');
+            console.log('🔄 Waking up database...');
+            const wakeResponse = await fetch('/api/db/wake');
+            if (wakeResponse.ok) {
+              const wakeData = await wakeResponse.json();
+              console.log('✅ Database wake-up response:', wakeData);
+              // Wait a moment for database to fully wake up
+              await new Promise(resolve => setTimeout(resolve, 2000));
+            }
           } catch (wakeError) {
-            console.log('Database wake-up failed, continuing with slip fetch');
+            console.log('❌ Database wake-up failed, continuing with slip fetch');
           }
         }
 
+        console.log(`🔍 Fetching next slip number for ${entryType} (attempt ${retryCount + 1})`);
         const response = await fetch(`/api/purchases/next-slip?entry_type=${entryType}`);
+        
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorText = await response.text();
+          throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
         const data = await response.json();
         const nextSlip = data.nextSlipNo || '1';
-        console.log(`✅ Fetched next slip number: ${nextSlip} for ${entryType}`);
-        setFormData(prev => ({ ...prev, slipNo: nextSlip }));
-      } catch (err: any) {
-        console.error(`Error fetching next slip number (attempt ${retryCount + 1}):`, err);
         
-        if (retryCount < 2) {
-          // Retry after delay
-          setTimeout(() => fetchSlipNumber(retryCount + 1), (retryCount + 1) * 1000);
+        // Validate that we got a proper numeric slip number
+        if (!/^\d+$/.test(nextSlip)) {
+          throw new Error(`Invalid slip number format: ${nextSlip}`);
+        }
+        
+        console.log(`✅ Successfully fetched next slip number: ${nextSlip} for ${entryType}`);
+        setFormData(prev => ({ ...prev, slipNo: nextSlip }));
+        
+      } catch (err: any) {
+        console.error(`❌ Error fetching slip number (attempt ${retryCount + 1}):`, err.message);
+        
+        if (retryCount < 4) { // Increased retry attempts
+          const waitTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
+          console.log(`⏳ Retrying in ${waitTime}ms...`);
+          setTimeout(() => fetchSlipNumber(retryCount + 1), waitTime);
         } else {
-          // Generate a timestamp-based slip number as fallback
-          const fallbackSlip = Date.now().toString().slice(-6);
-          console.log(`Using fallback slip number: ${fallbackSlip}`);
-          setFormData(prev => ({ ...prev, slipNo: fallbackSlip }));
+          // Use a more reasonable fallback - start from 1000 + current minute
+          const reasonableFallback = (1000 + new Date().getMinutes()).toString();
+          console.log(`🚨 All retries failed, using reasonable fallback: ${reasonableFallback}`);
+          setFormData(prev => ({ ...prev, slipNo: reasonableFallback }));
+          
+          // Show user notification
+          alert(`⚠️ Could not connect to database. Using temporary slip number: ${reasonableFallback}\n\nPlease check your internet connection.`);
         }
       }
     };
