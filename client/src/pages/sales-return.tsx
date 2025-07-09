@@ -837,10 +837,15 @@ export default function SalesReturnForm() {
       setOnlineMode(true);
     }
 
-    // Always reset to fresh form on page reload - fetch maximum slip number
-    setTimeout(() => {
-      resetFormToInitial();
-    }, 100);
+    if (editWbId) {
+      // Load record for editing by wb_id
+      loadDataByWbId(parseInt(editWbId));
+    } else {
+      // Reset to fresh form only when not in edit mode
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
+    }
   }, [location]);
 
   // Sync form data when onlineMode changes
