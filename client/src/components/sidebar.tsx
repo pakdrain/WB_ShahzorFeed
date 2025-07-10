@@ -60,10 +60,23 @@ const getNavigation = (isAdmin: boolean) => {
         },
       ],
     },
-    { name: "Voucher Entry", href: "/voucher-entry", icon: FileText },
-    { name: "Voucher View", href: "/voucher-view", icon: FileText },
+
     {
-      name: "Returns",
+      name: "GL Voucher",
+      icon: ShoppingCart,
+      hasSubItems: true,
+      subItems: [
+        {
+          name: "Voucher Entry",
+          href: "/voucher-entry",
+          icon: FileText,
+        },
+      ],
+    },
+    // { name: "Voucher Entry", href: "/voucher-entry", icon: FileText },
+    // { name: "Voucher View", href: "/voucher-view", icon: FileText },
+    {
+      name: "Return Form",
       icon: RotateCcw,
       hasSubItems: true,
       subItems: [
