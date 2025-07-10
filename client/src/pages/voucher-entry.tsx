@@ -1,8 +1,16 @@
 
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useLocation } from 'wouter';
 
 const VoucherEntry = () => {
+  const [, setLocation] = useLocation();
+
+  const handleSave = () => {
+    // Navigate to Voucher View
+    setLocation('/voucher-view');
+  };
+
   return (
     <div className="container-fluid p-3" style={{ backgroundColor: '#e6ffee' }}>
       {/* Row 1: Company, Credit Branch, Type */}
@@ -91,7 +99,7 @@ const VoucherEntry = () => {
       {/* Footer Buttons */}
       <div className="row">
         <div className="col-md-6 text-start">
-          <button className="btn btn-secondary">[Save]</button>
+          <button className="btn btn-secondary" onClick={handleSave}>[Save]</button>
         </div>
         <div className="col-md-6 text-end">
           <button className="btn btn-secondary">[Exit]</button>

@@ -71,6 +71,11 @@ const getNavigation = (isAdmin: boolean) => {
           href: "/voucher-entry",
           icon: FileText,
         },
+        {
+          name: "Voucher View",
+          href: "/voucher-view",
+          icon: FileText,
+        },
       ],
     },
     // { name: "Voucher Entry", href: "/voucher-entry", icon: FileText },
