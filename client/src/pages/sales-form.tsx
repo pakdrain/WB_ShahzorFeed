@@ -214,9 +214,9 @@ export default function SalesForm() {
         <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
-
+        
         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
+        
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -323,7 +323,7 @@ export default function SalesForm() {
               <div class="header-right"></div>
             </div>
  <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
+        
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -429,7 +429,7 @@ export default function SalesForm() {
               </div>
 
               <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
+        
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -711,18 +711,6 @@ export default function SalesForm() {
           setSalesData(salesRows);
           console.log("✅ Sales data loaded in edit mode:", salesRows);
         }
-
-        // Set branch name properly in edit mode
-        if (master.branch_id) {
-          const branch = branches.find(b => b.branch_id === master.branch_id);
-          if (branch) {
-            setFormData(prev => ({
-              ...prev,
-              branch: branch.branch_name,
-              branchId: String(master.branch_id)
-            }));
-          }
-        }
       }
     } catch (error) {
       console.error("Error loading data by wb_id:", error);
@@ -754,7 +742,6 @@ export default function SalesForm() {
     supplierWeightMinusBardana: "",
     supplierWeightMinusOutWeight: "",
     qualityDeduction: "",
-    //```text
     // Vehicle and driver information
     vehicleNo: "",
     driverName: "",
@@ -950,17 +937,11 @@ export default function SalesForm() {
     // Fetch next slip number for SALE entry type
     try {
       const response = await fetch("/api/purchases/next-slip?entry_type=SALE");
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
       const data = await response.json();
-      const nextSlip = data.nextSlipNo || Date.now().toString().slice(-6);
 
       setFormData({
         ...initialFormData,
-        slipNo: nextSlip,
+        slipNo: data.nextSlipNo,
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
@@ -971,11 +952,10 @@ export default function SalesForm() {
       });
     } catch (error) {
       console.error("Error fetching next slip number:", error);
-      // Generate a timestamp-based slip number as fallback
-      const fallbackSlip = Date.now().toString().slice(-6);
+      // Fallback - fetch next SALE slip number
       setFormData({
         ...initialFormData,
-        slipNo: fallbackSlip,
+        slipNo: "1",
         slipInTime: new Date().toISOString().slice(0, 16),
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
@@ -1230,59 +1210,33 @@ export default function SalesForm() {
   }, [location, onlineMode]);
 
   useEffect(() => {
-    // Fetch next slip number specific to SALE entry type with retry logic
-    const fetchSlipNumber = async (retryCount = 0) => {
-      try {
-        // First try to wake up database
-        if (retryCount === 0) {
-          try {
-            await fetch('/api/db/wake');
-            console.log('Database wake-up initiated for sales form');
-          } catch (wakeError) {
-            console.log('Database wake-up failed, continuing with slip fetch');
-          }
-        }
-
-        const response = await fetch("/api/purchases/next-slip?entry_type=SALE");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        const nextSlip = data.nextSlipNo || '1';
-        console.log(`✅ Fetched next slip number for SALE: ${nextSlip}`);
-        setFormData((prev) => ({ ...prev, slipNo: nextSlip }));
-      } catch (err: any) {
-        console.error(`Error fetching next slip number for SALE (attempt ${retryCount + 1}):`, err);
-        
-        if (retryCount < 2) {
-          // Retry after delay
-          setTimeout(() => fetchSlipNumber(retryCount + 1), (retryCount + 1) * 1000);
-        } else {
-          // Generate a timestamp-based slip number as fallback
-          const fallbackSlip = Date.now().toString().slice(-6);
-          console.log(`Using fallback slip number for SALE: ${fallbackSlip}`);
-          setFormData((prev) => ({ ...prev, slipNo: fallbackSlip }));
-        }
-      }
-    };
-
-    fetchSlipNumber();
+    // Fetch next slip number specific to SALE entry type
+    fetch("/api/purchases/next-slip?entry_type=SALE")
+      .then((res) => res.json())
+      .then((data: any) => {
+        setFormData((prev) => ({ ...prev, slipNo: data.nextSlipNo }));
+      })
+      .catch((err: any) => {
+        console.error("Error fetching next slip number:", err);
+        setFormData((prev) => ({ ...prev, slipNo: "1" }));
+      });
 
     // Fetch branches for dropdown
     fetch("/api/branches")
       .then((res) => res.json())
-      .then((data: any) => {
-        const branchData = Array.isArray(data) ? data : [];
-        setBranches(branchData);
+      .then((data: any[]) => {
+        setBranches(data);
         console.log("Branches fetched:", data);
 
         // Set default branch based on logged-in user's branch
-        if (branchData.length > 0 && (!formData.branchId || formData.branchId === "")) {
+        if (
+          data.length > 0 &&
+          (!formData.branchId || formData.branchId === "")
+        ) {
           const userBranchId = user?.branchId;
           const defaultBranch = userBranchId
-            ? branchData.find((b) => b.branch_id === userBranchId) || branchData[0]
-            : branchData[0];
+            ? data.find((b) => b.branch_id === userBranchId) || data[0]
+            : data[0];
           setFormData((prev) => ({
             ...prev,
             branchId: String(defaultBranch.branch_id),
@@ -1293,7 +1247,6 @@ export default function SalesForm() {
       })
       .catch((err: any) => {
         console.error("Error fetching branches:", err);
-        setBranches([]);
       });
 
     const now = new Date().toISOString();
@@ -1684,9 +1637,9 @@ export default function SalesForm() {
         <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
-
+        
         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
+        
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -1792,7 +1745,7 @@ export default function SalesForm() {
               <div class="header-right"></div>
             </div>
  <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
+        
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -1898,7 +1851,7 @@ export default function SalesForm() {
               </div>
 
               <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
+        
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -2449,14 +2402,15 @@ export default function SalesForm() {
               <Button
                 className="h-6 text-xs px-3 bg-gray-300 text-black"
                 onClick={() => {
-                  // Navigate to purchase form offline form section
-                  const urlParams = new URLSearchParams(window.location.search);
-                  const typeMode = urlParams.get("type") || "online";
-                  const targetUrl = `/purchase-form?type=${typeMode}&form=offline`;
-                  window.history.replaceState({}, "", targetUrl);
-                  setLocation(targetUrl);
+                  // Navigate to offline form
+                  window.history.replaceState(
+                    {},
+                    "",
+                    "/purchase-form?type=offline",
+                  );
+                  setLocation("/purchase-form?type=offline");
                   setTimeout(() => {
-                    window.location.href = targetUrl;
+                    window.location.href = "/purchase-form?type=offline";
                   }, 50);
                 }}
               >
@@ -2680,10 +2634,14 @@ export default function SalesForm() {
                           type="text"
                           className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
                           value={
-                            // Use formData.branch for consistent branch display
+                            // 👇 branchId se branch_name resolve karo
                             branches.find(
-                              (b) => b.branch_id.toString() === formData.branchId?.toString()
-                            )?.branch_name || formData.branch || ""
+                              (b) =>
+                                b.branch_id.toString() ===
+                                salesData[index]?.branchId?.toString(),
+                            )?.branch_name ||
+                            salesData[index]?.branch ||
+                            ""
                           }
                           onChange={(e) =>
                             handleSalesDataChange(

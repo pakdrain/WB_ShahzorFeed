@@ -566,9 +566,9 @@ export default function SalesReturnForm() {
     // Clear edit parameter from URL
     const urlParams = new URLSearchParams(window.location.search);
     urlParams.delete("edit");
-    const newUrl = urlParams.toString() ? 
-      `${window.location.pathname}?${urlParams.toString()}` : 
-      window.location.pathname;
+    const newUrl = urlParams.toString()
+      ? `${window.location.pathname}?${urlParams.toString()}`
+      : window.location.pathname;
     window.history.replaceState({}, "", newUrl);
 
     resetFormToInitial();
@@ -903,33 +903,45 @@ export default function SalesReturnForm() {
         // First try to wake up database
         if (retryCount === 0) {
           try {
-            await fetch('/api/db/wake');
-            console.log('Database wake-up initiated for sales return form');
+            await fetch("/api/db/wake");
+            console.log("Database wake-up initiated for sales return form");
           } catch (wakeError) {
-            console.log('Database wake-up failed, continuing with slip fetch');
+            console.log("Database wake-up failed, continuing with slip fetch");
           }
         }
 
-        const response = await fetch("/api/purchases/next-slip?entry_type=SALES_RETURN");
+        const response = await fetch(
+          "/api/purchases/next-slip?entry_type=SALES_RETURN",
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
         console.log("Next slip number response for Sales Return:", data);
-        const nextSlip = data.nextSlipNo || '1';
-        console.log(`✅ Fetched next slip number for Sales Return: ${nextSlip}`);
+        const nextSlip = data.nextSlipNo || "1";
+        console.log(
+          `✅ Fetched next slip number for Sales Return: ${nextSlip}`,
+        );
         setFormData((prev) => ({ ...prev, slipNo: nextSlip }));
       } catch (err: any) {
-        console.error(`Error fetching next slip number for Sales Return (attempt ${retryCount + 1}):`, err);
+        console.error(
+          `Error fetching next slip number for Sales Return (attempt ${retryCount + 1}):`,
+          err,
+        );
 
         if (retryCount < 2) {
           // Retry after delay
-          setTimeout(() => fetchSlipNumber(retryCount + 1), (retryCount + 1) * 1000);
+          setTimeout(
+            () => fetchSlipNumber(retryCount + 1),
+            (retryCount + 1) * 1000,
+          );
         } else {
           // Generate a timestamp-based slip number as fallback
           const fallbackSlip = Date.now().toString().slice(-6);
-          console.log(`Using fallback slip number for Sales Return: ${fallbackSlip}`);
+          console.log(
+            `Using fallback slip number for Sales Return: ${fallbackSlip}`,
+          );
           setFormData((prev) => ({ ...prev, slipNo: fallbackSlip }));
         }
       }
@@ -938,7 +950,7 @@ export default function SalesReturnForm() {
     // Only fetch slip number if not in edit mode
     const urlParams = new URLSearchParams(window.location.search);
     const editWbId = urlParams.get("edit");
-    
+
     if (!editWbId && !isEditMode && !editingWbId) {
       fetchSlipNumber();
     }
@@ -958,7 +970,8 @@ export default function SalesReturnForm() {
         ) {
           const userBranchId = user?.branchId;
           const defaultBranch = userBranchId
-            ? branchData.find((b) => b.branch_id === userBranchId) || branchData[0]
+            ? branchData.find((b) => b.branch_id === userBranchId) ||
+              branchData[0]
             : branchData[0];
           setFormData((prev) => ({
             ...prev,
@@ -1050,26 +1063,52 @@ export default function SalesReturnForm() {
       const masterDataPayload = {
         slip_no: formData.slipNo || null,
         slip_in_time: formatISODate(formData.slipInTime),
-        first_weight: formData.firstWeight && formData.firstWeight.trim() !== "" 
-          ? parseFloat(formData.firstWeight) : null,
-        second_weight: formData.secondWeight && formData.secondWeight.trim() !== "" 
-          ? parseFloat(formData.secondWeight) : null,
-        net_weight: formData.netWeight && formData.netWeight.trim() !== "" 
-          ? parseFloat(formData.netWeight) : null,
-        bardana_weight: formData.bardanaWeight && formData.bardanaWeight.trim() !== "" 
-          ? parseFloat(formData.bardanaWeight) : null,
-        gross_weight: formData.grossWeight && formData.grossWeight.trim() !== "" 
-          ? parseFloat(formData.grossWeight) : null,
-        freight: formData.freight && formData.freight.trim() !== "" 
-          ? parseFloat(formData.freight) : null,
+        first_weight:
+          formData.firstWeight && formData.firstWeight.trim() !== ""
+            ? parseFloat(formData.firstWeight)
+            : null,
+        second_weight:
+          formData.secondWeight && formData.secondWeight.trim() !== ""
+            ? parseFloat(formData.secondWeight)
+            : null,
+        net_weight:
+          formData.netWeight && formData.netWeight.trim() !== ""
+            ? parseFloat(formData.netWeight)
+            : null,
+        bardana_weight:
+          formData.bardanaWeight && formData.bardanaWeight.trim() !== ""
+            ? parseFloat(formData.bardanaWeight)
+            : null,
+        gross_weight:
+          formData.grossWeight && formData.grossWeight.trim() !== ""
+            ? parseFloat(formData.grossWeight)
+            : null,
+        freight:
+          formData.freight && formData.freight.trim() !== ""
+            ? parseFloat(formData.freight)
+            : null,
         remarks: formData.remarks || null,
         driver_name: formData.driverName || null,
-        company_id: formData.companyId && formData.companyId !== "undefined" && formData.companyId.trim() !== "" 
-          ? parseInt(formData.companyId, 10) : null,
-        branch_id: formData.branchId && formData.branchId !== "undefined" && formData.branchId.trim() !== "" 
-          ? parseInt(formData.branchId, 10) : null,
-        online_entry: formData.onlineEntry === "Yes" || formData.onlineEntry === true ? "Yes" : null,
-        offline_entry: formData.offlineEntry === "Yes" || formData.offlineEntry === true ? "Yes" : null,
+        company_id:
+          formData.companyId &&
+          formData.companyId !== "undefined" &&
+          formData.companyId.trim() !== ""
+            ? parseInt(formData.companyId, 10)
+            : null,
+        branch_id:
+          formData.branchId &&
+          formData.branchId !== "undefined" &&
+          formData.branchId.trim() !== ""
+            ? parseInt(formData.branchId, 10)
+            : null,
+        online_entry:
+          formData.onlineEntry === "Yes" || formData.onlineEntry === true
+            ? "Yes"
+            : null,
+        offline_entry:
+          formData.offlineEntry === "Yes" || formData.offlineEntry === true
+            ? "Yes"
+            : null,
         created_by: user?.userid || null,
         creation_date: formData.creationDate || null,
         last_updated_by: user?.userid || null,
@@ -1081,7 +1120,7 @@ export default function SalesReturnForm() {
         return_reason: formData.returnReason || null,
         return_date: formatISODate(formData.returnDate),
         original_slip_no: formData.originalSlipNo || null,
-        customer_name: formData.customerName || null
+        customer_name: formData.customerName || null,
       };
 
       // Filter non-empty sales rows
@@ -1097,7 +1136,9 @@ export default function SalesReturnForm() {
       );
 
       // Choose endpoint based on edit mode
-      const endpoint = isEditMode ? `/api/sales-return/update/${editingWbId}` : "/api/sales-return/save";
+      const endpoint = isEditMode
+        ? `/api/sales-return/update/${editingWbId}`
+        : "/api/sales-return/save";
       const method = isEditMode ? "PUT" : "POST";
 
       // Save to backend
@@ -1108,18 +1149,25 @@ export default function SalesReturnForm() {
         },
         body: JSON.stringify({
           masterData: masterDataPayload,
-          salesData: nonEmptyRows
+          salesData: nonEmptyRows,
         }),
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`Failed to ${isEditMode ? 'update' : 'save'} sales return data: ${errorText}`);
+        throw new Error(
+          `Failed to ${isEditMode ? "update" : "save"} sales return data: ${errorText}`,
+        );
       }
 
       const result = await response.json();
-      console.log(`Sales return data ${isEditMode ? 'updated' : 'saved'} successfully:`, result);
-      alert(`Sales return data ${isEditMode ? 'updated' : 'saved'} successfully!`);
+      console.log(
+        `Sales return data ${isEditMode ? "updated" : "saved"} successfully:`,
+        result,
+      );
+      alert(
+        `Sales return data ${isEditMode ? "updated" : "saved"} successfully!`,
+      );
 
       if (isEditMode) {
         // In edit mode, exit edit mode and clear URL parameter
@@ -1129,9 +1177,9 @@ export default function SalesReturnForm() {
         // Clear edit parameter from URL
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.delete("edit");
-        const newUrl = urlParams.toString() ? 
-          `${window.location.pathname}?${urlParams.toString()}` : 
-          window.location.pathname;
+        const newUrl = urlParams.toString()
+          ? `${window.location.pathname}?${urlParams.toString()}`
+          : window.location.pathname;
         window.history.replaceState({}, "", newUrl);
 
         // Reset form to clean state
@@ -1141,8 +1189,13 @@ export default function SalesReturnForm() {
         await resetFormToInitial();
       }
     } catch (error: any) {
-      console.error(`Error ${isEditMode ? 'updating' : 'saving'} sales return data:`, error);
-      alert(`Failed to ${isEditMode ? 'update' : 'save'} sales return data: ${error.message}`);
+      console.error(
+        `Error ${isEditMode ? "updating" : "saving"} sales return data:`,
+        error,
+      );
+      alert(
+        `Failed to ${isEditMode ? "update" : "save"} sales return data: ${error.message}`,
+      );
     } finally {
       setLoading(false);
     }
@@ -1179,15 +1232,32 @@ export default function SalesReturnForm() {
           slipDate: masterData.slipDate || "",
           status: masterData.status || "",
           entryType: masterData.entry_type || "Sales Return",
-          firstWeight: masterData.first_weight ? String(masterData.first_weight) : "",
-          secondWeight: masterData.second_weight ? String(masterData.second_weight) : "",
+          firstWeight: masterData.first_weight
+            ? String(masterData.first_weight)
+            : "",
+          secondWeight: masterData.second_weight
+            ? String(masterData.second_weight)
+            : "",
           netWeight: masterData.net_weight ? String(masterData.net_weight) : "",
-          bardanaWeight: masterData.bardana_weight ? String(masterData.bardana_weight) : "",
-          grossWeight: masterData.gross_weight ? String(masterData.gross_weight) : "",
-          supplierWeight: masterData.supplier_weight ? String(masterData.supplier_weight) : "",
-          supplierWeightMinusBardana: masterData.supplier_weight_minus_bardana ? String(masterData.supplier_weight_minus_bardana) : "",
-          supplierWeightMinusOutWeight: masterData.supplier_weight_minus_out_weight ? String(masterData.supplier_weight_minus_out_weight) : "",
-          qualityDeduction: masterData.quality_deduction ? String(masterData.quality_deduction) : "",
+          bardanaWeight: masterData.bardana_weight
+            ? String(masterData.bardana_weight)
+            : "",
+          grossWeight: masterData.gross_weight
+            ? String(masterData.gross_weight)
+            : "",
+          supplierWeight: masterData.supplier_weight
+            ? String(masterData.supplier_weight)
+            : "",
+          supplierWeightMinusBardana: masterData.supplier_weight_minus_bardana
+            ? String(masterData.supplier_weight_minus_bardana)
+            : "",
+          supplierWeightMinusOutWeight:
+            masterData.supplier_weight_minus_out_weight
+              ? String(masterData.supplier_weight_minus_out_weight)
+              : "",
+          qualityDeduction: masterData.quality_deduction
+            ? String(masterData.quality_deduction)
+            : "",
           vehicleNo: masterData.vehicle_no || "",
           driverName: masterData.driver_name || "",
           returnReason: masterData.return_reason || "",
@@ -1248,14 +1318,22 @@ export default function SalesReturnForm() {
         console.log("Raw sales data from database:", salesData);
         const mappedSalesData = salesData.map((item: any) => ({
           doId: item.do_id || "",
-          dcNo: item.igp_no || "",  // DC No maps to igp_no in database
-          doNo: item.po_no || "",   // DO No maps to po_no in database
+          dcNo: item.igp_no || "", // DC No maps to igp_no in database
+          doNo: item.po_no || "", // DO No maps to po_no in database
           customerName: item.customer_name || item.vendor_name || "",
           vehicleNo: item.vehicle_no || "",
           doDate: item.igp_date || item.do_date || "",
           itemDescription: item.item_desc || "",
-          dcQty: item.igp_qty ? String(item.igp_qty) : (item.dc_qty ? String(item.dc_qty) : ""),
-          doQty: item.po_qty ? String(item.po_qty) : (item.do_qty ? String(item.do_qty) : ""),
+          dcQty: item.igp_qty
+            ? String(item.igp_qty)
+            : item.dc_qty
+              ? String(item.dc_qty)
+              : "",
+          doQty: item.po_qty
+            ? String(item.po_qty)
+            : item.do_qty
+              ? String(item.do_qty)
+              : "",
           branch: item.branch || "",
           dcId: item.dc_id || "",
           customerId: item.customer_id || "",
@@ -1361,7 +1439,9 @@ export default function SalesReturnForm() {
                       console.log("wb_id:", record.wb_id);
                       console.log("entry_type:", record.entry_type);
                       // Navigate to edit mode by updating URL
-                      const urlParams = new URLSearchParams(window.location.search);
+                      const urlParams = new URLSearchParams(
+                        window.location.search,
+                      );
                       urlParams.set("edit", record.wb_id);
                       const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
                       window.history.replaceState({}, "", newUrl);
@@ -1442,7 +1522,7 @@ export default function SalesReturnForm() {
           >
             Sale
           </Button>
-          <Button 
+          <Button
             className="h-8 px-2 text-sm font-medium bg-rose-700 text-white"
             onClick={() => {
               // Navigate to sales return form with same type
@@ -1769,6 +1849,7 @@ export default function SalesReturnForm() {
                 </div>
 
                 {/* Sales Table Body - Fixed height with 8 rows */}
+                {/* Sales Table Body - Fixed height with 8 rows */}
                 <div className="bg-gray-200 mb-4" style={{ height: "240px" }}>
                   {[...Array(8)].map((_, index) => (
                     <div
@@ -1793,7 +1874,7 @@ export default function SalesReturnForm() {
                             if (e.key === "Enter") {
                               const dcNo = salesData[index]?.dcNo;
                               if (dcNo && dcNo.trim() !== "") {
-                                fetchDcData(dcNo.trim(), index);
+                                fetchDcData(dcNo.trim(), index); // ✅ index pass kar rahe hain
                               }
                             }
                           }}
@@ -1940,13 +2021,13 @@ export default function SalesReturnForm() {
                           type="text"
                           className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
                           value={
-                            // Use formData.branch for consistent branch display
+                            // 👇 branchId se branch_name resolve karo
                             branches.find(
                               (b) =>
                                 b.branch_id.toString() ===
-                                formData.branchId?.toString(),
+                                salesData[index]?.branchId?.toString(),
                             )?.branch_name ||
-                            formData.branch ||
+                            salesData[index]?.branch ||
                             ""
                           }
                           onChange={(e) =>
@@ -1973,7 +2054,6 @@ export default function SalesReturnForm() {
                     </div>
                   ))}
                 </div>
-
                 {/* Total Row */}
                 <div
                   className="grid gap-px text-xs font-semibold mb-4"
