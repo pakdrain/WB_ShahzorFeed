@@ -858,13 +858,15 @@ export default function SalesReturnForm() {
       setOnlineMode(true);
     }
 
-    // Check if page was reloaded while in edit mode
-    const wasInEditMode = sessionStorage.getItem('salesReturnEditMode');
-    if (wasInEditMode && !editWbId) {
-      // Page was reloaded while in edit mode but no edit parameter in URL
-      // Clear edit mode and reset to new form
-      console.log("Page reload detected while in edit mode, resetting to new form");
-      sessionStorage.removeItem('salesReturnEditMode');
+    // Always check if we should be in edit mode based on URL parameter
+    // If no edit parameter in URL, always reset to new form regardless of previous state
+    if (!editWbId) {
+      // No edit parameter in URL, clear any previous edit mode state
+      const wasInEditMode = sessionStorage.getItem('salesReturnEditMode');
+      if (wasInEditMode) {
+        console.log("Page reload detected without edit parameter, resetting to new form");
+        sessionStorage.removeItem('salesReturnEditMode');
+      }
       setIsEditMode(false);
       setEditingWbId(null);
       setIsLoadingEditData(false);
