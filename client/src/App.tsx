@@ -21,7 +21,7 @@ import SaleNode from "@/pages/sale-node";
 import PurchaseReturn from "@/pages/purchase-return";
 import VoucherEntry from "./pages/voucher-entry";
 import VoucherView from "./pages/voucher-view";
-import VoucherView from "./pages/voucher-view";
+
 
 function ProtectedApp() {
   return (
@@ -35,7 +35,6 @@ function ProtectedApp() {
           <Route path="/role-management" component={RoleManagement} />
           <Route path="/purchase-form" component={PurchaseForm} />
           <Route path="/voucher-entry" component={VoucherEntry} />
-              <Route path="/voucher-view" component={VoucherView} />
           <Route path="/voucher-view" component={VoucherView} />
           <Route path="/sales-form" component={SalesForm} />
           <Route path="/sales-return" component={SalesReturnForm} />

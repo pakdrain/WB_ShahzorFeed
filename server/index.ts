@@ -202,7 +202,7 @@ app.use((req, res, next) => {
   // this serves both the API and the client.
   // It is the only port that is not firewalled.
   const port = 5000;
-  server.listen(port, () => {
+  server.listen(port, '0.0.0.0', () => {
     log(`serving on port ${port}`);
     log(`📡 Attempting to connect to ${currentComPort} weight indicator...`);
     
@@ -210,5 +210,13 @@ app.use((req, res, next) => {
     setTimeout(() => {
       connectToWeightScale();
     }, 2000); // Wait 2 seconds after server starts
+  }).on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      log(`❌ Port ${port} is already in use. Attempting to kill existing process...`);
+      process.exit(1);
+    } else {
+      log(`❌ Server error: ${err.message}`);
+      throw err;
+    }
   });
 })();

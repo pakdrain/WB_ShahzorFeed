@@ -43,6 +43,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     client.release();
   } catch (err) {
     console.error('❌ Failed to connect to PostgreSQL database:', err);
+    console.log('🔄 Attempting to continue without database connection...');
+    // Continue execution even if database fails to connect initially
   }
 
   // Camera update endpoint
