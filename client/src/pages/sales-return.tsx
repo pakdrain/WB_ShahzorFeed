@@ -2060,17 +2060,15 @@ export default function SalesReturnForm() {
                           type="text"
                           className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
                           value={
-                            // Try multiple ways to get branch name
-                            salesData[index]?.branch ||
-                            branches.find(
-                              (b) =>
-                                b.branch_id.toString() === formData.branchId?.toString()
-                            )?.branch_name ||
-                            branches.find(
-                              (b) =>
-                                b.branch_id.toString() === salesData[index]?.branchId?.toString()
-                            )?.branch_name ||
-                            ""
+                            // Only show branch name if the row has DC data
+                            (salesData[index]?.dcNo || salesData[index]?.doNo || salesData[index]?.customerName) 
+                              ? (salesData[index]?.branch ||
+                                 branches.find(
+                                   (b) =>
+                                     b.branch_id.toString() === formData.branchId?.toString()
+                                 )?.branch_name ||
+                                 "")
+                              : ""
                           }
                           onChange={(e) =>
                             handleSalesDataChange(

@@ -1154,13 +1154,15 @@ export default function PurchaseReturnForm() {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
                       console.log("entry_type:", record.entry_type);
-                      // Navigate to edit mode by updating URL
+                      // Navigate to edit mode by updating URL without reload
                       const urlParams = new URLSearchParams(window.location.search);
                       urlParams.set("edit", record.wb_id);
                       const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
                       window.history.replaceState({}, "", newUrl);
-                      // Force page reload to ensure clean state
-                      window.location.reload();
+                      
+                      // Set edit mode and load data directly
+                      sessionStorage.setItem('purchaseReturnEditMode', 'true');
+                      loadDataByWbId(parseInt(record.wb_id));
                     }}
                   >
                     {record.slip_no || "---"}
