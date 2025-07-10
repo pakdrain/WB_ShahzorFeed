@@ -10,6 +10,7 @@ import { Edit, Trash2 } from 'lucide-react';
 interface UserPermissions {
   userId: string;
   userName: string;
+  roleName: string;
   permissions: string[];
 }
 
@@ -17,6 +18,7 @@ export default function RoleManagement() {
   const { user } = useAuth();
   const [currentView, setCurrentView] = useState<'assign' | 'list'>('assign');
   const [userId, setUserId] = useState('');
+  const [roleName, setRoleName] = useState('');
   const [editingUser, setEditingUser] = useState<UserPermissions | null>(null);
   const [savedUsers, setSavedUsers] = useState<UserPermissions[]>([]);
   const [permissions, setPermissions] = useState({
@@ -42,15 +44,66 @@ export default function RoleManagement() {
     if (!isAdmin) {
       return;
     }
-    // Load saved users from localStorage
-    const stored = localStorage.getItem('userPermissions');
-    if (stored) {
+    
+    // Load roles from wb_role table
+    const loadRoles = async () => {
       try {
-        setSavedUsers(JSON.parse(stored));
+        const response = await fetch('/api/wb-role/list');
+        if (response.ok) {
+          const roles = await response.json();
+          const formattedUsers = roles.map((role: any) => {
+            const permissions: string[] = [];
+            
+            // Convert integer flags back to permission strings
+            if (role.home_menu === 1) permissions.push('home');
+            if (role.pur_form_menu === 1) permissions.push('purchaseForm');
+            if (role.pur_form_online === 1) permissions.push('purchaseOnline');
+            if (role.pur_form_offline === 1) permissions.push('purchaseOffline');
+            if (role.sale_form_menu === 1) permissions.push('salesForm');
+            if (role.sale_form_online === 1) permissions.push('salesOnline');
+            if (role.sale_form_offline === 1) permissions.push('salesOffline');
+            if (role.sale_return_menu === 1) permissions.push('saleReturn');
+            if (role.sale_node_menu === 1) permissions.push('saleNode');
+            if (role.reports === 1) permissions.push('reports');
+            if (role.camera_settings === 1) permissions.push('cameraSettings');
+            if (role.wb_settings === 1) permissions.push('weighbridgeSettings');
+
+            return {
+              userId: role.Roleid.toString(),
+              userName: `User ${role.Roleid}`,
+              roleName: role.role_name,
+              permissions
+            };
+          });
+          
+          setSavedUsers(formattedUsers);
+        } else {
+          console.error('Failed to load roles from database');
+          // Fallback to localStorage
+          const stored = localStorage.getItem('userPermissions');
+          if (stored) {
+            try {
+              setSavedUsers(JSON.parse(stored));
+            } catch (error) {
+              console.error('Error loading saved users:', error);
+            }
+          }
+        }
       } catch (error) {
-        console.error('Error loading saved users:', error);
+        console.error('Error loading roles:', error);
+        // Fallback to localStorage
+        const stored = localStorage.getItem('userPermissions');
+        if (stored) {
+          try {
+            setSavedUsers(JSON.parse(stored));
+          } catch (error) {
+            console.error('Error loading saved users:', error);
+          }
+        }
       }
-    }
+    };
+
+    loadRoles();
   }, [isAdmin]);
 
   if (!isAdmin) {
@@ -74,6 +127,7 @@ export default function RoleManagement() {
 
   const resetForm = () => {
     setUserId('');
+    setRoleName('');
     setEditingUser(null);
     setPermissions({
       home: false,
@@ -98,6 +152,11 @@ export default function RoleManagement() {
       return;
     }
 
+    if (!roleName.trim()) {
+      alert('Please enter a Role Name');
+      return;
+    }
+
     try {
       // Get username from database
       const response = await fetch(`/api/users/${userId}`);
@@ -115,6 +174,7 @@ export default function RoleManagement() {
       const userPermissions: UserPermissions = {
         userId,
         userName,
+        roleName,
         permissions: selectedPermissions
       };
 
@@ -125,30 +185,32 @@ export default function RoleManagement() {
       setSavedUsers(updatedUsers);
       localStorage.setItem('userPermissions', JSON.stringify(updatedUsers));
 
-      // Save to database
-      await fetch(`/api/users/${userId}/permissions`, {
-        method: 'PUT',
+      // Save to wb_role table
+      await fetch('/api/wb-role/save', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          permissions: selectedPermissions,
-          role: 'Custom'
+          roleid: parseInt(userId),
+          role_name: roleName,
+          permissions: selectedPermissions
         }),
       });
 
-      alert('Permissions saved successfully!');
+      alert('Role saved successfully!');
       resetForm();
       setCurrentView('list');
     } catch (error) {
-      console.error('Error saving permissions:', error);
-      alert('Error saving permissions');
+      console.error('Error saving role:', error);
+      alert('Error saving role');
     }
   };
 
   const handleEditUser = (userPermissions: UserPermissions) => {
     setEditingUser(userPermissions);
     setUserId(userPermissions.userId);
+    setRoleName(userPermissions.roleName);
 
     // Set checkboxes based on saved permissions
     const newPermissions = {
@@ -178,28 +240,32 @@ export default function RoleManagement() {
   };
 
   const handleDeleteUser = async (userPermissions: UserPermissions) => {
-    if (!confirm(`Are you sure you want to delete permissions for ${userPermissions.userName}?`)) {
+    if (!confirm(`Are you sure you want to delete role "${userPermissions.roleName}" for User ${userPermissions.userId}?`)) {
       return;
     }
 
     try {
-      // Remove from local state
-      const updatedUsers = savedUsers.filter(u => u.userId !== userPermissions.userId);
-      setSavedUsers(updatedUsers);
-      localStorage.setItem('userPermissions', JSON.stringify(updatedUsers));
-
-      // Delete from database
-      await fetch(`/api/users/${userPermissions.userId}/permissions`, {
+      // Delete from wb_role table
+      const response = await fetch(`/api/wb-role/${userPermissions.userId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      alert('User permissions deleted successfully!');
+      if (response.ok) {
+        // Remove from local state
+        const updatedUsers = savedUsers.filter(u => u.userId !== userPermissions.userId);
+        setSavedUsers(updatedUsers);
+        localStorage.setItem('userPermissions', JSON.stringify(updatedUsers));
+
+        alert('Role deleted successfully!');
+      } else {
+        alert('Error deleting role from database');
+      }
     } catch (error) {
-      console.error('Error deleting user permissions:', error);
-      alert('Error deleting user permissions');
+      console.error('Error deleting role:', error);
+      alert('Error deleting role');
     }
   };
 
@@ -253,18 +319,32 @@ export default function RoleManagement() {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-8">
-              <div className="bg-gray-50 p-6 rounded-lg border">
-                <Label htmlFor="user-id" className="text-lg font-semibold text-gray-700 mb-3 block">
-                  User ID
-                </Label>
-                <Input
-                  id="user-id"
-                  value={userId}
-                  onChange={(e) => setUserId(e.target.value)}
-                  placeholder="Enter User ID"
-                  disabled={!!editingUser}
-                  className="text-lg p-4 border-2 focus:border-blue-500 rounded-lg"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-gray-50 p-6 rounded-lg border">
+                  <Label htmlFor="user-id" className="text-lg font-semibold text-gray-700 mb-3 block">
+                    User ID
+                  </Label>
+                  <Input
+                    id="user-id"
+                    value={userId}
+                    onChange={(e) => setUserId(e.target.value)}
+                    placeholder="Enter User ID"
+                    disabled={!!editingUser}
+                    className="text-lg p-4 border-2 focus:border-blue-500 rounded-lg"
+                  />
+                </div>
+                <div className="bg-gray-50 p-6 rounded-lg border">
+                  <Label htmlFor="role-name" className="text-lg font-semibold text-gray-700 mb-3 block">
+                    Role Name
+                  </Label>
+                  <Input
+                    id="role-name"
+                    value={roleName}
+                    onChange={(e) => setRoleName(e.target.value)}
+                    placeholder="Enter Role Name (e.g., Admin, Manager, etc.)"
+                    className="text-lg p-4 border-2 focus:border-blue-500 rounded-lg"
+                  />
+                </div>
               </div>
 
               <div className="space-y-6">
@@ -295,7 +375,7 @@ export default function RoleManagement() {
                 <Button 
                   onClick={handleSavePermissions} 
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-lg py-4 px-8 rounded-lg shadow-lg transform hover:scale-105 transition-all duration-200" 
-                  disabled={!userId.trim()}
+                  disabled={!userId.trim() || !roleName.trim()}
                   size="lg"
                 >
                   {editingUser ? '✓ UPDATE PERMISSIONS' : '✓ SAVE PERMISSIONS'}
@@ -353,6 +433,7 @@ export default function RoleManagement() {
                               {userPermissions.userName}
                             </h3>
                             <p className="text-sm text-gray-500">ID: {userPermissions.userId}</p>
+                            <p className="text-sm font-medium text-blue-600">Role: {userPermissions.roleName}</p>
                           </div>
                         </div>
                         <div className="bg-gray-50 p-4 rounded-lg">

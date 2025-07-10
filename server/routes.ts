@@ -2149,6 +2149,159 @@ app.get('/api/sales', async (req: Request, res: Response) => {
     }
   });
 
+  // WB Role endpoints for the new wb_role table
+  
+  // Save role to wb_role table
+  app.post('/api/wb-role/save', async (req: Request, res: Response) => {
+    try {
+      const { roleid, role_name, permissions } = req.body;
+
+      if (!roleid || !role_name) {
+        return res.status(400).json({ error: 'Roleid and role_name are required' });
+      }
+
+      // Convert permissions array to integer flags (1 for true, 0 for false)
+      const permissionFlags = {
+        home_menu: permissions.includes('home') ? 1 : 0,
+        pur_form_menu: permissions.includes('purchaseForm') ? 1 : 0,
+        pur_form_online: permissions.includes('purchaseOnline') ? 1 : 0,
+        pur_form_offline: permissions.includes('purchaseOffline') ? 1 : 0,
+        sale_form_menu: permissions.includes('salesForm') ? 1 : 0,
+        sale_form_online: permissions.includes('salesOnline') ? 1 : 0,
+        sale_form_offline: permissions.includes('salesOffline') ? 1 : 0,
+        sale_return_menu: permissions.includes('saleReturn') ? 1 : 0,
+        sale_node_menu: permissions.includes('saleNode') ? 1 : 0,
+        reports: permissions.includes('reports') ? 1 : 0,
+        camera_settings: permissions.includes('cameraSettings') ? 1 : 0,
+        wb_settings: permissions.includes('weighbridgeSettings') ? 1 : 0
+      };
+
+      // Insert or update the wb_role record
+      const query = `
+        INSERT INTO wb_role (
+          "Roleid", role_name, home_menu, pur_form_menu, pur_form_online, pur_form_offline,
+          sale_form_menu, sale_form_online, sale_form_offline, sale_return_menu,
+          sale_node_menu, reports, camera_settings, wb_settings
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        ON CONFLICT ("Roleid")
+        DO UPDATE SET
+          role_name = EXCLUDED.role_name,
+          home_menu = EXCLUDED.home_menu,
+          pur_form_menu = EXCLUDED.pur_form_menu,
+          pur_form_online = EXCLUDED.pur_form_online,
+          pur_form_offline = EXCLUDED.pur_form_offline,
+          sale_form_menu = EXCLUDED.sale_form_menu,
+          sale_form_online = EXCLUDED.sale_form_online,
+          sale_form_offline = EXCLUDED.sale_form_offline,
+          sale_return_menu = EXCLUDED.sale_return_menu,
+          sale_node_menu = EXCLUDED.sale_node_menu,
+          reports = EXCLUDED.reports,
+          camera_settings = EXCLUDED.camera_settings,
+          wb_settings = EXCLUDED.wb_settings
+        RETURNING *;
+      `;
+
+      const values = [
+        parseInt(roleid),
+        role_name,
+        permissionFlags.home_menu,
+        permissionFlags.pur_form_menu,
+        permissionFlags.pur_form_online,
+        permissionFlags.pur_form_offline,
+        permissionFlags.sale_form_menu,
+        permissionFlags.sale_form_online,
+        permissionFlags.sale_form_offline,
+        permissionFlags.sale_return_menu,
+        permissionFlags.sale_node_menu,
+        permissionFlags.reports,
+        permissionFlags.camera_settings,
+        permissionFlags.wb_settings
+      ];
+
+      const result = await pool.query(query, values);
+
+      console.log('✅ Role saved to wb_role table:', result.rows[0]);
+      res.json({ 
+        success: true, 
+        message: 'Role saved successfully',
+        role: result.rows[0]
+      });
+
+    } catch (error: any) {
+      console.error('❌ Error saving to wb_role table:', error);
+      res.status(500).json({ 
+        error: 'Failed to save role',
+        details: error.message 
+      });
+    }
+  });
+
+  // Get all roles from wb_role table
+  app.get('/api/wb-role/list', async (req: Request, res: Response) => {
+    try {
+      const query = 'SELECT * FROM wb_role ORDER BY "Roleid"';
+      const result = await pool.query(query);
+
+      console.log(`✅ Fetched ${result.rows.length} roles from wb_role table`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error('❌ Error fetching wb_role data:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch roles',
+        details: error.message 
+      });
+    }
+  });
+
+  // Get specific role by roleid from wb_role table
+  app.get('/api/wb-role/:roleid', async (req: Request, res: Response) => {
+    try {
+      const { roleid } = req.params;
+      const query = 'SELECT * FROM wb_role WHERE "Roleid" = $1';
+      const result = await pool.query(query, [parseInt(roleid)]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Role not found' });
+      }
+
+      console.log(`✅ Fetched role ${roleid} from wb_role table`);
+      res.json(result.rows[0]);
+    } catch (error: any) {
+      console.error('❌ Error fetching wb_role by id:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch role',
+        details: error.message 
+      });
+    }
+  });
+
+  // Delete role from wb_role table
+  app.delete('/api/wb-role/:roleid', async (req: Request, res: Response) => {
+    try {
+      const { roleid } = req.params;
+      const query = 'DELETE FROM wb_role WHERE "Roleid" = $1 RETURNING *';
+      const result = await pool.query(query, [parseInt(roleid)]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: 'Role not found' });
+      }
+
+      console.log(`✅ Deleted role ${roleid} from wb_role table`);
+      res.json({ 
+        success: true, 
+        message: 'Role deleted successfully',
+        deletedRole: result.rows[0]
+      });
+    } catch (error: any) {
+      console.error('❌ Error deleting from wb_role table:', error);
+      res.status(500).json({ 
+        error: 'Failed to delete role',
+        details: error.message 
+      });
+    }
+  });
+
   // Create role table if it doesn't exist
 app.post('/api/create-role-table', async (req: Request, res: Response) => {
   try {
