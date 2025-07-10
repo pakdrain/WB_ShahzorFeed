@@ -20,8 +20,6 @@ import SalesReturnForm from "@/pages/sales-return";
 import SaleNode from "@/pages/sale-node";
 import PurchaseReturn from "@/pages/purchase-return";
 import VoucherEntry from "./pages/voucher-entry";
-import VoucherView from "./pages/voucher-view";
-
 
 function ProtectedApp() {
   return (
