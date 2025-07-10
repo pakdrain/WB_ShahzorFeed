@@ -2634,14 +2634,15 @@ export default function SalesForm() {
                           type="text"
                           className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
                           value={
-                            // 👇 branchId se branch_name resolve karo
-                            branches.find(
-                              (b) =>
-                                b.branch_id.toString() ===
-                                salesData[index]?.branchId?.toString(),
-                            )?.branch_name ||
-                            salesData[index]?.branch ||
-                            ""
+                            // Only show branch name if the row has DC data
+                            (salesData[index]?.dcNo || salesData[index]?.doNo || salesData[index]?.customerName) 
+                              ? (salesData[index]?.branch ||
+                                 branches.find(
+                                   (b) =>
+                                     b.branch_id.toString() === formData.branchId?.toString()
+                                 )?.branch_name ||
+                                 "")
+                              : ""
                           }
                           onChange={(e) =>
                             handleSalesDataChange(
