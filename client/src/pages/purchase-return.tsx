@@ -610,34 +610,25 @@ export default function PurchaseReturnForm() {
       setOnlineMode(true);
     }
 
-    // Always check if we should be in edit mode based on URL parameter
-    // If no edit parameter in URL, always reset to new form regardless of previous state
-    if (!editWbId) {
-      // No edit parameter in URL, clear any previous edit mode state
-      const wasInEditMode = sessionStorage.getItem('purchaseReturnEditMode');
-      if (wasInEditMode) {
-        console.log("Page reload detected without edit parameter, resetting to new form");
-        sessionStorage.removeItem('purchaseReturnEditMode');
-      }
+    // Clear any previous edit mode state from sessionStorage on every page load
+    sessionStorage.removeItem('purchaseReturnEditMode');
+
+    // Check if we should be in edit mode ONLY based on URL parameter
+    if (editWbId) {
+      // Load record for editing by wb_id
+      console.log("Edit mode detected from URL parameter, loading data");
+      sessionStorage.setItem('purchaseReturnEditMode', 'true');
+      loadDataByWbId(parseInt(editWbId));
+      return; // Exit early to prevent any other initialization
+    } else {
+      // No edit parameter in URL, always reset to new form
+      console.log("No edit parameter in URL, resetting to new form");
       setIsEditMode(false);
       setEditingWbId(null);
       setTimeout(() => {
         resetFormToInitial();
       }, 100);
       return;
-    }
-
-    if (editWbId) {
-      // Load record for editing by wb_id - do NOT call resetFormToInitial
-      sessionStorage.setItem('purchaseReturnEditMode', 'true');
-      loadDataByWbId(parseInt(editWbId));
-      return; // Exit early to prevent any other initialization
-    } else if (!isEditMode && !editingWbId) {
-      // Reset form to clean state for new purchase return only when not in edit mode
-      sessionStorage.removeItem('purchaseReturnEditMode');
-      setTimeout(() => {
-        resetFormToInitial();
-      }, 100);
     }
   }, [location]);
 
