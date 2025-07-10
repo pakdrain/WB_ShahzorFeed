@@ -610,12 +610,29 @@ export default function PurchaseReturnForm() {
       setOnlineMode(true);
     }
 
+    // Check if page was reloaded while in edit mode
+    const wasInEditMode = sessionStorage.getItem('purchaseReturnEditMode');
+    if (wasInEditMode && !editWbId) {
+      // Page was reloaded while in edit mode but no edit parameter in URL
+      // Clear edit mode and reset to new form
+      console.log("Page reload detected while in edit mode, resetting to new form");
+      sessionStorage.removeItem('purchaseReturnEditMode');
+      setIsEditMode(false);
+      setEditingWbId(null);
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
+      return;
+    }
+
     if (editWbId) {
       // Load record for editing by wb_id - do NOT call resetFormToInitial
+      sessionStorage.setItem('purchaseReturnEditMode', 'true');
       loadDataByWbId(parseInt(editWbId));
       return; // Exit early to prevent any other initialization
     } else if (!isEditMode && !editingWbId) {
       // Reset form to clean state for new purchase return only when not in edit mode
+      sessionStorage.removeItem('purchaseReturnEditMode');
       setTimeout(() => {
         resetFormToInitial();
       }, 100);
@@ -841,6 +858,7 @@ export default function PurchaseReturnForm() {
         // In edit mode, exit edit mode and clear URL parameter
         setIsEditMode(false);
         setEditingWbId(null);
+        sessionStorage.removeItem('purchaseReturnEditMode');
 
         // Clear edit parameter from URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -1210,7 +1228,7 @@ export default function PurchaseReturnForm() {
               // Navigate to sales return form with same type
               const urlParams = new URLSearchParams(window.location.search);
               const typeMode = urlParams.get("type") || "online";
-              const targetUrl = `/sale-return?type=${typeMode}`;
+              const targetUrl = `/sales-return?type=${typeMode}`;
               window.history.pushState({}, "", targetUrl);
               setLocation(targetUrl);
             }}

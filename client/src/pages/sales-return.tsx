@@ -562,6 +562,7 @@ export default function SalesReturnForm() {
   const cancelEdit = () => {
     setIsEditMode(false);
     setEditingWbId(null);
+    sessionStorage.removeItem('salesReturnEditMode');
 
     // Clear edit parameter from URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -857,13 +858,31 @@ export default function SalesReturnForm() {
       setOnlineMode(true);
     }
 
+    // Check if page was reloaded while in edit mode
+    const wasInEditMode = sessionStorage.getItem('salesReturnEditMode');
+    if (wasInEditMode && !editWbId) {
+      // Page was reloaded while in edit mode but no edit parameter in URL
+      // Clear edit mode and reset to new form
+      console.log("Page reload detected while in edit mode, resetting to new form");
+      sessionStorage.removeItem('salesReturnEditMode');
+      setIsEditMode(false);
+      setEditingWbId(null);
+      setIsLoadingEditData(false);
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
+      return;
+    }
+
     if (editWbId) {
       // Load record for editing by wb_id - do NOT call resetFormToInitial
+      sessionStorage.setItem('salesReturnEditMode', 'true');
       setIsLoadingEditData(true);
       loadDataByWbId(parseInt(editWbId));
       return; // Exit early to prevent any other initialization
     } else if (!isEditMode && !editingWbId) {
       // Reset to fresh form only when not in edit mode
+      sessionStorage.removeItem('salesReturnEditMode');
       setTimeout(() => {
         resetFormToInitial();
       }, 100);
@@ -1173,6 +1192,7 @@ export default function SalesReturnForm() {
         // In edit mode, exit edit mode and clear URL parameter
         setIsEditMode(false);
         setEditingWbId(null);
+        sessionStorage.removeItem('salesReturnEditMode');
 
         // Clear edit parameter from URL
         const urlParams = new URLSearchParams(window.location.search);
