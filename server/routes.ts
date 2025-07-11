@@ -2360,6 +2360,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET items from inv_items table for dropdown
+  app.get("/api/inv-items", async (req: Request, res: Response) => {
+    try {
+      const query = "SELECT item_id, item_code, item_desc, uom, weight_in_kg FROM inv_items ORDER BY item_code";
+      const result = await pool.query(query);
+
+      console.log(`Fetched ${result.rows.length} items from inv_items table`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching items from inv_items:", error);
+      res.status(500).json({ error: "Failed to fetch items from inv_items table" });
+    }
+  });
+
   // WB Role endpoints for the new wb_role table
 
   // Save role to wb_role table

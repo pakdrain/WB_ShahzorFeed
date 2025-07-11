@@ -890,6 +890,7 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   const [igpItems, setIgpItems] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
+  const [invItems, setInvItems] = useState<any[]>([]);
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
@@ -1294,9 +1295,23 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
       }
     };
 
+    const fetchInvItems = async () => {
+      try {
+        const response = await fetch('/api/inv-items');
+        if (response.ok) {
+          const itemsData = await response.json();
+          setInvItems(Array.isArray(itemsData) ? itemsData : []);
+        }
+      } catch (error) {
+        console.error('Error fetching inv items:', error);
+        setInvItems([]);
+      }
+    };
+
     wakeUpDatabase().then(() => {
       fetchEntryTypes();
       fetchBranches();
+      fetchInvItems();
     });
   }, []);
 
@@ -3532,32 +3547,35 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                               />
                             </td>
                             <td className="border p-1 h-4 text-xs text-black">
-                              <Select name="itemCode" value={formData.itemCode} onValueChange={(value) => setFormData(prev => ({...prev, itemCode: value}))}>
+                              <Select name="itemCode" value={formData.itemCode} onValueChange={(value) => {
+                                const selectedItem = invItems.find(item => item.item_code === value);
+                                setFormData(prev => ({
+                                  ...prev, 
+                                  itemCode: value,
+                                  itemDesc: selectedItem ? selectedItem.item_desc : ''
+                                }));
+                              }}>
                                 <SelectTrigger className="h-4 text-xs text-black w-full border-none bg-transparent">
-                                  <SelectValue placeholder="Select item" className="text-black" />
+                                  <SelectValue placeholder="Select item code" className="text-black" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="WHEAT001">WHEAT001</SelectItem>
-                                  <SelectItem value="RICE001">RICE001</SelectItem>
-                                  <SelectItem value="CORN001">CORN001</SelectItem>
-                                  <SelectItem value="BARLEY001">BARLEY001</SelectItem>
-                                  <SelectItem value="OATS001">OATS001</SelectItem>
+                                  {invItems.map((item) => (
+                                    <SelectItem key={item.item_id} value={item.item_code}>
+                                      {item.item_code}
+                                    </SelectItem>
+                                  ))}
                                 </SelectContent>
                               </Select>
                             </td>
                             <td className="border p-1 h-4 text-xs text-black">
-                              <Select name="itemDesc" value={formData.itemDesc} onValueChange={(value) => setFormData(prev => ({...prev, itemDesc: value}))}>
-                                <SelectTrigger className="h-4 text-xs text-black w-full border-none bg-transparent">
-                                  <SelectValue placeholder="Select description" className="text-black" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="Wheat Grade A">Wheat Grade A</SelectItem>
-                                  <SelectItem value="Rice Premium">Rice Premium</SelectItem>
-                                  <SelectItem value="Corn Feed Grade">Corn Feed Grade</SelectItem>
-                                  <SelectItem value="Barley Malt">Barley Malt</SelectItem>
-                                  <SelectItem value="Oats Rolled">Oats Rolled</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <Input 
+                                name="itemDesc" 
+                                value={formData.itemDesc} 
+                                onChange={handleChange} 
+                                className="h-4 text-xs text-black w-full border-none bg-transparent" 
+                                placeholder="Auto-filled from Item Code"
+                                readOnly
+                              />
                             </td>
                             <td className="border p-1 h-4 text-xs text-black">
                               <Input 
