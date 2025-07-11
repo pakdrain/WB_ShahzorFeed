@@ -7,7 +7,6 @@ import { videoStreamService } from "./video-stream";
 import { z } from "zod";
 import pkg from 'pg';
 const { Pool } = pkg;
-import fetch from 'node-fetch';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -2439,17 +2438,20 @@ app.post('/api/save-role', async (req: Request, res: Response) => {
         return res.status(400).json({ error: 'URL is required' });
       }
 
-      // Fetch data from the provided URL
+      // Fetch data from the provided URL using native fetch (Node.js 18+)
       console.log('Fetching data from:', url);
       const response = await fetch(url);
       
       if (!response.ok) {
+        console.error(`Fetch failed with status: ${response.status} ${response.statusText}`);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
+      console.log('Data fetched successfully, type:', typeof data, 'isArray:', Array.isArray(data));
 
       // Create inv_items table if it doesn't exist
+      console.log('Creating/ensuring inv_items table exists...');
       await pool.query(`
         CREATE TABLE IF NOT EXISTS inv_items (
           id SERIAL PRIMARY KEY,
@@ -2470,45 +2472,60 @@ app.post('/api/save-role', async (req: Request, res: Response) => {
 
       let recordsInserted = 0;
 
+      // Helper function to insert item into database
+      const insertItemToDatabase = async (item: any, sourceUrl: string) => {
+        try {
+          const query = `
+            INSERT INTO inv_items (
+              item_code, item_name, item_desc, unit, price, quantity, 
+              category, supplier, data_source, raw_data
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          `;
+
+          const values = [
+            item.item_code || item.code || item.id || item.ITEM_CODE || null,
+            item.item_name || item.name || item.title || item.ITEM_NAME || null,
+            item.item_desc || item.description || item.desc || item.ITEM_DESC || null,
+            item.unit || item.uom || item.UNIT || null,
+            item.price || item.cost || item.amount || item.PRICE || null,
+            item.quantity || item.qty || item.stock || item.QUANTITY || null,
+            item.category || item.type || item.CATEGORY || null,
+            item.supplier || item.vendor || item.SUPPLIER || null,
+            sourceUrl,
+            JSON.stringify(item)
+          ];
+
+          await pool.query(query, values);
+          console.log('Inserted item:', item.item_code || item.code || item.id || 'unknown');
+        } catch (insertError: any) {
+          console.error('Error inserting item:', insertError.message);
+          throw insertError;
+        }
+      };
+
       // Handle different data structures
       if (Array.isArray(data)) {
+        console.log(`Processing array of ${data.length} items...`);
         // If data is an array, insert each item
         for (const item of data) {
           await insertItemToDatabase(item, url);
           recordsInserted++;
         }
+      } else if (data && typeof data === 'object' && data.items && Array.isArray(data.items)) {
+        console.log(`Processing nested array of ${data.items.length} items...`);
+        // If data has an items array property
+        for (const item of data.items) {
+          await insertItemToDatabase(item, url);
+          recordsInserted++;
+        }
       } else if (typeof data === 'object' && data !== null) {
+        console.log('Processing single object...');
         // If data is a single object, insert it
         await insertItemToDatabase(data, url);
         recordsInserted = 1;
       } else {
         throw new Error('Invalid data format received from URL');
-      }
-
-      // Helper function to insert item into database
-      async function insertItemToDatabase(item: any, sourceUrl: string) {
-        const query = `
-          INSERT INTO inv_items (
-            item_code, item_name, item_desc, unit, price, quantity, 
-            category, supplier, data_source, raw_data
-          )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        `;
-
-        const values = [
-          item.item_code || item.code || item.id || null,
-          item.item_name || item.name || item.title || null,
-          item.item_desc || item.description || item.desc || null,
-          item.unit || item.uom || null,
-          item.price || item.cost || item.amount || null,
-          item.quantity || item.qty || item.stock || null,
-          item.category || item.type || null,
-          item.supplier || item.vendor || null,
-          sourceUrl,
-          JSON.stringify(item)
-        ];
-
-        await pool.query(query, values);
       }
 
       console.log(`✅ Successfully saved ${recordsInserted} records to inv_items table from ${url}`);
@@ -2517,11 +2534,12 @@ app.post('/api/save-role', async (req: Request, res: Response) => {
         success: true,
         message: 'Data fetched and saved successfully',
         recordsInserted,
-        data: Array.isArray(data) ? data.slice(0, 5) : data // Return first 5 items for preview
+        data: Array.isArray(data) ? data.slice(0, 5) : (data.items ? data.items.slice(0, 5) : data)
       });
 
     } catch (error: any) {
       console.error('❌ Error fetching and saving data:', error);
+      console.error('Error stack:', error.stack);
       res.status(500).json({
         error: 'Failed to fetch and save data',
         details: error.message
