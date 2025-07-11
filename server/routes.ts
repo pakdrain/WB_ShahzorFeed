@@ -2669,23 +2669,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Array.isArray(data),
       );
 
-      // Create inv_items table if it doesn't exist
+      // Create inv_items table if it doesn't exist (matching your existing structure)
       console.log("Creating/ensuring inv_items table exists...");
       await pool.query(`
         CREATE TABLE IF NOT EXISTS inv_items (
-          id SERIAL PRIMARY KEY,
-          item_code VARCHAR(100),
-          item_name VARCHAR(255),
+          item_id SERIAL PRIMARY KEY,
+          item_code VARCHAR(50) NOT NULL UNIQUE,
           item_desc TEXT,
-          unit VARCHAR(50),
-          price DECIMAL(10, 2),
-          quantity INTEGER,
-          category VARCHAR(100),
-          supplier VARCHAR(255),
-          data_source VARCHAR(255),
-          raw_data JSONB,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          uom VARCHAR(10),
+          weight_in_kg DECIMAL(10, 2)
         )
       `);
 
@@ -2696,27 +2688,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const query = `
             INSERT INTO inv_items (
-              item_code, item_name, item_desc, unit, price, quantity, 
-              category, supplier, data_source, raw_data
+              item_code, item_desc, uom, weight_in_kg
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (item_code) DO UPDATE SET
+              item_desc = EXCLUDED.item_desc,
+              uom = EXCLUDED.uom,
+              weight_in_kg = EXCLUDED.weight_in_kg
           `;
 
           const values = [
-            item.item_code || item.code || item.id || item.ITEM_CODE || null,
-            item.item_name || item.name || item.title || item.ITEM_NAME || null,
-            item.item_desc ||
-              item.description ||
-              item.desc ||
-              item.ITEM_DESC ||
-              null,
-            item.unit || item.uom || item.UNIT || null,
-            item.price || item.cost || item.amount || item.PRICE || null,
-            item.quantity || item.qty || item.stock || item.QUANTITY || null,
-            item.category || item.type || item.CATEGORY || null,
-            item.supplier || item.vendor || item.SUPPLIER || null,
-            sourceUrl,
-            JSON.stringify(item),
+            item.item_code || item.code || item.id || item.ITEM_CODE || `ITEM_${Date.now()}`,
+            item.item_desc || item.description || item.desc || item.ITEM_DESC || item.name || item.title || null,
+            item.uom || item.unit || item.UOM || item.UNIT || null,
+            item.weight_in_kg || item.weight || item.kg || item.WEIGHT_IN_KG || null,
           ];
 
           await pool.query(query, values);
