@@ -2427,6 +2427,104 @@ app.post('/api/save-role', async (req: Request, res: Response) => {
   }
 });
 
+  // Get Data API endpoint - fetch data from URL and save to inv_items table
+  app.post('/api/fetch-and-save-data', async (req: Request, res: Response) => {
+    try {
+      const { url } = req.body;
+
+      if (!url) {
+        return res.status(400).json({ error: 'URL is required' });
+      }
+
+      // Fetch data from the provided URL
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      // Create inv_items table if it doesn't exist
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS inv_items (
+          id SERIAL PRIMARY KEY,
+          item_code VARCHAR(100),
+          item_name VARCHAR(255),
+          item_desc TEXT,
+          unit VARCHAR(50),
+          price DECIMAL(10, 2),
+          quantity INTEGER,
+          category VARCHAR(100),
+          supplier VARCHAR(255),
+          data_source VARCHAR(255),
+          raw_data JSONB,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+
+      let recordsInserted = 0;
+
+      // Handle different data structures
+      if (Array.isArray(data)) {
+        // If data is an array, insert each item
+        for (const item of data) {
+          await insertItemToDatabase(item, url);
+          recordsInserted++;
+        }
+      } else if (typeof data === 'object' && data !== null) {
+        // If data is a single object, insert it
+        await insertItemToDatabase(data, url);
+        recordsInserted = 1;
+      } else {
+        throw new Error('Invalid data format received from URL');
+      }
+
+      // Helper function to insert item into database
+      async function insertItemToDatabase(item: any, sourceUrl: string) {
+        const query = `
+          INSERT INTO inv_items (
+            item_code, item_name, item_desc, unit, price, quantity, 
+            category, supplier, data_source, raw_data
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `;
+
+        const values = [
+          item.item_code || item.code || item.id || null,
+          item.item_name || item.name || item.title || null,
+          item.item_desc || item.description || item.desc || null,
+          item.unit || item.uom || null,
+          item.price || item.cost || item.amount || null,
+          item.quantity || item.qty || item.stock || null,
+          item.category || item.type || null,
+          item.supplier || item.vendor || null,
+          sourceUrl,
+          JSON.stringify(item)
+        ];
+
+        await pool.query(query, values);
+      }
+
+      console.log(`✅ Successfully saved ${recordsInserted} records to inv_items table from ${url}`);
+      
+      res.json({
+        success: true,
+        message: 'Data fetched and saved successfully',
+        recordsInserted,
+        data: Array.isArray(data) ? data.slice(0, 5) : data // Return first 5 items for preview
+      });
+
+    } catch (error: any) {
+      console.error('❌ Error fetching and saving data:', error);
+      res.status(500).json({
+        error: 'Failed to fetch and save data',
+        details: error.message
+      });
+    }
+  });
+
   // Static file serving for captured images is already handled above
 
   return httpServer;

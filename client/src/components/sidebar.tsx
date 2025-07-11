@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronRight,
   Users,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -80,6 +81,7 @@ const getNavigation = (isAdmin: boolean) => {
     },
     // { name: "Voucher Entry", href: "/voucher-entry", icon: FileText },
     // { name: "Voucher View", href: "/voucher-view", icon: FileText },
+    { name: "Get Data", href: "/get-data", icon: Download },
     {
       name: "Return Form",
       icon: RotateCcw,
