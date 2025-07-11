@@ -7,6 +7,7 @@ import { videoStreamService } from "./video-stream";
 import { z } from "zod";
 import pkg from 'pg';
 const { Pool } = pkg;
+import fetch from 'node-fetch';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -2431,12 +2432,15 @@ app.post('/api/save-role', async (req: Request, res: Response) => {
   app.post('/api/fetch-and-save-data', async (req: Request, res: Response) => {
     try {
       const { url } = req.body;
+      
+      console.log('Received fetch request for URL:', url);
 
       if (!url) {
         return res.status(400).json({ error: 'URL is required' });
       }
 
       // Fetch data from the provided URL
+      console.log('Fetching data from:', url);
       const response = await fetch(url);
       
       if (!response.ok) {
