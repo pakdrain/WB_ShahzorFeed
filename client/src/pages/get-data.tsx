@@ -25,7 +25,7 @@ export default function GetData() {
 
     setIsLoading(true);
     try {
-      const response = await fetch("/api/fetch-and-save-data", {
+      const response = await fetch("/api/fetch-and-save-vendors", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,7 +42,7 @@ export default function GetData() {
       setFetchedData(result.data);
       toast({
         title: "Success",
-        description: `Successfully fetched and saved ${result.recordsInserted} records to inv_items table`,
+        description: `Successfully fetched and saved ${result.recordsInserted} records to ${result.targetTable} table`,
       });
     } catch (error) {
       console.error("Error fetching data:", error);
