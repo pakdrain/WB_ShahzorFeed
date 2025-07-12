@@ -2782,7 +2782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Fetch and save vendors API endpoint - fetch data from URL and save to inv_vendors table
+  // Fetch and save vendors API endpoint - dynamically check columns and save to correct table
   app.post("/api/fetch-and-save-vendors", async (req: Request, res: Response) => {
     try {
       const { url } = req.body;
@@ -2794,7 +2794,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Fetch data from the provided URL using native fetch (Node.js 18+)
-      console.log("Fetching vendors data from:", url);
+      console.log("Fetching data from:", url);
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -2806,50 +2806,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const data = await response.json();
       console.log(
-        "Vendors data fetched successfully, type:",
+        "Data fetched successfully, type:",
         typeof data,
         "isArray:",
         Array.isArray(data),
       );
 
-      // Create inv_vendors table if it doesn't exist
-      console.log("Creating/ensuring inv_vendors table exists...");
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS inv_vendors (
-          vendor_id SERIAL PRIMARY KEY,
-          vendor_name character varying(2000) COLLATE pg_catalog."default"
-        )
-      `);
+      // Get sample data to check column structure
+      let sampleItem = null;
+      if (Array.isArray(data) && data.length > 0) {
+        sampleItem = data[0];
+      } else if (data && typeof data === "object" && data.vendors && Array.isArray(data.vendors) && data.vendors.length > 0) {
+        sampleItem = data.vendors[0];
+      } else if (data && typeof data === "object" && data.items && Array.isArray(data.items) && data.items.length > 0) {
+        sampleItem = data.items[0];
+      } else if (typeof data === "object" && data !== null) {
+        sampleItem = data;
+      }
+
+      if (!sampleItem) {
+        throw new Error("No data found to process");
+      }
+
+      // Check column structure to determine target table
+      const sampleKeys = Object.keys(sampleItem).map(key => key.toLowerCase());
+      
+      // Define column patterns for each table
+      const vendorColumns = ['vendor_name', 'name', 'vendor', 'supplier'];
+      const itemColumns = ['item_code', 'item_desc', 'uom', 'weight_in_kg', 'code', 'description'];
+      
+      // Check which table columns match better
+      const vendorMatches = vendorColumns.filter(col => 
+        sampleKeys.some(key => key.includes(col) || col.includes(key))
+      ).length;
+      
+      const itemMatches = itemColumns.filter(col => 
+        sampleKeys.some(key => key.includes(col) || col.includes(key))
+      ).length;
+
+      let targetTable = 'inv_vendors'; // default
+      let tableName = 'inv_vendors';
+      
+      if (itemMatches > vendorMatches) {
+        targetTable = 'inv_items';
+        tableName = 'inv_items';
+      }
+
+      console.log(`Column analysis: vendor matches: ${vendorMatches}, item matches: ${itemMatches}`);
+      console.log(`Target table determined: ${targetTable}`);
+
+      // Create appropriate table
+      if (targetTable === 'inv_vendors') {
+        console.log("Creating/ensuring inv_vendors table exists...");
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS inv_vendors (
+            vendor_id SERIAL PRIMARY KEY,
+            vendor_name character varying(2000) COLLATE pg_catalog."default"
+          )
+        `);
+      } else {
+        console.log("Creating/ensuring inv_items table exists...");
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS inv_items (
+            item_id SERIAL PRIMARY KEY,
+            item_code VARCHAR(50) NOT NULL UNIQUE,
+            item_desc TEXT,
+            uom VARCHAR(10),
+            weight_in_kg DECIMAL(10, 2)
+          )
+        `);
+      }
 
       let recordsInserted = 0;
 
-      // Helper function to insert vendor into database
-      const insertVendorToDatabase = async (vendor: any, sourceUrl: string) => {
+      // Helper function to insert data into appropriate table
+      const insertDataToDatabase = async (item: any, sourceUrl: string) => {
         try {
-          const query = `
-            INSERT INTO inv_vendors (vendor_name)
-            VALUES ($1)
-            ON CONFLICT DO NOTHING
-          `;
+          if (targetTable === 'inv_vendors') {
+            const query = `
+              INSERT INTO inv_vendors (vendor_name)
+              VALUES ($1)
+              ON CONFLICT DO NOTHING
+            `;
 
-          const vendorName = vendor.vendor_name || vendor.name || vendor.VENDOR_NAME || vendor.NAME || vendor.title || vendor.label || `VENDOR_${Date.now()}`;
+            const vendorName = item.vendor_name || item.name || item.VENDOR_NAME || item.NAME || item.title || item.label || `VENDOR_${Date.now()}`;
+            const values = [vendorName];
 
-          const values = [vendorName];
+            await pool.query(query, values);
+            console.log("Inserted vendor:", vendorName);
+          } else {
+            const query = `
+              INSERT INTO inv_items (
+                item_code, item_desc, uom, weight_in_kg
+              )
+              VALUES ($1, $2, $3, $4)
+              ON CONFLICT (item_code) DO UPDATE SET
+                item_desc = EXCLUDED.item_desc,
+                uom = EXCLUDED.uom,
+                weight_in_kg = EXCLUDED.weight_in_kg
+            `;
 
-          const result = await pool.query(query, values);
-          console.log("Inserted vendor:", vendorName);
+            const values = [
+              item.item_code || item.code || item.id || item.ITEM_CODE || `ITEM_${Date.now()}`,
+              item.item_desc || item.description || item.desc || item.ITEM_DESC || item.name || item.title || null,
+              item.uom || item.unit || item.UOM || item.UNIT || null,
+              item.weight_in_kg || item.weight || item.kg || item.WEIGHT_IN_KG || null,
+            ];
+
+            await pool.query(query, values);
+            console.log("Inserted item:", item.item_code || item.code || item.id || "unknown");
+          }
         } catch (insertError: any) {
-          console.error("Error inserting vendor:", insertError.message);
+          console.error("Error inserting data:", insertError.message);
           throw insertError;
         }
       };
 
       // Handle different data structures
       if (Array.isArray(data)) {
-        console.log(`Processing array of ${data.length} vendors...`);
-        // If data is an array, insert each vendor
-        for (const vendor of data) {
-          await insertVendorToDatabase(vendor, url);
+        console.log(`Processing array of ${data.length} records...`);
+        for (const item of data) {
+          await insertDataToDatabase(item, url);
           recordsInserted++;
         }
       } else if (
@@ -2858,10 +2935,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data.vendors &&
         Array.isArray(data.vendors)
       ) {
-        console.log(`Processing nested array of ${data.vendors.length} vendors...`);
-        // If data has a vendors array property
-        for (const vendor of data.vendors) {
-          await insertVendorToDatabase(vendor, url);
+        console.log(`Processing nested array of ${data.vendors.length} records...`);
+        for (const item of data.vendors) {
+          await insertDataToDatabase(item, url);
           recordsInserted++;
         }
       } else if (
@@ -2870,29 +2946,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         data.items &&
         Array.isArray(data.items)
       ) {
-        console.log(`Processing nested array of ${data.items.length} vendors...`);
-        // If data has an items array property (fallback)
-        for (const vendor of data.items) {
-          await insertVendorToDatabase(vendor, url);
+        console.log(`Processing nested array of ${data.items.length} records...`);
+        for (const item of data.items) {
+          await insertDataToDatabase(item, url);
           recordsInserted++;
         }
       } else if (typeof data === "object" && data !== null) {
-        console.log("Processing single vendor object...");
-        // If data is a single object, insert it
-        await insertVendorToDatabase(data, url);
+        console.log("Processing single object...");
+        await insertDataToDatabase(data, url);
         recordsInserted = 1;
       } else {
         throw new Error("Invalid data format received from URL");
       }
 
       console.log(
-        `✅ Successfully saved ${recordsInserted} records to inv_vendors table from ${url}`,
+        `✅ Successfully saved ${recordsInserted} records to ${tableName} table from ${url}`,
       );
 
       res.json({
         success: true,
-        message: "Vendors data fetched and saved successfully",
+        message: `Data fetched and saved successfully to ${tableName}`,
         recordsInserted,
+        targetTable: tableName,
         data: Array.isArray(data)
           ? data.slice(0, 5)
           : data.vendors
@@ -2902,10 +2977,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               : data,
       });
     } catch (error: any) {
-      console.error("❌ Error fetching and saving vendors data:", error);
+      console.error("❌ Error fetching and saving data:", error);
       console.error("Error stack:", error.stack);
       res.status(500).json({
-        error: "Failed to fetch and save vendors data",
+        error: "Failed to fetch and save data",
         details: error.message,
       });
     }
