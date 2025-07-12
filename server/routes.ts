@@ -2782,6 +2782,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fetch and save vendors API endpoint - fetch data from URL and save to inv_vendors table
+  app.post("/api/fetch-and-save-vendors", async (req: Request, res: Response) => {
+    try {
+      const { url } = req.body;
+
+      console.log("Received fetch vendors request for URL:", url);
+
+      if (!url) {
+        return res.status(400).json({ error: "URL is required" });
+      }
+
+      // Fetch data from the provided URL using native fetch (Node.js 18+)
+      console.log("Fetching vendors data from:", url);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        console.error(
+          `Fetch failed with status: ${response.status} ${response.statusText}`,
+        );
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(
+        "Vendors data fetched successfully, type:",
+        typeof data,
+        "isArray:",
+        Array.isArray(data),
+      );
+
+      // Create inv_vendors table if it doesn't exist
+      console.log("Creating/ensuring inv_vendors table exists...");
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS inv_vendors (
+          vendor_id SERIAL PRIMARY KEY,
+          vendor_name character varying(2000) COLLATE pg_catalog."default"
+        )
+      `);
+
+      let recordsInserted = 0;
+
+      // Helper function to insert vendor into database
+      const insertVendorToDatabase = async (vendor: any, sourceUrl: string) => {
+        try {
+          const query = `
+            INSERT INTO inv_vendors (vendor_name)
+            VALUES ($1)
+            ON CONFLICT DO NOTHING
+          `;
+
+          const vendorName = vendor.vendor_name || vendor.name || vendor.VENDOR_NAME || vendor.NAME || vendor.title || vendor.label || `VENDOR_${Date.now()}`;
+
+          const values = [vendorName];
+
+          const result = await pool.query(query, values);
+          console.log("Inserted vendor:", vendorName);
+        } catch (insertError: any) {
+          console.error("Error inserting vendor:", insertError.message);
+          throw insertError;
+        }
+      };
+
+      // Handle different data structures
+      if (Array.isArray(data)) {
+        console.log(`Processing array of ${data.length} vendors...`);
+        // If data is an array, insert each vendor
+        for (const vendor of data) {
+          await insertVendorToDatabase(vendor, url);
+          recordsInserted++;
+        }
+      } else if (
+        data &&
+        typeof data === "object" &&
+        data.vendors &&
+        Array.isArray(data.vendors)
+      ) {
+        console.log(`Processing nested array of ${data.vendors.length} vendors...`);
+        // If data has a vendors array property
+        for (const vendor of data.vendors) {
+          await insertVendorToDatabase(vendor, url);
+          recordsInserted++;
+        }
+      } else if (
+        data &&
+        typeof data === "object" &&
+        data.items &&
+        Array.isArray(data.items)
+      ) {
+        console.log(`Processing nested array of ${data.items.length} vendors...`);
+        // If data has an items array property (fallback)
+        for (const vendor of data.items) {
+          await insertVendorToDatabase(vendor, url);
+          recordsInserted++;
+        }
+      } else if (typeof data === "object" && data !== null) {
+        console.log("Processing single vendor object...");
+        // If data is a single object, insert it
+        await insertVendorToDatabase(data, url);
+        recordsInserted = 1;
+      } else {
+        throw new Error("Invalid data format received from URL");
+      }
+
+      console.log(
+        `✅ Successfully saved ${recordsInserted} records to inv_vendors table from ${url}`,
+      );
+
+      res.json({
+        success: true,
+        message: "Vendors data fetched and saved successfully",
+        recordsInserted,
+        data: Array.isArray(data)
+          ? data.slice(0, 5)
+          : data.vendors
+            ? data.vendors.slice(0, 5)
+            : data.items
+              ? data.items.slice(0, 5)
+              : data,
+      });
+    } catch (error: any) {
+      console.error("❌ Error fetching and saving vendors data:", error);
+      console.error("Error stack:", error.stack);
+      res.status(500).json({
+        error: "Failed to fetch and save vendors data",
+        details: error.message,
+      });
+    }
+  });
+
   // Static file serving for captured images is already handled above
 
   return httpServer;
