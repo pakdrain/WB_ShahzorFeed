@@ -1,8 +1,15 @@
 
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useLocation } from 'wouter';
 
 const VoucherView = () => {
+  const [, setLocation] = useLocation();
+
+  const handleNewEntry = () => {
+    setLocation('/voucher-entry');
+  };
+
   return (
     <div
       className="container-fluid border p-2"
@@ -14,13 +21,24 @@ const VoucherView = () => {
         style={{ backgroundColor: '#336699', color: '#fff' }}
       >
         <strong>Voucher View</strong>
+        <button 
+          className="btn btn-light btn-sm"
+          onClick={handleNewEntry}
+        >
+          New Entry
+        </button>
       </div>
 
       {/* Form Filters */}
       <div className="row mt-3 mb-2">
         <div className="col-md-2">
           <label className="form-label fw-bold text-dark">Status</label>
-          <select className="form-select form-select-sm"></select>
+          <select className="form-select form-select-sm">
+            <option value="">Select Status</option>
+            <option value="create">Create</option>
+            <option value="checked">Checked</option>
+            <option value="approved">Approved</option>
+          </select>
         </div>
         <div className="col-md-4">
           <label className="form-label fw-bold text-dark">Company</label>
@@ -31,12 +49,28 @@ const VoucherView = () => {
         <div className="col-md-2">
           <label className="form-label fw-bold text-dark">Month</label>
           <select className="form-select form-select-sm">
-            <option>JUNE 25</option>
+            <option value="">Select Month</option>
+            <option value="january">January</option>
+            <option value="february">February</option>
+            <option value="march">March</option>
+            <option value="april">April</option>
+            <option value="may">May</option>
+            <option value="june">June</option>
+            <option value="july">July</option>
+            <option value="august">August</option>
+            <option value="september">September</option>
+            <option value="october">October</option>
+            <option value="november">November</option>
+            <option value="december">December</option>
           </select>
         </div>
         <div className="col-md-2">
           <label className="form-label fw-bold text-dark">Voucher Type</label>
-          <select className="form-select form-select-sm"></select>
+          <select className="form-select form-select-sm">
+            <option value="">Select Type</option>
+            <option value="cpv">CPV</option>
+            <option value="cv">CV</option>
+          </select>
         </div>
       </div>
 
