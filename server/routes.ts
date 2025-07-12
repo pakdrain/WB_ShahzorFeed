@@ -3019,6 +3019,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET all unique DO numbers from wb_weighbridge_items_purchase table
+  app.get("/api/do-numbers", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT DISTINCT do_no 
+        FROM wb_weighbridge_items_purchase 
+        WHERE do_no IS NOT NULL AND do_no != '' 
+        ORDER BY do_no
+      `;
+      const result = await pool.query(query);
+      
+      const doNumbers = result.rows.map(row => row.do_no);
+      
+      console.log(`Fetched ${doNumbers.length} unique DO numbers`);
+      res.json(doNumbers);
+    } catch (error: any) {
+      console.error("Error fetching DO numbers:", error);
+      res.status(500).json({ error: "Failed to fetch DO numbers" });
+    }
+  });
+
+  // GET data related to specific DO number
+  app.get("/api/do-data/:doNo", async (req: Request, res: Response) => {
+    try {
+      const { doNo } = req.params;
+      
+      const query = `
+        SELECT 
+          wbi.do_no,
+          wb.slip_no,
+          wbi.vehicle_no,
+          wbi.item_desc,
+          wbi.customer_name,
+          wbi.do_qty,
+          wbi.dc_qty,
+          wbi.do_date,
+          wb.freight,
+          wb.remarks
+        FROM wb_weighbridge_items_purchase wbi
+        LEFT JOIN wb_weighbridge wb ON wbi.wb_id = wb.wb_id
+        WHERE wbi.do_no = $1
+      `;
+      
+      const result = await pool.query(query, [doNo]);
+      
+      console.log(`Fetched ${result.rows.length} records for DO number: ${doNo}`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching DO data:", error);
+      res.status(500).json({ error: "Failed to fetch DO data" });
+    }
+  });
+
   // Static file serving for captured images is already handled above
 
   return httpServer;
