@@ -2833,10 +2833,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Define column patterns for each table
       const vendorColumns = ['vendor_name', 'name', 'vendor', 'supplier'];
+      const customerColumns = ['customer_name', 'customer', 'client', 'buyer'];
       const itemColumns = ['item_code', 'item_desc', 'uom', 'weight_in_kg', 'code', 'description'];
       
       // Check which table columns match better
       const vendorMatches = vendorColumns.filter(col => 
+        sampleKeys.some(key => key.includes(col) || col.includes(key))
+      ).length;
+      
+      const customerMatches = customerColumns.filter(col => 
         sampleKeys.some(key => key.includes(col) || col.includes(key))
       ).length;
       
@@ -2847,12 +2852,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let targetTable = 'inv_vendors'; // default
       let tableName = 'inv_vendors';
       
-      if (itemMatches > vendorMatches) {
+      if (itemMatches > Math.max(vendorMatches, customerMatches)) {
         targetTable = 'inv_items';
         tableName = 'inv_items';
+      } else if (customerMatches > vendorMatches) {
+        targetTable = 'inv_customers';
+        tableName = 'inv_customers';
       }
 
-      console.log(`Column analysis: vendor matches: ${vendorMatches}, item matches: ${itemMatches}`);
+      console.log(`Column analysis: vendor matches: ${vendorMatches}, customer matches: ${customerMatches}, item matches: ${itemMatches}`);
       console.log(`Target table determined: ${targetTable}`);
 
       // Create appropriate table
@@ -2862,6 +2870,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           CREATE TABLE IF NOT EXISTS inv_vendors (
             vendor_id SERIAL PRIMARY KEY,
             vendor_name character varying(2000) COLLATE pg_catalog."default"
+          )
+        `);
+      } else if (targetTable === 'inv_customers') {
+        console.log("Creating/ensuring inv_customers table exists...");
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS inv_customers (
+            customer_id SERIAL PRIMARY KEY,
+            customer_name VARCHAR(100) NOT NULL,
+            sale_person_id INT,
+            active BOOLEAN DEFAULT TRUE
           )
         `);
       } else {
@@ -2894,6 +2912,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             await pool.query(query, values);
             console.log("Inserted vendor:", vendorName);
+          } else if (targetTable === 'inv_customers') {
+            const query = `
+              INSERT INTO inv_customers (customer_name, sale_person_id, active)
+              VALUES ($1, $2, $3)
+              ON CONFLICT DO NOTHING
+            `;
+
+            const customerName = item.customer_name || item.name || item.CUSTOMER_NAME || item.NAME || item.title || item.label || item.customer || item.client || item.buyer || `CUSTOMER_${Date.now()}`;
+            const salePersonId = item.sale_person_id || item.salesperson_id || item.sales_person_id || item.SALE_PERSON_ID || null;
+            const active = item.active !== undefined ? item.active : (item.status === 'active' || item.STATUS === 'ACTIVE' || true);
+
+            const values = [customerName, salePersonId, active];
+
+            await pool.query(query, values);
+            console.log("Inserted customer:", customerName);
           } else {
             const query = `
               INSERT INTO inv_items (
