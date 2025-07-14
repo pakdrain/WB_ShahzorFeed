@@ -43,7 +43,7 @@ class LicensePlateOCR:
                         print(f"API response length: {len(content)}")
                         print(f"API response sample: {content[:200]}")
 
-                        # Enhanced plate number extraction patterns
+                        # Enhanced plate number extraction patterns - focus on actual number detection
                         plate_patterns = [
                             # XML format patterns
                             r'<PlateNumber[^>]*>([^<]+)</PlateNumber>',
@@ -62,22 +62,21 @@ class LicensePlateOCR:
                             r'"result"\s*:\s*"([^"]+)"',
 
                             # Key-value patterns
-                            r'PlateNumber[:\s=]+([A-Z0-9\-\s]{4,12})',
-                            r'plateNumber[:\s=]+([A-Z0-9\-\s]{4,12})',
-                            r'plate[:\s=]+([A-Z0-9\-\s]{4,12})',
-                            r'number[:\s=]+([A-Z0-9\-\s]{4,12})',
-                            r'ANPR[:\s=]+([A-Z0-9\-\s]{4,12})',
+                            r'PlateNumber[:\s=]+([A-Z0-9\-\s]{3,8})',
+                            r'plateNumber[:\s=]+([A-Z0-9\-\s]{3,8})',
+                            r'plate[:\s=]+([A-Z0-9\-\s]{3,8})',
+                            r'number[:\s=]+([A-Z0-9\-\s]{3,8})',
+                            r'ANPR[:\s=]+([A-Z0-9\-\s]{3,8})',
 
-                            # Pakistani license plate patterns
-                            r'([A-Z]{2,3}[\-\s]?\d{3,4}[A-Z]?)',
-                            r'([A-Z]{1,2}\d{1,4}[A-Z]{1,2})',
-                            r'(\d{1,4}[\-\s]?[A-Z]{2,4}[\-\s]?\d{1,4})',
-                            r'(LEA[\-\s]?\d{3,4})',
-                            r'(RIC[\-\s]?\d{3,4})',
-                            r'(LES[\-\s]?\d{3,4})',
+                            # Pakistani license plate patterns - more specific
+                            r'([A-Z]{2,3}[\-\s]?\d{3,4})',
+                            r'(\d{3,4})',  # Simple 3-4 digit numbers like 8400
+                            r'([A-Z]{1,3}\d{3,4})',
+                            r'(\d{1,4}[A-Z]{1,3})',
 
-                            # General alphanumeric patterns
-                            r'([A-Z0-9]{4,8})'
+                            # General patterns for visible plates
+                            r'([0-9]{3,4})',  # Pure numbers 3-4 digits
+                            r'([A-Z0-9]{3,6})'  # Mixed alphanumeric
                         ]
 
                         for pattern in plate_patterns:
@@ -85,11 +84,20 @@ class LicensePlateOCR:
                             for match in matches:
                                 plate_number = str(match).strip().replace(' ', '').replace('-', '').upper()
 
-                                # Validate plate number
-                                if len(plate_number) >= 4 and len(plate_number) <= 8:
-                                    # Check if it's not a common false positive
-                                    false_positives = ['HTTP', 'ADMIN', 'LOGIN', 'ERROR', 'NULL', 'UNDEFINED', 'TRUE', 'FALSE', 'CAMERA', 'STREAM', 'CAM0353', 'CAM']
-                                    if plate_number not in false_positives and not plate_number.startswith('CAM'):
+                                # Validate plate number - more lenient for actual detection
+                                if len(plate_number) >= 3 and len(plate_number) <= 8:
+                                    # Enhanced false positive filtering
+                                    false_positives = [
+                                        'HTTP', 'ADMIN', 'LOGIN', 'ERROR', 'NULL', 'UNDEFINED', 
+                                        'TRUE', 'FALSE', 'CAMERA', 'STREAM', 'CAM0353', 'CAM',
+                                        'PLT', 'TEST', 'DEMO', 'SAMPLE', 'DEFAULT'
+                                    ]
+
+                                    # Skip obvious false positives
+                                    if (plate_number not in false_positives and 
+                                        not plate_number.startswith('CAM') and
+                                        not plate_number.startswith('PLT') and
+                                        not plate_number.startswith('TEST')):
                                         print(f"ANPR API found valid plate: {plate_number}")
                                         return {"anpr_result": plate_number}
 

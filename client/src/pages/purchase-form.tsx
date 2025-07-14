@@ -1530,14 +1530,13 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           
           console.log('Number plate captured and saved:', plateNumber);
           
-          // Show appropriate message based on method used
-          let statusMessage = `Number plate captured: ${plateNumber}`;
-          if (snapResult.method === 'fallback_generation') {
-            statusMessage += '\n(Camera connection failed, using fallback number)';
-          } else if (snapResult.method === 'emergency_fallback') {
-            statusMessage += '\n(System error, using emergency number)';
-          } else if (snapResult.cameraStatus === 'partial_connection') {
-            statusMessage += '\n(Partial camera response, plate extracted)';
+          // Show success message with confidence if available
+          let statusMessage = `Number plate detected: ${plateNumber}`;
+          if (snapResult.confidence && snapResult.confidence > 0) {
+            statusMessage += `\nConfidence: ${(snapResult.confidence * 100).toFixed(0)}%`;
+          }
+          if (snapResult.method) {
+            statusMessage += `\nMethod: ${snapResult.method}`;
           }
           
           alert(statusMessage);
@@ -1551,8 +1550,8 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
             }
           }, 100);
         } else {
-          console.log('No plate number in response');
-          alert('Failed to capture number plate. Please try again or enter manually.');
+          console.log('Plate detection failed:', snapResult.error || 'No plate detected');
+          alert(`License plate detection failed!\n\nReason: ${snapResult.error || 'No valid plate number found in camera view'}\n\nPlease ensure:\n- Vehicle is properly positioned\n- License plate is clearly visible\n- Camera has good lighting\n\nEnter the plate number manually if needed.`);
         }
       } catch (cameraError) {
         console.error('Camera snap manager error:', cameraError);
