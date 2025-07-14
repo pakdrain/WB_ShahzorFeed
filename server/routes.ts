@@ -143,6 +143,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Camera snap manager endpoint for number plate capture and reading
+  app.post("/api/cameras/snap-manager", async (req: Request, res: Response) => {
+    try {
+      const { wbId } = req.body;
+      console.log("Camera snap manager requested for wb_id:", wbId);
+
+      // Call the camera API to capture image and read number plate
+      const cameraUrl = "http://admin:admin123@10.10.10.146/cgi-bin/snapManager.cgi?action=attachFileProc&Flags[0]=Event&Events=TrafficManualSnap&heartbeat=5";
+      
+      const response = await fetch(cameraUrl, {
+        method: 'GET',
+        timeout: 10000
+      });
+
+      if (!response.ok) {
+        throw new Error(`Camera API failed with status: ${response.status}`);
+      }
+
+      const cameraData = await response.text();
+      console.log("Camera API response:", cameraData);
+
+      // Parse the plate number from camera response
+      let plateNumber = null;
+      
+      // Try to extract plate number from various response formats
+      const platePatterns = [
+        /<PlateNumber[^>]*>([^<]+)<\/PlateNumber>/i,
+        /"PlateNumber"\s*:\s*"([^"]+)"/i,
+        /"plateNumber"\s*:\s*"([^"]+)"/i,
+        /"plate"\s*:\s*"([^"]+)"/i,
+        /PlateNumber[:\s]*([A-Z0-9\-\s]+)/i,
+        /plate[:\s]*([A-Z0-9\-\s]+)/i
+      ];
+
+      for (const pattern of platePatterns) {
+        const match = cameraData.match(pattern);
+        if (match && match[1]) {
+          plateNumber = match[1].trim();
+          break;
+        }
+      }
+
+      if (!plateNumber) {
+        return res.status(404).json({
+          success: false,
+          error: "No plate number found in camera response",
+          rawResponse: cameraData
+        });
+      }
+
+      console.log("Extracted plate number:", plateNumber);
+
+      // Save the plate number to wb_weighbridge_items_purchase table if wbId is provided
+      if (wbId) {
+        const updateQuery = `
+          UPDATE wb_weighbridge_items_purchase 
+          SET vehicle_no = $1 
+          WHERE wb_id = $2
+        `;
+        
+        await pool.query(updateQuery, [plateNumber, parseInt(wbId)]);
+        console.log(`Updated vehicle_no for wb_id ${wbId} with plate number: ${plateNumber}`);
+      }
+
+      res.json({
+        success: true,
+        plateNumber: plateNumber,
+        message: "Plate number captured and saved successfully",
+        wbId: wbId || null
+      });
+
+    } catch (error: any) {
+      console.error("Error in camera snap manager:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to capture plate number from camera",
+        details: error.message
+      });
+    }
+  });
+
   // Helper function to generate a unique WB_ID
   async function generateWBID() {
     try {
