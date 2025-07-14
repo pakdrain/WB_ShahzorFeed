@@ -1517,38 +1517,56 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           }),
         });
 
-        if (snapResponse.ok) {
-          const snapResult = await snapResponse.json();
-          console.log('Camera snap manager response:', snapResult);
+        const snapResult = await snapResponse.json();
+        console.log('Camera snap manager response:', snapResult);
+        
+        if (snapResult.success && snapResult.plateNumber) {
+          // Update vehicle number in form - ensure it's properly set
+          const plateNumber = snapResult.plateNumber.trim();
+          setFormData(prev => ({
+            ...prev,
+            vehicleNo: plateNumber
+          }));
           
-          if (snapResult.success && snapResult.plateNumber) {
-            // Update vehicle number in form - ensure it's properly set
-            const plateNumber = snapResult.plateNumber.trim();
-            setFormData(prev => ({
-              ...prev,
-              vehicleNo: plateNumber
-            }));
-            
-            console.log('Number plate captured and saved:', plateNumber);
-            alert(`Number plate captured: ${plateNumber}`);
-            
-            // Force update the input field if needed
+          console.log('Number plate captured and saved:', plateNumber);
+          
+          // Show appropriate message based on method used
+          let statusMessage = `Number plate captured: ${plateNumber}`;
+          if (snapResult.method === 'fallback_generation') {
+            statusMessage += '\n(Camera connection failed, using fallback number)';
+          } else if (snapResult.method === 'emergency_fallback') {
+            statusMessage += '\n(System error, using emergency number)';
+          } else if (snapResult.cameraStatus === 'partial_connection') {
+            statusMessage += '\n(Partial camera response, plate extracted)';
+          }
+          
+          alert(statusMessage);
+          
+          // Force update the input field if needed
+          setTimeout(() => {
             const vehicleInput = document.querySelector('input[name="vehicleNo"]') as HTMLInputElement;
             if (vehicleInput) {
               vehicleInput.value = plateNumber;
               vehicleInput.dispatchEvent(new Event('input', { bubbles: true }));
             }
-          } else {
-            console.log('No plate number detected from camera');
-            alert('No number plate detected. Please ensure vehicle is positioned correctly in camera view.');
-          }
+          }, 100);
         } else {
-          console.error('Camera snap manager failed:', snapResponse.status);
-          alert('Camera connection failed. Please check camera connection.');
+          console.log('No plate number in response');
+          alert('Failed to capture number plate. Please try again or enter manually.');
         }
       } catch (cameraError) {
         console.error('Camera snap manager error:', cameraError);
-        alert('Error connecting to camera system.');
+        
+        // Generate emergency plate number on frontend error
+        const now = new Date();
+        const emergencyPlate = `FE${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
+        
+        setFormData(prev => ({
+          ...prev,
+          vehicleNo: emergencyPlate
+        }));
+        
+        alert(`Camera system error. Using emergency plate: ${emergencyPlate}\nPlease verify and update if needed.`);
       }
 
     } catch (error) {
