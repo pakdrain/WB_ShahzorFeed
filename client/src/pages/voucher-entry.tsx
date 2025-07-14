@@ -49,6 +49,12 @@ const VoucherEntry = () => {
     }
   };
 
+  const handleTableDataChange = (index, field, value) => {
+    const updatedData = [...tableData];
+    updatedData[index] = { ...updatedData[index], [field]: value };
+    setTableData(updatedData);
+  };
+
   const handleSave = async () => {
     try {
       // Create vouchers table if it doesn't exist
@@ -183,9 +189,9 @@ const VoucherEntry = () => {
           <td><input className="form-control form-control-sm" value={row.do_date || row.delivery_term || ''} readOnly /></td>
           <td><input className="form-control form-control-sm" value={row.item_desc || ''} readOnly /></td>
           <td><input className="form-control form-control-sm" value={row.customer_name || ''} readOnly /></td>
-          <td><input className="form-control form-control-sm" value={row.debit_amount || ''} /></td>
-          <td><input className="form-control form-control-sm" value={row.credit_amount || ''} /></td>
-          <td><input className="form-control form-control-sm" value={row.freight_amount || ''} /></td>
+          <td><input className="form-control form-control-sm" value={row.debit_amount || ''} onChange={(e) => handleTableDataChange(i, 'debit_amount', e.target.value)} /></td>
+          <td><input className="form-control form-control-sm" value={row.credit_amount || ''} onChange={(e) => handleTableDataChange(i, 'credit_amount', e.target.value)} /></td>
+          <td><input className="form-control form-control-sm" value={row.freight_amount || ''} onChange={(e) => handleTableDataChange(i, 'freight_amount', e.target.value)} /></td>
           <td>
             <button className="btn btn-sm btn-outline-danger">X</button>
           </td>

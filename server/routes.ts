@@ -3209,24 +3209,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = `
         SELECT 
-          voucher_id,
-          voucher_type,
-          voucher_no,
-          voucher_date,
-          description,
-          status,
-          reference_no,
-          branch_id,
-          company_name,
-          entry_remarks,
-          creation_date
-        FROM gl_vouchers 
-        ORDER BY voucher_id DESC
+          gv.voucher_id,
+          gv.voucher_type,
+          gv.voucher_no,
+          gv.voucher_date,
+          gv.description,
+          gv.status,
+          gv.reference_no,
+          gv.branch_id,
+          gv.company_name,
+          gv.entry_remarks,
+          gv.creation_date,
+          wbi.customer_name,
+          wbi.item_desc,
+          wb.remarks
+        FROM gl_vouchers gv
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON gv.reference_no = wbi.do_no
+        LEFT JOIN wb_weighbridge wb ON wbi.wb_id = wb.wb_id
+        ORDER BY gv.voucher_id DESC
       `;
       
       const result = await pool.query(query);
       
-      console.log(`Fetched ${result.rows.length} vouchers`);
+      console.log(`Fetched ${result.rows.length} vouchers with DO data`);
       res.json(result.rows);
     } catch (error: any) {
       console.error("Error fetching vouchers:", error);

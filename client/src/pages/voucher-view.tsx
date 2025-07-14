@@ -212,15 +212,31 @@ const VoucherView = () => {
             </tr>
           </thead>
           <tbody>
-            {Array(10).fill(null).map((_, rowIdx) => (
-              <tr key={rowIdx}>
-                {Array(9).fill(null).map((_, colIdx) => (
-                  <td key={colIdx}>
-                    <input type="text" className="form-control form-control-sm" />
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {vouchers.length > 0 ? (
+              vouchers.map((voucher, index) => (
+                <tr key={index}>
+                  <td><input type="text" className="form-control form-control-sm" value={voucher.customer_name || ''} readOnly /></td>
+                  <td><input type="text" className="form-control form-control-sm" value="" /></td>
+                  <td><input type="text" className="form-control form-control-sm" value={voucher.item_desc || ''} readOnly /></td>
+                  <td><input type="text" className="form-control form-control-sm" value={voucher.remarks || ''} readOnly /></td>
+                  <td><input type="text" className="form-control form-control-sm" value="" /></td>
+                  <td><input type="text" className="form-control form-control-sm" value="" /></td>
+                  <td><input type="text" className="form-control form-control-sm" value="" /></td>
+                  <td><input type="text" className="form-control form-control-sm" value="" /></td>
+                  <td><input type="text" className="form-control form-control-sm" value="" /></td>
+                </tr>
+              ))
+            ) : (
+              Array(10).fill(null).map((_, rowIdx) => (
+                <tr key={rowIdx}>
+                  {Array(9).fill(null).map((_, colIdx) => (
+                    <td key={colIdx}>
+                      <input type="text" className="form-control form-control-sm" />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
