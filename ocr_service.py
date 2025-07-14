@@ -88,8 +88,8 @@ class LicensePlateOCR:
                                 # Validate plate number
                                 if len(plate_number) >= 4 and len(plate_number) <= 8:
                                     # Check if it's not a common false positive
-                                    false_positives = ['HTTP', 'ADMIN', 'LOGIN', 'ERROR', 'NULL', 'UNDEFINED', 'TRUE', 'FALSE', 'CAMERA', 'STREAM']
-                                    if plate_number not in false_positives:
+                                    false_positives = ['HTTP', 'ADMIN', 'LOGIN', 'ERROR', 'NULL', 'UNDEFINED', 'TRUE', 'FALSE', 'CAMERA', 'STREAM', 'CAM0353', 'CAM']
+                                    if plate_number not in false_positives and not plate_number.startswith('CAM'):
                                         print(f"ANPR API found valid plate: {plate_number}")
                                         return {"anpr_result": plate_number}
 
