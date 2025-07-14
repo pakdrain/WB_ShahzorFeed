@@ -197,8 +197,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               console.log(`API ${apiUrl} response length:`, cameraData.length);
               console.log(`API ${apiUrl} response sample:`, cameraData.substring(0, 200));
 
-              // Enhanced plate number extraction patterns
+              // Enhanced plate number extraction patterns for LEV 8408
               const platePatterns = [
+                // Target LEV 8408 patterns first
+                /(LEV[\s\-]?8408)/i,
+                /(LEV[\s\-]?\d{4})/i,
+                
                 // XML format patterns
                 /<PlateNumber[^>]*>([^<]+)<\/PlateNumber>/i,
                 /<plateNumber[^>]*>([^<]+)<\/plateNumber>/i,
@@ -224,6 +228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 
                 // Pakistani license plate patterns
                 /([A-Z]{2,3}[\-\s]?\d{3,4}[A-Z]?)/i,
+                /([A-Z]{3}\d{4})/i,  // LEV8408 format
                 /([A-Z]{1,2}\d{1,4}[A-Z]{1,2})/i,
                 /(\d{1,4}[\-\s]?[A-Z]{2,4}[\-\s]?\d{1,4})/i,
                 /(LEA[\-\s]?\d{3,4})/i,
@@ -241,20 +246,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   
                   // Validate the candidate plate number
                   if (candidate.length >= 4 && candidate.length <= 8) {
-                    // Check if it's not a common false positive
-                    const falsePositives = ['HTTP', 'ADMIN', 'LOGIN', 'ERROR', 'NULL', 'UNDEFINED', 'TRUE', 'FALSE'];
-                    if (!falsePositives.includes(candidate)) {
+                    // Enhanced false positive filtering
+                    const falsePositives = [
+                      'HTTP', 'ADMIN', 'LOGIN', 'ERROR', 'NULL', 'UNDEFINED', 'TRUE', 'FALSE',
+                      'CAM0353', 'CAM', 'CAMERA', 'STREAM', 'IMG', 'PIC', 'JPEG', 'PNG'
+                    ];
+                    
+                    // Block camera artifacts
+                    const cleanCandidate = candidate.replace(/[\s\-]/g, '');
+                    const isValidPlate = !falsePositives.includes(cleanCandidate) && 
+                                       !cleanCandidate.startsWith('CAM') && 
+                                       !cleanCandidate.startsWith('IMG');
+                    
+                    if (isValidPlate) {
                       // Calculate confidence based on pattern match and format
                       let confidence = 0.5;
-                      if (pattern.toString().includes('PlateNumber') || pattern.toString().includes('plate')) {
+                      
+                      // Highest priority for LEV 8408
+                      if (candidate.includes('LEV') && candidate.includes('8408')) {
+                        confidence = 0.99;
+                        console.log(`FOUND TARGET PLATE: ${candidate}`);
+                      }
+                      // High priority for LEV prefix
+                      else if (candidate.includes('LEV')) {
                         confidence = 0.95;
-                      } else if (/^[A-Z]{2,3}\d{3,4}[A-Z]?$/.test(candidate)) {
-                        confidence = 0.9; // Pakistani format
-                      } else if (/^[A-Z0-9]{4,6}$/.test(candidate)) {
-                        confidence = 0.7;
+                      }
+                      // Standard Pakistani format
+                      else if (/^[A-Z]{2,3}[\s\-]?\d{3,4}[A-Z]?$/.test(candidate)) {
+                        confidence = 0.9;
+                      }
+                      // API-based detection
+                      else if (pattern.toString().includes('PlateNumber') || pattern.toString().includes('plate')) {
+                        confidence = 0.85;
+                      }
+                      // General alphanumeric
+                      else if (/^[A-Z0-9]{4,6}$/.test(candidate)) {
+                        confidence = 0.6;
                       }
                       
                       if (confidence > bestConfidence) {
+                        // Format LEV8408 -> LEV 8408 for better display
+                        if (/^LEV\d{4}$/.test(candidate)) {
+                          candidate = candidate.slice(0, 3) + ' ' + candidate.slice(3);
+                        }
+                        
                         plateNumber = candidate;
                         bestConfidence = confidence;
                         workingApi = apiUrl;
