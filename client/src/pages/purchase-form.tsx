@@ -1494,6 +1494,7 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
 
   const captureFirstWeight = async () => {
     try {
+      // Get current weight data
       const response = await fetch('/api/weight/data');
       const weightData = await response.json();
 
@@ -1502,6 +1503,44 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
         ...prev,
         firstWeight: weightData.weight
       }));
+
+      // Call camera snap manager to capture and read number plate
+      try {
+        console.log('Calling camera snap manager for number plate reading...');
+        const snapResponse = await fetch('/api/cameras/snap-manager', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            wbId: editingWbId || null
+          }),
+        });
+
+        if (snapResponse.ok) {
+          const snapResult = await snapResponse.json();
+          console.log('Camera snap manager response:', snapResult);
+          
+          if (snapResult.success && snapResult.plateNumber) {
+            // Update vehicle number in form
+            setFormData(prev => ({
+              ...prev,
+              vehicleNo: snapResult.plateNumber
+            }));
+            
+            console.log('Number plate captured and saved:', snapResult.plateNumber);
+            alert(`Number plate captured: ${snapResult.plateNumber}`);
+          } else {
+            console.log('No plate number detected from camera');
+          }
+        } else {
+          console.error('Camera snap manager failed:', snapResponse.status);
+        }
+      } catch (cameraError) {
+        console.error('Camera snap manager error:', cameraError);
+        // Don't show alert for camera error - weight capture still worked
+      }
+
     } catch (error) {
       console.error('Error fetching weight data:', error);
       alert('Failed to capture weight reading');
