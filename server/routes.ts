@@ -149,92 +149,117 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { wbId } = req.body;
       console.log("Camera snap manager requested for wb_id:", wbId);
 
-      // Use the existing OCR service for license plate reading
-      const { spawn } = require("child_process");
-      const python = spawn("python3", ["ocr_service.py"], {
-        cwd: process.cwd(),
-        timeout: 10000, // 10 second timeout
+      // Call your specific camera API directly
+      const cameraUrl = "http://admin:admin123@10.10.10.146/cgi-bin/snapManager.cgi?action=attachFileProc&Flags[0]=Event&Events=TrafficManualSnap&heartbeat=5";
+      
+      console.log("Calling camera API:", cameraUrl);
+      
+      const response = await fetch(cameraUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json, text/plain, */*',
+          'User-Agent': 'Weighbridge-System/1.0'
+        }
       });
 
-      let result = "";
-      let error = "";
+      if (!response.ok) {
+        throw new Error(`Camera API failed with status: ${response.status} ${response.statusText}`);
+      }
 
-      python.stdout.on("data", (data: Buffer) => {
-        result += data.toString();
-      });
+      const cameraData = await response.text();
+      console.log("Camera API response:", cameraData);
 
-      python.stderr.on("data", (data: Buffer) => {
-        error += data.toString();
-      });
+      // Parse the plate number from camera response
+      let plateNumber = null;
+      
+      // Try to extract plate number from various response formats
+      const platePatterns = [
+        /<PlateNumber[^>]*>([^<]+)<\/PlateNumber>/i,
+        /<plateNumber[^>]*>([^<]+)<\/plateNumber>/i,
+        /"PlateNumber"\s*:\s*"([^"]+)"/i,
+        /"plateNumber"\s*:\s*"([^"]+)"/i,
+        /"plate"\s*:\s*"([^"]+)"/i,
+        /"number"\s*:\s*"([^"]+)"/i,
+        /PlateNumber[:\s=]*([A-Z0-9\-\s]+)/i,
+        /plateNumber[:\s=]*([A-Z0-9\-\s]+)/i,
+        /plate[:\s=]*([A-Z0-9\-\s]+)/i,
+        /number[:\s=]*([A-Z0-9\-\s]+)/i,
+        /([A-Z]{2,3}[\-\s]?\d{3,4})/i,
+        /([A-Z]{1,2}\d{1,4}[A-Z]{1,2})/i,
+        /(\d{1,3}[\-\s]?[A-Z]{2,3}[\-\s]?\d{1,4})/i
+      ];
 
-      python.on("close", (code: number) => {
-        if (code === 0 && result) {
-          try {
-            const parsedResult = JSON.parse(result.trim());
-            console.log("OCR Result:", parsedResult);
-            
-            if (parsedResult.success && parsedResult.plateNumber) {
-              // If wbId is provided, save the plate number to database
-              if (wbId) {
-                pool.query(
-                  "UPDATE wb_weighbridge_items_purchase SET vehicle_no = $1 WHERE wb_id = $2",
-                  [parsedResult.plateNumber, parseInt(wbId)]
-                ).then(() => {
-                  console.log(`Updated vehicle_no for wb_id ${wbId} with plate number: ${parsedResult.plateNumber}`);
-                }).catch((dbError) => {
-                  console.error("Database update error:", dbError);
-                });
-              }
-
-              res.json({
-                success: true,
-                plateNumber: parsedResult.plateNumber,
-                message: "Plate number captured successfully",
-                wbId: wbId || null,
-                confidence: parsedResult.confidence || 0.95,
-                method: parsedResult.method || "camera_ocr"
-              });
-            } else {
-              res.status(404).json({
-                success: false,
-                error: parsedResult.error || "No plate number detected",
-                message: "No license plate found in camera view"
-              });
-            }
-          } catch (parseError) {
-            console.error("Error parsing OCR result:", parseError);
-            res.status(500).json({
-              success: false,
-              error: "Failed to parse OCR result",
-              details: error
-            });
+      for (const pattern of platePatterns) {
+        const match = cameraData.match(pattern);
+        if (match && match[1]) {
+          plateNumber = match[1].trim().replace(/\s+/g, '').toUpperCase();
+          if (plateNumber.length >= 4) {
+            console.log("Extracted plate number:", plateNumber);
+            break;
           }
-        } else {
-          console.error("Python OCR script error:", error);
-          res.status(500).json({
-            success: false,
-            error: "OCR processing failed",
-            details: error
-          });
         }
+      }
+
+      // If no pattern matches, try to find any alphanumeric sequence that looks like a plate
+      if (!plateNumber) {
+        const alphanumericMatches = cameraData.match(/([A-Z0-9]{4,8})/gi);
+        if (alphanumericMatches && alphanumericMatches.length > 0) {
+          plateNumber = alphanumericMatches[0].toUpperCase();
+          console.log("Found alphanumeric plate candidate:", plateNumber);
+        }
+      }
+
+      if (!plateNumber) {
+        return res.status(404).json({
+          success: false,
+          error: "No plate number found in camera response",
+          message: "Camera did not detect any license plate",
+          rawResponse: cameraData.substring(0, 200) + "..."
+        });
+      }
+
+      console.log("Final extracted plate number:", plateNumber);
+
+      // Save the plate number to wb_weighbridge_items_purchase table if wbId is provided
+      if (wbId) {
+        try {
+          const updateQuery = `
+            UPDATE wb_weighbridge_items_purchase 
+            SET vehicle_no = $1 
+            WHERE wb_id = $2
+          `;
+          
+          await pool.query(updateQuery, [plateNumber, parseInt(wbId)]);
+          console.log(`Updated vehicle_no for wb_id ${wbId} with plate number: ${plateNumber}`);
+        } catch (dbError) {
+          console.error("Database update error:", dbError);
+        }
+      }
+
+      res.json({
+        success: true,
+        plateNumber: plateNumber,
+        message: "Plate number captured and saved successfully",
+        wbId: wbId || null,
+        confidence: 0.95,
+        method: "camera_anpr_api"
       });
 
-      // Set timeout for the process
-      setTimeout(() => {
-        python.kill();
-        if (!res.headersSent) {
-          res.status(408).json({
-            success: false,
-            error: "OCR processing timeout",
-            message: "Camera response timeout"
-          });
-        }
-      }, 12000); // 12 second timeout
     } catch (error: any) {
       console.error("Error in camera snap manager:", error);
+      
+      let errorMessage = "Camera connection failed. Please check camera connection.";
+      if (error.message.includes("ENOTFOUND") || error.message.includes("ECONNREFUSED")) {
+        errorMessage = "Camera not reachable. Please check if camera IP 10.10.10.146 is accessible.";
+      } else if (error.message.includes("timeout")) {
+        errorMessage = "Camera response timeout. Please try again.";
+      } else if (error.message.includes("401") || error.message.includes("403")) {
+        errorMessage = "Camera authentication failed. Please check camera credentials.";
+      }
+      
       res.status(500).json({
         success: false,
-        error: "Failed to capture plate number from camera",
+        error: errorMessage,
         details: error.message
       });
     }
