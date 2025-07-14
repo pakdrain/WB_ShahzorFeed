@@ -49,9 +49,45 @@ const VoucherEntry = () => {
     }
   };
 
-  const handleSave = () => {
-    // Navigate to Voucher View
-    setLocation('/voucher-view');
+  const handleSave = async () => {
+    try {
+      // Create vouchers table if it doesn't exist
+      await fetch('/api/create-vouchers-table', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      // Prepare voucher data
+      const voucherData = {
+        voucherType: 'CPV',
+        docDate: document.querySelector('input[type="date"]')?.value,
+        remarks: document.querySelector('textarea')?.value,
+        createdBy: 1, // You can get this from user context
+        creationDate: new Date().toISOString().split('T')[0],
+        branch: selectedBranch,
+        docNo: selectedDoNo
+      };
+
+      // Save voucher data
+      const response = await fetch('/api/vouchers/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(voucherData)
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Voucher saved successfully:', result);
+        alert('Voucher saved successfully!');
+        // Navigate to Voucher View
+        setLocation('/voucher-view');
+      } else {
+        throw new Error('Failed to save voucher');
+      }
+    } catch (error) {
+      console.error('Error saving voucher:', error);
+      alert('Failed to save voucher. Please try again.');
+    }
   };
 
   return (
@@ -144,7 +180,7 @@ const VoucherEntry = () => {
           </td>
           <td><input className="form-control form-control-sm" value={row.slip_no || ''} readOnly /></td>
           <td><input className="form-control form-control-sm" value={row.vehicle_no || ''} readOnly /></td>
-          <td><input className="form-control form-control-sm" value={row.delivery_term || ''} readOnly /></td>
+          <td><input className="form-control form-control-sm" value={row.do_date || row.delivery_term || ''} readOnly /></td>
           <td><input className="form-control form-control-sm" value={row.item_desc || ''} readOnly /></td>
           <td><input className="form-control form-control-sm" value={row.customer_name || ''} readOnly /></td>
           <td><input className="form-control form-control-sm" value={row.debit_amount || ''} /></td>
