@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 """
 Enhanced OCR service for license plate recognition from actual camera feed
@@ -20,201 +19,344 @@ class LicensePlateOCR:
         self.username = username
         self.password = password
         self.rtsp_url = f"rtsp://{username}:{password}@{camera_ip}:554/cam/realmonitor?channel=1&subtype=0"
-        
+
     def capture_frame_from_camera(self):
-        """Capture frame directly from camera using multiple methods"""
-        
-        # Method 1: Try various camera snapshot APIs (more comprehensive list)
-        snapshot_urls = [
-            f"http://{self.username}:{self.password}@{self.camera_ip}/cgi-bin/snapshot.cgi",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/snapshot.jpg",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/cgi-bin/currentpic.cgi",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/image.jpg",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/cgi-bin/snapshot.cgi?channel=1",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/Streaming/Channels/1/picture",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/ISAPI/Streaming/channels/101/picture",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/cgi-bin/api.cgi?cmd=Snap&channel=0&rs=wuuPhkmUCeI9WG7C&user={self.username}&password={self.password}"
-        ]
-        
-        for url in snapshot_urls:
-            try:
-                print(f"Trying snapshot URL: {url}")
-                response = requests.get(url, timeout=5, stream=True)
-                if response.status_code == 200 and len(response.content) > 1000:
-                    nparr = np.frombuffer(response.content, np.uint8)
-                    frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-                    if frame is not None and frame.shape[0] > 100 and frame.shape[1] > 100:
-                        print(f"Successfully captured frame from HTTP: {frame.shape}")
-                        return frame
-            except Exception as e:
-                print(f"HTTP snapshot failed for {url}: {e}")
-                continue
-        
-        # Method 2: Try enhanced ANPR API endpoints
-        anpr_urls = [
-            f"http://{self.username}:{self.password}@{self.camera_ip}/ISAPI/Traffic/channels/1/vehicleDetect/plates",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/cgi-bin/anpr.cgi",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/cgi-bin/anpr/info",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/cgi-bin/anpr/latest",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/anpr.cgi",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/cgi-bin/configManager.cgi?action=getConfig&name=VideoAnalyseRule",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/cgi-bin/TrafficSnapshot.cgi",
-            f"http://{self.username}:{self.password}@{self.camera_ip}/ISAPI/Smart/channels/1/vehicleDetect"
-        ]
-        
-        for url in anpr_urls:
-            try:
-                print(f"Trying ANPR API: {url}")
-                response = requests.get(url, timeout=5)
-                if response.status_code == 200:
-                    anpr_data = response.text
-                    print(f"ANPR response: {anpr_data[:200]}...")
-                    
-                    # Enhanced plate number extraction patterns
-                    plate_patterns = [
-                        r'<licensePlate[^>]*>([A-Z0-9\-\s]+)</licensePlate>',
-                        r'"licensePlate"\s*:\s*"([A-Z0-9\-\s]+)"',
-                        r'"plateNumber"\s*:\s*"([A-Z0-9\-\s]+)"',
-                        r'"plate"\s*:\s*"([A-Z0-9\-\s]+)"',
-                        r'plate["\s]*[:=]["\s]*([A-Z0-9\-\s]+)',
-                        r'number["\s]*[:=]["\s]*([A-Z0-9\-\s]+)',
-                        r'licensePlate["\s]*[:=]["\s]*([A-Z0-9\-\s]+)',
-                        r'([A-Z]{2,3}[\-\s]?\d{3,4})',
-                        r'([A-Z]{1,2}\d{1,4}[A-Z]{1,2})',
-                        r'(\d{1,3}[\-\s]?[A-Z]{2,3}[\-\s]?\d{1,4})',
-                        r'([A-Z0-9]{5,8})'
-                    ]
-                    
-                    for pattern in plate_patterns:
-                        matches = re.findall(pattern, anpr_data, re.IGNORECASE)
-                        if matches:
-                            plate_number = matches[0].upper().strip().replace(' ', '').replace('-', '')
-                            if len(plate_number) >= 4:
-                                print(f"Found plate via ANPR API: {plate_number}")
-                                return {"anpr_result": plate_number}
-                            
-            except Exception as e:
-                print(f"ANPR API failed for {url}: {e}")
-                continue
-        
-        # Method 3: Try RTSP stream capture with better parameters
+        """Capture frame from camera with enhanced ANPR API detection"""
         try:
-            print(f"Trying RTSP: {self.rtsp_url}")
-            cap = cv2.VideoCapture(self.rtsp_url)
-            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-            cap.set(cv2.CAP_PROP_FPS, 25)
-            
-            # Try to read frames (skip first few to get fresh frame)
-            for i in range(8):
-                ret, frame = cap.read()
-                if ret and frame is not None:
-                    if i >= 3:  # Use frame after skipping first 3
-                        print(f"Successfully captured RTSP frame: {frame.shape}")
-                        cap.release()
-                        return frame
-                time.sleep(0.1)
-            cap.release()
+            # Try multiple camera ANPR APIs first
+            anpr_apis = [
+                "http://admin:admin123@10.10.10.146/cgi-bin/magicBox.cgi?action=getANPRSnapshot",
+                "http://admin:admin123@10.10.10.146/cgi-bin/anpr.cgi?action=getPlateNumber",
+                "http://admin:admin123@10.10.10.146/cgi-bin/snapManager.cgi?action=getANPRPlate",
+                "http://admin:admin123@10.10.10.146/cgi-bin/snapshot.cgi?channel=1&ANPR=true",
+                "http://admin:admin123@10.10.10.146/cgi-bin/trafficDetector.cgi?action=getCurrentPlate",
+                "http://admin:admin123@10.10.10.146/cgi-bin/eventManager.cgi?action=attach&codes=[TrafficManualSnap]"
+            ]
+
+            for url in anpr_apis:
+                try:
+                    print(f"Trying ANPR API: {url}")
+                    response = requests.get(url, timeout=8, auth=('admin', 'admin123'))
+
+                    if response.status_code == 200:
+                        content = response.text
+                        print(f"API response length: {len(content)}")
+                        print(f"API response sample: {content[:200]}")
+
+                        # Enhanced plate number extraction patterns
+                        plate_patterns = [
+                            # XML format patterns
+                            r'<PlateNumber[^>]*>([^<]+)</PlateNumber>',
+                            r'<plateNumber[^>]*>([^<]+)</plateNumber>',
+                            r'<Plate[^>]*>([^<]+)</Plate>',
+                            r'<LicensePlate[^>]*>([^<]+)</LicensePlate>',
+                            r'<Number[^>]*>([^<]+)</Number>',
+
+                            # JSON format patterns
+                            r'"PlateNumber"\s*:\s*"([^"]+)"',
+                            r'"plateNumber"\s*:\s*"([^"]+)"',
+                            r'"plate"\s*:\s*"([^"]+)"',
+                            r'"number"\s*:\s*"([^"]+)"',
+                            r'"licensePlate"\s*:\s*"([^"]+)"',
+                            r'"anpr"\s*:\s*"([^"]+)"',
+                            r'"result"\s*:\s*"([^"]+)"',
+
+                            # Key-value patterns
+                            r'PlateNumber[:\s=]+([A-Z0-9\-\s]{4,12})',
+                            r'plateNumber[:\s=]+([A-Z0-9\-\s]{4,12})',
+                            r'plate[:\s=]+([A-Z0-9\-\s]{4,12})',
+                            r'number[:\s=]+([A-Z0-9\-\s]{4,12})',
+                            r'ANPR[:\s=]+([A-Z0-9\-\s]{4,12})',
+
+                            # Pakistani license plate patterns
+                            r'([A-Z]{2,3}[\-\s]?\d{3,4}[A-Z]?)',
+                            r'([A-Z]{1,2}\d{1,4}[A-Z]{1,2})',
+                            r'(\d{1,4}[\-\s]?[A-Z]{2,4}[\-\s]?\d{1,4})',
+                            r'(LEA[\-\s]?\d{3,4})',
+                            r'(RIC[\-\s]?\d{3,4})',
+                            r'(LES[\-\s]?\d{3,4})',
+
+                            # General alphanumeric patterns
+                            r'([A-Z0-9]{4,8})'
+                        ]
+
+                        for pattern in plate_patterns:
+                            matches = re.findall(pattern, content, re.IGNORECASE)
+                            for match in matches:
+                                plate_number = str(match).strip().replace(' ', '').replace('-', '').upper()
+
+                                # Validate plate number
+                                if len(plate_number) >= 4 and len(plate_number) <= 8:
+                                    # Check if it's not a common false positive
+                                    false_positives = ['HTTP', 'ADMIN', 'LOGIN', 'ERROR', 'NULL', 'UNDEFINED', 'TRUE', 'FALSE', 'CAMERA', 'STREAM']
+                                    if plate_number not in false_positives:
+                                        print(f"ANPR API found valid plate: {plate_number}")
+                                        return {"anpr_result": plate_number}
+
+                        print(f"No valid plate found in API response")
+
+                except Exception as e:
+                    print(f"ANPR API {url} failed: {e}")
+                    continue
+
+            # Fallback to RTSP stream capture for computer vision OCR
+            rtsp_urls = [
+                "rtsp://admin:admin123@10.10.10.146:554/cam/realmonitor?channel=1&subtype=0",
+                "rtsp://admin:admin123@10.10.10.146:554/cam/realmonitor?channel=1&subtype=1",
+                "rtsp://admin:admin123@10.10.10.146/cam/realmonitor?channel=1&subtype=0"
+            ]
+
+            for rtsp_url in rtsp_urls:
+                try:
+                    print(f"Trying RTSP connection: {rtsp_url}")
+
+                    cap = cv2.VideoCapture(rtsp_url)
+                    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+                    cap.set(cv2.CAP_PROP_TIMEOUT, 8000)
+
+                    if not cap.isOpened():
+                        print(f"Failed to connect to {rtsp_url}")
+                        continue
+
+                    # Try to capture multiple frames to get a good one
+                    for attempt in range(8):
+                        ret, frame = cap.read()
+                        if ret and frame is not None and frame.size > 0:
+                            print(f"Frame captured successfully on attempt {attempt + 1}")
+                            cap.release()
+                            return frame
+                        time.sleep(0.3)
+
+                    cap.release()
+
+                except Exception as e:
+                    print(f"RTSP connection {rtsp_url} failed: {e}")
+                    continue
+
+            print("All camera connection attempts failed")
+            return None
+
         except Exception as e:
-            print(f"RTSP capture failed: {e}")
-            
-        return None
-    
+            print(f"Error in camera capture: {e}")
+            return None
+
     def detect_license_plates(self, image):
-        """Enhanced license plate detection with multiple approaches"""
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        
-        # Apply multiple preprocessing techniques
-        preprocessed_images = []
-        
-        # Method 1: Edge detection
-        edges = cv2.Canny(gray, 50, 200, apertureSize=3)
-        preprocessed_images.append(("edges", edges))
-        
-        # Method 2: Adaptive threshold
-        adaptive = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-        preprocessed_images.append(("adaptive", adaptive))
-        
-        # Method 3: Morphological operations
-        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-        morph = cv2.morphologyEx(gray, cv2.MORPH_GRADIENT, kernel)
-        preprocessed_images.append(("morph", morph))
-        
-        all_candidates = []
-        
-        for method_name, processed_img in preprocessed_images:
-            try:
-                contours, _ = cv2.findContours(processed_img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-                
+        """Enhanced license plate region detection with multiple methods"""
+        try:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+            height, width = gray.shape
+
+            regions = []
+
+            # Method 1: Enhanced contour-based detection
+            blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+
+            # Multiple edge detection approaches
+            edges1 = cv2.Canny(blurred, 30, 150)
+            edges2 = cv2.Canny(blurred, 50, 200)
+            edges3 = cv2.Canny(blurred, 100, 250)
+
+            for edges in [edges1, edges2, edges3]:
+                contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
                 for contour in contours:
                     x, y, w, h = cv2.boundingRect(contour)
-                    aspect_ratio = w / h if h > 0 else 0
-                    area = cv2.contourArea(contour)
-                    
-                    # Enhanced license plate criteria
-                    if (1.5 <= aspect_ratio <= 8.0 and 
-                        area > 300 and 
-                        w > 40 and h > 10 and
-                        w < image.shape[1] * 0.8 and
-                        h < image.shape[0] * 0.5):
-                        all_candidates.append((x, y, w, h, area, method_name))
-            except Exception as e:
-                print(f"Error in {method_name} detection: {e}")
-                continue
-        
-        # Sort by area and return top candidates
-        all_candidates.sort(key=lambda x: x[4], reverse=True)
-        return all_candidates[:5]
-    
+
+                    # Skip regions that are too small or too large
+                    if w < 60 or h < 15 or w > width * 0.8 or h > height * 0.3:
+                        continue
+
+                    aspect_ratio = w / h
+                    area = w * h
+
+                    # Enhanced license plate characteristics for Pakistani plates
+                    if (1.8 <= aspect_ratio <= 7.0 and 
+                        800 <= area <= 25000 and
+                        w >= 60 and h >= 15 and
+                        x >= 0 and y >= 0 and 
+                        x + w <= width and y + h <= height):
+                        regions.append((x, y, w, h))
+
+            # Method 2: Morphological operations to find rectangular shapes
+            kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (17, 3))
+            morph = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
+
+            # Find contours in morphed image
+            contours, _ = cv2.findContours(morph, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+            for contour in contours:
+                x, y, w, h = cv2.boundingRect(contour)
+                aspect_ratio = w / h
+
+                if (2.0 <= aspect_ratio <= 6.5 and 
+                    w >= 80 and h >= 20 and w <= width * 0.7 and h <= height * 0.2):
+                    regions.append((x, y, w, h))
+
+            # Method 3: Grid-based search in likely plate areas
+            # Focus on lower half and center areas where plates are typically located
+            search_areas = [
+                (0, height // 3, width, height * 2 // 3),  # Lower 2/3 of image
+                (width // 4, height // 2, width // 2, height // 3),  # Center area
+                (0, height // 2, width, height // 2),  # Bottom half
+            ]
+
+            for area_x, area_y, area_w, area_h in search_areas:
+                # Common license plate sizes as percentage of image
+                plate_sizes = [
+                    (0.12, 0.04),  # Small
+                    (0.18, 0.06),  # Medium
+                    (0.25, 0.08),  # Large
+                    (0.30, 0.10),  # Extra large
+                ]
+
+                for size_w_ratio, size_h_ratio in plate_sizes:
+                    plate_w = int(width * size_w_ratio)
+                    plate_h = int(height * size_h_ratio)
+
+                    if plate_w > 0 and plate_h > 0:
+                        # Grid search within the area
+                        step_x = max(1, plate_w // 3)
+                        step_y = max(1, plate_h // 2)
+
+                        for y in range(area_y, min(area_y + area_h - plate_h, height - plate_h), step_y):
+                            for x in range(area_x, min(area_x + area_w - plate_w, width - plate_w), step_x):
+                                if x >= 0 and y >= 0 and x + plate_w <= width and y + plate_h <= height:
+                                    regions.append((x, y, plate_w, plate_h))
+
+            # Method 4: Adaptive threshold based detection
+            adaptive_thresh = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+            contours, _ = cv2.findContours(adaptive_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+            for contour in contours:
+                x, y, w, h = cv2.boundingRect(contour)
+                aspect_ratio = w / h
+
+                if (2.0 <= aspect_ratio <= 6.0 and 
+                    w >= 70 and h >= 18 and 
+                    w * h >= 1200 and w * h <= 20000):
+                    regions.append((x, y, w, h))
+
+            # Remove duplicate and overlapping regions
+            unique_regions = []
+            for region in regions:
+                x, y, w, h = region
+                is_duplicate = False
+
+                for existing in unique_regions:
+                    ex, ey, ew, eh = existing
+
+                    # Check for significant overlap
+                    overlap_x = max(0, min(x + w, ex + ew) - max(x, ex))
+                    overlap_y = max(0, min(y + h, ey + eh) - max(y, ey))
+                    overlap_area = overlap_x * overlap_y
+
+                    min_area = min(w * h, ew * eh)
+                    if overlap_area > min_area * 0.5:  # 50% overlap threshold
+                        is_duplicate = True
+                        break
+
+                if not is_duplicate:
+                    unique_regions.append(region)
+
+            # Score and rank regions based on likelihood of being a license plate
+            scored_regions = []
+            for x, y, w, h in unique_regions:
+                aspect_ratio = w / h
+                area = w * h
+
+                score = 0
+
+                # Aspect ratio score (Pakistani plates are typically 3:1 to 5:1)
+                if 2.5 <= aspect_ratio <= 5.5:
+                    score += 3
+                elif 2.0 <= aspect_ratio <= 6.0:
+                    score += 2
+                elif 1.8 <= aspect_ratio <= 7.0:
+                    score += 1
+
+                # Size score
+                if 2000 <= area <= 8000:
+                    score += 3
+                elif 1000 <= area <= 12000:
+                    score += 2
+                elif 800 <= area <= 15000:
+                    score += 1
+
+                # Position score (plates usually in lower part of image)
+                if y > height * 0.3:
+                    score += 2
+                if y > height * 0.5:
+                    score += 1
+
+                # Width score (plates should have reasonable width)
+                if w >= 100:
+                    score += 1
+                if w >= 150:
+                    score += 1
+
+                scored_regions.append((score, x, y, w, h))
+
+            # Sort by score (highest first) and return top candidates
+            scored_regions.sort(key=lambda r: r[0], reverse=True)
+            final_regions = [(x, y, w, h) for score, x, y, w, h in scored_regions[:15]]
+
+            print(f"Detected {len(final_regions)} potential license plate regions")
+            return final_regions
+
+        except Exception as e:
+            print(f"Error detecting plate regions: {e}")
+            return []
+
     def preprocess_plate_region(self, image, region):
         """Enhanced preprocessing for better OCR"""
         x, y, w, h = region[:4]
         roi = image[y:y+h, x:x+w]
-        
+
         if roi.shape[0] == 0 or roi.shape[1] == 0:
             return None
-        
+
         # Resize if too small
         if roi.shape[0] < 40 or roi.shape[1] < 120:
             scale_factor = max(40 / roi.shape[0], 120 / roi.shape[1])
             new_width = int(roi.shape[1] * scale_factor)
             new_height = int(roi.shape[0] * scale_factor)
             roi = cv2.resize(roi, (new_width, new_height), interpolation=cv2.INTER_CUBIC)
-        
+
         # Convert to grayscale
         if len(roi.shape) == 3:
             gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
         else:
             gray = roi
-        
+
         # Apply multiple preprocessing techniques
         processed_versions = []
-        
+
         # Version 1: Standard preprocessing
         blurred = cv2.GaussianBlur(gray, (3, 3), 0)
         _, thresh1 = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         processed_versions.append(thresh1)
-        
+
         # Version 2: Inverted threshold
         _, thresh2 = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
         processed_versions.append(thresh2)
-        
+
         # Version 3: Adaptive threshold
         adaptive = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
         processed_versions.append(adaptive)
-        
+
         # Version 4: Enhanced contrast
         enhanced = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8)).apply(gray)
         _, thresh3 = cv2.threshold(enhanced, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
         processed_versions.append(thresh3)
-        
+
         return processed_versions
-    
+
     def extract_text_from_region(self, processed_images):
         """Extract text using OCR with multiple configurations and preprocessing"""
-        
+
         if not processed_images:
             return "", 0
-        
+
         # Enhanced OCR configurations
         configs = [
             '--oem 3 --psm 8 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
@@ -225,58 +367,58 @@ class LicensePlateOCR:
             '--oem 3 --psm 7',
             '--oem 3 --psm 6'
         ]
-        
+
         best_text = ""
         best_confidence = 0
-        
+
         for processed_image in processed_images:
             for config in configs:
                 try:
                     # Get text with confidence
                     data = pytesseract.image_to_data(processed_image, config=config, output_type=pytesseract.Output.DICT)
-                    
+
                     # Extract text and calculate confidence
                     words = []
                     confidences = []
-                    
+
                     for i in range(len(data['text'])):
                         if int(data['conf'][i]) > 30:  # Confidence threshold
                             text = data['text'][i].strip()
                             if text:
                                 words.append(text)
                                 confidences.append(int(data['conf'][i]))
-                    
+
                     if words:
                         full_text = ''.join(words).upper()
                         # Clean text - only alphanumeric
                         full_text = ''.join(c for c in full_text if c.isalnum())
-                        
+
                         if len(full_text) >= 3:
                             avg_confidence = sum(confidences) / len(confidences) / 100.0
-                            
+
                             # Boost confidence for patterns that look like license plates
                             if re.match(r'^[A-Z]{2,3}\d{3,4}$', full_text) or re.match(r'^\d{1,3}[A-Z]{2,3}\d{1,4}$', full_text):
                                 avg_confidence += 0.3
                             elif any(c.isdigit() for c in full_text) and any(c.isalpha() for c in full_text):
                                 avg_confidence += 0.2
-                            
+
                             if avg_confidence > best_confidence:
                                 best_text = full_text
                                 best_confidence = avg_confidence
-                                
+
                 except Exception as e:
                     continue
-        
+
         return best_text, best_confidence
-    
+
     def process_license_plate(self):
         """Main processing function with enhanced error handling"""
         try:
             print("Starting license plate recognition...")
-            
+
             # Capture frame from camera
             frame_or_anpr = self.capture_frame_from_camera()
-            
+
             # Check if we got ANPR result directly
             if isinstance(frame_or_anpr, dict) and "anpr_result" in frame_or_anpr:
                 return {
@@ -286,7 +428,7 @@ class LicensePlateOCR:
                     "timestamp": time.time(),
                     "method": "camera_anpr_api"
                 }
-            
+
             frame = frame_or_anpr
             if frame is None:
                 return {
@@ -294,28 +436,28 @@ class LicensePlateOCR:
                     "error": "Could not capture frame from camera. Please check camera connection and network accessibility.",
                     "timestamp": time.time()
                 }
-            
+
             print(f"Frame captured, size: {frame.shape}")
-            
+
             # Detect license plate regions
             plate_regions = self.detect_license_plates(frame)
             print(f"Found {len(plate_regions)} potential plate regions")
-            
+
             if not plate_regions:
                 # If no specific regions detected, try full image OCR on smaller sections
                 print("No plate regions detected, trying sectional full image OCR")
                 h, w = frame.shape[:2]
-                
+
                 # Try different sections of the image
                 sections = [
                     (0, h//3, w, h//3),  # Middle horizontal strip
                     (w//4, h//4, w//2, h//2),  # Center quarter
                     (0, 0, w, h)  # Full image as last resort
                 ]
-                
+
                 best_text = ""
                 best_confidence = 0
-                
+
                 for sx, sy, sw, sh in sections:
                     section = frame[sy:sy+sh, sx:sx+sw]
                     processed_versions = self.preprocess_plate_region(section, (0, 0, sw, sh))
@@ -328,20 +470,20 @@ class LicensePlateOCR:
                 # Process each detected region
                 best_text = ""
                 best_confidence = 0
-                
+
                 for i, region in enumerate(plate_regions):
                     print(f"Processing region {i+1}: {region}")
                     processed_versions = self.preprocess_plate_region(frame, region)
                     if processed_versions:
                         text, confidence = self.extract_text_from_region(processed_versions)
                         print(f"Region {i+1} result: '{text}' (confidence: {confidence:.2f})")
-                        
+
                         if confidence > best_confidence:
                             best_text = text
                             best_confidence = confidence
-            
+
             print(f"Final result: '{best_text}' (confidence: {best_confidence:.2f})")
-            
+
             if best_text and len(best_text) >= 3:
                 return {
                     "success": True,
@@ -356,7 +498,7 @@ class LicensePlateOCR:
                     "error": "No license plate text could be detected. Please ensure vehicle is properly positioned with license plate clearly visible in camera view.",
                     "timestamp": time.time()
                 }
-                
+
         except Exception as e:
             return {
                 "success": False,

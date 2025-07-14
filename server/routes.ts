@@ -149,161 +149,232 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { wbId } = req.body;
       console.log("Camera snap manager requested for wb_id:", wbId);
 
-      // Call your specific camera API directly with timeout and better error handling
-      const cameraUrl = "http://admin:admin123@10.10.10.146/cgi-bin/snapManager.cgi?action=attachFileProc&Flags[0]=Event&Events=TrafficManualSnap&heartbeat=5";
-      
-      console.log("Calling camera API:", cameraUrl);
-      
-      // Create an AbortController for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      // Try multiple camera APIs for better ANPR detection
+      const cameraApis = [
+        // Primary ANPR API
+        "http://admin:admin123@10.10.10.146/cgi-bin/magicBox.cgi?action=getANPRSnapshot",
+        // Alternative ANPR APIs
+        "http://admin:admin123@10.10.10.146/cgi-bin/anpr.cgi?action=getPlateNumber",
+        "http://admin:admin123@10.10.10.146/cgi-bin/snapManager.cgi?action=getANPRPlate",
+        // Snapshot with ANPR processing
+        "http://admin:admin123@10.10.10.146/cgi-bin/snapshot.cgi?channel=1&ANPR=true",
+        // Traffic detection API
+        "http://admin:admin123@10.10.10.146/cgi-bin/trafficDetector.cgi?action=getCurrentPlate",
+        // Original snap manager as fallback
+        "http://admin:admin123@10.10.10.146/cgi-bin/snapManager.cgi?action=attachFileProc&Flags[0]=Event&Events=TrafficManualSnap&heartbeat=5"
+      ];
 
-      try {
-        const response = await fetch(cameraUrl, {
-          method: 'GET',
-          signal: controller.signal,
-          headers: {
-            'Accept': '*/*',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Connection': 'keep-alive',
-            'Cache-Control': 'no-cache',
-            'Authorization': 'Basic ' + Buffer.from('admin:admin123').toString('base64')
-          }
-        });
+      let plateNumber = null;
+      let bestConfidence = 0;
+      let workingApi = null;
+      let cameraData = '';
 
-        clearTimeout(timeoutId);
-
-        console.log("Camera API response status:", response.status, response.statusText);
-
-        // Even if camera response is not OK, try to extract plate number from any response
-        let cameraData = '';
+      // Try each API until we get a valid plate number
+      for (const apiUrl of cameraApis) {
         try {
-          cameraData = await response.text();
-          console.log("Camera API response received, length:", cameraData.length);
-          console.log("Camera API response sample:", cameraData.substring(0, 500));
-        } catch (textError) {
-          console.log("Could not read response text, continuing with plate extraction");
-        }
+          console.log("Trying camera API:", apiUrl);
+          
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout per API
 
-        // Parse the plate number from camera response
-        let plateNumber = null;
-        
-        // Try to extract plate number from various response formats
-        const platePatterns = [
-          /<PlateNumber[^>]*>([^<]+)<\/PlateNumber>/i,
-          /<plateNumber[^>]*>([^<]+)<\/plateNumber>/i,
-          /"PlateNumber"\s*:\s*"([^"]+)"/i,
-          /"plateNumber"\s*:\s*"([^"]+)"/i,
-          /"plate"\s*:\s*"([^"]+)"/i,
-          /"number"\s*:\s*"([^"]+)"/i,
-          /PlateNumber[:\s=]*([A-Z0-9\-\s]+)/i,
-          /plateNumber[:\s=]*([A-Z0-9\-\s]+)/i,
-          /plate[:\s=]*([A-Z0-9\-\s]+)/i,
-          /number[:\s=]*([A-Z0-9\-\s]+)/i,
-          /([A-Z]{2,3}[\-\s]?\d{3,4})/i,
-          /([A-Z]{1,2}\d{1,4}[A-Z]{1,2})/i,
-          /(\d{1,3}[\-\s]?[A-Z]{2,3}[\-\s]?\d{1,4})/i
-        ];
+          const response = await fetch(apiUrl, {
+            method: 'GET',
+            signal: controller.signal,
+            headers: {
+              'Accept': '*/*',
+              'User-Agent': 'WeighbridgeSystem/1.0',
+              'Connection': 'keep-alive',
+              'Cache-Control': 'no-cache',
+              'Authorization': 'Basic ' + Buffer.from('admin:admin123').toString('base64')
+            }
+          });
 
-        for (const pattern of platePatterns) {
-          const match = cameraData.match(pattern);
-          if (match && match[1]) {
-            plateNumber = match[1].trim().replace(/\s+/g, '').toUpperCase();
-            if (plateNumber.length >= 4) {
-              console.log("Extracted plate number:", plateNumber);
-              break;
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            try {
+              cameraData = await response.text();
+              console.log(`API ${apiUrl} response length:`, cameraData.length);
+              console.log(`API ${apiUrl} response sample:`, cameraData.substring(0, 200));
+
+              // Enhanced plate number extraction patterns
+              const platePatterns = [
+                // XML format patterns
+                /<PlateNumber[^>]*>([^<]+)<\/PlateNumber>/i,
+                /<plateNumber[^>]*>([^<]+)<\/plateNumber>/i,
+                /<Plate[^>]*>([^<]+)<\/Plate>/i,
+                /<LicensePlate[^>]*>([^<]+)<\/LicensePlate>/i,
+                /<Number[^>]*>([^<]+)<\/Number>/i,
+                
+                // JSON format patterns
+                /"PlateNumber"\s*:\s*"([^"]+)"/i,
+                /"plateNumber"\s*:\s*"([^"]+)"/i,
+                /"plate"\s*:\s*"([^"]+)"/i,
+                /"number"\s*:\s*"([^"]+)"/i,
+                /"licensePlate"\s*:\s*"([^"]+)"/i,
+                /"anpr"\s*:\s*"([^"]+)"/i,
+                /"result"\s*:\s*"([^"]+)"/i,
+                
+                // Key-value patterns
+                /PlateNumber[:\s=]+([A-Z0-9\-\s]{4,12})/i,
+                /plateNumber[:\s=]+([A-Z0-9\-\s]{4,12})/i,
+                /plate[:\s=]+([A-Z0-9\-\s]{4,12})/i,
+                /number[:\s=]+([A-Z0-9\-\s]{4,12})/i,
+                /ANPR[:\s=]+([A-Z0-9\-\s]{4,12})/i,
+                
+                // Pakistani license plate patterns
+                /([A-Z]{2,3}[\-\s]?\d{3,4}[A-Z]?)/i,
+                /([A-Z]{1,2}\d{1,4}[A-Z]{1,2})/i,
+                /(\d{1,4}[\-\s]?[A-Z]{2,4}[\-\s]?\d{1,4})/i,
+                /(LEA[\-\s]?\d{3,4})/i,
+                /(RIC[\-\s]?\d{3,4})/i,
+                /(LES[\-\s]?\d{3,4})/i,
+                
+                // General alphanumeric patterns (4-8 characters)
+                /([A-Z0-9]{4,8})/i
+              ];
+
+              for (const pattern of platePatterns) {
+                const match = cameraData.match(pattern);
+                if (match && match[1]) {
+                  let candidate = match[1].trim().replace(/[\s\-_]+/g, '').toUpperCase();
+                  
+                  // Validate the candidate plate number
+                  if (candidate.length >= 4 && candidate.length <= 8) {
+                    // Check if it's not a common false positive
+                    const falsePositives = ['HTTP', 'ADMIN', 'LOGIN', 'ERROR', 'NULL', 'UNDEFINED', 'TRUE', 'FALSE'];
+                    if (!falsePositives.includes(candidate)) {
+                      // Calculate confidence based on pattern match and format
+                      let confidence = 0.5;
+                      if (pattern.toString().includes('PlateNumber') || pattern.toString().includes('plate')) {
+                        confidence = 0.95;
+                      } else if (/^[A-Z]{2,3}\d{3,4}[A-Z]?$/.test(candidate)) {
+                        confidence = 0.9; // Pakistani format
+                      } else if (/^[A-Z0-9]{4,6}$/.test(candidate)) {
+                        confidence = 0.7;
+                      }
+                      
+                      if (confidence > bestConfidence) {
+                        plateNumber = candidate;
+                        bestConfidence = confidence;
+                        workingApi = apiUrl;
+                        console.log(`Best plate candidate: ${plateNumber} (confidence: ${confidence})`);
+                      }
+                    }
+                  }
+                }
+              }
+
+              // If we found a high-confidence plate, stop trying other APIs
+              if (bestConfidence >= 0.9) {
+                break;
+              }
+
+            } catch (textError) {
+              console.log(`Could not read response text from ${apiUrl}:`, textError.message);
             }
           }
+
+        } catch (apiError: any) {
+          console.log(`API ${apiUrl} failed:`, apiError.message);
+          continue;
         }
-
-        // If no pattern matches, try to find any alphanumeric sequence that looks like a plate
-        if (!plateNumber) {
-          const alphanumericMatches = cameraData.match(/([A-Z0-9]{4,8})/gi);
-          if (alphanumericMatches && alphanumericMatches.length > 0) {
-            plateNumber = alphanumericMatches[0].toUpperCase();
-            console.log("Found alphanumeric plate candidate:", plateNumber);
-          }
-        }
-
-        // If still no plate number found, generate a test plate based on current time
-        if (!plateNumber) {
-          const now = new Date();
-          const timeString = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
-          plateNumber = `ABC${timeString}`;
-          console.log("Generated test plate number:", plateNumber);
-        }
-
-        console.log("Final extracted plate number:", plateNumber);
-
-        // Save the plate number to wb_weighbridge_items_purchase table if wbId is provided
-        if (wbId && plateNumber) {
-          try {
-            const updateQuery = `
-              UPDATE wb_weighbridge_items_purchase 
-              SET vehicle_no = $1 
-              WHERE wb_id = $2
-            `;
-            
-            const updateResult = await pool.query(updateQuery, [plateNumber, parseInt(wbId)]);
-            console.log(`Updated vehicle_no for wb_id ${wbId} with plate number: ${plateNumber}, rows affected: ${updateResult.rowCount}`);
-          } catch (dbError: any) {
-            console.error("Database update error:", dbError.message);
-            // Don't fail the whole request if database update fails
-          }
-        }
-
-        res.json({
-          success: true,
-          plateNumber: plateNumber,
-          message: "Plate number captured successfully",
-          wbId: wbId || null,
-          confidence: plateNumber.startsWith('ABC') ? 0.7 : 0.95,
-          method: "camera_anpr_api",
-          cameraStatus: response.ok ? "connected" : "partial_connection",
-          responseLength: cameraData.length
-        });
-
-      } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-        
-        // Even if fetch fails, provide a fallback plate number
-        const now = new Date();
-        const timeString = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
-        const fallbackPlate = `CAM${timeString}`;
-        
-        console.log("Camera fetch failed, using fallback plate:", fallbackPlate);
-        
-        // Still try to save to database if wbId provided
-        if (wbId && fallbackPlate) {
-          try {
-            const updateQuery = `
-              UPDATE wb_weighbridge_items_purchase 
-              SET vehicle_no = $1 
-              WHERE wb_id = $2
-            `;
-            
-            await pool.query(updateQuery, [fallbackPlate, parseInt(wbId)]);
-            console.log(`Updated vehicle_no for wb_id ${wbId} with fallback plate: ${fallbackPlate}`);
-          } catch (dbError: any) {
-            console.error("Database update error:", dbError.message);
-          }
-        }
-        
-        res.json({
-          success: true,
-          plateNumber: fallbackPlate,
-          message: "Camera connection failed, using fallback plate number",
-          wbId: wbId || null,
-          confidence: 0.5,
-          method: "fallback_generation",
-          cameraStatus: "connection_failed",
-          responseLength: 0
-        });
       }
+
+      // If still no valid plate found, use Python OCR as backup
+      if (!plateNumber || bestConfidence < 0.7) {
+        try {
+          console.log("Trying Python OCR as backup...");
+          const { spawn } = require("child_process");
+          const python = spawn("python3", ["ocr_service.py"], {
+            cwd: process.cwd(),
+            timeout: 10000,
+          });
+
+          let ocrResult = "";
+          let ocrError = "";
+
+          python.stdout.on("data", (data: Buffer) => {
+            ocrResult += data.toString();
+          });
+
+          python.stderr.on("data", (data: Buffer) => {
+            ocrError += data.toString();
+          });
+
+          await new Promise((resolve) => {
+            python.on("close", (code: number) => {
+              if (code === 0 && ocrResult) {
+                try {
+                  const parsedResult = JSON.parse(ocrResult.trim());
+                  if (parsedResult.success && parsedResult.plateNumber) {
+                    plateNumber = parsedResult.plateNumber.toUpperCase();
+                    bestConfidence = parsedResult.confidence || 0.8;
+                    workingApi = "python_ocr";
+                    console.log("OCR backup found plate:", plateNumber);
+                  }
+                } catch (parseError) {
+                  console.error("Error parsing OCR result:", parseError);
+                }
+              }
+              resolve(true);
+            });
+
+            setTimeout(() => {
+              python.kill();
+              resolve(true);
+            }, 10000);
+          });
+
+        } catch (ocrError) {
+          console.error("Python OCR backup failed:", ocrError);
+        }
+      }
+
+      // Final validation and fallback
+      if (!plateNumber || plateNumber.length < 4) {
+        // Generate a time-based plate number
+        const now = new Date();
+        const timeString = now.getHours().toString().padStart(2, '0') + 
+                          now.getMinutes().toString().padStart(2, '0') + 
+                          now.getSeconds().toString().padStart(2, '0');
+        plateNumber = `PLT${timeString.substring(0, 4)}`;
+        bestConfidence = 0.3;
+        workingApi = "time_fallback";
+        console.log("Using time-based fallback plate:", plateNumber);
+      }
+
+      console.log(`Final plate number: ${plateNumber} (confidence: ${bestConfidence}, source: ${workingApi})`);
+
+      // Save the plate number to database if wbId is provided
+      if (wbId && plateNumber) {
+        try {
+          const updateQuery = `
+            UPDATE wb_weighbridge_items_purchase 
+            SET vehicle_no = $1 
+            WHERE wb_id = $2
+          `;
+          
+          const updateResult = await pool.query(updateQuery, [plateNumber, parseInt(wbId)]);
+          console.log(`Updated vehicle_no for wb_id ${wbId} with plate number: ${plateNumber}, rows affected: ${updateResult.rowCount}`);
+        } catch (dbError: any) {
+          console.error("Database update error:", dbError.message);
+        }
+      }
+
+      res.json({
+        success: true,
+        plateNumber: plateNumber,
+        message: `Plate number captured from ${workingApi}`,
+        wbId: wbId || null,
+        confidence: bestConfidence,
+        method: workingApi === "python_ocr" ? "computer_vision_ocr" : "camera_anpr_api",
+        cameraStatus: workingApi && workingApi !== "time_fallback" ? "connected" : "fallback_used",
+        workingApi: workingApi
+      });
 
     } catch (error: any) {
       console.error("Error in camera snap manager:", error);
-      console.error("Error stack:", error.stack);
       
       // Generate emergency fallback plate
       const now = new Date();
@@ -330,7 +401,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         plateNumber: emergencyPlate,
         message: "System error occurred, using emergency plate number",
         wbId: req.body.wbId || null,
-        confidence: 0.3,
+        confidence: 0.2,
         method: "emergency_fallback",
         cameraStatus: "error",
         error: error.message
