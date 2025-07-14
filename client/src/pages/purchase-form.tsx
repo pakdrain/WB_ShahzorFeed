@@ -1522,23 +1522,33 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           console.log('Camera snap manager response:', snapResult);
           
           if (snapResult.success && snapResult.plateNumber) {
-            // Update vehicle number in form
+            // Update vehicle number in form - ensure it's properly set
+            const plateNumber = snapResult.plateNumber.trim();
             setFormData(prev => ({
               ...prev,
-              vehicleNo: snapResult.plateNumber
+              vehicleNo: plateNumber
             }));
             
-            console.log('Number plate captured and saved:', snapResult.plateNumber);
-            alert(`Number plate captured: ${snapResult.plateNumber}`);
+            console.log('Number plate captured and saved:', plateNumber);
+            alert(`Number plate captured: ${plateNumber}`);
+            
+            // Force update the input field if needed
+            const vehicleInput = document.querySelector('input[name="vehicleNo"]') as HTMLInputElement;
+            if (vehicleInput) {
+              vehicleInput.value = plateNumber;
+              vehicleInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
           } else {
             console.log('No plate number detected from camera');
+            alert('No number plate detected. Please ensure vehicle is positioned correctly in camera view.');
           }
         } else {
           console.error('Camera snap manager failed:', snapResponse.status);
+          alert('Camera connection failed. Please check camera connection.');
         }
       } catch (cameraError) {
         console.error('Camera snap manager error:', cameraError);
-        // Don't show alert for camera error - weight capture still worked
+        alert('Error connecting to camera system.');
       }
 
     } catch (error) {
