@@ -3341,6 +3341,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fetch and save data to sys_data_configg table
+  app.post("/api/fetch-and-save-sys-config", async (req: Request, res: Response) => {
+    try {
+      const { url } = req.body;
+
+      console.log("Received fetch request for sys_data_configg URL:", url);
+
+      if (!url) {
+        return res.status(400).json({ error: "URL is required" });
+      }
+
+      // Fetch data from the provided URL
+      console.log("Fetching data from:", url);
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        console.error(
+          `Fetch failed with status: ${response.status} ${response.statusText}`,
+        );
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(
+        "Data fetched successfully, type:",
+        typeof data,
+        "isArray:",
+        Array.isArray(data),
+      );
+
+      // Create sys_data_configg table if it doesn't exist
+      console.log("Creating/ensuring sys_data_configg table exists...");
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS sys_data_configg (
+          data_config_id BIGINT PRIMARY KEY,
+          sys_config_id BIGINT,
+          data_config_desc VARCHAR(500),
+          data_config_segment1 VARCHAR(500)
+        )
+      `);
+
+      let recordsInserted = 0;
+
+      // Helper function to insert item into database
+      const insertItemToDatabase = async (item: any, sourceUrl: string) => {
+        try {
+          const query = `
+            INSERT INTO sys_data_configg (
+              data_config_id, sys_config_id, data_config_desc, data_config_segment1
+            )
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (data_config_id) DO UPDATE SET
+              sys_config_id = EXCLUDED.sys_config_id,
+              data_config_desc = EXCLUDED.data_config_desc,
+              data_config_segment1 = EXCLUDED.data_config_segment1
+          `;
+
+          const values = [
+            item.data_config_id || item.id || item.DATA_CONFIG_ID || item.configId || Date.now(),
+            item.sys_config_id || item.sysId || item.SYS_CONFIG_ID || item.systemId || null,
+            item.data_config_desc || item.description || item.desc || item.DATA_CONFIG_DESC || item.name || null,
+            item.data_config_segment1 || item.segment1 || item.DATA_CONFIG_SEGMENT1 || item.segment || null,
+          ];
+
+          await pool.query(query, values);
+          console.log(
+            "Inserted sys config item:",
+            item.data_config_id || item.id || "unknown",
+          );
+        } catch (insertError: any) {
+          console.error("Error inserting sys config item:", insertError.message);
+          throw insertError;
+        }
+      };
+
+      // Handle different data structures
+      if (Array.isArray(data)) {
+        console.log(`Processing array of ${data.length} items...`);
+        // If data is an array, insert each item
+        for (const item of data) {
+          await insertItemToDatabase(item, url);
+          recordsInserted++;
+        }
+      } else if (
+        data &&
+        typeof data === "object" &&
+        data.items &&
+        Array.isArray(data.items)
+      ) {
+        console.log(`Processing nested array of ${data.items.length} items...`);
+        // If data has an items array property
+        for (const item of data.items) {
+          await insertItemToDatabase(item, url);
+          recordsInserted++;
+        }
+      } else if (typeof data === "object" && data !== null) {
+        console.log("Processing single object...");
+        // If data is a single object, insert it
+        await insertItemToDatabase(data, url);
+        recordsInserted = 1;
+      } else {
+        throw new Error("Invalid data format received from URL");
+      }
+
+      console.log(
+        `✅ Successfully saved ${recordsInserted} records to sys_data_configg table from ${url}`,
+      );
+
+      res.json({
+        success: true,
+        message: "Data fetched and saved successfully to sys_data_configg",
+        recordsInserted,
+        data: Array.isArray(data)
+          ? data.slice(0, 5)
+          : data.items
+            ? data.items.slice(0, 5)
+            : data,
+      });
+    } catch (error: any) {
+      console.error("❌ Error fetching and saving sys config data:", error);
+      console.error("Error stack:", error.stack);
+      res.status(500).json({
+        error: "Failed to fetch and save sys config data",
+        details: error.message,
+      });
+    }
+  });
+
   // GET data related to specific DO number
   app.get("/api/do-data/:doNo", async (req: Request, res: Response) => {
     try {
