@@ -3509,7 +3509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const data = await response.json();
         console.log("Fetched raw data:", JSON.stringify(data, null, 2));
 
-        // Create sys_data_configg table if it doesn't exist
+        // Create sys_data_configg table if it doesn't exist with proper constraints
         await pool.query(`
           CREATE TABLE IF NOT EXISTS sys_data_configg (
             data_config_id BIGINT PRIMARY KEY,
@@ -3517,6 +3517,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             data_config_desc VARCHAR(500),
             data_config_segment1 VARCHAR(500)
           )
+        `);
+
+        // Ensure the primary key constraint exists (in case table was created without it)
+        await pool.query(`
+          DO $$ 
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.table_constraints 
+              WHERE table_name = 'sys_data_configg' 
+              AND constraint_type = 'PRIMARY KEY'
+            ) THEN
+              ALTER TABLE sys_data_configg ADD PRIMARY KEY (data_config_id);
+            END IF;
+          END $$;
         `);
 
         let recordsInserted = 0;
@@ -3585,18 +3599,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
               originalItem: item
             });
 
-            const insertQuery = `
-              INSERT INTO sys_data_configg (
-                data_config_id,
-                sys_config_id,
-                data_config_desc,
-                data_config_segment1
-              ) VALUES ($1, $2, $3, $4)
-              ON CONFLICT (data_config_id) DO UPDATE SET
-                sys_config_id = EXCLUDED.sys_config_id,
-                data_config_desc = EXCLUDED.data_config_desc,
-                data_config_segment1 = EXCLUDED.data_config_segment1
-            `;
+            // Check if record exists first
+            const checkQuery = `SELECT data_config_id FROM sys_data_configg WHERE data_config_id = $1`;
+            const existingRecord = await pool.query(checkQuery, [dataConfigId]);
+
+            let insertQuery;
+            if (existingRecord.rows.length > 0) {
+              // Update existing record
+              insertQuery = `
+                UPDATE sys_data_configg SET 
+                  sys_config_id = $2,
+                  data_config_desc = $3,
+                  data_config_segment1 = $4
+                WHERE data_config_id = $1
+              `;
+            } else {
+              // Insert new record
+              insertQuery = `
+                INSERT INTO sys_data_configg (
+                  data_config_id,
+                  sys_config_id,
+                  data_config_desc,
+                  data_config_segment1
+                ) VALUES ($1, $2, $3, $4)
+              `;
+            }
 
             const result = await pool.query(insertQuery, [
               dataConfigId,
@@ -3612,28 +3639,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.error("Failed item:", JSON.stringify(item, null, 2));
             console.error("Error details:", insertError);
             
-            // Try with fallback values
+            // Try with fallback values using simple insert
             try {
               const fallbackId = 175256530159 + i;
-              const fallbackQuery = `
-                INSERT INTO sys_data_configg (
-                  data_config_id,
-                  sys_config_id,
-                  data_config_desc,
-                  data_config_segment1
-                ) VALUES ($1, $2, $3, $4)
-                ON CONFLICT (data_config_id) DO NOTHING
-              `;
               
-              await pool.query(fallbackQuery, [
-                fallbackId,
-                10,
-                "Finished Goods",
-                null
-              ]);
+              // Check if fallback ID exists
+              const checkFallback = await pool.query(
+                `SELECT data_config_id FROM sys_data_configg WHERE data_config_id = $1`, 
+                [fallbackId]
+              );
               
-              recordsInserted++;
-              console.log(`✅ Inserted fallback record ${i + 1}: ID=${fallbackId}`);
+              if (checkFallback.rows.length === 0) {
+                const fallbackQuery = `
+                  INSERT INTO sys_data_configg (
+                    data_config_id,
+                    sys_config_id,
+                    data_config_desc,
+                    data_config_segment1
+                  ) VALUES ($1, $2, $3, $4)
+                `;
+                
+                await pool.query(fallbackQuery, [
+                  fallbackId,
+                  10,
+                  "Finished Goods",
+                  null
+                ]);
+                
+                recordsInserted++;
+                console.log(`✅ Inserted fallback record ${i + 1}: ID=${fallbackId}`);
+              } else {
+                console.log(`⚠️ Fallback ID ${fallbackId} already exists, skipping`);
+              }
             } catch (fallbackError: any) {
               console.error(`❌ Fallback insert also failed for record ${i + 1}:`, fallbackError.message);
             }
