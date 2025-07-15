@@ -952,6 +952,7 @@ function PurchaseForm() {
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
   const [invItems, setInvItems] = useState<any[]>([]);
+  const [bardanaTypes, setBardanaTypes] = useState<any[]>([]);
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
@@ -1418,10 +1419,24 @@ function PurchaseForm() {
       }
     };
 
+    const fetchBardanaTypes = async () => {
+      try {
+        const response = await fetch("/api/bardana-types");
+        if (response.ok) {
+          const bardanaData = await response.json();
+          setBardanaTypes(Array.isArray(bardanaData) ? bardanaData : []);
+        }
+      } catch (error) {
+        console.error("Error fetching bardana types:", error);
+        setBardanaTypes([]);
+      }
+    };
+
     wakeUpDatabase().then(() => {
       fetchEntryTypes();
       fetchBranches();
       fetchInvItems();
+      fetchBardanaTypes();
     });
   }, []);
 
@@ -3902,49 +3917,33 @@ function PurchaseForm() {
                         <span className="text-xs text-black w-28">
                           Bardana Type
                         </span>
-                        {onlineMode ? (
-                          <Input
-                            name="bardanaType"
-                            value={formData.bardanaType}
-                            onChange={handleChange}
-                            className="h-8 text-xs text-black w-60" // Wider input
-                          />
-                        ) : (
-                          <Select
-                            name="bardanaType"
-                            value={formData.bardanaType}
-                            onValueChange={(value) =>
-                              setFormData((prev) => ({
-                                ...prev,
-                                bardanaType: value,
-                              }))
-                            }
-                          >
-                            <SelectTrigger className="h-8 text-xs text-black w-60">
-                              <SelectValue
-                                placeholder="Select bardana type"
-                                className="text-black"
-                              />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="PP BAGS 100 GR">
-                                PP BAGS 100 GR
+                        <Select
+                          name="bardanaType"
+                          value={formData.bardanaType}
+                          onValueChange={(value) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              bardanaType: value,
+                            }))
+                          }
+                        >
+                          <SelectTrigger className="h-8 text-xs text-black w-60">
+                            <SelectValue
+                              placeholder="Select bardana type"
+                              className="text-black"
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {bardanaTypes.map((bardanaType) => (
+                              <SelectItem
+                                key={bardanaType.data_config_segment1}
+                                value={bardanaType.type}
+                              >
+                                {bardanaType.type}
                               </SelectItem>
-                              <SelectItem value="PP BAGS 50 GR">
-                                PP BAGS 50 GR
-                              </SelectItem>
-                              <SelectItem value="JUTE BAGS">
-                                JUTE BAGS
-                              </SelectItem>
-                              <SelectItem value="HDPE BAGS">
-                                HDPE BAGS
-                              </SelectItem>
-                              <SelectItem value="PLASTIC BAGS">
-                                PLASTIC BAGS
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       {/* Wt per Bag */}

@@ -3732,6 +3732,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET bardana types from sys_data_configg table
+  app.get("/api/bardana-types", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT data_config_segment1 || '-' || data_config_desc AS type, data_config_segment1 
+        FROM sys_data_configg 
+        WHERE sys_config_id = 15
+        ORDER BY data_config_desc
+      `;
+      
+      const result = await pool.query(query);
+      
+      console.log(`Fetched ${result.rows.length} bardana types from sys_data_configg`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching bardana types:", error);
+      res.status(500).json({ error: "Failed to fetch bardana types" });
+    }
+  });
+
   // Voucher API endpoints for gl_vouchers table
 
   // Create gl_vouchers table if it doesn't exist
