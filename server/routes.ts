@@ -3492,16 +3492,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           });
         }
 
-        // Validate URL format
-        try {
-          new URL(url);
-        } catch (urlError) {
-          return res.status(400).json({
-            success: false,
-            error: "Invalid URL format",
-          });
-        }
-
         // Fetch data from the provided URL
         console.log("Fetching data from:", url);
         const response = await fetch(url, {
@@ -3509,264 +3499,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
           headers: {
             Accept: "application/json",
             "User-Agent": "WeighbridgeSystem/1.0",
-            "Content-Type": "application/json",
           },
-          timeout: 30000, // 30 second timeout
         });
 
         if (!response.ok) {
-          console.error(
-            `Fetch failed with status: ${response.status} ${response.statusText}`,
-          );
-          throw new Error(
-            `HTTP error! status: ${response.status} - ${response.statusText}`,
-          );
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const responseText = await response.text();
-        console.log("Raw response:", responseText.substring(0, 200));
-
-        let data;
-        try {
-          data = JSON.parse(responseText);
-        } catch (parseError) {
-          console.error("Failed to parse JSON:", parseError);
-          throw new Error("Invalid JSON response from URL");
-        }
-
-        console.log(
-          "Data fetched successfully, type:",
-          typeof data,
-          "isArray:",
-          Array.isArray(data),
-          "keys:",
-          data && typeof data === "object"
-            ? Object.keys(data).slice(0, 5)
-            : "N/A",
-        );
+        const data = await response.json();
+        console.log("Fetched data:", data);
 
         // Create sys_data_configg table if it doesn't exist
-        console.log("Creating/ensuring sys_data_configg table exists...");
         await pool.query(`
-        CREATE TABLE IF NOT EXISTS sys_data_configg (
-          data_config_id BIGINT PRIMARY KEY,
-          sys_config_id BIGINT,
-          data_config_desc VARCHAR(500),
-          data_config_segment1 VARCHAR(500)
-        )
-      `);
+          CREATE TABLE IF NOT EXISTS sys_data_configg (
+            data_config_id BIGINT PRIMARY KEY,
+            sys_config_id BIGINT,
+            data_config_desc VARCHAR(500),
+            data_config_segment1 VARCHAR(500)
+          )
+        `);
 
         let recordsInserted = 0;
-        let recordsUpdated = 0;
-        let recordsSkipped = 0;
-        let baseId = Date.now(); // Use as base for generating unique IDs
-
-        // Helper function to insert item into database
-        const insertItemToDatabase = async (item: any, index: number) => {
-          try {
-            // Generate a unique ID for each record
-            let uniqueId =
-              item.data_config_id ||
-              item.id ||
-              item.DATA_CONFIG_ID ||
-              item.configId ||
-              item.config_id ||
-              item.segment_id ||
-              baseId + index;
-
-            // Convert to number and validate
-            const numericId = parseInt(uniqueId.toString());
-            if (isNaN(numericId)) {
-              uniqueId = baseId + index;
-              console.warn(
-                `Invalid ID for item ${index}, using generated ID: ${uniqueId}`,
-              );
-            } else {
-              uniqueId = numericId;
-            }
-
-            // Extract values with better null handling
-            const sysConfigId =
-              item.sys_config_id ||
-              item.sysId ||
-              item.SYS_CONFIG_ID ||
-              item.systemId ||
-              null;
-            const dataConfigDesc =
-              item.data_config_desc ||
-              item.description ||
-              item.desc ||
-              item.DATA_CONFIG_DESC ||
-              item.name ||
-              item.label ||
-              item.title ||
-              null;
-            const dataConfigSegment1 =
-              item.data_config_segment1 ||
-              item.segment1 ||
-              item.DATA_CONFIG_SEGMENT1 ||
-              item.segment ||
-              item.type ||
-              item.category ||
-              null;
-
-            // Skip empty records
-            if (!dataConfigDesc && !dataConfigSegment1 && !sysConfigId) {
-              console.log(`Skipping empty record with ID: ${uniqueId}`);
-              recordsSkipped++;
-              return false;
-            }
-
-            const query = `
-            INSERT INTO sys_data_configg (
-              data_config_id, sys_config_id, data_config_desc, data_config_segment1
-            )
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (data_config_id) DO UPDATE SET
-              sys_config_id = EXCLUDED.sys_config_id,
-              data_config_desc = EXCLUDED.data_config_desc,
-              data_config_segment1 = EXCLUDED.data_config_segment1
-            RETURNING (xmax = 0) AS inserted
-          `;
-
-            const values = [
-              uniqueId,
-              sysConfigId,
-              dataConfigDesc,
-              dataConfigSegment1,
-            ];
-
-            console.log(
-              `Attempting to insert/update record with values:`,
-              values,
-            );
-            const result = await pool.query(query, values);
-
-            if (result.rows[0]?.inserted) {
-              console.log(
-                `✅ Inserted new sys config item: ID=${uniqueId}, desc='${dataConfigDesc}'`,
-              );
-              return true;
-            } else {
-              console.log(
-                `🔄 Updated existing sys config item: ID=${uniqueId}, desc='${dataConfigDesc}'`,
-              );
-              recordsUpdated++;
-              return false;
-            }
-          } catch (insertError: any) {
-            console.error(
-              "❌ Error inserting sys config item:",
-              insertError.message,
-            );
-            console.error("Item data:", JSON.stringify(item, null, 2));
-            throw insertError; // Re-throw to handle in calling function
-          }
-        };
-
-        // Handle different data structures
         let dataToProcess = [];
 
+        // Handle different data structures
         if (Array.isArray(data)) {
-          console.log(`Processing array of ${data.length} items...`);
           dataToProcess = data;
-        } else if (
-          data &&
-          typeof data === "object" &&
-          data.items &&
-          Array.isArray(data.items)
-        ) {
-          console.log(
-            `Processing nested array of ${data.items.length} items...`,
-          );
-          dataToProcess = data.items;
-        } else if (
-          data &&
-          typeof data === "object" &&
-          data.data &&
-          Array.isArray(data.data)
-        ) {
-          console.log(
-            `Processing nested data array of ${data.data.length} items...`,
-          );
-          dataToProcess = data.data;
-        } else if (typeof data === "object" && data !== null) {
-          console.log("Processing single object...");
+        } else if (data && typeof data === "object") {
           dataToProcess = [data];
-        } else {
-          throw new Error(
-            "Invalid data format received from URL. Expected JSON object or array.",
-          );
         }
 
-        // Process all items
+        console.log(`Processing ${dataToProcess.length} records...`);
+
+        // Clear existing data and insert new data
+        await pool.query("DELETE FROM sys_data_configg");
+
         for (let i = 0; i < dataToProcess.length; i++) {
+          const item = dataToProcess[i];
+          
           try {
-            const wasInserted = await insertItemToDatabase(dataToProcess[i], i);
-            if (wasInserted) {
-              recordsInserted++;
-            }
-          } catch (error: any) {
-            console.error(`Failed to process item ${i}:`, error.message);
-            recordsSkipped++;
+            const dataConfigId = item.data_config_id || item.segment_id || (Date.now() + i);
+            const sysConfigId = item.sys_config_id || 10;
+            const dataConfigDesc = item.data_config_desc || "Finished Goods";
+            const dataConfigSegment1 = item.data_config_segment1 || null;
+
+            const insertQuery = `
+              INSERT INTO sys_data_configg (
+                data_config_id,
+                sys_config_id,
+                data_config_desc,
+                data_config_segment1
+              ) VALUES ($1, $2, $3, $4)
+            `;
+
+            await pool.query(insertQuery, [
+              dataConfigId,
+              sysConfigId,
+              dataConfigDesc,
+              dataConfigSegment1
+            ]);
+
+            recordsInserted++;
+            console.log(`✅ Inserted record ${i + 1}: ID=${dataConfigId}, desc='${dataConfigDesc}'`);
+          } catch (insertError: any) {
+            console.error(`❌ Error inserting record ${i + 1}:`, insertError.message);
+            continue;
           }
         }
 
-        // Verify data was actually saved by querying the table
-        const verifyQuery = "SELECT COUNT(*) as count FROM sys_data_configg";
-        const verifyResult = await pool.query(verifyQuery);
-        const totalRecordsInTable = parseInt(verifyResult.rows[0].count);
-
-        console.log(
-          `✅ Processing complete: ${recordsInserted} inserted, ${recordsUpdated} updated, ${recordsSkipped} skipped. Total records in table: ${totalRecordsInTable}`,
-        );
+        console.log(`✅ Successfully inserted ${recordsInserted} records into sys_data_configg table`);
 
         res.json({
           success: true,
           message: `Data fetched and saved successfully to sys_data_configg table`,
           recordsInserted,
-          recordsUpdated,
-          recordsSkipped,
-          totalRecordsInTable,
           targetTable: "sys_data_configg",
-          data: dataToProcess.slice(0, 3), // Show first 3 records for verification
+          data: dataToProcess.slice(0, 3)
         });
       } catch (error: any) {
         console.error("❌ Error fetching and saving sys config data:", error);
-        console.error("Error stack:", error.stack);
-
-        // Provide more specific error messages
-        let errorMessage = "Failed to fetch and save sys config data";
-        if (
-          error.message.includes("fetch") ||
-          error.message.includes("network")
-        ) {
-          errorMessage =
-            "Network error: Failed to fetch data from URL. Please check your internet connection and URL accessibility.";
-        } else if (
-          error.message.includes("JSON") ||
-          error.message.includes("parse")
-        ) {
-          errorMessage =
-            "Data format error: Invalid JSON response from URL. Please check the API response format.";
-        } else if (
-          error.message.includes("INSERT") ||
-          error.message.includes("duplicate") ||
-          error.message.includes("database")
-        ) {
-          errorMessage =
-            "Database error: Failed to save data. Please check for duplicate IDs or database connectivity.";
-        } else if (error.message.includes("timeout")) {
-          errorMessage =
-            "Timeout error: Request took too long. Please try again or check the URL.";
-        }
-
         res.status(500).json({
           success: false,
-          error: errorMessage,
+          error: "Failed to fetch and save sys config data",
           details: error.message,
-          url: req.body.url || "Unknown URL",
-          targetTable: "sys_data_configg",
         });
       }
     },
