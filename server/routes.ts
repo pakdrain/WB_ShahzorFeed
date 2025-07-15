@@ -3415,8 +3415,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `);
 
       let recordsInserted = 0;
-      let idCounter = Date.now(); // Use as base for generating unique IDs
-      const processedIds = new Set(); // Track processed IDs to avoid duplicates
+      let recordsUpdated = 0;
+      let recordsSkipped = 0;
+      let baseId = Date.now(); // Use as base for generating unique IDs
 
       // Helper function to insert item into database
       const insertItemToDatabase = async (item: any, index: number) => {
@@ -3428,23 +3429,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
                         item.configId || 
                         item.config_id ||
                         item.segment_id ||
-                        (idCounter + index);
+                        (baseId + index);
 
           // Convert to number and validate
           const numericId = parseInt(uniqueId.toString());
           if (isNaN(numericId)) {
-            uniqueId = idCounter + index;
+            uniqueId = baseId + index;
             console.warn(`Invalid ID for item ${index}, using generated ID: ${uniqueId}`);
           } else {
             uniqueId = numericId;
           }
 
-          // Skip if we've already processed this ID
-          if (processedIds.has(uniqueId)) {
-            console.log(`Skipping duplicate ID: ${uniqueId}`);
-            return;
+          // Extract values with better null handling
+          const sysConfigId = item.sys_config_id || item.sysId || item.SYS_CONFIG_ID || item.systemId || null;
+          const dataConfigDesc = item.data_config_desc || item.description || item.desc || item.DATA_CONFIG_DESC || item.name || item.label || item.title || null;
+          const dataConfigSegment1 = item.data_config_segment1 || item.segment1 || item.DATA_CONFIG_SEGMENT1 || item.segment || item.type || item.category || null;
+
+          // Skip empty records
+          if (!dataConfigDesc && !dataConfigSegment1 && !sysConfigId) {
+            console.log(`Skipping empty record with ID: ${uniqueId}`);
+            recordsSkipped++;
+            return false;
           }
-          processedIds.add(uniqueId);
 
           const query = `
             INSERT INTO sys_data_configg (
@@ -3455,36 +3461,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
               sys_config_id = EXCLUDED.sys_config_id,
               data_config_desc = EXCLUDED.data_config_desc,
               data_config_segment1 = EXCLUDED.data_config_segment1
+            RETURNING (xmax = 0) AS inserted
           `;
 
-          const values = [
-            uniqueId,
-            item.sys_config_id || item.sysId || item.SYS_CONFIG_ID || item.systemId || null,
-            item.data_config_desc || item.description || item.desc || item.DATA_CONFIG_DESC || item.name || item.label || item.title || null,
-            item.data_config_segment1 || item.segment1 || item.DATA_CONFIG_SEGMENT1 || item.segment || item.type || item.category || null,
-          ];
+          const values = [uniqueId, sysConfigId, dataConfigDesc, dataConfigSegment1];
 
+          console.log(`Attempting to insert/update record with values:`, values);
           const result = await pool.query(query, values);
-          console.log(
-            "Inserted/Updated sys config item:",
-            values[0],
-            "desc:",
-            values[2] || "no description"
-          );
+          
+          if (result.rows[0]?.inserted) {
+            console.log(`✅ Inserted new sys config item: ID=${uniqueId}, desc='${dataConfigDesc}'`);
+            return true;
+          } else {
+            console.log(`🔄 Updated existing sys config item: ID=${uniqueId}, desc='${dataConfigDesc}'`);
+            recordsUpdated++;
+            return false;
+          }
         } catch (insertError: any) {
-          console.error("Error inserting sys config item:", insertError.message);
+          console.error("❌ Error inserting sys config item:", insertError.message);
           console.error("Item data:", JSON.stringify(item, null, 2));
-          // Don't throw, just log and continue with other items
+          throw insertError; // Re-throw to handle in calling function
         }
       };
 
       // Handle different data structures
+      let dataToProcess = [];
+      
       if (Array.isArray(data)) {
         console.log(`Processing array of ${data.length} items...`);
-        for (let i = 0; i < data.length; i++) {
-          await insertItemToDatabase(data[i], i);
-          recordsInserted++;
-        }
+        dataToProcess = data;
       } else if (
         data &&
         typeof data === "object" &&
@@ -3492,10 +3497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Array.isArray(data.items)
       ) {
         console.log(`Processing nested array of ${data.items.length} items...`);
-        for (let i = 0; i < data.items.length; i++) {
-          await insertItemToDatabase(data.items[i], i);
-          recordsInserted++;
-        }
+        dataToProcess = data.items;
       } else if (
         data &&
         typeof data === "object" &&
@@ -3503,34 +3505,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Array.isArray(data.data)
       ) {
         console.log(`Processing nested data array of ${data.data.length} items...`);
-        for (let i = 0; i < data.data.length; i++) {
-          await insertItemToDatabase(data.data[i], i);
-          recordsInserted++;
-        }
+        dataToProcess = data.data;
       } else if (typeof data === "object" && data !== null) {
         console.log("Processing single object...");
-        await insertItemToDatabase(data, 0);
-        recordsInserted = 1;
+        dataToProcess = [data];
       } else {
         throw new Error("Invalid data format received from URL. Expected JSON object or array.");
       }
 
+      // Process all items
+      for (let i = 0; i < dataToProcess.length; i++) {
+        try {
+          const wasInserted = await insertItemToDatabase(dataToProcess[i], i);
+          if (wasInserted) {
+            recordsInserted++;
+          }
+        } catch (error: any) {
+          console.error(`Failed to process item ${i}:`, error.message);
+          recordsSkipped++;
+        }
+      }
+
+      // Verify data was actually saved by querying the table
+      const verifyQuery = "SELECT COUNT(*) as count FROM sys_data_configg";
+      const verifyResult = await pool.query(verifyQuery);
+      const totalRecordsInTable = parseInt(verifyResult.rows[0].count);
+
       console.log(
-        `✅ Successfully saved ${recordsInserted} records to sys_data_configg table from ${url}`,
+        `✅ Processing complete: ${recordsInserted} inserted, ${recordsUpdated} updated, ${recordsSkipped} skipped. Total records in table: ${totalRecordsInTable}`
       );
 
       res.json({
         success: true,
         message: `Data fetched and saved successfully to sys_data_configg table`,
         recordsInserted,
+        recordsUpdated,
+        recordsSkipped,
+        totalRecordsInTable,
         targetTable: "sys_data_configg",
-        data: Array.isArray(data)
-          ? data.slice(0, 3)
-          : data.items
-            ? data.items.slice(0, 3)
-            : data.data
-              ? data.data.slice(0, 3)
-              : data,
+        data: dataToProcess.slice(0, 3), // Show first 3 records for verification
       });
     } catch (error: any) {
       console.error("❌ Error fetching and saving sys config data:", error);
