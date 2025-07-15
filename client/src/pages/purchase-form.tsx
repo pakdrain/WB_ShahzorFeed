@@ -235,24 +235,68 @@ function PurchaseForm() {
           setOnlineMode(true);
         }
 
-        // Set IGP items after form data is loaded - use saved detail fields
-        setTimeout(() => {
-          if (details.po_no || details.item_code || details.item_desc) {
-            setIgpItems([
-              {
-                po_no: details.po_no || "",
-                item_code: details.item_code || "",
-                item_desc: details.item_desc || "Saved record data",
-                po_qty: details.po_qty || "",
-                igp_qty: details.igp_qty || "",
-                balance_qty: details.balance_qty || "",
-              },
-            ]);
-            console.log(
-              "IGP items set from saved detail fields in wb_id loading",
-            );
+        // Load sales data if this is a SALE entry type
+        if (master.entry_type === "SALE" && data.details && data.details.length > 0) {
+          const salesRows = data.details.map((detail: any, index: number) => ({
+            doId: String(index + 1),
+            dcNo: detail.igp_no || detail.manual_dc_no || "", // DC No maps to igp_no
+            doNo: detail.po_no || detail.do_no || "", // DO No maps to po_no
+            customerName: detail.vendor_name || detail.customer_name || "",
+            vehicleNo: detail.vehicle_no || "",
+            doDate: detail.igp_date || detail.do_date || "",
+            itemDescription: detail.item_desc || "",
+            dcQty: detail.igp_qty ? String(detail.igp_qty) : (detail.dc_qty ? String(detail.dc_qty) : ""),
+            doQty: detail.po_qty ? String(detail.po_qty) : (detail.do_qty ? String(detail.do_qty) : ""),
+            branch: "",
+            // Hidden / internal fields
+            dcId: detail.dc_id || "",
+            customerId: detail.customer_id || "",
+            itemId: detail.item_id || "",
+            itemCode: detail.item_code || "",
+          }));
+
+          // Ensure 8 rows
+          while (salesRows.length < 8) {
+            salesRows.push({
+              doId: "",
+              dcNo: "",
+              doNo: "",
+              customerName: "",
+              vehicleNo: "",
+              doDate: "",
+              itemDescription: "",
+              dcQty: "",
+              doQty: "",
+              branch: "",
+              dcId: "",
+              customerId: "",
+              itemId: "",
+              itemCode: "",
+            });
           }
-        }, 100);
+
+          setSalesData(salesRows);
+          console.log("✅ Sales data loaded in edit mode:", salesRows);
+        } else {
+          // Set IGP items after form data is loaded - use saved detail fields for purchase entries
+          setTimeout(() => {
+            if (details.po_no || details.item_code || details.item_desc) {
+              setIgpItems([
+                {
+                  po_no: details.po_no || "",
+                  item_code: details.item_code || "",
+                  item_desc: details.item_desc || "Saved record data",
+                  po_qty: details.po_qty || "",
+                  igp_qty: details.igp_qty || "",
+                  balance_qty: details.balance_qty || "",
+                },
+              ]);
+              console.log(
+                "IGP items set from saved detail fields in wb_id loading",
+              );
+            }
+          }, 100);
+        }
 
         // Don't auto-fetch IGP data in edit mode - use saved table data
       }
