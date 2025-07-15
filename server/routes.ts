@@ -50,7 +50,7 @@
     } catch (error: any) {
       console.error("❌ Error fetching and saving sys config data:", error);
       console.error("Error stack:", error.stack);
-
+      
       // Provide more specific error messages
       let errorMessage = "Failed to fetch and save sys config data";
       if (error.message.includes('fetch') || error.message.includes('network')) {
@@ -77,7 +77,7 @@
   app.get("/api/do-data/:doNo", async (req: Request, res: Response) => {
     try {
       const { doNo } = req.params;
-
+      
       const query = `
         SELECT 
           wbi.do_no,
@@ -95,9 +95,9 @@
         LEFT JOIN wb_weighbridge wb ON wbi.wb_id = wb.wb_id
         WHERE wbi.do_no = $1
       `;
-
+      
       const result = await pool.query(query, [doNo]);
-
+      
       console.log(`Fetched ${result.rows.length} records for DO number: ${doNo}`);
       res.json(result.rows);
     } catch (error: any) {
@@ -107,7 +107,7 @@
   });
 
   // Voucher API endpoints for gl_vouchers table
-
+  
   // Create gl_vouchers table if it doesn't exist
   app.post("/api/create-vouchers-table", async (req: Request, res: Response) => {
     try {
@@ -188,7 +188,7 @@
           vehicle_no         VARCHAR(50)
         )
       `);
-
+      
       res.json({ success: true, message: "gl_vouchers table created successfully" });
     } catch (error: any) {
       console.error("Error creating gl_vouchers table:", error);
@@ -200,7 +200,7 @@
   app.post("/api/vouchers/save", async (req: Request, res: Response) => {
     try {
       const voucherData = req.body;
-
+      
       const query = `
         INSERT INTO gl_vouchers (
           voucher_type, voucher_date, description, created_by, creation_date,
@@ -209,7 +209,7 @@
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING voucher_id
       `;
-
+      
       const values = [
         voucherData.voucherType || 'CPV',
         voucherData.docDate,
@@ -222,9 +222,9 @@
         voucherData.remarks,
         'Sabirs\' Poultry (Pvt.) Ltd'
       ];
-
+      
       const result = await pool.query(query, values);
-
+      
       console.log(`Voucher saved with ID: ${result.rows[0].voucher_id}`);
       res.json({ 
         success: true, 
@@ -261,9 +261,9 @@
         LEFT JOIN wb_weighbridge wb ON wbi.wb_id = wb.wb_id
         ORDER BY gv.voucher_id DESC
       `;
-
+      
       const result = await pool.query(query);
-
+      
       console.log(`Fetched ${result.rows.length} vouchers with DO data`);
       res.json(result.rows);
     } catch (error: any) {
