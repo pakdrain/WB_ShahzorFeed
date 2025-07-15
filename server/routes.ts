@@ -3352,15 +3352,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "URL is required" });
       }
 
+      // Validate URL format
+      try {
+        new URL(url);
+      } catch (urlError) {
+        return res.status(400).json({ error: "Invalid URL format" });
+      }
+
       // Fetch data from the provided URL
       console.log("Fetching data from:", url);
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'WeighbridgeSystem/1.0'
+        },
+        timeout: 10000 // 10 second timeout
+      });
 
       if (!response.ok) {
         console.error(
           `Fetch failed with status: ${response.status} ${response.statusText}`,
         );
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        console.error('Response is not JSON:', contentType);
+        throw new Error('Response is not JSON format');
       }
 
       const data = await response.json();
@@ -3369,6 +3389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         typeof data,
         "isArray:",
         Array.isArray(data),
+        "keys:", data && typeof data === 'object' ? Object.keys(data).slice(0, 5) : 'N/A'
       );
 
       // Create sys_data_configg table if it doesn't exist
@@ -3383,10 +3404,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `);
 
       let recordsInserted = 0;
+      let idCounter = Date.now(); // Use as base for generating unique IDs
 
       // Helper function to insert item into database
-      const insertItemToDatabase = async (item: any, sourceUrl: string) => {
+      const insertItemToDatabase = async (item: any, index: number) => {
         try {
+          // Generate a unique ID for each record
+          const uniqueId = item.data_config_id || 
+                          item.id || 
+                          item.DATA_CONFIG_ID || 
+                          item.configId || 
+                          item.config_id ||
+                          (idCounter + index);
+
+          // Validate that uniqueId is a number
+          const numericId = parseInt(uniqueId.toString());
+          if (isNaN(numericId)) {
+            console.warn(`Invalid ID for item ${index}, using generated ID`);
+          }
+
           const query = `
             INSERT INTO sys_data_configg (
               data_config_id, sys_config_id, data_config_desc, data_config_segment1
@@ -3399,19 +3435,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           `;
 
           const values = [
-            item.data_config_id || item.id || item.DATA_CONFIG_ID || item.configId || Date.now(),
+            isNaN(numericId) ? (idCounter + index) : numericId,
             item.sys_config_id || item.sysId || item.SYS_CONFIG_ID || item.systemId || null,
-            item.data_config_desc || item.description || item.desc || item.DATA_CONFIG_DESC || item.name || null,
-            item.data_config_segment1 || item.segment1 || item.DATA_CONFIG_SEGMENT1 || item.segment || null,
+            item.data_config_desc || item.description || item.desc || item.DATA_CONFIG_DESC || item.name || item.label || null,
+            item.data_config_segment1 || item.segment1 || item.DATA_CONFIG_SEGMENT1 || item.segment || item.type || null,
           ];
+
+          // Validate values before insert
+          if (values[0] === null || values[0] === undefined) {
+            values[0] = idCounter + index;
+          }
 
           await pool.query(query, values);
           console.log(
             "Inserted sys config item:",
-            item.data_config_id || item.id || "unknown",
+            values[0],
+            "desc:",
+            values[2] || "no description"
           );
         } catch (insertError: any) {
           console.error("Error inserting sys config item:", insertError.message);
+          console.error("Item data:", JSON.stringify(item, null, 2));
           throw insertError;
         }
       };
@@ -3420,8 +3464,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (Array.isArray(data)) {
         console.log(`Processing array of ${data.length} items...`);
         // If data is an array, insert each item
-        for (const item of data) {
-          await insertItemToDatabase(item, url);
+        for (let i = 0; i < data.length; i++) {
+          await insertItemToDatabase(data[i], i);
           recordsInserted++;
         }
       } else if (
@@ -3432,17 +3476,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ) {
         console.log(`Processing nested array of ${data.items.length} items...`);
         // If data has an items array property
-        for (const item of data.items) {
-          await insertItemToDatabase(item, url);
+        for (let i = 0; i < data.items.length; i++) {
+          await insertItemToDatabase(data.items[i], i);
+          recordsInserted++;
+        }
+      } else if (
+        data &&
+        typeof data === "object" &&
+        data.data &&
+        Array.isArray(data.data)
+      ) {
+        console.log(`Processing nested data array of ${data.data.length} items...`);
+        // If data has a data array property
+        for (let i = 0; i < data.data.length; i++) {
+          await insertItemToDatabase(data.data[i], i);
           recordsInserted++;
         }
       } else if (typeof data === "object" && data !== null) {
         console.log("Processing single object...");
         // If data is a single object, insert it
-        await insertItemToDatabase(data, url);
+        await insertItemToDatabase(data, 0);
         recordsInserted = 1;
       } else {
-        throw new Error("Invalid data format received from URL");
+        throw new Error("Invalid data format received from URL. Expected JSON object or array.");
       }
 
       console.log(
@@ -3454,17 +3510,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Data fetched and saved successfully to sys_data_configg",
         recordsInserted,
         data: Array.isArray(data)
-          ? data.slice(0, 5)
+          ? data.slice(0, 3)
           : data.items
-            ? data.items.slice(0, 5)
-            : data,
+            ? data.items.slice(0, 3)
+            : data.data
+              ? data.data.slice(0, 3)
+              : data,
       });
     } catch (error: any) {
       console.error("❌ Error fetching and saving sys config data:", error);
       console.error("Error stack:", error.stack);
+      
+      // Provide more specific error messages
+      let errorMessage = "Failed to fetch and save sys config data";
+      if (error.message.includes('fetch')) {
+        errorMessage = "Failed to fetch data from URL. Please check if the URL is accessible.";
+      } else if (error.message.includes('JSON')) {
+        errorMessage = "Invalid JSON response from URL. Please check the API response format.";
+      } else if (error.message.includes('INSERT') || error.message.includes('duplicate')) {
+        errorMessage = "Database error while saving data. Please check for duplicate IDs.";
+      }
+
       res.status(500).json({
-        error: "Failed to fetch and save sys config data",
+        success: false,
+        error: errorMessage,
         details: error.message,
+        url: req.body.url || "Unknown URL"
       });
     }
   });

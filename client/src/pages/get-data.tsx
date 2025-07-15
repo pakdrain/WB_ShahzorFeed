@@ -21,6 +21,8 @@ export default function GetData() {
   const [vendorResponse, setVendorResponse] = useState<any>(null);
   const [sysConfigResponse, setSysConfigResponse] = useState<any>(null);
 
+  const { toast } = useToast();
+
   const handleFetchData = async () => {
     if (!url.trim()) {
       toast({
@@ -31,7 +33,10 @@ export default function GetData() {
       return;
     }
 
-    setIsLoading(true);
+    setLoading(true);
+    setMessage("");
+    setResponse(null);
+
     try {
       const response = await fetch("/api/fetch-and-save-vendors", {
         method: "POST",
@@ -44,23 +49,26 @@ export default function GetData() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "Failed to fetch data");
+        throw new Error(result.error || result.details || "Failed to fetch data");
       }
 
       setResponse(result);
+      setMessage(`✅ Successfully fetched and saved ${result.recordsInserted} records to ${result.targetTable} table`);
       toast({
         title: "Success",
         description: `Successfully fetched and saved ${result.recordsInserted} records to ${result.targetTable} table`,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching data:", error);
+      const errorMsg = error.message || "Failed to fetch and save data";
+      setMessage(`❌ Error: ${errorMsg}`);
       toast({
         title: "Error",
-        description: error.message || "Failed to fetch and save data",
+        description: errorMsg,
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -179,6 +187,12 @@ export default function GetData() {
                 </>
               )}
             </Button>
+
+            {message && (
+              <Alert className={message.includes("✅") ? "border-green-500" : "border-red-500"}>
+                <AlertDescription>{message}</AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </Card>
 
