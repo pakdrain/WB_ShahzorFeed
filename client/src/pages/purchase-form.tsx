@@ -954,6 +954,7 @@ function PurchaseForm() {
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
   const [invItems, setInvItems] = useState<any[]>([]);
   const [bardanaTypes, setBardanaTypes] = useState<any[]>([]);
+  const [percentageData, setPercentageData] = useState<any[]>([]);
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
@@ -1433,11 +1434,25 @@ function PurchaseForm() {
       }
     };
 
+    const fetchPercentageData = async () => {
+      try {
+        const response = await fetch("/api/percentage-data");
+        if (response.ok) {
+          const percentageData = await response.json();
+          setPercentageData(Array.isArray(percentageData) ? percentageData : []);
+        }
+      } catch (error) {
+        console.error("Error fetching percentage data:", error);
+        setPercentageData([]);
+      }
+    };
+
     wakeUpDatabase().then(() => {
       fetchEntryTypes();
       fetchBranches();
       fetchInvItems();
       fetchBardanaTypes();
+      fetchPercentageData();
     });
   }, []);
 
@@ -3457,16 +3472,11 @@ function PurchaseForm() {
                           className="w-full text-center text-xs text-black bg-transparent border-none focus:outline-none"
                         >
                           <option value="">Select %</option>
-                          <option value="0.1">0.1% (0.1)</option>
-                          <option value="0.2">0.2% (0.2)</option>
-                          <option value="0.3">0.3% (0.3)</option>
-                          <option value="0.4">0.4% (0.4)</option>
-                          <option value="0.5">0.5% (0.5)</option>
-                          <option value="0.6">0.6% (0.6)</option>
-                          <option value="0.7">0.7% (0.7)</option>
-                          <option value="0.8">0.8% (0.8)</option>
-                          <option value="0.9">0.9% (0.9)</option>
-                          <option value="1.0">1.0% (1.0)</option>
+                          {percentageData.map((item, index) => (
+                            <option key={index} value={item.data_config_desc}>
+                              {item.data_config_desc}
+                            </option>
+                          ))}
                         </select>
                       ) : (
                         <input
