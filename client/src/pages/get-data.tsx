@@ -131,7 +131,7 @@ export default function GetData() {
 
       if (response.ok) {
         setSysConfigMessage(
-          `✅ ${data.message} (${data.recordsInserted} records inserted)`,
+          `✅ ${data.message} (${data.recordsInserted} records inserted into ${data.targetTable || 'sys_data_configg'} table)`,
         );
         setSysConfigResponse(data);
       } else {
