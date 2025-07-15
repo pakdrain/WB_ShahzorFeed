@@ -3366,8 +3366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         headers: {
           'Accept': 'application/json',
           'User-Agent': 'WeighbridgeSystem/1.0'
-        },
-        timeout: 10000 // 10 second timeout
+        }
       });
 
       if (!response.ok) {
@@ -3415,6 +3414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                           item.DATA_CONFIG_ID || 
                           item.configId || 
                           item.config_id ||
+                          item.segment_id ||
                           (idCounter + index);
 
           // Validate that uniqueId is a number
@@ -3436,9 +3436,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const values = [
             isNaN(numericId) ? (idCounter + index) : numericId,
-            item.sys_config_id || item.sysId || item.SYS_CONFIG_ID || item.systemId || null,
-            item.data_config_desc || item.description || item.desc || item.DATA_CONFIG_DESC || item.name || item.label || null,
-            item.data_config_segment1 || item.segment1 || item.DATA_CONFIG_SEGMENT1 || item.segment || item.type || null,
+            item.sys_config_id || item.sysId || item.SYS_CONFIG_ID || item.systemId || item.segment_id || null,
+            item.data_config_desc || item.description || item.desc || item.DATA_CONFIG_DESC || item.name || item.label || item.segment_id || null,
+            item.data_config_segment1 || item.segment1 || item.DATA_CONFIG_SEGMENT1 || item.segment || item.type || item.segment_id || null,
           ];
 
           // Validate values before insert
@@ -3509,6 +3509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         message: "Data fetched and saved successfully to sys_data_configg",
         recordsInserted,
+        targetTable: "sys_data_configg",
         data: Array.isArray(data)
           ? data.slice(0, 3)
           : data.items
