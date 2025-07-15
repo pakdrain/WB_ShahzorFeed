@@ -3507,7 +3507,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const data = await response.json();
-        console.log("Fetched data:", data);
+        console.log("Fetched raw data:", JSON.stringify(data, null, 2));
 
         // Create sys_data_configg table if it doesn't exist
         await pool.query(`
@@ -3522,14 +3522,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let recordsInserted = 0;
         let dataToProcess = [];
 
-        // Handle different data structures
+        // Handle different data structures - look for arrays in nested properties
         if (Array.isArray(data)) {
           dataToProcess = data;
         } else if (data && typeof data === "object") {
-          dataToProcess = [data];
+          // Check for common API response structures
+          if (data.items && Array.isArray(data.items)) {
+            dataToProcess = data.items;
+          } else if (data.data && Array.isArray(data.data)) {
+            dataToProcess = data.data;
+          } else if (data.results && Array.isArray(data.results)) {
+            dataToProcess = data.results;
+          } else if (data.records && Array.isArray(data.records)) {
+            dataToProcess = data.records;
+          } else {
+            // Single object
+            dataToProcess = [data];
+          }
         }
 
-        console.log(`Processing ${dataToProcess.length} records...`);
+        console.log(`Found ${dataToProcess.length} records to process`);
+
+        if (dataToProcess.length === 0) {
+          throw new Error("No valid data found in API response");
+        }
 
         // Clear existing data and insert new data
         await pool.query("DELETE FROM sys_data_configg");
@@ -3538,10 +3554,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const item = dataToProcess[i];
           
           try {
-            const dataConfigId = item.data_config_id || item.segment_id || (Date.now() + i);
-            const sysConfigId = item.sys_config_id || 10;
-            const dataConfigDesc = item.data_config_desc || "Finished Goods";
-            const dataConfigSegment1 = item.data_config_segment1 || null;
+            // Extract data_config_id - try multiple possible field names
+            let dataConfigId = null;
+            if (item.data_config_id !== undefined) {
+              dataConfigId = parseInt(item.data_config_id);
+            } else if (item.segment_id !== undefined) {
+              dataConfigId = parseInt(item.segment_id);
+            } else if (item.id !== undefined) {
+              dataConfigId = parseInt(item.id);
+            } else if (item.config_id !== undefined) {
+              dataConfigId = parseInt(item.config_id);
+            } else {
+              dataConfigId = Date.now() + i; // Fallback
+            }
+
+            const sysConfigId = item.sys_config_id || item.system_config_id || 10;
+            const dataConfigDesc = item.data_config_desc || item.description || item.desc || "Finished Goods";
+            const dataConfigSegment1 = item.data_config_segment1 || item.segment1 || item.segment || null;
+
+            console.log(`Processing record ${i + 1}:`, {
+              dataConfigId,
+              sysConfigId,
+              dataConfigDesc,
+              dataConfigSegment1,
+              originalItem: item
+            });
 
             const insertQuery = `
               INSERT INTO sys_data_configg (
@@ -3550,6 +3587,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 data_config_desc,
                 data_config_segment1
               ) VALUES ($1, $2, $3, $4)
+              ON CONFLICT (data_config_id) DO UPDATE SET
+                sys_config_id = EXCLUDED.sys_config_id,
+                data_config_desc = EXCLUDED.data_config_desc,
+                data_config_segment1 = EXCLUDED.data_config_segment1
             `;
 
             await pool.query(insertQuery, [
@@ -3563,6 +3604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             console.log(`✅ Inserted record ${i + 1}: ID=${dataConfigId}, desc='${dataConfigDesc}'`);
           } catch (insertError: any) {
             console.error(`❌ Error inserting record ${i + 1}:`, insertError.message);
+            console.error("Failed item:", item);
             continue;
           }
         }
@@ -3571,7 +3613,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         res.json({
           success: true,
-          message: `Data fetched and saved successfully to sys_data_configg table`,
+          message: `Data fetched and saved successfully to sys_data_configg table (${recordsInserted} records inserted into sys_data_configg table)`,
           recordsInserted,
           targetTable: "sys_data_configg",
           data: dataToProcess.slice(0, 3)
