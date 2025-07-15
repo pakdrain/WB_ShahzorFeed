@@ -3349,14 +3349,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Received fetch request for sys_data_configg URL:", url);
 
       if (!url) {
-        return res.status(400).json({ error: "URL is required" });
+        return res.status(400).json({ 
+          success: false,
+          error: "URL is required" 
+        });
       }
 
       // Validate URL format
       try {
         new URL(url);
       } catch (urlError) {
-        return res.status(400).json({ error: "Invalid URL format" });
+        return res.status(400).json({ 
+          success: false,
+          error: "Invalid URL format" 
+        });
       }
 
       // Fetch data from the provided URL
@@ -3365,8 +3371,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
-          'User-Agent': 'WeighbridgeSystem/1.0'
-        }
+          'User-Agent': 'WeighbridgeSystem/1.0',
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000 // 30 second timeout
       });
 
       if (!response.ok) {
@@ -3376,13 +3384,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
       }
 
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        console.error('Response is not JSON:', contentType);
-        throw new Error('Response is not JSON format');
+      const responseText = await response.text();
+      console.log("Raw response:", responseText.substring(0, 200));
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('Failed to parse JSON:', parseError);
+        throw new Error('Invalid JSON response from URL');
       }
 
-      const data = await response.json();
       console.log(
         "Data fetched successfully, type:",
         typeof data,
@@ -3404,24 +3416,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       let recordsInserted = 0;
       let idCounter = Date.now(); // Use as base for generating unique IDs
+      const processedIds = new Set(); // Track processed IDs to avoid duplicates
 
       // Helper function to insert item into database
       const insertItemToDatabase = async (item: any, index: number) => {
         try {
           // Generate a unique ID for each record
-          const uniqueId = item.data_config_id || 
-                          item.id || 
-                          item.DATA_CONFIG_ID || 
-                          item.configId || 
-                          item.config_id ||
-                          item.segment_id ||
-                          (idCounter + index);
+          let uniqueId = item.data_config_id || 
+                        item.id || 
+                        item.DATA_CONFIG_ID || 
+                        item.configId || 
+                        item.config_id ||
+                        item.segment_id ||
+                        (idCounter + index);
 
-          // Validate that uniqueId is a number
+          // Convert to number and validate
           const numericId = parseInt(uniqueId.toString());
           if (isNaN(numericId)) {
-            console.warn(`Invalid ID for item ${index}, using generated ID`);
+            uniqueId = idCounter + index;
+            console.warn(`Invalid ID for item ${index}, using generated ID: ${uniqueId}`);
+          } else {
+            uniqueId = numericId;
           }
+
+          // Skip if we've already processed this ID
+          if (processedIds.has(uniqueId)) {
+            console.log(`Skipping duplicate ID: ${uniqueId}`);
+            return;
+          }
+          processedIds.add(uniqueId);
 
           const query = `
             INSERT INTO sys_data_configg (
@@ -3435,20 +3458,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           `;
 
           const values = [
-            isNaN(numericId) ? (idCounter + index) : numericId,
-            item.sys_config_id || item.sysId || item.SYS_CONFIG_ID || item.systemId || item.segment_id || null,
-            item.data_config_desc || item.description || item.desc || item.DATA_CONFIG_DESC || item.name || item.label || item.segment_id || null,
-            item.data_config_segment1 || item.segment1 || item.DATA_CONFIG_SEGMENT1 || item.segment || item.type || item.segment_id || null,
+            uniqueId,
+            item.sys_config_id || item.sysId || item.SYS_CONFIG_ID || item.systemId || null,
+            item.data_config_desc || item.description || item.desc || item.DATA_CONFIG_DESC || item.name || item.label || item.title || null,
+            item.data_config_segment1 || item.segment1 || item.DATA_CONFIG_SEGMENT1 || item.segment || item.type || item.category || null,
           ];
 
-          // Validate values before insert
-          if (values[0] === null || values[0] === undefined) {
-            values[0] = idCounter + index;
-          }
-
-          await pool.query(query, values);
+          const result = await pool.query(query, values);
           console.log(
-            "Inserted sys config item:",
+            "Inserted/Updated sys config item:",
             values[0],
             "desc:",
             values[2] || "no description"
@@ -3456,14 +3474,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (insertError: any) {
           console.error("Error inserting sys config item:", insertError.message);
           console.error("Item data:", JSON.stringify(item, null, 2));
-          throw insertError;
+          // Don't throw, just log and continue with other items
         }
       };
 
       // Handle different data structures
       if (Array.isArray(data)) {
         console.log(`Processing array of ${data.length} items...`);
-        // If data is an array, insert each item
         for (let i = 0; i < data.length; i++) {
           await insertItemToDatabase(data[i], i);
           recordsInserted++;
@@ -3475,7 +3492,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Array.isArray(data.items)
       ) {
         console.log(`Processing nested array of ${data.items.length} items...`);
-        // If data has an items array property
         for (let i = 0; i < data.items.length; i++) {
           await insertItemToDatabase(data.items[i], i);
           recordsInserted++;
@@ -3487,14 +3503,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         Array.isArray(data.data)
       ) {
         console.log(`Processing nested data array of ${data.data.length} items...`);
-        // If data has a data array property
         for (let i = 0; i < data.data.length; i++) {
           await insertItemToDatabase(data.data[i], i);
           recordsInserted++;
         }
       } else if (typeof data === "object" && data !== null) {
         console.log("Processing single object...");
-        // If data is a single object, insert it
         await insertItemToDatabase(data, 0);
         recordsInserted = 1;
       } else {
@@ -3507,7 +3521,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         success: true,
-        message: "Data fetched and saved successfully to sys_data_configg",
+        message: `Data fetched and saved successfully to sys_data_configg table`,
         recordsInserted,
         targetTable: "sys_data_configg",
         data: Array.isArray(data)
@@ -3524,19 +3538,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Provide more specific error messages
       let errorMessage = "Failed to fetch and save sys config data";
-      if (error.message.includes('fetch')) {
-        errorMessage = "Failed to fetch data from URL. Please check if the URL is accessible.";
-      } else if (error.message.includes('JSON')) {
-        errorMessage = "Invalid JSON response from URL. Please check the API response format.";
-      } else if (error.message.includes('INSERT') || error.message.includes('duplicate')) {
-        errorMessage = "Database error while saving data. Please check for duplicate IDs.";
+      if (error.message.includes('fetch') || error.message.includes('network')) {
+        errorMessage = "Network error: Failed to fetch data from URL. Please check your internet connection and URL accessibility.";
+      } else if (error.message.includes('JSON') || error.message.includes('parse')) {
+        errorMessage = "Data format error: Invalid JSON response from URL. Please check the API response format.";
+      } else if (error.message.includes('INSERT') || error.message.includes('duplicate') || error.message.includes('database')) {
+        errorMessage = "Database error: Failed to save data. Please check for duplicate IDs or database connectivity.";
+      } else if (error.message.includes('timeout')) {
+        errorMessage = "Timeout error: Request took too long. Please try again or check the URL.";
       }
 
       res.status(500).json({
         success: false,
         error: errorMessage,
         details: error.message,
-        url: req.body.url || "Unknown URL"
+        url: req.body.url || "Unknown URL",
+        targetTable: "sys_data_configg"
       });
     }
   });
