@@ -2058,11 +2058,23 @@ export default function SalesForm() {
 
                       if (record.wb_id) {
                         // Navigate based on entry type
-                        if (record.entry_type === "PURCHASE" || record.entry_type === "PURCHASE_RETURN") {
+                        if (record.entry_type === "PURCHASE") {
                           // Navigate to purchase form
                           const urlParams = new URLSearchParams(window.location.search);
                           const typeMode = urlParams.get("type") || "online";
                           const targetUrl = `/purchase-form?type=${typeMode}&edit=${record.wb_id}`;
+                          setLocation(targetUrl);
+                        } else if (record.entry_type === "PURCHASE_RETURN") {
+                          // Navigate to purchase return form
+                          const urlParams = new URLSearchParams(window.location.search);
+                          const typeMode = urlParams.get("type") || "online";
+                          const targetUrl = `/purchase-return?type=${typeMode}&edit=${record.wb_id}`;
+                          setLocation(targetUrl);
+                        } else if (record.entry_type === "SALE_RETURN") {
+                          // Navigate to sales return form
+                          const urlParams = new URLSearchParams(window.location.search);
+                          const typeMode = urlParams.get("type") || "online";
+                          const targetUrl = `/sales-return?type=${typeMode}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
                         } else {
                           // Load the data for editing (sales entries)

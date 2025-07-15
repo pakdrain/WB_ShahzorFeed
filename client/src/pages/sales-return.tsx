@@ -1474,18 +1474,36 @@ export default function SalesReturnForm() {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
                       console.log("entry_type:", record.entry_type);
-                      // Navigate to edit mode by updating URL without reload
-                      const urlParams = new URLSearchParams(
-                        window.location.search,
-                      );
-                      urlParams.set("edit", record.wb_id);
-                      const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-                      window.history.replaceState({}, "", newUrl);
-                      
-                      // Set edit mode and load data directly
-                      sessionStorage.setItem('salesReturnEditMode', 'true');
-                      setIsLoadingEditData(true);
-                      loadDataByWbId(parseInt(record.wb_id));
+
+                      if (record.wb_id) {
+                        // Navigate based on entry type
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const typeMode = urlParams.get("type") || "online";
+                        
+                        if (record.entry_type === "PURCHASE") {
+                          // Navigate to purchase form
+                          const targetUrl = `/purchase-form?type=${typeMode}&edit=${record.wb_id}`;
+                          setLocation(targetUrl);
+                        } else if (record.entry_type === "PURCHASE_RETURN") {
+                          // Navigate to purchase return form
+                          const targetUrl = `/purchase-return?type=${typeMode}&edit=${record.wb_id}`;
+                          setLocation(targetUrl);
+                        } else if (record.entry_type === "SALE") {
+                          // Navigate to sales form
+                          const targetUrl = `/sales-form?type=${typeMode}&edit=${record.wb_id}`;
+                          setLocation(targetUrl);
+                        } else {
+                          // Load the data for editing (sales return entries)
+                          urlParams.set("edit", record.wb_id);
+                          const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                          window.history.replaceState({}, "", newUrl);
+                          
+                          // Set edit mode and load data directly
+                          sessionStorage.setItem('salesReturnEditMode', 'true');
+                          setIsLoadingEditData(true);
+                          loadDataByWbId(parseInt(record.wb_id));
+                        }
+                      }
                     }}
                   >
                     {record.slip_no || "---"}
