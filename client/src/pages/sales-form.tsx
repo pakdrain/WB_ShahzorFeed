@@ -2057,8 +2057,17 @@ export default function SalesForm() {
                       console.log("entry_type:", record.entry_type);
 
                       if (record.wb_id) {
-                        // Load the data for editing
-                        loadDataByWbId(record.wb_id);
+                        // Navigate based on entry type
+                        if (record.entry_type === "PURCHASE" || record.entry_type === "PURCHASE_RETURN") {
+                          // Navigate to purchase form
+                          const urlParams = new URLSearchParams(window.location.search);
+                          const typeMode = urlParams.get("type") || "online";
+                          const targetUrl = `/purchase-form?type=${typeMode}&edit=${record.wb_id}`;
+                          setLocation(targetUrl);
+                        } else {
+                          // Load the data for editing (sales entries)
+                          loadDataByWbId(record.wb_id);
+                        }
                       }
                     }}
                   >
