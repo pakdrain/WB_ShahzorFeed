@@ -1,99 +1,111 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import WeightIndicator from '@/components/weight-indicator';
-import WeightDisplayTable from '@/components/weight-display-table';
-import VideoStreamFullscreen from '@/components/video-stream-fullscreen';
-import { useQuery } from '@tanstack/react-query';
-import { Link, useLocation } from 'wouter';
-import { useAuth } from '@/lib/auth';
-
+import React, { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import WeightIndicator from "@/components/weight-indicator";
+import WeightDisplayTable from "@/components/weight-display-table";
+import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useLocation } from "wouter";
+import { useAuth } from "@/lib/auth";
 
 function PurchaseForm() {
   const [location, setLocation] = useLocation();
-  const [type, setType] = useState('');
+  const [type, setType] = useState("");
   const { user } = useAuth();
-  const [searchSlipNo, setSearchSlipNo] = useState('');
-  const [searchVehicleNo, setSearchVehicleNo] = useState('');
-  const [activeTab, setActiveTab] = useState('purchase');
-const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline'>('purchase'); // Controls which form section is shown
+  const [searchSlipNo, setSearchSlipNo] = useState("");
+  const [searchVehicleNo, setSearchVehicleNo] = useState("");
+  const [activeTab, setActiveTab] = useState("purchase");
+  const [selectedForm, setSelectedForm] = useState<
+    "purchase" | "sales" | "offline"
+  >("purchase"); // Controls which form section is shown
   const [isReturnMode, setIsReturnMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Deduction/Bag table state
   const [bagTableData, setBagTableData] = useState<any[]>([]);
-  const [percentageMode, setPercentageMode] = useState<{[key: string]: boolean}>({});
+  const [percentageMode, setPercentageMode] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.split('?')[1]);
-    const currentType = searchParams.get('type');
-    const returnParam = searchParams.get('return');
-    console.log('Type param changed:', currentType);
-    console.log('Return param:', returnParam);
+    const searchParams = new URLSearchParams(location.split("?")[1]);
+    const currentType = searchParams.get("type");
+    const returnParam = searchParams.get("return");
+    console.log("Type param changed:", currentType);
+    console.log("Return param:", returnParam);
     setType(currentType ?? "");
-    setIsReturnMode(returnParam === 'true');
-
+    setIsReturnMode(returnParam === "true");
   }, [location]); // 👈 Every time URL changes
 
- useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  const formType = params.get('form');
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const formType = params.get("form");
 
-  if (formType === 'sales') {
-    setSelectedForm('sales');
-  } else if (formType === 'purchase') {
-    setSelectedForm('purchase');
-  } else if (formType === 'offline') {
-    setSelectedForm('offline');
-  }
-}, [location]);
-
+    if (formType === "sales") {
+      setSelectedForm("sales");
+    } else if (formType === "purchase") {
+      setSelectedForm("purchase");
+    } else if (formType === "offline") {
+      setSelectedForm("offline");
+    }
+  }, [location]);
 
   // Sales data state - mapped to database columns
   const [salesData, setSalesData] = useState<any[]>(
     Array.from({ length: 8 }, (_, index) => ({
-      doId: '', // Will be auto-generated as maximum number
-      dcNo: '',
-      doNo: '',
-      customerName: '', // Maps to customer_name
-      vehicleNo: '', // Maps to vehicle_no
-      doDate: '', // Maps to do_date (will be null for now)
-      itemDescription: '', // Maps to item_description
-      dcQty: '',
-      doQty: '',
-      branch: ''
-    }))
+      doId: "", // Will be auto-generated as maximum number
+      dcNo: "",
+      doNo: "",
+      customerName: "", // Maps to customer_name
+      vehicleNo: "", // Maps to vehicle_no
+      doDate: "", // Maps to do_date (will be null for now)
+      itemDescription: "", // Maps to item_description
+      dcQty: "",
+      doQty: "",
+      branch: "",
+    })),
   );
   const [nextBagId, setNextBagId] = useState(1);
 
-  const handleSalesDataChange = (index: number, field: string, value: string) => {
+  const handleSalesDataChange = (
+    index: number,
+    field: string,
+    value: string,
+  ) => {
     const newData = [...salesData];
     newData[index] = { ...newData[index], [field]: value };
     setSalesData(newData);
   };
 
   const handleSalesRowDelete = (index: number) => {
-    setSalesData(prevData => {
+    setSalesData((prevData) => {
       const newData = [...prevData];
       // Clear the row data
       newData[index] = {
-        doId: '',
-        dcNo: '',
-        doNo: '',
-        customerName: '',
-        vehicleNo: '',
-        doDate: '',
-        itemDescription: '',
-        dcQty: '',
-        doQty: '',
-        branch: '',
-        dcId: '',
-        customerId: '',
-        itemId: '',
-        itemCode: ''
+        doId: "",
+        dcNo: "",
+        doNo: "",
+        customerName: "",
+        vehicleNo: "",
+        doDate: "",
+        itemDescription: "",
+        dcQty: "",
+        doQty: "",
+        branch: "",
+        dcId: "",
+        customerId: "",
+        itemId: "",
+        itemCode: "",
       };
       return newData;
     });
@@ -101,31 +113,41 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
 
   // Fetch all first weight records
   const { data: firstWeightRecords = [] } = useQuery({
-    queryKey: ['/api/purchase/first-weight-records'],
+    queryKey: ["/api/purchase/first-weight-records"],
     refetchInterval: 3000, // Refresh every 3 seconds
   });
 
   // Fetch offline records specifically
   const { data: offlineRecords = [] } = useQuery({
-    queryKey: ['/api/purchases/offline'],
+    queryKey: ["/api/purchases/offline"],
     refetchInterval: 3000, // Refresh every 3 seconds
   });
 
   // Filter records based on search criteria and form type
   const filteredRecords = (() => {
     let records = [];
-    
-    if (selectedForm === 'offline') {
+
+    if (selectedForm === "offline") {
       // Show offline records when offline tab is selected
       records = Array.isArray(offlineRecords) ? offlineRecords : [];
     } else {
       // Show all first weight records for other tabs
       records = Array.isArray(firstWeightRecords) ? firstWeightRecords : [];
     }
-    
+
     return records.filter((record: any) => {
-      const matchesSlipNo = !searchSlipNo || (record.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
-      const matchesVehicleNo = !searchVehicleNo || (record.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
+      const matchesSlipNo =
+        !searchSlipNo ||
+        (record.slip_no || "")
+          .toString()
+          .toLowerCase()
+          .includes(searchSlipNo.toLowerCase());
+      const matchesVehicleNo =
+        !searchVehicleNo ||
+        (record.vehicle_no || "")
+          .toString()
+          .toLowerCase()
+          .includes(searchVehicleNo.toLowerCase());
       return matchesSlipNo && matchesVehicleNo;
     });
   })();
@@ -133,56 +155,71 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   // Function to load data by wb_id for editing
   const loadDataByWbId = async (wbId: number) => {
     try {
-      console.log('loadDataByWbId called with wbId:', wbId);
+      console.log("loadDataByWbId called with wbId:", wbId);
       const response = await fetch(`/api/purchase/by-wbid/${wbId}`);
-      console.log('Response status:', response.status);
+      console.log("Response status:", response.status);
       const data = await response.json();
-      console.log('Response data:', data);
+      console.log("Response data:", data);
       if (data && data.master) {
         const master = data.master;
-        const details = data.details && data.details.length > 0 ? data.details[0] : {};
+        const details =
+          data.details && data.details.length > 0 ? data.details[0] : {};
 
         // Enable edit mode
         setIsEditMode(true);
         setEditingWbId(master.wb_id);
 
         // Load all the form data including detail table data
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          slipNo: master.slip_no || '',
-          vehicleNo: details.vehicle_no || '',
-          firstWeight: master.first_weight ? String(master.first_weight) : '',
-          secondWeight: master.second_weight ? String(master.second_weight) : '',
-          netWeight: master.net_weight ? String(master.net_weight) : '',
-          bardanaWeight: master.bardana_weight ? String(master.bardana_weight) : '',
-          grossWeight: master.gross_weight ? String(master.gross_weight) : '',
-          freight: master.freight ? String(master.freight) : '',
-          remarks: master.remarks || '',
-          driverName: master.driver_name || '',
+          slipNo: master.slip_no || "",
+          vehicleNo: details.vehicle_no || "",
+          firstWeight: master.first_weight ? String(master.first_weight) : "",
+          secondWeight: master.second_weight
+            ? String(master.second_weight)
+            : "",
+          netWeight: master.net_weight ? String(master.net_weight) : "",
+          bardanaWeight: master.bardana_weight
+            ? String(master.bardana_weight)
+            : "",
+          grossWeight: master.gross_weight ? String(master.gross_weight) : "",
+          freight: master.freight ? String(master.freight) : "",
+          remarks: master.remarks || "",
+          driverName: master.driver_name || "",
           // Detail table data
-          vendor: details.vendor_name || '',
-          igpNo: details.igp_no || '',
-          poNo: details.po_no || '',
-          itemCode: details.item_code || '',
-          itemDesc: details.item_desc || '',
-          poQty: details.po_qty ? String(details.po_qty) : '',
-          igpQty: details.igp_qty ? String(details.igp_qty) : '',
-          balanceQty: details.balance_qty ? String(details.balance_qty) : '',
-          bardanaType: details.bardana_type || '',
-          wtPerBag: details.weight_per_bags ? String(details.weight_per_bags) : '',
-          noOfBags: details.no_of_bags ? String(details.no_of_bags) : '',
-          igpDate: details.igp_date || '',
-          slipInTime: master.slip_in_time ? formatDatetimeLocal(master.slip_in_time) : '',
-          slipOutTime: master.slip_out_time ? formatDatetimeLocal(master.slip_out_time) : '',
-          entryType: master.entry_type || 'PURCHASE',
-          branch: master.branch_id ? String(master.branch_id) : '',
-          branchId: master.branch_id ? String(master.branch_id) : '',
+          vendor: details.vendor_name || "",
+          igpNo: details.igp_no || "",
+          poNo: details.po_no || "",
+          itemCode: details.item_code || "",
+          itemDesc: details.item_desc || "",
+          poQty: details.po_qty ? String(details.po_qty) : "",
+          igpQty: details.igp_qty ? String(details.igp_qty) : "",
+          balanceQty: details.balance_qty ? String(details.balance_qty) : "",
+          bardanaType: details.bardana_type || "",
+          wtPerBag: details.weight_per_bags
+            ? String(details.weight_per_bags)
+            : "",
+          noOfBags: details.no_of_bags ? String(details.no_of_bags) : "",
+          igpDate: details.igp_date || "",
+          slipInTime: master.slip_in_time
+            ? formatDatetimeLocal(master.slip_in_time)
+            : "",
+          slipOutTime: master.slip_out_time
+            ? formatDatetimeLocal(master.slip_out_time)
+            : "",
+          entryType: master.entry_type || "PURCHASE",
+          branch: master.branch_id ? String(master.branch_id) : "",
+          branchId: master.branch_id ? String(master.branch_id) : "",
 
-      // 🔧 Add these missing fields
-          qualityDeduction: details.quality_deduction ? String(details.quality_deduction) : '',
-          weight: bagTableData[0]?.weight ? String(bagTableData[0].weight) : '',
-          bags: bagTableData[0]?.bags ? String(bagTableData[0].bags) : '',
-          supplierWeight: details.supplier_weight ? String(details.supplier_weight) : ''
+          // 🔧 Add these missing fields
+          qualityDeduction: details.quality_deduction
+            ? String(details.quality_deduction)
+            : "",
+          weight: bagTableData[0]?.weight ? String(bagTableData[0].weight) : "",
+          bags: bagTableData[0]?.bags ? String(bagTableData[0].bags) : "",
+          supplierWeight: details.supplier_weight
+            ? String(details.supplier_weight)
+            : "",
         }));
 
         // Load existing deduction data for this record
@@ -191,81 +228,101 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
         }
 
         // Set online/offline status based on database values
-        if (master.offline_entry === 'Yes') {
+        if (master.offline_entry === "Yes") {
           setOnlineMode(false);
-        } else if (master.online_entry === 'Yes') {
+        } else if (master.online_entry === "Yes") {
           setOnlineMode(true);
         }
 
         // Set IGP items after form data is loaded - use saved detail fields
         setTimeout(() => {
           if (details.po_no || details.item_code || details.item_desc) {
-            setIgpItems([{
-              po_no: details.po_no || '',
-              item_code: details.item_code || '',
-              item_desc: details.item_desc || 'Saved record data',
-              po_qty: details.po_qty || '',
-              igp_qty: details.igp_qty || '',
-              balance_qty: details.balance_qty || ''
-            }]);
-            console.log('IGP items set from saved detail fields in wb_id loading');
+            setIgpItems([
+              {
+                po_no: details.po_no || "",
+                item_code: details.item_code || "",
+                item_desc: details.item_desc || "Saved record data",
+                po_qty: details.po_qty || "",
+                igp_qty: details.igp_qty || "",
+                balance_qty: details.balance_qty || "",
+              },
+            ]);
+            console.log(
+              "IGP items set from saved detail fields in wb_id loading",
+            );
           }
         }, 100);
 
         // Don't auto-fetch IGP data in edit mode - use saved table data
       }
     } catch (error) {
-      console.error('Error loading data by wb_id:', error);
-      alert('Failed to load record data');
+      console.error("Error loading data by wb_id:", error);
+      alert("Failed to load record data");
     }
   };
 
   // Function to load data by slip number for editing (kept for backward compatibility)
   const loadDataBySlipNo = async (slipNo: string) => {
     try {
-      console.log('Loading slip:', slipNo, 'with entry type:', formData.entryType); 
-      const response = await fetch(`/api/purchase/by-slip/${slipNo}?entry_type=${formData.entryType}`);
-
+      console.log(
+        "Loading slip:",
+        slipNo,
+        "with entry type:",
+        formData.entryType,
+      );
+      const response = await fetch(
+        `/api/purchase/by-slip/${slipNo}?entry_type=${formData.entryType}`,
+      );
 
       const data = await response.json();
       if (data && data.master) {
         const master = data.master;
-        const details = data.details && data.details.length > 0 ? data.details[0] : {};
+        const details =
+          data.details && data.details.length > 0 ? data.details[0] : {};
 
         // Enable edit mode
         setIsEditMode(true);
         setEditingWbId(master.wb_id);
 
         // Load all the form data including detail table data
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          slipNo: master.slip_no || '',
-          vehicleNo: details.vehicle_no || '',
-          firstWeight: master.first_weight ? String(master.first_weight) : '',
-          secondWeight: master.second_weight ? String(master.second_weight) : '',
-          netWeight: master.net_weight ? String(master.net_weight) : '',
-          bardanaWeight: master.bardana_weight ? String(master.bardana_weight) : '',
-          grossWeight: master.gross_weight ? String(master.gross_weight) : '',
-          freight: master.freight ? String(master.freight) : '',
-          remarks: master.remarks || '',
-          driverName: master.driver_name || '',
+          slipNo: master.slip_no || "",
+          vehicleNo: details.vehicle_no || "",
+          firstWeight: master.first_weight ? String(master.first_weight) : "",
+          secondWeight: master.second_weight
+            ? String(master.second_weight)
+            : "",
+          netWeight: master.net_weight ? String(master.net_weight) : "",
+          bardanaWeight: master.bardana_weight
+            ? String(master.bardana_weight)
+            : "",
+          grossWeight: master.gross_weight ? String(master.gross_weight) : "",
+          freight: master.freight ? String(master.freight) : "",
+          remarks: master.remarks || "",
+          driverName: master.driver_name || "",
           // Detail table data
-          vendor: details.vendor_name || '',
-          igpNo: details.igp_no || '',
-          poNo: details.po_no || '',
-          itemCode: details.item_code || '',
-          itemDesc: details.item_desc || '',
-          poQty: details.po_qty ? String(details.po_qty) : '',
-          igpQty: details.igp_qty ? String(details.igp_qty) : '',
-          balanceQty: details.balance_qty ? String(details.balance_qty) : '',
-          bardanaType: details.bardana_type || '',
-          wtPerBag: details.weight_per_bags ? String(details.weight_per_bags) : '',
-          noOfBags: details.no_of_bags ? String(details.no_of_bags) : '',
-          igpDate: details.igp_date || '',
-          slipInTime: master.slip_in_time ? formatDatetimeLocal(master.slip_in_time) : '',
-          slipOutTime: master.slip_out_time ? formatDatetimeLocal(master.slip_out_time) : '',
-          entryType: master.entry_type || 'PURCHASE',
-
+          vendor: details.vendor_name || "",
+          igpNo: details.igp_no || "",
+          poNo: details.po_no || "",
+          itemCode: details.item_code || "",
+          itemDesc: details.item_desc || "",
+          poQty: details.po_qty ? String(details.po_qty) : "",
+          igpQty: details.igp_qty ? String(details.igp_qty) : "",
+          balanceQty: details.balance_qty ? String(details.balance_qty) : "",
+          bardanaType: details.bardana_type || "",
+          wtPerBag: details.weight_per_bags
+            ? String(details.weight_per_bags)
+            : "",
+          noOfBags: details.no_of_bags ? String(details.no_of_bags) : "",
+          igpDate: details.igp_date || "",
+          slipInTime: master.slip_in_time
+            ? formatDatetimeLocal(master.slip_in_time)
+            : "",
+          slipOutTime: master.slip_out_time
+            ? formatDatetimeLocal(master.slip_out_time)
+            : "",
+          entryType: master.entry_type || "PURCHASE",
         }));
 
         // Load existing deduction data for this record
@@ -274,32 +331,36 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
         }
 
         // Set online/offline status based on database values
-        if (master.offline_entry === 'Yes') {
+        if (master.offline_entry === "Yes") {
           setOnlineMode(false);
-        } else if (master.online_entry === 'Yes') {
+        } else if (master.online_entry === "Yes") {
           setOnlineMode(true);
         }
 
         // Set IGP items after form data is loaded - use saved detail fields
         setTimeout(() => {
           if (details.po_no || details.item_code || details.item_desc) {
-            setIgpItems([{
-              po_no: details.po_no || '',
-              item_code: details.item_code || '',
-              item_desc: details.item_desc || 'Saved record data',
-              po_qty: details.po_qty || '',
-              igp_qty: details.igp_qty || '',
-              balance_qty: details.balance_qty || ''
-            }]);
-            console.log('IGP items set from saved detail fields in slip loading');
+            setIgpItems([
+              {
+                po_no: details.po_no || "",
+                item_code: details.item_code || "",
+                item_desc: details.item_desc || "Saved record data",
+                po_qty: details.po_qty || "",
+                igp_qty: details.igp_qty || "",
+                balance_qty: details.balance_qty || "",
+              },
+            ]);
+            console.log(
+              "IGP items set from saved detail fields in slip loading",
+            );
           }
         }, 100);
 
         // Don't auto-fetch IGP data in edit mode - use saved table data
       }
     } catch (error) {
-      console.error('Error loading data by slip number:', error);
-      alert('Failed to load record data');
+      console.error("Error loading data by slip number:", error);
+      alert("Failed to load record data");
     }
   };
 
@@ -313,14 +374,14 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   // Print report function
   const handlePrintReport = () => {
     if (!formData.slipNo) {
-      alert('Please save the record first or load an existing slip to print');
+      alert("Please save the record first or load an existing slip to print");
       return;
     }
 
     // Create print window with report data
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open("", "_blank");
     if (!printWindow) {
-      alert('Please allow popups to print the report');
+      alert("Please allow popups to print the report");
       return;
     }
 
@@ -332,14 +393,17 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
 
   // Generate HTML for the weighbridge report
   const generateReportHTML = () => {
-    const currentDate = new Date().toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: 'short',
-      year: '2-digit'
-    }).toUpperCase().replace(/\s/g, '-');
+    const currentDate = new Date()
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "2-digit",
+      })
+      .toUpperCase()
+      .replace(/\s/g, "-");
 
-    const currentTime = new Date().toLocaleTimeString('en-GB', {
-      hour12: false
+    const currentTime = new Date().toLocaleTimeString("en-GB", {
+      hour12: false,
     });
 
     return `
@@ -472,18 +536,18 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
 
-        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ''}</span></div>
+        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ''}</div>
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
           </div>
         </div>
 
@@ -492,12 +556,12 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ''}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ''}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -510,12 +574,12 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
@@ -554,18 +618,18 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
               </div>
               <div class="header-right"></div>
             </div>
-         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ''}</span></div>
+         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ''}</div>
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
           </div>
         </div>
 
@@ -574,12 +638,12 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ''}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ''}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -592,12 +656,12 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
@@ -633,18 +697,18 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
               </div>
-            <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ''}</span></div>
+            <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ''}</div>
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
           </div>
         </div>
 
@@ -653,12 +717,12 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ''}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ''}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -671,12 +735,12 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
@@ -709,21 +773,19 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   </body>
   </html>
 `;
-
-
   };
 
   // Navigation functions
   const navigateToFirst = async () => {
     try {
-      const response = await fetch('/api/purchase/first-weight-records');
+      const response = await fetch("/api/purchase/first-weight-records");
       const records = await response.json();
       if (records.length > 0) {
         const firstRecord = records[records.length - 1]; // Get oldest record
         await loadDataByWbId(firstRecord.wb_id);
       }
     } catch (error) {
-      console.error('Error navigating to first record:', error);
+      console.error("Error navigating to first record:", error);
     }
   };
 
@@ -742,7 +804,7 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           alert(`No record found for slip number ${prevSlip}`);
         }
       } catch (error) {
-        console.error('Error navigating to previous record:', error);
+        console.error("Error navigating to previous record:", error);
       }
     }
   };
@@ -760,107 +822,107 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
       } else {
         // If no next record exists, create new entry with next slip number
         resetFormToInitial();
-        setFormData(prev => ({ ...prev, slipNo: nextSlip.toString() }));
+        setFormData((prev) => ({ ...prev, slipNo: nextSlip.toString() }));
       }
     } catch (error) {
-      console.error('Error navigating to next record:', error);
+      console.error("Error navigating to next record:", error);
     }
   };
 
   const navigateToLast = async () => {
     try {
-      const response = await fetch('/api/purchase/first-weight-records');
+      const response = await fetch("/api/purchase/first-weight-records");
       const records = await response.json();
       if (records.length > 0) {
         const lastRecord = records[0]; // Get newest record
         await loadDataByWbId(lastRecord.wb_id);
       }
     } catch (error) {
-      console.error('Error navigating to last record:', error);
+      console.error("Error navigating to last record:", error);
     }
   };
 
   // Function to get current date in YYYY-MM-DD format
   const getCurrentDate = () => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return today.toISOString().split("T")[0];
   };
 
   const initialFormData = {
     // Basic slip information
-    slipNo: '',
-    slipInTime: '',
-    slipOutTime: '',
-    slipDate: '',
-    status: '',
-    entryType: 'PURCHASE',
+    slipNo: "",
+    slipInTime: "",
+    slipOutTime: "",
+    slipDate: "",
+    status: "",
+    entryType: "PURCHASE",
     // Weight measurements
-    firstWeight: '',
-    secondWeight: '',
-    netWeight: '',
-    bardanaWeight: '',
-    grossWeight: '',
-    supplierWeight: '',
-    supplierWeightMinusBardana: '',
-    supplierWeightMinusOutWeight: '',
-    qualityDeduction: '',
+    firstWeight: "",
+    secondWeight: "",
+    netWeight: "",
+    bardanaWeight: "",
+    grossWeight: "",
+    supplierWeight: "",
+    supplierWeightMinusBardana: "",
+    supplierWeightMinusOutWeight: "",
+    qualityDeduction: "",
     // Vehicle and driver information
-    vehicleNo: '',
-    driverName: '',
+    vehicleNo: "",
+    driverName: "",
     // IGP and purchase details
-    igpNo: '',
-    igpDate: '',
-    poNo: '',
-    po_no: '',
-    itemCode: '',
-    itemDesc: '',
-    poQty: '',
-    igpQty: '',
-    balanceQty: '',
+    igpNo: "",
+    igpDate: "",
+    poNo: "",
+    po_no: "",
+    itemCode: "",
+    itemDesc: "",
+    poQty: "",
+    igpQty: "",
+    balanceQty: "",
     // Bardana information
-    bardanaType: '',
-    wtPerBag: '',
-    noOfBags: '',
-    bagCondition: '',
-    bardanaTypeId: '',
+    bardanaType: "",
+    wtPerBag: "",
+    noOfBags: "",
+    bagCondition: "",
+    bardanaTypeId: "",
     // Vendor information
-    vendor: '',
-    vendorName: '',
-    customerId: '',
-    customerName: '',
+    vendor: "",
+    vendorName: "",
+    customerId: "",
+    customerName: "",
     // System fields
-    wbId: '',
-    companyId: '',
-    branchId: '',
-    branch: '',
-    onlineEntry: 'Yes',
-    offlineEntry: '',
-    createdBy: '',
-    creationDate: '',
-    lastUpdatedBy: '',
-    lastUpdatedDate: '',
-    manualDcNo: '',
+    wbId: "",
+    companyId: "",
+    branchId: "",
+    branch: "",
+    onlineEntry: "Yes",
+    offlineEntry: "",
+    createdBy: "",
+    creationDate: "",
+    lastUpdatedBy: "",
+    lastUpdatedDate: "",
+    manualDcNo: "",
     // Additional fields
-    doId: '',
-    doNo: '',
-    doDate: '',
-    freight: '',
-    remarks: '',
+    doId: "",
+    doNo: "",
+    doDate: "",
+    freight: "",
+    remarks: "",
     // Missing fields that are referenced in the code
-    qualityDed: '',
-    weight: '',
-    bags: '',
-    wbItemPId: '',
-    itemId: '',
-    poId: '',
-    baradanaType: '',
-    manualIgpNo: '',
-    igpId: '',
-    vendorId: '',
-    weightPerBags: '',
-    dcQty: '',
-    supWeightWithoutBardana: '',
-    netSupplierWeight: '',
+    qualityDed: "",
+    weight: "",
+    bags: "",
+    wbItemPId: "",
+    itemId: "",
+    poId: "",
+    baradanaType: "",
+    manualIgpNo: "",
+    igpId: "",
+    vendorId: "",
+    weightPerBags: "",
+    dcQty: "",
+    supWeightWithoutBardana: "",
+    netSupplierWeight: "",
     isPercentageMode: false,
   };
 
@@ -869,21 +931,20 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
 
-
   const [onlineMode, setOnlineMode] = useState(() => {
     // Initialize based on URL parameter immediately
     const urlParams = new URLSearchParams(window.location.search);
-    const typeMode = urlParams.get('type');
-    console.log('Initial state calculation - typeMode:', typeMode);
-    if (typeMode === 'offline') {
-      console.log('Setting initial state to OFFLINE');
+    const typeMode = urlParams.get("type");
+    console.log("Initial state calculation - typeMode:", typeMode);
+    if (typeMode === "offline") {
+      console.log("Setting initial state to OFFLINE");
       return false;
-    } else if (typeMode === 'online') {
-      console.log('Setting initial state to ONLINE');
+    } else if (typeMode === "online") {
+      console.log("Setting initial state to ONLINE");
       return true;
     }
     // Default to online if no parameter specified
-    console.log('No type parameter, defaulting to ONLINE');
+    console.log("No type parameter, defaulting to ONLINE");
     return true;
   });
   const [plateReading, setPlateReading] = useState(false);
@@ -908,13 +969,18 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
     // Net Weight = First Weight - Second Weight - Bardana Weight
     const netWeight = grossWeight - bardanaWeight;
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      bardanaWeight: bardanaWeight > 0 ? bardanaWeight.toFixed(2) : '0.00',
-      grossWeight: grossWeight > 0 ? grossWeight.toFixed(2) : '0.00',
-      netWeight: netWeight > 0 ? netWeight.toFixed(2) : '0.00'
+      bardanaWeight: bardanaWeight > 0 ? bardanaWeight.toFixed(2) : "0.00",
+      grossWeight: grossWeight > 0 ? grossWeight.toFixed(2) : "0.00",
+      netWeight: netWeight > 0 ? netWeight.toFixed(2) : "0.00",
     }));
-  }, [formData.firstWeight, formData.secondWeight, formData.wtPerBag, formData.noOfBags]);
+  }, [
+    formData.firstWeight,
+    formData.secondWeight,
+    formData.wtPerBag,
+    formData.noOfBags,
+  ]);
 
   // Remove auto-fetch IGP data in edit mode - use saved table data only
 
@@ -922,17 +988,17 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   const fetchIgpData = async () => {
     // Don't fetch IGP data in edit mode for offline entries that were switched to online
     if (isEditMode) {
-      console.log('Skipping IGP fetch in edit mode');
+      console.log("Skipping IGP fetch in edit mode");
       return;
     }
-    
+
     if (!formData.igpNo) {
-      alert('Please enter IGP No');
+      alert("Please enter IGP No");
       return;
     }
     try {
       const response = await fetch(
-        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data?igp_no=${formData.igpNo}`
+        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/live_data?igp_no=${formData.igpNo}`,
       );
 
       if (!response.ok) {
@@ -944,40 +1010,42 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
       if (data && data.items && data.items.length > 0) {
         const items = data.items;
         const firstItem = items[0];
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
-          driverName: firstItem.driver_name || '',
-          vendor: firstItem.vendor_name || '',
-          vehicleNo: firstItem.vehicle_no || '',
-          noOfBags: firstItem.bardana_qty ? String(firstItem.bardana_qty) : '',
-          bardanaType: firstItem.bardanatype || '',
-          wtPerBag: firstItem.wtperbag ? String(firstItem.wtperbag) : '',
-          igpDate: firstItem.igp_date || '',
+          driverName: firstItem.driver_name || "",
+          vendor: firstItem.vendor_name || "",
+          vehicleNo: firstItem.vehicle_no || "",
+          noOfBags: firstItem.bardana_qty ? String(firstItem.bardana_qty) : "",
+          bardanaType: firstItem.bardanatype || "",
+          wtPerBag: firstItem.wtperbag ? String(firstItem.wtperbag) : "",
+          igpDate: firstItem.igp_date || "",
           // Change status from Online to Offline when IGP data loads
-          onlineEntry: 'No'
+          onlineEntry: "No",
         }));
         setIgpItems(items);
-        console.log('IGP data fetched successfully:', items);
+        console.log("IGP data fetched successfully:", items);
       } else {
-        alert('No data found for this IGP No.');
+        alert("No data found for this IGP No.");
         setIgpItems([]);
       }
     } catch (error) {
-      console.error('Error fetching IGP data:', error);
-      alert('Failed to fetch IGP data. Please check the IGP number and try again.');
+      console.error("Error fetching IGP data:", error);
+      alert(
+        "Failed to fetch IGP data. Please check the IGP number and try again.",
+      );
       setIgpItems([]);
     }
   };
 
   // DC Data Fetching Function for Sales
   const fetchDcData = async (dcNo: string) => {
-    if (!dcNo || dcNo.trim() === '') {
-      alert('Please enter DC No');
+    if (!dcNo || dcNo.trim() === "") {
+      alert("Please enter DC No");
       return;
     }
     try {
       const response = await fetch(
-        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/dc_data?dc_no=${dcNo}`
+        `http://portal.sabirsgroup.com:8184/ords/sabroso_ords/webridge_igp/dc_data?dc_no=${dcNo}`,
       );
 
       if (!response.ok) {
@@ -985,7 +1053,7 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
       }
 
       const data = await response.json();
-      console.log('DC API Response:', data);
+      console.log("DC API Response:", data);
 
       if (data && data.items && data.items.length > 0) {
         const items = data.items;
@@ -993,76 +1061,83 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
         // Update sales data with fetched DC data including hidden columns
         const updatedSalesData = items.map((item: any, index: number) => ({
           doId: `${index + 1}`, // Auto-generated ID
-          dcNo: item.dc_no || '',
-          doNo: item.delivery_order_no ? String(item.delivery_order_no) : '', // Map delivery order number to DO #
-          customerName: item.customer_name || '',
-          vehicleNo: item.vehicle_no || '',
-          doDate: item.dc_date ? new Date(item.dc_date).toLocaleDateString() : '',
-          itemDescription: item.item_desc || '',
-          dcQty: item.dc_qty ? String(item.dc_qty) : '',
-          doQty: item.del_qty ? String(item.del_qty) : '',
-          branch: '', // Keep empty for now
+          dcNo: item.dc_no || "",
+          doNo: item.delivery_order_no ? String(item.delivery_order_no) : "", // Map delivery order number to DO #
+          customerName: item.customer_name || "",
+          vehicleNo: item.vehicle_no || "",
+          doDate: item.dc_date
+            ? new Date(item.dc_date).toLocaleDateString()
+            : "",
+          itemDescription: item.item_desc || "",
+          dcQty: item.dc_qty ? String(item.dc_qty) : "",
+          doQty: item.del_qty ? String(item.del_qty) : "",
+          branch: "", // Keep empty for now
           // Hidden columns for database storage
-          dcId: item.dc_id || '',
-          customerId: item.customer_id || '',
-          itemId: item.item_id || '',
-          itemCode: item.item_code || ''
+          dcId: item.dc_id || "",
+          customerId: item.customer_id || "",
+          itemId: item.item_id || "",
+          itemCode: item.item_code || "",
         }));
 
         // Fill remaining rows with empty data if needed
         while (updatedSalesData.length < 8) {
           updatedSalesData.push({
-            doId: '',
-            dcNo: '',
-            doNo: '',
-            customerName: '',
-            vehicleNo: '',
-            doDate: '',
-            itemDescription: '',
-            dcQty: '',
-            doQty: '',
-            branch: '',
+            doId: "",
+            dcNo: "",
+            doNo: "",
+            customerName: "",
+            vehicleNo: "",
+            doDate: "",
+            itemDescription: "",
+            dcQty: "",
+            doQty: "",
+            branch: "",
             // Hidden columns for database storage
-            dcId: '',
-            customerId: '',
-            itemId: '',
-            itemCode: ''
+            dcId: "",
+            customerId: "",
+            itemId: "",
+            itemCode: "",
           });
         }
 
         setSalesData(updatedSalesData);
-        console.log('DC data fetched and populated successfully:', updatedSalesData);
+        console.log(
+          "DC data fetched and populated successfully:",
+          updatedSalesData,
+        );
       } else {
-        alert('No data found for this DC No.');
+        alert("No data found for this DC No.");
       }
     } catch (error) {
-      console.error('Error fetching DC data:', error);
-      alert('Failed to fetch DC data. Please check the DC number and try again.');
+      console.error("Error fetching DC data:", error);
+      alert(
+        "Failed to fetch DC data. Please check the DC number and try again.",
+      );
     }
   };
 
   // Function to reset form to clean state
   const resetFormToInitial = () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const typeMode = urlParams.get('type');
-    const isOfflineMode = typeMode === 'offline';
+    const typeMode = urlParams.get("type");
+    const isOfflineMode = typeMode === "offline";
 
     // Sync onlineMode state with URL parameter
-    if (typeMode === 'offline') {
+    if (typeMode === "offline") {
       setOnlineMode(false);
-    } else if (typeMode === 'online') {
+    } else if (typeMode === "online") {
       setOnlineMode(true);
     }
 
     setFormData({
       ...initialFormData,
       slipInTime: new Date().toISOString().slice(0, 16),
-      onlineEntry: isOfflineMode ? 'No' : 'Yes',
-      offlineEntry: isOfflineMode ? 'Yes' : 'No',
-      entryType: 'PURCHASE',
+      onlineEntry: isOfflineMode ? "No" : "Yes",
+      offlineEntry: isOfflineMode ? "Yes" : "No",
+      entryType: "PURCHASE",
       creationDate: new Date().toISOString(),
       lastUpdatedDate: new Date().toISOString(),
-      slipDate: new Date().toISOString()
+      slipDate: new Date().toISOString(),
     });
     setIgpItems([]);
     setIsEditMode(false);
@@ -1071,14 +1146,12 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
 
   // Get camera data
   const { data: camera } = useQuery({
-    queryKey: ['/api/cameras/1'],
+    queryKey: ["/api/cameras/1"],
     enabled: true,
   });
 
-
-
   const formatDatetimeLocal = (isoString: string) => {
-    if (!isoString) return '';
+    if (!isoString) return "";
     return isoString.slice(0, 16);
   };
 
@@ -1101,54 +1174,59 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
         pb: pb,
         percentage: percentage,
         weight: weight,
-        total: bags * pb
+        total: bags * pb,
       };
 
-      setBagTableData(prev => [...prev, newBagEntry]);
-      setNextBagId(prev => prev + 1);
+      setBagTableData((prev) => [...prev, newBagEntry]);
+      setNextBagId((prev) => prev + 1);
     } else {
-      alert('Please enter valid values for Bags and Weight Per Bag');
+      alert("Please enter valid values for Bags and Weight Per Bag");
     }
   };
 
   // Function to remove bag entry
   const removeBagEntry = (bagId: number) => {
-    setBagTableData(prev => prev.filter(item => item.bagId !== bagId));
+    setBagTableData((prev) => prev.filter((item) => item.bagId !== bagId));
   };
 
   const updateBagEntry = (bagId: number, field: string, value: string) => {
-    setBagTableData(prev => prev.map(item => 
-      item.bagId === bagId 
-        ? { ...item, [field]: field === 'weight' ? value : parseFloat(value) || 0 }
-        : item
-    ));
+    setBagTableData((prev) =>
+      prev.map((item) =>
+        item.bagId === bagId
+          ? {
+              ...item,
+              [field]: field === "weight" ? value : parseFloat(value) || 0,
+            }
+          : item,
+      ),
+    );
   };
 
   // Function to handle Insert button - save bag data to database
   const handleInsertBagData = async () => {
     if (bagTableData.length === 0) {
-      alert('No bag data to insert');
+      alert("No bag data to insert");
       return;
     }
 
     const wbId = formData.wbId || editingWbId;
     if (!wbId) {
-      alert('Please save the main form first to get WB ID');
+      alert("Please save the main form first to get WB ID");
       return;
     }
 
-    const wbIdNumber = typeof wbId === 'string' ? parseInt(wbId) : wbId;
+    const wbIdNumber = typeof wbId === "string" ? parseInt(wbId) : wbId;
 
     try {
       setLoading(true);
-      const response = await fetch('/api/deduction/save', {
-        method: 'POST',
+      const response = await fetch("/api/deduction/save", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           wbId: wbIdNumber,
-          bagTableData: bagTableData
+          bagTableData: bagTableData,
         }),
       });
 
@@ -1157,103 +1235,135 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
       }
 
       const data = await response.json();
-      alert('Deduction data saved successfully!');
-      console.log('Deduction data saved:', data);
+      alert("Deduction data saved successfully!");
+      console.log("Deduction data saved:", data);
       setBagTableData([]); // Clear the table after successful insert
       setNextBagId(1); // Reset bag ID counter
     } catch (error) {
-      console.error('Error saving deduction data:', error);
-      alert('Failed to save deduction data');
+      console.error("Error saving deduction data:", error);
+      alert("Failed to save deduction data");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const { name, value } = e.target;
     const numericFields = [
-      'firstWeight', 'secondWeight', 'netWeight',
-      'bardanaWeight', 'grossWeight', 'freight',
-      'companyId', 'branchId', 'createdBy', 'lastUpdatedBy',
-      'wtPerBag', 'noOfBags'
+      "firstWeight",
+      "secondWeight",
+      "netWeight",
+      "bardanaWeight",
+      "grossWeight",
+      "freight",
+      "companyId",
+      "branchId",
+      "createdBy",
+      "lastUpdatedBy",
+      "wtPerBag",
+      "noOfBags",
     ];
 
     if (numericFields.includes(name)) {
-      if (value === '' || /^\d*\.?\d*$/.test(value)) {
-        setFormData(prev => {
+      if (value === "" || /^\d*\.?\d*$/.test(value)) {
+        setFormData((prev) => {
           const newData = { ...prev, [name]: value };
 
           // Auto-calculate bardana weight when wtPerBag or noOfBags changes
-          if (name === 'wtPerBag' || name === 'noOfBags') {
-            const wtPerBag = parseFloat(name === 'wtPerBag' ? value : prev.wtPerBag) || 0;
-            const noOfBags = parseFloat(name === 'noOfBags' ? value : prev.noOfBags) || 0;
+          if (name === "wtPerBag" || name === "noOfBags") {
+            const wtPerBag =
+              parseFloat(name === "wtPerBag" ? value : prev.wtPerBag) || 0;
+            const noOfBags =
+              parseFloat(name === "noOfBags" ? value : prev.noOfBags) || 0;
             const calculatedBardanaWeight = wtPerBag * noOfBags;
-            newData.bardanaWeight = calculatedBardanaWeight > 0 ? String(calculatedBardanaWeight) : '';
+            newData.bardanaWeight =
+              calculatedBardanaWeight > 0
+                ? String(calculatedBardanaWeight)
+                : "";
           }
 
           return newData;
         });
       }
     } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
 
   const toggleOnlineMode = (isOnline: boolean) => {
-    console.log('toggleOnlineMode called with:', isOnline, 'Current onlineMode:', onlineMode);
+    console.log(
+      "toggleOnlineMode called with:",
+      isOnline,
+      "Current onlineMode:",
+      onlineMode,
+    );
 
     // Update state immediately
     setOnlineMode(isOnline);
 
     // Update URL to reflect the current mode
     const urlParams = new URLSearchParams(window.location.search);
-    urlParams.set('type', isOnline ? 'online' : 'offline');
+    urlParams.set("type", isOnline ? "online" : "offline");
     const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-    window.history.replaceState({}, '', newUrl);
+    window.history.replaceState({}, "", newUrl);
 
     // Update form data to reflect the mode change
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      onlineEntry: isOnline ? 'Yes' : 'No',
-      offlineEntry: isOnline ? 'No' : 'Yes'
+      onlineEntry: isOnline ? "Yes" : "No",
+      offlineEntry: isOnline ? "No" : "Yes",
     }));
 
-    console.log('Mode changed to:', isOnline ? 'ONLINE' : 'OFFLINE');
+    console.log("Mode changed to:", isOnline ? "ONLINE" : "OFFLINE");
   };
 
   const readLicensePlate = async () => {
     setPlateReading(true);
     try {
-      console.log('Starting license plate recognition...');
-      const response = await fetch('/api/cameras/read-plate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ cameraId: 1 })
+      console.log("Starting license plate recognition...");
+      const response = await fetch("/api/cameras/read-plate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cameraId: 1 }),
       });
 
       if (response.ok) {
         const result = await response.json();
-        console.log('OCR Response:', result);
+        console.log("OCR Response:", result);
 
         if (result.success && result.plateNumber) {
-          setFormData(prev => ({ ...prev, vehicleNo: result.plateNumber }));
-          console.log('License plate detected:', result.plateNumber, 'Method:', result.method);
+          setFormData((prev) => ({ ...prev, vehicleNo: result.plateNumber }));
+          console.log(
+            "License plate detected:",
+            result.plateNumber,
+            "Method:",
+            result.method,
+          );
 
           // Show success message with method info
-          const methodText = result.method === 'camera_anpr_api' ? 'Camera ANPR' : 'Computer Vision OCR';
-          alert(`License plate detected: ${result.plateNumber}\nMethod: ${methodText}\nConfidence: ${(result.confidence * 100).toFixed(0)}%`);
+          const methodText =
+            result.method === "camera_anpr_api"
+              ? "Camera ANPR"
+              : "Computer Vision OCR";
+          alert(
+            `License plate detected: ${result.plateNumber}\nMethod: ${methodText}\nConfidence: ${(result.confidence * 100).toFixed(0)}%`,
+          );
         } else {
-          console.log('No license plate detected:', result.error);
-          alert(`License plate recognition failed:\n${result.error}\n\nPlease ensure:\n- Camera is connected and accessible\n- Vehicle with license plate is visible in camera view\n- Camera has clear view of the license plate`);
+          console.log("No license plate detected:", result.error);
+          alert(
+            `License plate recognition failed:\n${result.error}\n\nPlease ensure:\n- Camera is connected and accessible\n- Vehicle with license plate is visible in camera view\n- Camera has clear view of the license plate`,
+          );
         }
       } else {
         const errorText = await response.text();
-        console.error('API error:', errorText);
-        alert('Failed to process camera image');
+        console.error("API error:", errorText);
+        alert("Failed to process camera image");
       }
     } catch (error) {
-      console.error('Error reading license plate:', error);
-      alert('Error connecting to camera system');
+      console.error("Error reading license plate:", error);
+      alert("Error connecting to camera system");
     }
     setPlateReading(false);
   };
@@ -1263,47 +1373,47 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
     // Wake up database first
     const wakeUpDatabase = async () => {
       try {
-        await fetch('/api/db/wake');
+        await fetch("/api/db/wake");
       } catch (error) {
-        console.error('Database wake-up failed:', error);
+        console.error("Database wake-up failed:", error);
       }
     };
 
     const fetchEntryTypes = async () => {
       try {
-        const response = await fetch('/api/entry-types');
+        const response = await fetch("/api/entry-types");
         if (response.ok) {
           const entryTypeData = await response.json();
           setEntryTypes(Array.isArray(entryTypeData) ? entryTypeData : []);
         }
       } catch (error) {
-        console.error('Error fetching entry types:', error);
+        console.error("Error fetching entry types:", error);
         setEntryTypes([]);
       }
     };
 
     const fetchBranches = async () => {
       try {
-        const response = await fetch('/api/branches');
+        const response = await fetch("/api/branches");
         if (response.ok) {
           const branchData = await response.json();
           setBranches(Array.isArray(branchData) ? branchData : []);
         }
       } catch (error) {
-        console.error('Error fetching branches:', error);
+        console.error("Error fetching branches:", error);
         setBranches([]);
       }
     };
 
     const fetchInvItems = async () => {
       try {
-        const response = await fetch('/api/inv-items');
+        const response = await fetch("/api/inv-items");
         if (response.ok) {
           const itemsData = await response.json();
           setInvItems(Array.isArray(itemsData) ? itemsData : []);
         }
       } catch (error) {
-        console.error('Error fetching inv items:', error);
+        console.error("Error fetching inv items:", error);
         setInvItems([]);
       }
     };
@@ -1316,49 +1426,53 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   }, []);
 
   // Handle URL parameters for edit mode and form type
- useEffect(() => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const editWbId = urlParams.get('edit');
-  const formType = urlParams.get('form') || 'purchase';  // Default to 'purchase' if null
-  const typeMode = urlParams.get('type');
-  const offlineEditSlip = urlParams.get('offline_edit');
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const editWbId = urlParams.get("edit");
+    const formType = urlParams.get("form") || "purchase"; // Default to 'purchase' if null
+    const typeMode = urlParams.get("type");
+    const offlineEditSlip = urlParams.get("offline_edit");
 
-  console.log('URL parameters:', { editWbId, formType, typeMode, offlineEditSlip });
+    console.log("URL parameters:", {
+      editWbId,
+      formType,
+      typeMode,
+      offlineEditSlip,
+    });
 
-  // Set selected form robustly
-  if (['sales', 'purchase', 'offline'].includes(formType)) {
-    setSelectedForm(formType as 'sales' | 'purchase' | 'offline');
-  }
+    // Set selected form robustly
+    if (["sales", "purchase", "offline"].includes(formType)) {
+      setSelectedForm(formType as "sales" | "purchase" | "offline");
+    }
 
-  // Online/offline mode
-  if (typeMode === 'offline') {
-    console.log('Setting OFFLINE mode from URL parameter');
-    setOnlineMode(false);
-  } else if (typeMode === 'online') {
-    console.log('Setting ONLINE mode from URL parameter');
-    setOnlineMode(true);
-  }
+    // Online/offline mode
+    if (typeMode === "offline") {
+      console.log("Setting OFFLINE mode from URL parameter");
+      setOnlineMode(false);
+    } else if (typeMode === "online") {
+      console.log("Setting ONLINE mode from URL parameter");
+      setOnlineMode(true);
+    }
 
-  // Load data
-  if (editWbId) {
-    loadDataByWbId(parseInt(editWbId));
-  } else if (offlineEditSlip) {
-    loadDataBySlipNo(offlineEditSlip);
-    setOnlineMode(false);
-  } else {
-    setTimeout(() => {
-      resetFormToInitial();
-    }, 100);
-  }
-}, [location]);
-
+    // Load data
+    if (editWbId) {
+      loadDataByWbId(parseInt(editWbId));
+    } else if (offlineEditSlip) {
+      loadDataBySlipNo(offlineEditSlip);
+      setOnlineMode(false);
+    } else {
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
+    }
+  }, [location]);
 
   // Sync form data when onlineMode changes
   useEffect(() => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      onlineEntry: onlineMode ? 'Yes' : 'No',
-      offlineEntry: onlineMode ? 'No' : 'Yes'
+      onlineEntry: onlineMode ? "Yes" : "No",
+      offlineEntry: onlineMode ? "No" : "Yes",
     }));
   }, [onlineMode]);
 
@@ -1366,11 +1480,11 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   useEffect(() => {
     const handleURLChange = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const typeMode = urlParams.get('type');
+      const typeMode = urlParams.get("type");
 
-      if (typeMode === 'offline' && onlineMode) {
+      if (typeMode === "offline" && onlineMode) {
         setOnlineMode(false);
-      } else if (typeMode === 'online' && !onlineMode) {
+      } else if (typeMode === "online" && !onlineMode) {
         setOnlineMode(true);
       }
     };
@@ -1381,60 +1495,77 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
 
   useEffect(() => {
     // Fetch next slip number based on return mode with enhanced retry logic
-    const entryType = isReturnMode ? 'PURCHASE_RETURN' : 'PURCHASE';
-    
+    const entryType = isReturnMode ? "PURCHASE_RETURN" : "PURCHASE";
+
     const fetchSlipNumber = async (retryCount = 0) => {
       try {
         // Always try to wake up database first
         if (retryCount === 0) {
           try {
-            console.log('🔄 Waking up database...');
-            const wakeResponse = await fetch('/api/db/wake');
+            console.log("🔄 Waking up database...");
+            const wakeResponse = await fetch("/api/db/wake");
             if (wakeResponse.ok) {
               const wakeData = await wakeResponse.json();
-              console.log('✅ Database wake-up response:', wakeData);
+              console.log("✅ Database wake-up response:", wakeData);
               // Wait a moment for database to fully wake up
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await new Promise((resolve) => setTimeout(resolve, 2000));
             }
           } catch (wakeError) {
-            console.log('❌ Database wake-up failed, continuing with slip fetch');
+            console.log(
+              "❌ Database wake-up failed, continuing with slip fetch",
+            );
           }
         }
 
-        console.log(`🔍 Fetching next slip number for ${entryType} (attempt ${retryCount + 1})`);
-        const response = await fetch(`/api/purchases/next-slip?entry_type=${entryType}`);
-        
+        console.log(
+          `🔍 Fetching next slip number for ${entryType} (attempt ${retryCount + 1})`,
+        );
+        const response = await fetch(
+          `/api/purchases/next-slip?entry_type=${entryType}`,
+        );
+
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
-        
+
         const data = await response.json();
-        const nextSlip = data.nextSlipNo || '1';
-        
+        const nextSlip = data.nextSlipNo || "1";
+
         // Validate that we got a proper numeric slip number
         if (!/^\d+$/.test(nextSlip)) {
           throw new Error(`Invalid slip number format: ${nextSlip}`);
         }
-        
-        console.log(`✅ Successfully fetched next slip number: ${nextSlip} for ${entryType}`);
-        setFormData(prev => ({ ...prev, slipNo: nextSlip }));
-        
+
+        console.log(
+          `✅ Successfully fetched next slip number: ${nextSlip} for ${entryType}`,
+        );
+        setFormData((prev) => ({ ...prev, slipNo: nextSlip }));
       } catch (err: any) {
-        console.error(`❌ Error fetching slip number (attempt ${retryCount + 1}):`, err.message);
-        
-        if (retryCount < 4) { // Increased retry attempts
+        console.error(
+          `❌ Error fetching slip number (attempt ${retryCount + 1}):`,
+          err.message,
+        );
+
+        if (retryCount < 4) {
+          // Increased retry attempts
           const waitTime = Math.pow(2, retryCount) * 1000; // Exponential backoff
           console.log(`⏳ Retrying in ${waitTime}ms...`);
           setTimeout(() => fetchSlipNumber(retryCount + 1), waitTime);
         } else {
           // Use a more reasonable fallback - start from 1000 + current minute
-          const reasonableFallback = (1000 + new Date().getMinutes()).toString();
-          console.log(`🚨 All retries failed, using reasonable fallback: ${reasonableFallback}`);
-          setFormData(prev => ({ ...prev, slipNo: reasonableFallback }));
-          
+          const reasonableFallback = (
+            1000 + new Date().getMinutes()
+          ).toString();
+          console.log(
+            `🚨 All retries failed, using reasonable fallback: ${reasonableFallback}`,
+          );
+          setFormData((prev) => ({ ...prev, slipNo: reasonableFallback }));
+
           // Show user notification
-          alert(`⚠️ Could not connect to database. Using temporary slip number: ${reasonableFallback}\n\nPlease check your internet connection.`);
+          alert(
+            `⚠️ Could not connect to database. Using temporary slip number: ${reasonableFallback}\n\nPlease check your internet connection.`,
+          );
         }
       }
     };
@@ -1442,34 +1573,38 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
     fetchSlipNumber();
 
     // Fetch branches for dropdown
-    fetch('/api/branches')
-      .then(res => res.json())
+    fetch("/api/branches")
+      .then((res) => res.json())
       .then((data: any) => {
         const branchData = Array.isArray(data) ? data : [];
         setBranches(branchData);
-        console.log('Branches fetched:', data);
+        console.log("Branches fetched:", data);
 
         // Set default branch based on logged-in user's branch
-        if (branchData.length > 0 && (!formData.branchId || formData.branchId === '')) {
+        if (
+          branchData.length > 0 &&
+          (!formData.branchId || formData.branchId === "")
+        ) {
           const userBranchId = user?.branchId;
-          const defaultBranch = userBranchId ? 
-            branchData.find(b => b.branch_id === userBranchId) || branchData[0] : 
-            branchData[0];
-          setFormData(prev => ({
+          const defaultBranch = userBranchId
+            ? branchData.find((b) => b.branch_id === userBranchId) ||
+              branchData[0]
+            : branchData[0];
+          setFormData((prev) => ({
             ...prev,
             branchId: String(defaultBranch.branch_id),
             branch: String(defaultBranch.branch_id),
-            createdBy: String(user?.userid || '')
+            createdBy: String(user?.userid || ""),
           }));
         }
       })
       .catch((err: any) => {
-        console.error('Error fetching branches:', err);
+        console.error("Error fetching branches:", err);
         setBranches([]);
       });
 
     const now = new Date().toISOString();
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       slipInTime: formatDatetimeLocal(now),
       creationDate: now,
@@ -1484,7 +1619,7 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
     const currentSlipNo = formData.slipNo;
     setFormData({
       ...initialFormData,
-      slipNo: currentSlipNo
+      slipNo: currentSlipNo,
     });
     setIgpItems([]);
     setIsEditMode(false);
@@ -1495,41 +1630,41 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
   const captureFirstWeight = async () => {
     try {
       // Get current weight data
-      const response = await fetch('/api/weight/data');
+      const response = await fetch("/api/weight/data");
       const weightData = await response.json();
 
       // Update the firstWeight field with current weight reading
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        firstWeight: weightData.weight
+        firstWeight: weightData.weight,
       }));
 
       // Call camera snap manager to capture and read number plate
       try {
-        console.log('Calling camera snap manager for number plate reading...');
-        const snapResponse = await fetch('/api/cameras/snap-manager', {
-          method: 'POST',
+        console.log("Calling camera snap manager for number plate reading...");
+        const snapResponse = await fetch("/api/cameras/snap-manager", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            wbId: editingWbId || null
+            wbId: editingWbId || null,
           }),
         });
 
         const snapResult = await snapResponse.json();
-        console.log('Camera snap manager response:', snapResult);
-        
+        console.log("Camera snap manager response:", snapResult);
+
         if (snapResult.success && snapResult.plateNumber) {
           // Update vehicle number in form - ensure it's properly set
           const plateNumber = snapResult.plateNumber.trim();
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
-            vehicleNo: plateNumber
+            vehicleNo: plateNumber,
           }));
-          
-          console.log('Number plate captured and saved:', plateNumber);
-          
+
+          console.log("Number plate captured and saved:", plateNumber);
+
           // Show success message with confidence if available
           let statusMessage = `Number plate detected: ${plateNumber}`;
           if (snapResult.confidence && snapResult.confidence > 0) {
@@ -1538,85 +1673,99 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           if (snapResult.method) {
             statusMessage += `\nMethod: ${snapResult.method}`;
           }
-          
+
           alert(statusMessage);
-          
+
           // Force update the input field if needed
           setTimeout(() => {
-            const vehicleInput = document.querySelector('input[name="vehicleNo"]') as HTMLInputElement;
+            const vehicleInput = document.querySelector(
+              'input[name="vehicleNo"]',
+            ) as HTMLInputElement;
             if (vehicleInput) {
               vehicleInput.value = plateNumber;
-              vehicleInput.dispatchEvent(new Event('input', { bubbles: true }));
+              vehicleInput.dispatchEvent(new Event("input", { bubbles: true }));
             }
           }, 100);
         } else {
-          console.log('Plate detection failed:', snapResult.error || 'No plate detected');
-          alert(`License plate detection failed!\n\nReason: ${snapResult.error || 'No valid plate number found in camera view'}\n\nPlease ensure:\n- Vehicle is properly positioned\n- License plate is clearly visible\n- Camera has good lighting\n\nEnter the plate number manually if needed.`);
+          console.log(
+            "Plate detection failed:",
+            snapResult.error || "No plate detected",
+          );
+          alert(
+            `License plate detection failed!\n\nReason: ${snapResult.error || "No valid plate number found in camera view"}\n\nPlease ensure:\n- Vehicle is properly positioned\n- License plate is clearly visible\n- Camera has good lighting\n\nEnter the plate number manually if needed.`,
+          );
         }
       } catch (cameraError) {
-        console.error('Camera snap manager error:', cameraError);
-        
+        console.error("Camera snap manager error:", cameraError);
+
         // Generate emergency plate number on frontend error
         const now = new Date();
-        const emergencyPlate = `FE${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
-        
-        setFormData(prev => ({
-          ...prev,
-          vehicleNo: emergencyPlate
-        }));
-        
-        alert(`Camera system error. Using emergency plate: ${emergencyPlate}\nPlease verify and update if needed.`);
-      }
+        const emergencyPlate = `FE${now.getMinutes().toString().padStart(2, "0")}${now.getSeconds().toString().padStart(2, "0")}`;
 
+        setFormData((prev) => ({
+          ...prev,
+          vehicleNo: emergencyPlate,
+        }));
+
+        alert(
+          `Camera system error. Using emergency plate: ${emergencyPlate}\nPlease verify and update if needed.`,
+        );
+      }
     } catch (error) {
-      console.error('Error fetching weight data:', error);
-      alert('Failed to capture weight reading');
+      console.error("Error fetching weight data:", error);
+      alert("Failed to capture weight reading");
     }
   };
 
   const captureSecondWeight = async () => {
     try {
-      const response = await fetch('/api/weight/data');
+      const response = await fetch("/api/weight/data");
       const weightData = await response.json();
 
       const currentTime = new Date().toISOString();
 
       // Update the secondWeight field with current weight reading and set slip_out_time
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         secondWeight: weightData.weight,
-        slipOutTime: currentTime.slice(0, 16) // Format for datetime-local input
+        slipOutTime: currentTime.slice(0, 16), // Format for datetime-local input
       }));
 
       // Automatically capture second weight image if slip number exists
       if (formData.slipNo) {
         try {
-          console.log('Capturing second weight image for slip:', formData.slipNo);
-          const captureResponse = await fetch('/api/capture/second-weight', {
-            method: 'POST',
+          console.log(
+            "Capturing second weight image for slip:",
+            formData.slipNo,
+          );
+          const captureResponse = await fetch("/api/capture/second-weight", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               slipNo: formData.slipNo,
-              cameraIp: '10.10.10.146',
-              cameraPort: 554
+              cameraIp: "10.10.10.146",
+              cameraPort: 554,
             }),
           });
 
           if (captureResponse.ok) {
             const captureResult = await captureResponse.json();
-            console.log('Second weight image captured successfully:', captureResult);
+            console.log(
+              "Second weight image captured successfully:",
+              captureResult,
+            );
           } else {
-            console.error('Failed to capture second weight image');
+            console.error("Failed to capture second weight image");
           }
         } catch (imageError) {
-          console.error('Error capturing second weight image:', imageError);
+          console.error("Error capturing second weight image:", imageError);
         }
       }
     } catch (error) {
-      console.error('Error fetching weight data:', error);
-      alert('Failed to capture weight reading');
+      console.error("Error fetching weight data:", error);
+      alert("Failed to capture weight reading");
     }
   };
 
@@ -1637,22 +1786,28 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
     const supplierWeightMinusBardana = supplierWeight - bardanaWeight;
 
     // Supplier Weight - Out Weight = Supplier Weight - Supp Wt - Bardana
-    const suppWtMinusBardana = parseFloat(formData.supplierWeightMinusBardana) || 0;
+    const suppWtMinusBardana =
+      parseFloat(formData.supplierWeightMinusBardana) || 0;
     const supplierWeightMinusOutWeight = supplierWeight - suppWtMinusBardana;
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       netWeight: netWeight.toString(),
       grossWeight: grossWeight.toString(),
       supplierWeightMinusBardana: supplierWeightMinusBardana.toString(),
-      supplierWeightMinusOutWeight: supplierWeightMinusOutWeight.toString()
+      supplierWeightMinusOutWeight: supplierWeightMinusOutWeight.toString(),
     }));
   };
 
   // Auto-calculate weights when values change
   useEffect(() => {
     calculateWeights();
-  }, [formData.firstWeight, formData.secondWeight, formData.bardanaWeight, formData.supplierWeight]);
+  }, [
+    formData.firstWeight,
+    formData.secondWeight,
+    formData.bardanaWeight,
+    formData.supplierWeight,
+  ]);
 
   // Load existing deduction data when editing
   const loadDeductionData = async (wbId: number) => {
@@ -1666,13 +1821,13 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           pb: item.pb,
           percentage: item.percentage,
           weight: item.weight,
-          total: item.bags * item.pb
+          total: item.bags * item.pb,
         }));
         setBagTableData(formattedData);
-        console.log('Loaded existing deduction data:', formattedData);
+        console.log("Loaded existing deduction data:", formattedData);
       }
     } catch (error) {
-      console.error('Error loading deduction data:', error);
+      console.error("Error loading deduction data:", error);
     }
   };
 
@@ -1680,62 +1835,116 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
     setLoading(true);
 
     // Validate that first weight is not null/empty when saving
-    if (!formData.firstWeight || formData.firstWeight.trim() === '' || parseFloat(formData.firstWeight) <= 0) {
-      alert('First weight is required and must be greater than 0');
+    if (
+      !formData.firstWeight ||
+      formData.firstWeight.trim() === "" ||
+      parseFloat(formData.firstWeight) <= 0
+    ) {
+      alert("First weight is required and must be greater than 0");
       setLoading(false);
       return;
     }
 
-    if (!formData. vehicleNo || formData. vehicleNo.trim() === '') {
-  alert('Vehicle number is required');
-  setLoading(false);
-  return;
-}
+    if (!formData.vehicleNo || formData.vehicleNo.trim() === "") {
+      alert("Vehicle number is required");
+      setLoading(false);
+      return;
+    }
 
     // Determine entry type based on selected form and return mode
-    let currentEntryType = 'PURCHASE';
-    if (selectedForm === 'sales') {
-      currentEntryType = isReturnMode ? 'SALE_RETURN' : 'SALE';
+    let currentEntryType = "PURCHASE";
+    if (selectedForm === "sales") {
+      currentEntryType = isReturnMode ? "SALE_RETURN" : "SALE";
     } else {
-      currentEntryType = isReturnMode ? 'PURCHASE_RETURN' : 'PURCHASE';
+      currentEntryType = isReturnMode ? "PURCHASE_RETURN" : "PURCHASE";
     }
 
     // Check if a record with this slip number already exists
     let existingRecord = null;
     try {
-      const checkResponse = await fetch(`/api/purchase/by-slip/${formData.slipNo}`);
+      const checkResponse = await fetch(
+        `/api/purchase/by-slip/${formData.slipNo}`,
+      );
       if (checkResponse.ok) {
         existingRecord = await checkResponse.json();
-        console.log('Found existing record:', existingRecord);
+        console.log("Found existing record:", existingRecord);
       }
     } catch (error) {
-      console.log('No existing record found for slip:', formData.slipNo);
+      console.log("No existing record found for slip:", formData.slipNo);
     }
 
     // Debug the online/offline mode state
-    console.log('Before saving - onlineMode state:', onlineMode);
-    console.log('Before saving - formData.onlineEntry:', formData.onlineEntry);
-    console.log('Before saving - formData.offlineEntry:', formData.offlineEntry);
+    console.log("Before saving - onlineMode state:", onlineMode);
+    console.log("Before saving - formData.onlineEntry:", formData.onlineEntry);
+    console.log(
+      "Before saving - formData.offlineEntry:",
+      formData.offlineEntry,
+    );
 
     // Prepare master data payload with safe parsing
     const masterPayload = {
       slip_no: formData.slipNo || null,
       slip_in_time: formatISODate(formData.slipInTime),
-      first_weight: (formData.firstWeight && formData.firstWeight !== 'undefined' && formData.firstWeight.trim() !== '') ? parseFloat(formData.firstWeight) : null,
-      second_weight: (formData.secondWeight && formData.secondWeight !== 'undefined' && formData.secondWeight.trim() !== '') ? parseFloat(formData.secondWeight) : null,
-      net_weight: (formData.netWeight && formData.netWeight !== 'undefined' && formData.netWeight.trim() !== '') ? parseFloat(formData.netWeight) : null,
-      bardana_weight: (formData.bardanaWeight && formData.bardanaWeight !== 'undefined' && formData.bardanaWeight.trim() !== '') ? parseFloat(formData.bardanaWeight) : null,
-      gross_weight: (formData.grossWeight && formData.grossWeight !== 'undefined' && formData.grossWeight.trim() !== '') ? parseFloat(formData.grossWeight) : null,
-      freight: (formData.freight && formData.freight !== 'undefined' && formData.freight.trim() !== '') ? parseFloat(formData.freight) : null,
+      first_weight:
+        formData.firstWeight &&
+        formData.firstWeight !== "undefined" &&
+        formData.firstWeight.trim() !== ""
+          ? parseFloat(formData.firstWeight)
+          : null,
+      second_weight:
+        formData.secondWeight &&
+        formData.secondWeight !== "undefined" &&
+        formData.secondWeight.trim() !== ""
+          ? parseFloat(formData.secondWeight)
+          : null,
+      net_weight:
+        formData.netWeight &&
+        formData.netWeight !== "undefined" &&
+        formData.netWeight.trim() !== ""
+          ? parseFloat(formData.netWeight)
+          : null,
+      bardana_weight:
+        formData.bardanaWeight &&
+        formData.bardanaWeight !== "undefined" &&
+        formData.bardanaWeight.trim() !== ""
+          ? parseFloat(formData.bardanaWeight)
+          : null,
+      gross_weight:
+        formData.grossWeight &&
+        formData.grossWeight !== "undefined" &&
+        formData.grossWeight.trim() !== ""
+          ? parseFloat(formData.grossWeight)
+          : null,
+      freight:
+        formData.freight &&
+        formData.freight !== "undefined" &&
+        formData.freight.trim() !== ""
+          ? parseFloat(formData.freight)
+          : null,
       remarks: formData.remarks || null,
       driver_name: formData.driverName || null,
-      company_id: (formData.companyId && formData.companyId !== 'undefined' && formData.companyId.trim() !== '') ? parseInt(formData.companyId, 10) : null,
-      branch_id: (formData.branchId && formData.branchId !== 'undefined' && formData.branchId.trim() !== '') ? parseInt(formData.branchId, 10) : null,
-      online_entry: onlineMode ? 'Yes' : null,
-      offline_entry: onlineMode ? null : 'Yes',
+      company_id:
+        formData.companyId &&
+        formData.companyId !== "undefined" &&
+        formData.companyId.trim() !== ""
+          ? parseInt(formData.companyId, 10)
+          : null,
+      branch_id:
+        formData.branchId &&
+        formData.branchId !== "undefined" &&
+        formData.branchId.trim() !== ""
+          ? parseInt(formData.branchId, 10)
+          : null,
+      online_entry: onlineMode ? "Yes" : null,
+      offline_entry: onlineMode ? null : "Yes",
       created_by: user?.userid ? parseInt(user.userid.toString()) : null,
       creation_date: formData.creationDate || null,
-      last_updated_by: (formData.lastUpdatedBy && formData.lastUpdatedBy !== 'undefined' && formData.lastUpdatedBy.trim() !== '') ? parseInt(formData.lastUpdatedBy, 10) : null,
+      last_updated_by:
+        formData.lastUpdatedBy &&
+        formData.lastUpdatedBy !== "undefined" &&
+        formData.lastUpdatedBy.trim() !== ""
+          ? parseInt(formData.lastUpdatedBy, 10)
+          : null,
       last_updated_date: formData.lastUpdatedDate || null,
       manual_dc_no: formData.manualDcNo || null,
       entry_type: currentEntryType,
@@ -1749,20 +1958,31 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
       let savedWbId: number = 0;
 
       // If we found an existing record or we're in edit mode, update it
-      if ((existingRecord && existingRecord.master && existingRecord.master.wb_id) || (isEditMode && editingWbId)) {
-        const updateWbId = (existingRecord && existingRecord.master) ? existingRecord.master.wb_id : editingWbId;
+      if (
+        (existingRecord &&
+          existingRecord.master &&
+          existingRecord.master.wb_id) ||
+        (isEditMode && editingWbId)
+      ) {
+        const updateWbId =
+          existingRecord && existingRecord.master
+            ? existingRecord.master.wb_id
+            : editingWbId;
 
         if (!updateWbId) {
-          throw new Error('No valid wb_id found for update operation');
+          throw new Error("No valid wb_id found for update operation");
         }
 
         // Handle online/offline status updates properly
         if (isEditMode && updateWbId) {
-          console.log('Updating online/offline status - onlineMode:', onlineMode);
+          console.log(
+            "Updating online/offline status - onlineMode:",
+            onlineMode,
+          );
         }
 
-        console.log('Updating record with wb_id:', updateWbId);
-        console.log('Edit mode:', isEditMode, 'editingWbId:', editingWbId);
+        console.log("Updating record with wb_id:", updateWbId);
+        console.log("Edit mode:", isEditMode, "editingWbId:", editingWbId);
 
         // Update existing record - combine master and items data
         const updatePayload = {
@@ -1774,21 +1994,46 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           igp_no: formData.igpNo || null,
           item_code: formData.itemCode || null,
           item_desc: formData.itemDesc || null,
-          po_qty: (formData.poQty && formData.poQty !== 'undefined' && formData.poQty.trim() !== '') ? parseFloat(formData.poQty) : null,
-          igp_qty: (formData.igpQty && formData.igpQty !== 'undefined' && formData.igpQty.trim() !== '') ? parseFloat(formData.igpQty) : null,
-          balance_qty: (formData.balanceQty && formData.balanceQty !== 'undefined' && formData.balanceQty.trim() !== '') ? parseFloat(formData.balanceQty) : null,
+          po_qty:
+            formData.poQty &&
+            formData.poQty !== "undefined" &&
+            formData.poQty.trim() !== ""
+              ? parseFloat(formData.poQty)
+              : null,
+          igp_qty:
+            formData.igpQty &&
+            formData.igpQty !== "undefined" &&
+            formData.igpQty.trim() !== ""
+              ? parseFloat(formData.igpQty)
+              : null,
+          balance_qty:
+            formData.balanceQty &&
+            formData.balanceQty !== "undefined" &&
+            formData.balanceQty.trim() !== ""
+              ? parseFloat(formData.balanceQty)
+              : null,
           igp_date: formData.igpDate || null,
-          weight_per_bags: (formData.wtPerBag && formData.wtPerBag !== 'undefined' && formData.wtPerBag.trim() !== '') ? parseFloat(formData.wtPerBag) : null,
-          no_of_bags: (formData.noOfBags && formData.noOfBags !== 'undefined' && formData.noOfBags.trim() !== '') ? parseInt(formData.noOfBags) : null,
-          bardana_type: formData.bardanaType || null
+          weight_per_bags:
+            formData.wtPerBag &&
+            formData.wtPerBag !== "undefined" &&
+            formData.wtPerBag.trim() !== ""
+              ? parseFloat(formData.wtPerBag)
+              : null,
+          no_of_bags:
+            formData.noOfBags &&
+            formData.noOfBags !== "undefined" &&
+            formData.noOfBags.trim() !== ""
+              ? parseInt(formData.noOfBags)
+              : null,
+          bardana_type: formData.bardanaType || null,
         };
 
-        console.log('Update payload being sent:', updatePayload);
+        console.log("Update payload being sent:", updatePayload);
 
         masterResponse = await fetch(`/api/purchase/update/${updateWbId}`, {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(updatePayload),
         });
@@ -1801,10 +2046,10 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
         }
       } else {
         // Create new record
-        masterResponse = await fetch('/api/purchases', {
-          method: 'POST',
+        masterResponse = await fetch("/api/purchases", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(masterPayload),
         });
@@ -1812,13 +2057,16 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
 
       if (!masterResponse.ok) {
         const errorData = await masterResponse.json().catch(() => ({}));
-        const errorMessage = errorData.details || errorData.error || `HTTP error! status: ${masterResponse.status}`;
-        console.error('Server error response:', errorData);
+        const errorMessage =
+          errorData.details ||
+          errorData.error ||
+          `HTTP error! status: ${masterResponse.status}`;
+        console.error("Server error response:", errorData);
         throw new Error(errorMessage);
       }
 
       const masterData = await masterResponse.json();
-      console.log('Master purchase saved/updated:', masterData);
+      console.log("Master purchase saved/updated:", masterData);
 
       // Get the WB_ID from saved master data for new records
       if (!isEditMode) {
@@ -1830,10 +2078,15 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
       }
 
       // For Sales entries, save sales data to details table using standard purchase items API
-      if (selectedForm === 'sales') {
+      if (selectedForm === "sales") {
         // Filter valid sales rows (at least one field filled)
-        const validSalesRows = salesData.filter(row => 
-          row.customerName || row.vehicleNo || row.itemDescription || row.dcNo || row.doNo
+        const validSalesRows = salesData.filter(
+          (row) =>
+            row.customerName ||
+            row.vehicleNo ||
+            row.itemDescription ||
+            row.dcNo ||
+            row.doNo,
         );
 
         if (validSalesRows.length > 0) {
@@ -1861,26 +2114,31 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
                 customer_name: row.customerName || null, // Additional customer_name field
                 do_no: row.doNo || null, // Additional do_no field
                 do_qty: row.doQty ? parseFloat(row.doQty) : null, // Additional do_qty field
-                dc_qty: row.dcQty ? parseFloat(row.dcQty) : null // Map DC Qty to dc_qty field
+                dc_qty: row.dcQty ? parseFloat(row.dcQty) : null, // Map DC Qty to dc_qty field
               };
 
-              const salesItemResponse = await fetch('/api/purchase-items', {
-                method: 'POST',
+              const salesItemResponse = await fetch("/api/purchase-items", {
+                method: "POST",
                 headers: {
-                  'Content-Type': 'application/json',
+                  "Content-Type": "application/json",
                 },
                 body: JSON.stringify(salesItemPayload),
               });
 
               if (salesItemResponse.ok) {
-                console.log('Sales item saved to Details table:', row);
+                console.log("Sales item saved to Details table:", row);
               } else {
-                console.error('Failed to save sales item to Details table:', row);
+                console.error(
+                  "Failed to save sales item to Details table:",
+                  row,
+                );
               }
             }
-            console.log('All sales detail data saved successfully to Details table');
+            console.log(
+              "All sales detail data saved successfully to Details table",
+            );
           } catch (salesError) {
-            console.error('Error saving sales detail data:', salesError);
+            console.error("Error saving sales detail data:", salesError);
           }
         }
       } else {
@@ -1889,44 +2147,66 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
           // Prepare items data payload for Purchase entries - use first IGP item if available, otherwise form data
           const firstIgpItem: any = igpItems.length > 0 ? igpItems[0] : {};
 
-          console.log('Form data for items:', formData);
-          console.log('IGP items available:', igpItems);
+          console.log("Form data for items:", formData);
+          console.log("IGP items available:", igpItems);
 
           const itemsPayload = {
             wb_id: savedWbId!,
             baradana_type: formData.bardanaType || null,
             igp_no: formData.igpNo || null,
             vehicle_no: formData.vehicleNo || null,
-            weight_per_bags: formData.wtPerBag ? parseFloat(formData.wtPerBag) : null,
+            weight_per_bags: formData.wtPerBag
+              ? parseFloat(formData.wtPerBag)
+              : null,
             igp_date: formData.igpDate || null,
-            supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
-            quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
-            bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null, // New Bardana Wht field
+            supplier_weight: formData.supplierWeight
+              ? parseFloat(formData.supplierWeight)
+              : null,
+            quality_deduction: formData.qualityDeduction
+              ? parseFloat(formData.qualityDeduction)
+              : null,
+            bardana_weight: formData.bardanaWeight
+              ? parseFloat(formData.bardanaWeight)
+              : null, // New Bardana Wht field
             no_of_bags: formData.noOfBags ? parseInt(formData.noOfBags) : null,
             vendor_name: firstIgpItem?.vendor_name || formData.vendor || null,
             bag_condition: formData.bagCondition || null,
             po_no: firstIgpItem?.po_no || formData.po_no || null,
             item_code: firstIgpItem?.item_code || formData.itemCode || null,
             item_desc: firstIgpItem?.item_desc || formData.itemDesc || null,
-            po_qty: firstIgpItem?.po_qty ? parseFloat(firstIgpItem.po_qty) : (formData.poQty ? parseFloat(formData.poQty) : null),
-            igp_qty: firstIgpItem?.igp_qty ? parseFloat(firstIgpItem.igp_qty) : (formData.igpQty ? parseFloat(formData.igpQty) : null),
-            balance_qty: firstIgpItem?.balance_qty ? parseFloat(firstIgpItem.balance_qty) : (formData.balanceQty ? parseFloat(formData.balanceQty) : null),
-            dc_qty: firstIgpItem?.dc_qty ? parseFloat(firstIgpItem.dc_qty) : null
+            po_qty: firstIgpItem?.po_qty
+              ? parseFloat(firstIgpItem.po_qty)
+              : formData.poQty
+                ? parseFloat(formData.poQty)
+                : null,
+            igp_qty: firstIgpItem?.igp_qty
+              ? parseFloat(firstIgpItem.igp_qty)
+              : formData.igpQty
+                ? parseFloat(formData.igpQty)
+                : null,
+            balance_qty: firstIgpItem?.balance_qty
+              ? parseFloat(firstIgpItem.balance_qty)
+              : formData.balanceQty
+                ? parseFloat(formData.balanceQty)
+                : null,
+            dc_qty: firstIgpItem?.dc_qty
+              ? parseFloat(firstIgpItem.dc_qty)
+              : null,
           };
 
-          console.log('Items payload being sent:', itemsPayload);
+          console.log("Items payload being sent:", itemsPayload);
 
           // Save items data for Purchase entries
-          const itemsResponse = await fetch('/api/purchase-items', {
-            method: 'POST',
+          const itemsResponse = await fetch("/api/purchase-items", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify(itemsPayload),
           });
 
           if (!itemsResponse.ok) {
-            console.error('Failed to save purchase items');
+            console.error("Failed to save purchase items");
           }
         }
       }
@@ -1934,152 +2214,186 @@ const [selectedForm, setSelectedForm] = useState<'purchase' | 'sales' | 'offline
       // Automatically capture first weight image (only for new entries with first weight but no second weight)
       if (formData.firstWeight && !formData.secondWeight) {
         try {
-          console.log('Capturing first weight image for slip:', formData.slipNo);
-          const captureResponse = await fetch('/api/capture/first-weight', {
-            method: 'POST',
+          console.log(
+            "Capturing first weight image for slip:",
+            formData.slipNo,
+          );
+          const captureResponse = await fetch("/api/capture/first-weight", {
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               slipNo: formData.slipNo,
-              cameraIp: '10.10.10.146',
-              cameraPort: 554
-              }),
-            });
+              cameraIp: "10.10.10.146",
+              cameraPort: 554,
+            }),
+          });
 
-            if (captureResponse.ok) {
-              const captureData = await captureResponse.json();
-              console.log('First weight image captured successfully:', captureData.message);
-            } else {
-              console.log('First weight image capture failed, but continuing with form submission');
-            }
-          } catch (imageError) {
-            console.log('First weight image capture error, but continuing:', imageError);
-          }
-        }
-
-        // Automatically capture second weight image when both weights are present
-        if (formData.firstWeight && formData.secondWeight) {
-          try {
-            console.log('Capturing second weight image for slip:', formData.slipNo);
-            const captureResponse = await fetch('/api/capture/second-weight', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                slipNo: formData.slipNo,
-                cameraIp: '10.10.10.146',
-                cameraPort: 554
-              }),
-            });
-
-            if (captureResponse.ok) {
-              const captureData = await captureResponse.json();
-              console.log('Second weight image captured successfully:', captureData.message);
-            } else {
-              console.log('Second weight image capture failed, but continuing with form submission');
-            }
-          } catch (imageError) {
-            console.log('Second weight image capture error, but continuing:', imageError);
-          }
-        }
-
-        // Save bag data to deduction table if available
-        if (bagTableData.length > 0) {
-          try {
-            console.log('Saving deduction data for wb_id:', savedWbId);
-            const deductionResponse = await fetch('/api/deduction/save', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                wbId: savedWbId!,
-                bagTableData: bagTableData
-              }),
-            });
-
-            if (deductionResponse.ok) {
-              console.log('Deduction data saved successfully to database');
-            } else {
-              const errorText = await deductionResponse.text();
-              console.error('Failed to save deduction data:', errorText);
-              alert('Warning: Main data saved but deduction data failed to save');
-            }
-          } catch (bagError) {
-            console.error('Error saving deduction data:', bagError);
-            alert('Warning: Main data saved but deduction data failed to save');
-          }
-        }
-
-        // Save sales data when active tab is sale
-        if (activeTab === 'sale' && salesData.length > 0) {
-          try {
-            const validSalesData = salesData.filter(item => 
-              item.doNo || item.customerName || item.vehicleNo || item.itemDescription || item.dcNo
+          if (captureResponse.ok) {
+            const captureData = await captureResponse.json();
+            console.log(
+              "First weight image captured successfully:",
+              captureData.message,
             );
-
-            if (validSalesData.length > 0) {
-              console.log('Saving sales data to details table:', validSalesData);
-
-              const salesPayload = {
-                salesData: validSalesData.map(item => ({
-                  wbId: savedWbId!,
-                  doId: item.doId || null,
-                  dcNo: item.dcNo || null,
-                  doNo: item.doNo || null,
-                  customerName: item.customerName || null,
-                  vehicleNo: item.vehicleNo || null,
-                  doDate: null, // As requested - null for now
-                  itemDescription: item.itemDescription || null,
-                  dcQty: item.dcQty ? parseFloat(item.dcQty) : null,
-                  doQty: item.doQty ? parseFloat(item.doQty) : null,
-                  branch: item.branch || null
-                })),
-                entryType: 'SALE'
-              };
-
-              const salesResponse = await fetch('/api/sales/save', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(salesPayload),
-              });
-
-              if (salesResponse.ok) {
-                console.log('Sales detail data saved successfully to database');
-              } else {
-                const errorText = await salesResponse.text();
-                console.error('Failed to save sales detail data:', errorText);
-                alert('Warning: Main data saved but sales detail data failed to save');
-              }
-            }
-          } catch (salesError) {
-            console.error('Error saving sales data:', salesError);
-            alert('Warning: Main data saved but sales data failed to save');
+          } else {
+            console.log(
+              "First weight image capture failed, but continuing with form submission",
+            );
           }
+        } catch (imageError) {
+          console.log(
+            "First weight image capture error, but continuing:",
+            imageError,
+          );
         }
+      }
 
-        // Increment slip number for next entry
-        const currentSlipNo = parseInt(formData.slipNo);
-        const nextSlipNo = (currentSlipNo + 1).toString();
+      // Automatically capture second weight image when both weights are present
+      if (formData.firstWeight && formData.secondWeight) {
+        try {
+          console.log(
+            "Capturing second weight image for slip:",
+            formData.slipNo,
+          );
+          const captureResponse = await fetch("/api/capture/second-weight", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              slipNo: formData.slipNo,
+              cameraIp: "10.10.10.146",
+              cameraPort: 554,
+            }),
+          });
 
-  const currentDate = new Date().toLocaleDateString('en-GB', {
-  day: '2-digit', month: 'short', year: '2-digit'
-}).toUpperCase().replace(/\s/g, '-');
+          if (captureResponse.ok) {
+            const captureData = await captureResponse.json();
+            console.log(
+              "Second weight image captured successfully:",
+              captureData.message,
+            );
+          } else {
+            console.log(
+              "Second weight image capture failed, but continuing with form submission",
+            );
+          }
+        } catch (imageError) {
+          console.log(
+            "Second weight image capture error, but continuing:",
+            imageError,
+          );
+        }
+      }
 
-const currentTime = new Date().toLocaleTimeString('en-GB', {
-  hour12: false
-});
+      // Save bag data to deduction table if available
+      if (bagTableData.length > 0) {
+        try {
+          console.log("Saving deduction data for wb_id:", savedWbId);
+          const deductionResponse = await fetch("/api/deduction/save", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              wbId: savedWbId!,
+              bagTableData: bagTableData,
+            }),
+          });
 
-        if (isEditMode) {
-          alert('Record updated successfully!');
-          // Auto-print after successful update
-          setTimeout(() => {
-            try {
-              const printHTML = `
+          if (deductionResponse.ok) {
+            console.log("Deduction data saved successfully to database");
+          } else {
+            const errorText = await deductionResponse.text();
+            console.error("Failed to save deduction data:", errorText);
+            alert("Warning: Main data saved but deduction data failed to save");
+          }
+        } catch (bagError) {
+          console.error("Error saving deduction data:", bagError);
+          alert("Warning: Main data saved but deduction data failed to save");
+        }
+      }
+
+      // Save sales data when active tab is sale
+      if (activeTab === "sale" && salesData.length > 0) {
+        try {
+          const validSalesData = salesData.filter(
+            (item) =>
+              item.doNo ||
+              item.customerName ||
+              item.vehicleNo ||
+              item.itemDescription ||
+              item.dcNo,
+          );
+
+          if (validSalesData.length > 0) {
+            console.log("Saving sales data to details table:", validSalesData);
+
+            const salesPayload = {
+              salesData: validSalesData.map((item) => ({
+                wbId: savedWbId!,
+                doId: item.doId || null,
+                dcNo: item.dcNo || null,
+                doNo: item.doNo || null,
+                customerName: item.customerName || null,
+                vehicleNo: item.vehicleNo || null,
+                doDate: null, // As requested - null for now
+                itemDescription: item.itemDescription || null,
+                dcQty: item.dcQty ? parseFloat(item.dcQty) : null,
+                doQty: item.doQty ? parseFloat(item.doQty) : null,
+                branch: item.branch || null,
+              })),
+              entryType: "SALE",
+            };
+
+            const salesResponse = await fetch("/api/sales/save", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(salesPayload),
+            });
+
+            if (salesResponse.ok) {
+              console.log("Sales detail data saved successfully to database");
+            } else {
+              const errorText = await salesResponse.text();
+              console.error("Failed to save sales detail data:", errorText);
+              alert(
+                "Warning: Main data saved but sales detail data failed to save",
+              );
+            }
+          }
+        } catch (salesError) {
+          console.error("Error saving sales data:", salesError);
+          alert("Warning: Main data saved but sales data failed to save");
+        }
+      }
+
+      // Increment slip number for next entry
+      const currentSlipNo = parseInt(formData.slipNo);
+      const nextSlipNo = (currentSlipNo + 1).toString();
+
+      const currentDate = new Date()
+        .toLocaleDateString("en-GB", {
+          day: "2-digit",
+          month: "short",
+          year: "2-digit",
+        })
+        .toUpperCase()
+        .replace(/\s/g, "-");
+
+      const currentTime = new Date().toLocaleTimeString("en-GB", {
+        hour12: false,
+      });
+
+      if (isEditMode) {
+        alert("Record updated successfully!");
+        // Auto-print after successful update
+        setTimeout(() => {
+          try {
+            const printHTML = `
  <!DOCTYPE html>
   <html>
   <head>
@@ -2209,18 +2523,18 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
 
-        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ''}</span></div>
+        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ''}</div>
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
           </div>
         </div>
 
@@ -2229,12 +2543,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ''}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ''}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -2247,12 +2561,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
@@ -2291,18 +2605,18 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
               </div>
               <div class="header-right"></div>
             </div>
-         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ''}</span></div>
+         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ''}</div>
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
           </div>
         </div>
 
@@ -2311,12 +2625,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ''}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ''}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -2329,12 +2643,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
@@ -2370,18 +2684,18 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
               </div>
-            <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ''}</span></div>
+            <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ''}</div>
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
           </div>
         </div>
 
@@ -2390,12 +2704,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ''}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ''}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -2408,12 +2722,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
@@ -2447,24 +2761,24 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
   </html>
 `;
 
-              const printWindow = window.open('', '_blank');
-              if (printWindow) {
-                printWindow.document.write(printHTML);
-                printWindow.document.close();
-                printWindow.print();
-              }
-            } catch (printError) {
-              console.error('Auto-print error:', printError);
+            const printWindow = window.open("", "_blank");
+            if (printWindow) {
+              printWindow.document.write(printHTML);
+              printWindow.document.close();
+              printWindow.print();
             }
-          }, 500);
-          // Reset form to clean state after edit
-          resetFormToInitial();
-        } else {
-          alert('Purchase data saved successfully!');
-          // Auto-print after successful save
-          setTimeout(() => {
-            try {
-              const printHTML = `
+          } catch (printError) {
+            console.error("Auto-print error:", printError);
+          }
+        }, 500);
+        // Reset form to clean state after edit
+        resetFormToInitial();
+      } else {
+        alert("Purchase data saved successfully!");
+        // Auto-print after successful save
+        setTimeout(() => {
+          try {
+            const printHTML = `
 <!DOCTYPE html>
   <html>
   <head>
@@ -2594,18 +2908,18 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
 
-        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ''}</span></div>
+        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ''}</div>
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
           </div>
         </div>
 
@@ -2614,12 +2928,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ''}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ''}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -2632,12 +2946,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
@@ -2676,18 +2990,18 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
               </div>
               <div class="header-right"></div>
             </div>
-         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ''}</span></div>
+         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ''}</div>
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
           </div>
         </div>
 
@@ -2696,12 +3010,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ''}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ''}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -2714,12 +3028,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
@@ -2755,18 +3069,18 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
               </div>
-            <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ''}</span></div>
+            <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ''}</div>
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
+            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
           </div>
         </div>
 
@@ -2775,12 +3089,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ''}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ''}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -2793,12 +3107,12 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
@@ -2832,39 +3146,38 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
   </html>
 `;
 
-               const printWindow = window.open('', '_blank');
-              if (printWindow) {
-                printWindow.document.write(printHTML);
-                printWindow.document.close();
-                printWindow.print();
-              }
-            } catch (printError) {
-              console.error('Auto-print error:', printError);
+            const printWindow = window.open("", "_blank");
+            if (printWindow) {
+              printWindow.document.write(printHTML);
+              printWindow.document.close();
+              printWindow.print();
             }
-          }, 500);
-          // Reset form to clean state and increment slip number for next entry
-          resetFormToInitial();
-        }
+          } catch (printError) {
+            console.error("Auto-print error:", printError);
+          }
+        }, 500);
+        // Reset form to clean state and increment slip number for next entry
+        resetFormToInitial();
+      }
 
-        // If second weight was entered, refresh to remove from display table
-        if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
-          setTimeout(() => {
-            window.location.reload();
-          }, 1000);
-        }
-
-        // Auto-increment slip number for next entry regardless of mode
+      // If second weight was entered, refresh to remove from display table
+      if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
         setTimeout(() => {
-          setFormData(prev => ({
-            ...prev,
-            slipNo: nextSlipNo
-          }));
-        }, 100);
+          window.location.reload();
+        }, 1000);
+      }
 
+      // Auto-increment slip number for next entry regardless of mode
+      setTimeout(() => {
+        setFormData((prev) => ({
+          ...prev,
+          slipNo: nextSlipNo,
+        }));
+      }, 100);
     } catch (err: any) {
-      const errorMessage = err.message || 'Failed to save purchase.';
+      const errorMessage = err.message || "Failed to save purchase.";
       alert(errorMessage);
-      console.error('Save error:', err);
+      console.error("Save error:", err);
     } finally {
       setLoading(false);
     }
@@ -2873,12 +3186,16 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
   const handleSaveItems = async () => {
     setLoading(true);
     const payload = {
-      wb_item_p_id: formData.wbItemPId ? parseInt(formData.wbItemPId, 10) : null,
+      wb_item_p_id: formData.wbItemPId
+        ? parseInt(formData.wbItemPId, 10)
+        : null,
       wb_id: formData.wbId ? parseInt(formData.wbId, 10) : null,
       manual_dc_no: formData.manualDcNo || null,
       do_id: formData.doId ? parseInt(formData.doId, 10) : null,
       do_no: formData.doNo || null,
-      customer_id: formData.customerId ? parseInt(formData.customerId, 10) : null,
+      customer_id: formData.customerId
+        ? parseInt(formData.customerId, 10)
+        : null,
       customer_name: formData.customerName || null,
       vehicle_no: formData.vehicleNo || null,
       do_date: formData.doDate || null,
@@ -2887,7 +3204,9 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
       item_desc: formData.itemDesc || null,
       created_by: formData.createdBy ? parseInt(formData.createdBy, 10) : null,
       creation_date: formData.creationDate || null,
-      last_updated_by: formData.lastUpdatedBy ? parseInt(formData.lastUpdatedBy, 10) : null,
+      last_updated_by: formData.lastUpdatedBy
+        ? parseInt(formData.lastUpdatedBy, 10)
+        : null,
       last_updated_date: formData.lastUpdatedDate || null,
       po_id: formData.poId ? parseInt(formData.poId, 10) : null,
       po_no: formData.po_no || null,
@@ -2902,21 +3221,33 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
       vendor_name: formData.vendorName || null,
       no_of_bags: formData.noOfBags ? parseFloat(formData.noOfBags) : null,
       weight_per_bags: formData.wtPerBag ? parseFloat(formData.wtPerBag) : null,
-      bardana_weight: formData.bardanaWeight ? parseFloat(formData.bardanaWeight) : null,
+      bardana_weight: formData.bardanaWeight
+        ? parseFloat(formData.bardanaWeight)
+        : null,
       igp_date: formData.igpDate || null,
-      quality_deduction: formData.qualityDeduction ? parseFloat(formData.qualityDeduction) : null,
-      supplier_weight: formData.supplierWeight ? parseFloat(formData.supplierWeight) : null,
-      sup_weight_wthout_bardana: formData.supplierWeightMinusBardana ? parseFloat(formData.supplierWeightMinusBardana) : null,
-      net_supplier_weight: formData.supplierWeightMinusOutWeight ? parseFloat(formData.supplierWeightMinusOutWeight) : null,
+      quality_deduction: formData.qualityDeduction
+        ? parseFloat(formData.qualityDeduction)
+        : null,
+      supplier_weight: formData.supplierWeight
+        ? parseFloat(formData.supplierWeight)
+        : null,
+      sup_weight_wthout_bardana: formData.supplierWeightMinusBardana
+        ? parseFloat(formData.supplierWeightMinusBardana)
+        : null,
+      net_supplier_weight: formData.supplierWeightMinusOutWeight
+        ? parseFloat(formData.supplierWeightMinusOutWeight)
+        : null,
       bag_condition: formData.bagCondition || null,
-      bardana_type_id: formData.bardanaTypeId ? parseInt(formData.bardanaTypeId, 10) : null,
+      bardana_type_id: formData.bardanaTypeId
+        ? parseInt(formData.bardanaTypeId, 10)
+        : null,
     };
 
     try {
-      const response = await fetch('/api/purchase-items', {
-        method: 'POST',
+      const response = await fetch("/api/purchase-items", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
@@ -2926,21 +3257,20 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
       }
 
       const data = await response.json();
-      alert('Purchase items saved successfully!');
-      console.log('Items saved:', data);
+      alert("Purchase items saved successfully!");
+      console.log("Items saved:", data);
     } catch (err) {
-      alert('Failed to save purchase items.');
+      alert("Failed to save purchase items.");
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
-      <div className="absolute top-20 right-4 z-50">
+      <div className="absolute top-20 right-14 z-50">
         <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72 mb-4">
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
@@ -2958,7 +3288,7 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           {/* Search Row - positioned under headers */}
           <div className="grid grid-cols-3 border-b border-gray-400 bg-blue-50">
             <div className="border-r border-gray-400 p-1">
-              <Input 
+              <Input
                 placeholder="Search Slip No"
                 value={searchSlipNo}
                 onChange={(e) => setSearchSlipNo(e.target.value)}
@@ -2966,7 +3296,7 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
               />
             </div>
             <div className="border-r border-gray-400 p-1">
-              <Input 
+              <Input
                 placeholder="Search Vehicle"
                 value={searchVehicleNo}
                 onChange={(e) => setSearchVehicleNo(e.target.value)}
@@ -2974,8 +3304,11 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
               />
             </div>
             <div className="p-1">
-              <Button 
-                onClick={() => {setSearchSlipNo(''); setSearchVehicleNo('');}}
+              <Button
+                onClick={() => {
+                  setSearchSlipNo("");
+                  setSearchVehicleNo("");
+                }}
                 className="h-5 text-xs bg-gray-500 hover:bg-gray-600 text-white w-full"
               >
                 Clear
@@ -2987,20 +3320,23 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           <div className="max-h-48 overflow-y-auto">
             {filteredRecords && filteredRecords.length > 0 ? (
               filteredRecords.map((record: any, index: number) => (
-                <div key={index} className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50">
-                  <button 
+                <div
+                  key={index}
+                  className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50"
+                >
+                  <button
                     className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
                     onClick={() => {
-                      console.log('Clicked record:', record);
-                      console.log('wb_id:', record.wb_id);
-                      console.log('entry_type:', record.entry_type);
+                      console.log("Clicked record:", record);
+                      console.log("wb_id:", record.wb_id);
+                      console.log("entry_type:", record.entry_type);
 
                       if (record.wb_id) {
                         // Switch form type based on entry type, then load data
-                        if (record.entry_type === 'SALE') {
-                          setSelectedForm('sales');
+                        if (record.entry_type === "SALE") {
+                          setSelectedForm("sales");
                         } else {
-                          setSelectedForm('purchase');
+                          setSelectedForm("purchase");
                         }
                         // Load the data for editing
                         loadDataByWbId(record.wb_id);
@@ -3020,7 +3356,9 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
             ) : (
               <div className="grid grid-cols-3 border-b border-gray-400">
                 <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
-                  {searchSlipNo || searchVehicleNo ? 'No matches' : 'No records'}
+                  {searchSlipNo || searchVehicleNo
+                    ? "No matches"
+                    : "No records"}
                 </div>
                 <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
                   ---
@@ -3033,7 +3371,7 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
           </div>
 
           {/* Load Data Button */}
-          <button 
+          <button
             className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 text-xs"
             onClick={() => window.location.reload()}
           >
@@ -3043,112 +3381,127 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
       </div>
 
       {/* Bag Details Table - Below Weight Display Table (hide when Sales form is active) */}
-      {selectedForm === 'purchase' && (
+      {selectedForm === "purchase" && (
         <div className="absolute top-96 right-4 z-50">
           <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80">
-          {/* Header Row */}
-          <div className="grid grid-cols-6 border-b border-gray-400">
-            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
-              Bag ID
-            </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
-              Bags
-            </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
-              P/B
-            </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
-              %age
-            </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
-              Weight
-            </div>
-            <div className="bg-gray-200 p-1 text-center text-xs font-semibold text-black">
-
-            </div>
-          </div>
-
-          {/* Dynamic Data Rows */}
-          <div className="max-h-32 overflow-y-auto">
-            {bagTableData.length === 0 ? (
-              <div className="grid grid-cols-6 border-b border-gray-300">
-                <div className="col-span-6 p-2 text-center text-xs text-gray-500">No bag data available. Click Deduction+ to add data.</div>
+            {/* Header Row */}
+            <div className="grid grid-cols-6 border-b border-gray-400">
+              <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+                Bag ID
               </div>
-            ) : (
-              bagTableData.map((item, index) => (
-                <div key={item.bagId} className="grid grid-cols-6 border-b border-gray-300">
-                  <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{String(item.bagId).padStart(3, '0')}</div>
-                  <div className="border-r border-gray-300 p-1 text-center text-xs text-black">{item.bags}</div>
-                 <div className="border-r border-gray-300 p-1 text-center text-xs text-black">
-  {Number(item.pb ?? 0).toFixed(1)}
-</div>
-<div className="border-r border-gray-300 p-1 text-center text-xs text-black">
-  {Number(item.percentage ?? 0).toFixed(1)}
-</div>
+              <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+                Bags
+              </div>
+              <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+                P/B
+              </div>
+              <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+                %age
+              </div>
+              <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+                Weight
+              </div>
+              <div className="bg-gray-200 p-1 text-center text-xs font-semibold text-black"></div>
+            </div>
 
-                  <div className="border-r border-gray-300 p-1">
-                    {percentageMode[item.bagId] ? (
-                      <select
-                        value={item.weight}
-                        onChange={(e) => updateBagEntry(item.bagId, 'weight', e.target.value)}
-                        className="w-full text-center text-xs text-black bg-transparent border-none focus:outline-none"
-                      >
-                        <option value="">Select %</option>
-                        <option value="0.1">0.1% (0.1)</option>
-                        <option value="0.2">0.2% (0.2)</option>
-                        <option value="0.3">0.3% (0.3)</option>
-                        <option value="0.4">0.4% (0.4)</option>
-                        <option value="0.5">0.5% (0.5)</option>
-                        <option value="0.6">0.6% (0.6)</option>
-                        <option value="0.7">0.7% (0.7)</option>
-                        <option value="0.8">0.8% (0.8)</option>
-                        <option value="0.9">0.9% (0.9)</option>
-                        <option value="1.0">1.0% (1.0)</option>
-                      </select>
-                    ) : (
-                      <input
-                        type="text"
-                        value={item.weight}
-                        onChange={(e) => updateBagEntry(item.bagId, 'weight', e.target.value)}
-                        className="w-full text-center text-xs text-black bg-transparent border-none focus:outline-none"
-                      />
-                    )}
-                  </div>
-                  <div className="p-1 text-center flex flex-col items-center gap-1">
-                    <input
-                      type="checkbox"
-                      checked={percentageMode[item.bagId] || false}
-                      onChange={(e) => setPercentageMode(prev => ({
-                        ...prev,
-                        [item.bagId]: e.target.checked
-                      }))}
-                      className="w-3 h-3"
-                      title="Percentage mode"
-                    />
-                    <button 
-                      className="text-red-600 hover:text-red-800 font-bold text-sm"
-                      onClick={() => removeBagEntry(item.bagId)}
-                    >
-                      ×
-                    </button>
+            {/* Dynamic Data Rows */}
+            <div className="max-h-32 overflow-y-auto">
+              {bagTableData.length === 0 ? (
+                <div className="grid grid-cols-6 border-b border-gray-300">
+                  <div className="col-span-6 p-2 text-center text-xs text-gray-500">
+                    No bag data available. Click Deduction+ to add data.
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              ) : (
+                bagTableData.map((item, index) => (
+                  <div
+                    key={item.bagId}
+                    className="grid grid-cols-6 border-b border-gray-300"
+                  >
+                    <div className="border-r border-gray-300 p-1 text-center text-xs text-black">
+                      {String(item.bagId).padStart(3, "0")}
+                    </div>
+                    <div className="border-r border-gray-300 p-1 text-center text-xs text-black">
+                      {item.bags}
+                    </div>
+                    <div className="border-r border-gray-300 p-1 text-center text-xs text-black">
+                      {Number(item.pb ?? 0).toFixed(1)}
+                    </div>
+                    <div className="border-r border-gray-300 p-1 text-center text-xs text-black">
+                      {Number(item.percentage ?? 0).toFixed(1)}
+                    </div>
 
-          {/* Total Field */}
-          <div className="border-t-2 border-gray-400 bg-gray-100 p-2">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-semibold text-black">Total:</span>
-              <Input 
-                value={bagTableData.reduce((sum, item) => sum + item.total, 0).toFixed(1)}
-                className="h-5 text-xs w-16 text-center font-bold text-blue-700 bg-white border-gray-300"
-                readOnly
-              />
+                    <div className="border-r border-gray-300 p-1">
+                      {percentageMode[item.bagId] ? (
+                        <select
+                          value={item.weight}
+                          onChange={(e) =>
+                            updateBagEntry(item.bagId, "weight", e.target.value)
+                          }
+                          className="w-full text-center text-xs text-black bg-transparent border-none focus:outline-none"
+                        >
+                          <option value="">Select %</option>
+                          <option value="0.1">0.1% (0.1)</option>
+                          <option value="0.2">0.2% (0.2)</option>
+                          <option value="0.3">0.3% (0.3)</option>
+                          <option value="0.4">0.4% (0.4)</option>
+                          <option value="0.5">0.5% (0.5)</option>
+                          <option value="0.6">0.6% (0.6)</option>
+                          <option value="0.7">0.7% (0.7)</option>
+                          <option value="0.8">0.8% (0.8)</option>
+                          <option value="0.9">0.9% (0.9)</option>
+                          <option value="1.0">1.0% (1.0)</option>
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={item.weight}
+                          onChange={(e) =>
+                            updateBagEntry(item.bagId, "weight", e.target.value)
+                          }
+                          className="w-full text-center text-xs text-black bg-transparent border-none focus:outline-none"
+                        />
+                      )}
+                    </div>
+                    <div className="p-1 text-center flex flex-col items-center gap-1">
+                      <input
+                        type="checkbox"
+                        checked={percentageMode[item.bagId] || false}
+                        onChange={(e) =>
+                          setPercentageMode((prev) => ({
+                            ...prev,
+                            [item.bagId]: e.target.checked,
+                          }))
+                        }
+                        className="w-3 h-3"
+                        title="Percentage mode"
+                      />
+                      <button
+                        className="text-red-600 hover:text-red-800 font-bold text-sm"
+                        onClick={() => removeBagEntry(item.bagId)}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Total Field */}
+            <div className="border-t-2 border-gray-400 bg-gray-100 p-2">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-semibold text-black">Total:</span>
+                <Input
+                  value={bagTableData
+                    .reduce((sum, item) => sum + item.total, 0)
+                    .toFixed(1)}
+                  className="h-5 text-xs w-16 text-center font-bold text-blue-700 bg-white border-gray-300"
+                  readOnly
+                />
+              </div>
             </div>
           </div>
-        </div>
         </div>
       )}
 
@@ -3162,52 +3515,86 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
       {/* Navigation Buttons */}
       <div className="flex justify-between items-center bg-white border rounded p-1 mb-1">
         <div className="flex gap-1 text-xs">
-          <Button 
-            className={`h-8 px-2 text-sm font-medium ${selectedForm === 'purchase' ? 'bg-blue-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
-            onClick={() => setSelectedForm('purchase')}
+          <Button
+            className={`h-8 px-2 text-sm font-medium ${selectedForm === "purchase" ? "bg-blue-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
+            onClick={() => setSelectedForm("purchase")}
           >
             Purchase
           </Button>
-          <Button 
-            className={`h-8 px-2 text-sm font-medium ${selectedForm === 'sales' ? 'bg-rose-700 text-white' : 'bg-rose-600 hover:bg-rose-700 text-white'}`}
-            onClick={() => setSelectedForm('sales')}
+          <Button
+            className={`h-8 px-2 text-sm font-medium ${selectedForm === "sales" ? "bg-rose-700 text-white" : "bg-rose-600 hover:bg-rose-700 text-white"}`}
+            onClick={() => setSelectedForm("sales")}
           >
             Sale
           </Button>
-          <Button 
-            className={`h-8 px-2 text-sm font-medium ${selectedForm === 'offline' ? 'bg-yellow-600 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}
-            onClick={() => setSelectedForm('offline')}
+          <Button
+            className={`h-8 px-2 text-sm font-medium ${selectedForm === "offline" ? "bg-yellow-600 text-white" : "bg-amber-600 hover:bg-amber-700 text-white"}`}
+            onClick={() => setSelectedForm("offline")}
           >
             Offline
           </Button>
-          <Button className="h-8 px-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium" onClick={navigateToFirst}>First</Button>
-          <Button className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium" onClick={navigateToPrev}>Prev</Button>
-          <Button className="h-8 px-2 text-sm bg-cyan-600 hover:bg-cyan-700 text-white font-medium" onClick={navigateToNext}>Next</Button>
-          <Button className="h-8 px-2 text-sm bg-teal-600 hover:bg-teal-700 text-white font-medium" onClick={navigateToLast}>Last</Button>
-          <Button className="bg-green-600 hover:bg-green-700 h-8 px-3 text-sm text-white font-medium" onClick={handleSave} disabled={loading}>
-            {loading ? 'Saving...' : 'Save'}
+          <Button
+            className="h-8 px-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+            onClick={navigateToFirst}
+          >
+            First
+          </Button>
+          <Button
+            className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium"
+            onClick={navigateToPrev}
+          >
+            Prev
+          </Button>
+          <Button
+            className="h-8 px-2 text-sm bg-cyan-600 hover:bg-cyan-700 text-white font-medium"
+            onClick={navigateToNext}
+          >
+            Next
+          </Button>
+          <Button
+            className="h-8 px-2 text-sm bg-teal-600 hover:bg-teal-700 text-white font-medium"
+            onClick={navigateToLast}
+          >
+            Last
+          </Button>
+          <Button
+            className="bg-green-600 hover:bg-green-700 h-8 px-3 text-sm text-white font-medium"
+            onClick={handleSave}
+            disabled={loading}
+          >
+            {loading ? "Saving..." : "Save"}
           </Button>
           {isEditMode && (
-            <Button className="h-8 px-2 text-sm bg-red-600 hover:bg-red-700 text-white font-medium" onClick={cancelEdit}>
+            <Button
+              className="h-8 px-2 text-sm bg-red-600 hover:bg-red-700 text-white font-medium"
+              onClick={cancelEdit}
+            >
               Cancel
             </Button>
           )}
-          <Button className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium" onClick={handlePrintReport}>Print</Button>
-          <Button className="h-8 px-2 text-sm bg-orange-600 hover:bg-orange-700 text-white font-medium">Rej</Button>
+          <Button
+            className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium"
+            onClick={handlePrintReport}
+          >
+            Print
+          </Button>
+          <Button className="h-8 px-2 text-sm bg-orange-600 hover:bg-orange-700 text-white font-medium">
+            Rej
+          </Button>
         </div>
         <div className="flex gap-1 items-center">
           {/* Weight Display - positioned on left side with bolder text */}
           <div className="mr-2">
             <WeightIndicator comPort="COM6" compact={true} />
           </div>
-          <button 
-            className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === true ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
+          <button
+            className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === true ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
           </button>
-          <button 
-            className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-gray-300 hover:bg-gray-400 text-gray-600'}`}
+          <button
+            className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
@@ -3217,364 +3604,647 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
       </div>
 
       {/* Main Form Layout - 100% visible without scrolling */}
-      <div className="bg-white p-1 rounded border h-[calc(100vh-60px)] overflow-hidden">
+      <div className="bg-white p-1 rounded border h-[calc(100vh-30px)] overflow-hidden">
         <div className="grid grid-cols-12 gap-1 h-full">
           {/* Left Side - Main Form (Columns 1-8) */}
           <div className="col-span-8">
             {/* Master Table Section */}
-            <div className="bg-blue-50 p-2 rounded border mb-3">
-              <div className="grid grid-cols-9 gap-1">
-              {/* Column 1 - Left Form Fields */}
-              <div className="col-span-3 space-y-1">
-                <div>
-                  <Label className="text-xs text-black">Slip No</Label>
-                  <Input name="slipNo" value={formData.slipNo} readOnly className="h-5 text-xs text-black w-20" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Net Weight</Label>
-                  <Input name="netWeight" value={formData.netWeight} onChange={handleChange} className="h-5 text-xs bg-yellow-200 text-black w-20" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Freight</Label>
-                  <Input name="freight" value={formData.freight} onChange={handleChange} className="h-5 text-xs text-black w-28" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Remarks</Label>
-                  <Textarea
-                    placeholder="Add remarks"
-                    name="remarks"
-                    value={formData.remarks}
-                    onChange={handleChange}
-                    className="h-8 text-xs resize-none text-black placeholder:text-gray-500"
-                  />
-                </div>
-              </div>
-
-              {/* Column 2 - Weight Fields */}
-              <div className="col-span-3 space-y-1">
-                <div>
-                  <Label className="text-xs text-black">First Weight</Label>
-                  <Input name="firstWeight" value={formData.firstWeight} onChange={handleChange} className="h-5 text-xs text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Second Weight</Label>
-                  <Input name="secondWeight" value={formData.secondWeight} onChange={handleChange} className="h-5 text-xs text-green-600" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Bardana Weight</Label>
-                  <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-5 text-xs text-black" />
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Gross Weight</Label>
-                  <Input name="grossWeight" value={formData.grossWeight} readOnly className="h-5 text-xs text-black" />
-                </div>
-              </div>
-
-              {/* Column 3 - Driver & Branch */}
-              <div className="col-span-3 space-y-1">
-                <div>
-                  <Label className="text-xs text-black">Branch</Label>
-                  {isEditMode ? (
-                    <Input 
-                      value={branches.find(b => b.branch_id.toString() === formData.branchId?.toString())?.branch_name || formData.branch || ''} 
-                      readOnly 
-                      className="h-5 text-xs text-black bg-gray-100" 
+            <div className="bg-blue-50 p-2 rounded border mb-4 w-full">
+              <div className="grid grid-cols-9 gap-4">
+                {/* Column 1 - Left Form Fields */}
+                <div className="col-span-3 flex flex-col gap-2 items-start">
+                  {/* Slip No */}
+                  <div className="flex items-center gap-[2px]">
+                    <Label className="text-xs text-black w-20">Slip No</Label>
+                    <Input
+                      name="slipNo"
+                      value={formData.slipNo}
+                      readOnly
+                      className="h-8 text-xs text-black w-52"
                     />
-                  ) : (
-                    <Select name="branch" value={formData.branch} onValueChange={(value) => setFormData(prev => ({...prev, branch: value, branchId: value}))}>
-                      <SelectTrigger className="h-5 text-xs text-black">
-                        <SelectValue placeholder="Select branch" className="text-black" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {branches.map((branch) => (
-                          <SelectItem key={branch.branch_id} value={branch.branch_id.toString()}>
-                            {branch.branch_name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                </div>
-                <div>
-                  <Label className="text-xs text-black">Driver Name</Label>
-                  <Input
-                    placeholder="Enter driver name"
-                    name="driverName"
-                    value={formData.driverName}
-                    onChange={handleChange}
-                    className="h-5 text-xs text-black placeholder:text-gray-500"
-                  />
-                </div>
-                <div className="mt-6">
-                  <div className="grid grid-cols-2 gap-1 mb-1">
-                    <Button className="h-5 bg-green-600 text-xs" onClick={captureFirstWeight}>1st WHT</Button>
-                    <Button className="h-5 bg-gray-500 text-xs" onClick={captureSecondWeight}>2nd WHT</Button>
                   </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    <Button className="h-5 bg-yellow-500 text-xs" onClick={resetForm}>Clear</Button>
-                    <Button className="h-5 bg-red-500 text-xs">Exit</Button>
+
+                  {/* Net Weight */}
+                  <div className="flex items-center gap-[2px]">
+                    <Label className="text-xs text-black w-20">
+                      Net Weight
+                    </Label>
+                    <Input
+                      name="netWeight"
+                      value={formData.netWeight}
+                      onChange={handleChange}
+                      className="h-8 text-xs bg-yellow-200 text-black w-52"
+                    />
+                  </div>
+
+                  {/* Freight */}
+                  <div className="flex items-center gap-[2px]">
+                    <Label className="text-xs text-black w-20">Freight</Label>
+                    <Input
+                      name="freight"
+                      value={formData.freight}
+                      onChange={handleChange}
+                      className="h-8 text-xs text-black w-52"
+                    />
+                  </div>
+
+                  {/* Remarks */}
+                  <div className="flex items-start gap-[2px]">
+                    <Label className="text-xs text-black w-20 mt-1">
+                      Remarks
+                    </Label>
+                    <Textarea
+                      placeholder="Add remarks"
+                      name="remarks"
+                      value={formData.remarks}
+                      onChange={handleChange}
+                      className="h-20 text-xs resize-none text-black placeholder:text-gray-500 w-60"
+                    />
                   </div>
                 </div>
 
-                {/* Clean Camera Feed - just the video content */}
-                <div className="mt-2 h-24 w-full overflow-hidden">
-                  <VideoStreamFullscreen
-                    camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
-                    isConnected={true}
-                    isStreaming={true}
-                  />
+                {/* Column 2 - Weight Fields */}
+                <div className="col-span-3 flex flex-col gap-2 items-start">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-24">
+                      First Weight
+                    </Label>
+                    <Input
+                      name="firstWeight"
+                      value={formData.firstWeight}
+                      onChange={handleChange}
+                      className="h-8 text-xs text-black w-52"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-24">
+                      Second Weight
+                    </Label>
+                    <Input
+                      name="secondWeight"
+                      value={formData.secondWeight}
+                      onChange={handleChange}
+                      className="h-8 text-xs text-green-600 w-52"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-24">
+                      Bardana Weight
+                    </Label>
+                    <Input
+                      name="bardanaWeight"
+                      value={formData.bardanaWeight}
+                      onChange={handleChange}
+                      className="h-8 text-xs text-black w-52"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-24">
+                      Gross Weight
+                    </Label>
+                    <Input
+                      name="grossWeight"
+                      value={formData.grossWeight}
+                      readOnly
+                      className="h-8 text-xs text-black w-52"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-24">Branch</Label>
+                    {isEditMode ? (
+                      <Input
+                        value={
+                          branches.find(
+                            (b) =>
+                              b.branch_id.toString() ===
+                              formData.branchId?.toString(),
+                          )?.branch_name ||
+                          formData.branch ||
+                          ""
+                        }
+                        readOnly
+                        className="h-8 text-xs text-black bg-gray-100 w-52"
+                      />
+                    ) : (
+                      <Select
+                        name="branch"
+                        value={formData.branch}
+                        onValueChange={(value) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            branch: value,
+                            branchId: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="h-8 text-xs text-black w-52">
+                          <SelectValue
+                            placeholder="Select branch"
+                            className="text-black"
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {branches.map((branch) => (
+                            <SelectItem
+                              key={branch.branch_id}
+                              value={branch.branch_id.toString()}
+                            >
+                              {branch.branch_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
                 </div>
-              </div>
+
+                {/* Column 3 - Driver & Branch */}
+                <div className="col-span-3 flex flex-col justify-between">
+                  <div className="flex flex-col gap-2">
+                    {/* Branch Field */}
+
+                    {/* Driver Name */}
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs text-black w-20">
+                        Driver Name
+                      </Label>
+                      <Input
+                        placeholder="Enter driver name"
+                        name="driverName"
+                        value={formData.driverName}
+                        onChange={handleChange}
+                        className="h-8 text-xs text-black placeholder:text-gray-500 w-52"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Buttons & Camera */}
+                  <div className="flex flex-col gap-2 mt-2">
+                    {/* First & Second Weight Buttons */}
+                    <div className="grid grid-cols-2 gap-1 mb-2">
+                      {" "}
+                      {/* Slight space below */}
+                      <Button
+                        className="h-8 bg-green-600 text-xs"
+                        onClick={captureFirstWeight}
+                      >
+                        1st WHT
+                      </Button>
+                      <Button
+                        className="h-8 bg-gray-500 text-xs"
+                        onClick={captureSecondWeight}
+                      >
+                        2nd WHT
+                      </Button>
+                    </div>
+
+                    {/* Camera Feed */}
+                    <div className="h-40 w-full overflow-hidden mb-1 rounded border">
+                      {" "}
+                      {/* Reduced mb */}
+                      <VideoStreamFullscreen
+                        camera={{
+                          id: 1,
+                          name: "Camera 01",
+                          ip: "10.10.10.146",
+                          port: 554,
+                        }}
+                        isConnected={true}
+                        isStreaming={true}
+                      />
+                    </div>
+
+                    {/* Clear & Exit Buttons */}
+                    <div className="grid grid-cols-2 gap-1">
+                      <Button
+                        className="h-8 bg-yellow-500 text-xs"
+                        onClick={resetForm}
+                      >
+                        Clear
+                      </Button>
+                      <Button className="h-8 bg-red-500 text-xs">Exit</Button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
             {/* Large Label Between Sections */}
-            <div className="text-center py-4 mb-3">
-              <div className={`inline-block px-8 py-3 rounded-lg shadow-md ${
-                onlineMode === true
-                  ? 'bg-gradient-to-r from-green-500 to-green-600 text-white' 
-                  : 'bg-gradient-to-r from-red-500 to-red-600 text-white'
-              }`}>
+            <div className="text-center py-1 mb-3">
+              <div
+                className={`inline-block px-4 py-1 rounded-lg shadow-md ${
+                  onlineMode === true
+                    ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
+                    : "bg-gradient-to-r from-red-500 to-red-600 text-white"
+                }`}
+              >
                 <h2 className="text-3xl font-bold tracking-wide">
-                  {isReturnMode 
-                    ? (onlineMode === true ? 'Purchase Return Online' : 'Purchase Return Offline')
-                    : (onlineMode === true ? 'Purchase Online' : 'Purchase Offline')
-                  }
+                  {isReturnMode
+                    ? onlineMode === true
+                      ? "Purchase Return Online"
+                      : "Purchase Return Offline"
+                    : onlineMode === true
+                      ? "Purchase Online"
+                      : "Purchase Offline"}
                 </h2>
               </div>
             </div>
 
             {/* Top buttons row - above details section */}
-           <div className="flex gap-2">
-  <Button 
-    className={`h-6 text-xs px-3 ${selectedForm === 'purchase' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-    onClick={() => {
-      setSelectedForm('purchase');
-      setLocation('/purchase-form?form=purchase');
-    }}
-  >
-    Purchase
-  </Button>
+            <div className="flex gap-1">
+              <Button
+                className={`h-6 text-xs px-3 ${selectedForm === "purchase" ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+                onClick={() => {
+                  setSelectedForm("purchase");
+                  setLocation("/purchase-form?form=purchase");
+                }}
+              >
+                Purchase
+              </Button>
 
-  <Button 
-    className={`h-6 text-xs px-3 ${selectedForm === 'sales' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-    onClick={() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const typeMode = urlParams.get('type');
-      const modeParam = typeMode ? `?type=${typeMode}` : '';
-      const targetUrl = `/sales-form${modeParam}`;
+              <Button
+                className={`h-6 text-xs px-3 ${selectedForm === "sales" ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+                onClick={() => {
+                  const urlParams = new URLSearchParams(window.location.search);
+                  const typeMode = urlParams.get("type");
+                  const modeParam = typeMode ? `?type=${typeMode}` : "";
+                  const targetUrl = `/sales-form${modeParam}`;
 
-      setSelectedForm('sales');
-      setLocation(targetUrl);
+                  setSelectedForm("sales");
+                  setLocation(targetUrl);
 
-      // Optional force reload if needed
-      setTimeout(() => {
-        window.location.href = targetUrl;
-      }, 50);
-    }}
-  >
-    Sales
-  </Button>
+                  // Optional force reload if needed
+                  setTimeout(() => {
+                    window.location.href = targetUrl;
+                  }, 50);
+                }}
+              >
+                Sales
+              </Button>
 
-  <Button 
-    className={`h-6 text-xs px-3 ${selectedForm === 'offline' ? 'bg-blue-600 text-white' : 'bg-gray-300 text-black'}`}
-    onClick={() => setSelectedForm('offline')}
-  >
-    Offline
-  </Button>
-</div>
-
+              <Button
+                className={`h-6 text-xs px-3 ${selectedForm === "offline" ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+                onClick={() => setSelectedForm("offline")}
+              >
+                Offline
+              </Button>
+            </div>
 
             {/* Details Section */}
             <div className="bg-blue-50 p-2 rounded border">
-
               {/* Show Purchase Form when selectedForm is 'purchase' */}
-              {selectedForm === 'purchase' && (
+              {selectedForm === "purchase" && (
                 <div className="mt-1">
                   <div className="grid grid-cols-3 gap-4 text-xs">
                     {/* First Column */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-16">Bardana Type</span>
+                    <div className="flex flex-col gap-2">
+                      {/* Bardana Type */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-black w-28">
+                          Bardana Type
+                        </span>
                         {onlineMode ? (
-                          <Input name="bardanaType" value={formData.bardanaType} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                          <Input
+                            name="bardanaType"
+                            value={formData.bardanaType}
+                            onChange={handleChange}
+                            className="h-8 text-xs text-black w-60" // Wider input
+                          />
                         ) : (
-                          <Select name="bardanaType" value={formData.bardanaType} onValueChange={(value) => setFormData(prev => ({...prev, bardanaType: value}))}>
-                            <SelectTrigger className="h-4 text-xs text-black flex-1">
-                              <SelectValue placeholder="Select bardana type" className="text-black" />
+                          <Select
+                            name="bardanaType"
+                            value={formData.bardanaType}
+                            onValueChange={(value) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                bardanaType: value,
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="h-8 text-xs text-black w-60">
+                              <SelectValue
+                                placeholder="Select bardana type"
+                                className="text-black"
+                              />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="PP BAGS 100 GR">PP BAGS 100 GR</SelectItem>
-                              <SelectItem value="PP BAGS 50 GR">PP BAGS 50 GR</SelectItem>
-                              <SelectItem value="JUTE BAGS">JUTE BAGS</SelectItem>
-                              <SelectItem value="HDPE BAGS">HDPE BAGS</SelectItem>
-                              <SelectItem value="PLASTIC BAGS">PLASTIC BAGS</SelectItem>
+                              <SelectItem value="PP BAGS 100 GR">
+                                PP BAGS 100 GR
+                              </SelectItem>
+                              <SelectItem value="PP BAGS 50 GR">
+                                PP BAGS 50 GR
+                              </SelectItem>
+                              <SelectItem value="JUTE BAGS">
+                                JUTE BAGS
+                              </SelectItem>
+                              <SelectItem value="HDPE BAGS">
+                                HDPE BAGS
+                              </SelectItem>
+                              <SelectItem value="PLASTIC BAGS">
+                                PLASTIC BAGS
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-16">Wt per Bag</span>
-                        <Input name="wtPerBag" value={formData.wtPerBag} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+
+                      {/* Wt per Bag */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-black w-28">
+                          Wt per Bag
+                        </span>
+                        <Input
+                          name="wtPerBag"
+                          value={formData.wtPerBag}
+                          onChange={handleChange}
+                          className="h-8 text-xs text-black w-60"
+                        />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-16">No of Bags</span>
-                        <Input name="noOfBags" value={formData.noOfBags} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+
+                      {/* No of Bags */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-black w-28">
+                          No of Bags
+                        </span>
+                        <Input
+                          name="noOfBags"
+                          value={formData.noOfBags}
+                          onChange={handleChange}
+                          className="h-8 text-xs text-black w-60"
+                        />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-16">Bardana Weight</span>
-                        <Input name="bardanaWeight" value={formData.bardanaWeight} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+
+                      {/* Bardana Weight */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-black w-28">
+                          Bardana Weight
+                        </span>
+                        <Input
+                          name="bardanaWeight"
+                          value={formData.bardanaWeight}
+                          onChange={handleChange}
+                          className="h-8 text-xs text-black w-60"
+                        />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-16">Quality</span>
-                        <Input name="qualityDeduction" value={formData.qualityDeduction} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+
+                      {/* Quality */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-black w-28">Quality</span>
+                        <Input
+                          name="qualityDeduction"
+                          value={formData.qualityDeduction}
+                          onChange={handleChange}
+                          className="h-8 text-xs text-black w-60"
+                        />
                       </div>
                     </div>
 
                     {/* Second Column */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-16">IGP No</span>
-                        <Input 
-                          name="igpNo" 
-                          value={formData.igpNo} 
-                          onChange={handleChange} 
+                    <div className="flex flex-col gap-2">
+                      {/* IGP No */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-black w-28">IGP No</span>
+                        <Input
+                          name="igpNo"
+                          value={formData.igpNo}
+                          onChange={handleChange}
                           onKeyDown={(e) => {
-                            if (e.key === 'Enter' && onlineMode) {
+                            if (e.key === "Enter" && onlineMode) {
                               fetchIgpData();
                             }
                           }}
-                          className={`h-4 text-xs flex-1 ${onlineMode ? 'text-black' : 'text-gray-500 bg-gray-100'}`}
-                          placeholder={onlineMode ? "Press Enter to fetch" : "Not available in offline mode"}
+                          className={`h-8 text-xs w-60 ${onlineMode ? "text-black" : "text-gray-500 bg-gray-100"}`}
+                          placeholder={
+                            onlineMode
+                              ? "Press Enter to fetch"
+                              : "Not available in offline mode"
+                          }
                           readOnly={!onlineMode}
                         />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-16">IGP Date</span>
-                        <Input 
-                          name="igpDate" 
-                          value={formData.igpDate} 
-                          onChange={handleChange} 
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' && onlineMode) {
-                              fetchIgpData();
-                            }
-                          }}
-                          className="h-4 text-xs flex-1 text-black"
-                          placeholder={onlineMode ? "Press Enter to fetch" : "Enter IGP Date"}
+
+                      {/* IGP Date */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-black w-28">
+                          IGP Date
+                        </span>
+                        <Input
+                          name="igpDate"
+                          value={formData.igpDate}
+                          onChange={handleChange}
+                          className="h-8 text-xs text-black w-60"
+                          placeholder={
+                            onlineMode
+                              ? "Press Enter to fetch"
+                              : "Enter IGP Date"
+                          }
                         />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-16">Vendor</span>
+
+                      {/* Vendor */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-black w-28">Vendor</span>
                         {onlineMode ? (
-                          <Input name="vendor" value={formData.vendor} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                          <Input
+                            name="vendor"
+                            value={formData.vendor}
+                            onChange={handleChange}
+                            className="h-8 text-xs text-black w-60"
+                          />
                         ) : (
-                          <Select name="vendor" value={formData.vendor} onValueChange={(value) => setFormData(prev => ({...prev, vendor: value}))}>
-                            <SelectTrigger className="h-4 text-xs text-black flex-1">
-                              <SelectValue placeholder="Select vendor" className="text-black" />
+                          <Select
+                            name="vendor"
+                            value={formData.vendor}
+                            onValueChange={(value) =>
+                              setFormData((prev) => ({
+                                ...prev,
+                                vendor: value,
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="h-8 text-xs text-black w-60">
+                              <SelectValue
+                                placeholder="Select vendor"
+                                className="text-black"
+                              />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="ABC Suppliers">ABC Suppliers</SelectItem>
-                              <SelectItem value="XYZ Trading">XYZ Trading</SelectItem>
-                              <SelectItem value="Global Vendors">Global Vendors</SelectItem>
-                              <SelectItem value="Local Suppliers">Local Suppliers</SelectItem>
-                              <SelectItem value="Premium Traders">Premium Traders</SelectItem>
+                              <SelectItem value="ABC Suppliers">
+                                ABC Suppliers
+                              </SelectItem>
+                              <SelectItem value="XYZ Trading">
+                                XYZ Trading
+                              </SelectItem>
+                              <SelectItem value="Global Vendors">
+                                Global Vendors
+                              </SelectItem>
+                              <SelectItem value="Local Suppliers">
+                                Local Suppliers
+                              </SelectItem>
+                              <SelectItem value="Premium Traders">
+                                Premium Traders
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-16">Vehicle No</span>
-                        <div className="flex gap-1 flex-1">
-                          <Input name="vehicleNo" value={formData.vehicleNo} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
-                          <Button 
-                            type="button"
-                            onClick={readLicensePlate}
-                            disabled={plateReading}
-                            className="h-4 px-2 text-xs bg-blue-500 hover:bg-blue-600 text-white"
-                          >
-                            {plateReading ? '...' : 'Read'}
-                          </Button>
+
+                      {/* Vehicle No */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-black w-28">
+                          Vehicle No
+                        </span>
+                        <div className="flex gap-1 w-60">
+                          <Input
+                            name="vehicleNo"
+                            value={formData.vehicleNo}
+                            onChange={handleChange}
+                            className="h-8 text-xs text-black flex-1"
+                          />
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-16">Weight</span>
-                        {formData.isPercentageMode ? (
-                          <select
-                            name="weight"
-                            value={formData.weight}
+
+                      {/* Weight */}
+                      {/* Weight, Bags & % toggle in one row */}
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-black w-28">Weight</span>
+                        <div className="flex gap-1 w-60">
+                          {/* Weight Input */}
+                          {formData.isPercentageMode ? (
+                            <select
+                              name="weight"
+                              value={formData.weight}
+                              onChange={handleChange}
+                              className="h-8 text-xs text-black flex-1 border border-gray-300 rounded"
+                            >
+                              <option value="">Select %</option>
+                              <option value="0.1">0.1</option>
+                              <option value="0.2">0.2</option>
+                              <option value="0.3">0.3</option>
+                              <option value="0.4">0.4</option>
+                              <option value="0.5">0.5</option>
+                              <option value="0.6">0.6</option>
+                              <option value="0.7">0.7</option>
+                              <option value="0.8">0.8</option>
+                              <option value="0.9">0.9</option>
+                              <option value="1.0">1.0</option>
+                            </select>
+                          ) : (
+                            <Input
+                              name="weight"
+                              value={formData.weight}
+                              onChange={handleChange}
+                              className="h-8 text-xs text-black flex-1"
+                            />
+                          )}
+
+                          {/* Bags Input */}
+                          <Input
+                            name="bags"
+                            value={formData.bags}
                             onChange={handleChange}
-                            className="h-4 text-xs text-black w-20 border border-gray-300 rounded"
-                          >
-                            <option value="">Select %</option>
-                            <option value="0.1">0.1</option>
-                            <option value="0.2">0.2</option>
-                            <option value="0.3">0.3</option>
-                            <option value="0.4">0.4</option>
-                            <option value="0.5">0.5</option>
-                            <option value="0.6">0.6</option>
-                            <option value="0.7">0.7</option>
-                            <option value="0.8">0.8</option>
-                            <option value="0.9">0.9</option>
-                            <option value="1.0">1.0</option>
-                          </select>
-                        ) : (
-                          <Input name="weight" value={formData.weight} onChange={handleChange} className="h-4 text-xs text-black w-20" />
-                        )}
-                        <span className="text-xs text-black ml-2">Bags</span>
-                        <Input name="bags" value={formData.bags} onChange={handleChange} className="h-4 text-xs text-black w-20" />
-                        <input 
-                          type="checkbox" 
-                          checked={formData.isPercentageMode || false}
-                          onChange={(e) => setFormData(prev => ({ ...prev, isPercentageMode: e.target.checked, weight: '' }))}
-                          className="w-3 h-3 ml-1" 
-                        />
-                        <span className="text-xs text-black">%</span>
+                            className="h-8 text-xs text-black flex-1"
+                            placeholder="Bags"
+                          />
+
+                          {/* % Mode Checkbox */}
+                          <div className="flex items-center gap-0.5">
+                            <input
+                              type="checkbox"
+                              checked={formData.isPercentageMode || false}
+                              onChange={(e) =>
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  isPercentageMode: e.target.checked,
+                                  weight: "",
+                                }))
+                              }
+                              className="w-4 h-4"
+                            />
+                            <span className="text-xs text-black">%</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
                     {/* Third Column */}
                     <div className="space-y-2">
+                      {/* Supplier Weight */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-20">Supplier Weight</span>
-                        <Input name="supplierWeight" value={formData.supplierWeight} onChange={handleChange} className="h-4 text-xs text-black flex-1" />
+                        <span className="text-xs text-black w-28">
+                          Supplier Weight
+                        </span>
+                        <Input
+                          name="supplierWeight"
+                          value={formData.supplierWeight}
+                          onChange={handleChange}
+                          className="h-8 text-xs text-black w-60"
+                        />
                       </div>
+
+                      {/* Supplier Weight - Bardana */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-20">Supp Wt - Bardana</span>
-                        <Input name="supplierWeightMinusBardana" value={formData.supplierWeightMinusBardana} readOnly className="h-4 text-xs text-gray-600 bg-gray-100 flex-1" />
+                        <span className="text-xs text-black w-28">
+                          Supp Wt - Bardana
+                        </span>
+                        <Input
+                          name="supplierWeightMinusBardana"
+                          value={formData.supplierWeightMinusBardana}
+                          readOnly
+                          className="h-8 text-xs text-gray-600 bg-gray-100 w-60"
+                        />
                       </div>
+
+                      {/* Supplier Weight - Out Weight */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-20">Supp Wt - Out Wt</span>
-                        <Input name="supplierWeightMinusOutWeight" value={formData.supplierWeightMinusOutWeight} readOnly className="h-4 text-xs text-gray-600 bg-gray-100 flex-1" />
+                        <span className="text-xs text-black w-28">
+                          Supp Wt - Out Wt
+                        </span>
+                        <Input
+                          name="supplierWeightMinusOutWeight"
+                          value={formData.supplierWeightMinusOutWeight}
+                          readOnly
+                          className="h-8 text-xs text-gray-600 bg-gray-100 w-60"
+                        />
                       </div>
-                      <div className="mt-2">
-                        <Button className="h-6 px-2 bg-green-600 hover:bg-green-700 text-white text-xs">
-                          Deduction +
+
+                      {/* Deduction Button */}
+                      <div className="mt-5 flex justify-center">
+                        <Button
+                          className="h-8 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
+                          onClick={handleDeduction}
+                        >
+                          Deduction+
                         </Button>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-6">
-                    <Button 
-                      className="h-6 px-4 bg-orange-600 hover:bg-orange-700 text-white text-xs font-medium"
-                      onClick={handleDeduction}
-                    >
-                      Deduction+
-                    </Button>
-                  </div>
-
                   {/* Compact Table with IGP Data - aligned with master form */}
-                  <div className="border rounded text-xs h-[calc(100%-200px)] overflow-auto mt-4 -ml-4 mr-0" style={{width: 'calc(100% + 1rem)'}}>
+                  <div
+                    className="border rounded text-xs h-[calc(100%-200px)] overflow-auto mt-4 -ml-4 mr-0"
+                    style={{ width: "calc(100% + 1rem)" }}
+                  >
                     <table className="w-full text-center">
                       <thead className="bg-gray-100 sticky top-0">
                         <tr>
-                          <th className="border p-1 text-xs text-black">Po No</th>
-                          <th className="border p-1 text-xs text-black">Item Code</th>
-                          <th className="border p-1 text-xs text-black">Item Description</th>
-                          <th className="border p-1 text-xs text-black">PO Quantity</th>
-                          <th className="border p-1 text-xs text-black">IGP Quantity</th>
-                          <th className="border p-1 text-xs text-black">Balance Quantity</th>
+                          <th className="border p-1 text-xs text-black">
+                            Po No
+                          </th>
+                          <th className="border p-1 text-xs text-black">
+                            Item Code
+                          </th>
+                          <th className="border p-1 text-xs text-black">
+                            Item Description
+                          </th>
+                          <th className="border p-1 text-xs text-black">
+                            PO Quantity
+                          </th>
+                          <th className="border p-1 text-xs text-black">
+                            IGP Quantity
+                          </th>
+                          <th className="border p-1 text-xs text-black">
+                            Balance Quantity
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3586,89 +4256,141 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
 
                             return (
                               <tr key={index}>
-                                <td className="border p-1 h-4 text-xs text-black">{item.po_no || ''}</td>
-                                <td className="border p-1 h-4 text-xs text-black">{item.item_code || ''}</td>
-                                <td className="border p-1 h-4 text-xs text-black">{item.item_desc || ''}</td>
-                                <td className="border p-1 h-4 text-xs text-black">{poQty.toFixed(2)}</td>
-                                <td className="border p-1 h-4 text-xs text-black">{igpQty.toFixed(2)}</td>
-                                <td className="border p-1 h-4 text-xs text-black">{balanceQty.toFixed(2)}</td>
+                                <td className="border p-1 h-4 text-xs text-black">
+                                  {item.po_no || ""}
+                                </td>
+                                <td className="border p-1 h-4 text-xs text-black">
+                                  {item.item_code || ""}
+                                </td>
+                                <td className="border p-1 h-4 text-xs text-black">
+                                  {item.item_desc || ""}
+                                </td>
+                                <td className="border p-1 h-4 text-xs text-black">
+                                  {poQty.toFixed(2)}
+                                </td>
+                                <td className="border p-1 h-4 text-xs text-black">
+                                  {igpQty.toFixed(2)}
+                                </td>
+                                <td className="border p-1 h-4 text-xs text-black">
+                                  {balanceQty.toFixed(2)}
+                                </td>
                               </tr>
                             );
                           })
                         ) : onlineMode ? (
                           <tr>
-                            <td className="border p-1 h-4 text-xs text-black" colSpan={6}>
-                              {isEditMode ? 'Loading saved record data...' : 'No IGP data available'}
+                            <td
+                              className="border p-1 h-4 text-xs text-black"
+                              colSpan={6}
+                            >
+                              {isEditMode
+                                ? "Loading saved record data..."
+                                : "No IGP data available"}
                             </td>
                           </tr>
                         ) : (
                           <tr>
                             <td className="border p-1 h-4 text-xs text-black">
-                              <Input 
-                                name="poNo" 
-                                value={formData.poNo} 
-                                onChange={handleChange} 
-                                className="h-4 text-xs text-black w-full border-none bg-transparent" 
+                              <Input
+                                name="poNo"
+                                value={formData.poNo}
+                                onChange={handleChange}
+                                className="h-4 text-xs text-black w-full border-none bg-transparent"
                                 placeholder="Enter PO No"
                               />
                             </td>
                             <td className="border p-1 h-4 text-xs text-black">
-                              <Select name="itemCode" value={formData.itemCode} onValueChange={(value) => {
-                                const selectedItem = invItems.find(item => item.item_code === value);
-                                setFormData(prev => ({
-                                  ...prev, 
-                                  itemCode: value,
-                                  itemDesc: selectedItem ? selectedItem.item_desc : ''
-                                }));
-                              }}>
+                              <Select
+                                name="itemCode"
+                                value={formData.itemCode}
+                                onValueChange={(value) => {
+                                  const selectedItem = invItems.find(
+                                    (item) => item.item_code === value,
+                                  );
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    itemCode: value,
+                                    itemDesc: selectedItem
+                                      ? selectedItem.item_desc
+                                      : "",
+                                  }));
+                                }}
+                              >
                                 <SelectTrigger className="h-4 text-xs text-black w-full border-none bg-transparent">
-                                  <SelectValue placeholder="Select item code" className="text-black" />
+                                  <SelectValue
+                                    placeholder="Select item code"
+                                    className="text-black"
+                                  />
                                 </SelectTrigger>
+
                                 <SelectContent>
-                                  {invItems.map((item) => (
-                                    <SelectItem key={item.item_id} value={item.item_code}>
-                                      {item.item_code}
-                                    </SelectItem>
-                                  ))}
+                                  {/* Search Box at top */}
+                                  <div className="px-2 py-1 sticky top-0 bg-white z-10">
+                                    <Input
+                                      type="text"
+                                      placeholder="Search Item Code..."
+                                      value={searchQuery}
+                                      onChange={(e) =>
+                                        setSearchQuery(e.target.value)
+                                      }
+                                      className="h-6 text-xs border-gray-300"
+                                    />
+                                  </div>
+
+                                  {/* Filtered Items */}
+                                  {invItems
+                                    .filter((item) =>
+                                      item.item_code
+                                        .toLowerCase()
+                                        .includes(searchQuery.toLowerCase()),
+                                    )
+                                    .map((item) => (
+                                      <SelectItem
+                                        key={item.item_id}
+                                        value={item.item_code}
+                                      >
+                                        {item.item_code} - {item.item_desc}
+                                      </SelectItem>
+                                    ))}
                                 </SelectContent>
                               </Select>
                             </td>
                             <td className="border p-1 h-4 text-xs text-black">
-                              <Input 
-                                name="itemDesc" 
-                                value={formData.itemDesc} 
-                                onChange={handleChange} 
-                                className="h-4 text-xs text-black w-full border-none bg-transparent" 
+                              <Input
+                                name="itemDesc"
+                                value={formData.itemDesc}
+                                onChange={handleChange}
+                                className="h-4 text-xs text-black w-full border-none bg-transparent"
                                 placeholder="Auto-filled from Item Code"
                                 readOnly
                               />
                             </td>
                             <td className="border p-1 h-4 text-xs text-black">
-                              <Input 
-                                name="poQty" 
-                                value={formData.poQty} 
-                                onChange={handleChange} 
-                                className="h-4 text-xs text-black w-full border-none bg-transparent" 
+                              <Input
+                                name="poQty"
+                                value={formData.poQty}
+                                onChange={handleChange}
+                                className="h-4 text-xs text-black w-full border-none bg-transparent"
                                 placeholder="PO Qty"
                                 type="number"
                               />
                             </td>
                             <td className="border p-1 h-4 text-xs text-black">
-                              <Input 
-                                name="igpQty" 
-                                value={formData.igpQty} 
-                                onChange={handleChange} 
-                                className="h-4 text-xs text-black w-full border-none bg-transparent" 
+                              <Input
+                                name="igpQty"
+                                value={formData.igpQty}
+                                onChange={handleChange}
+                                className="h-4 text-xs text-black w-full border-none bg-transparent"
                                 placeholder="IGP Qty"
                                 type="number"
                               />
                             </td>
                             <td className="border p-1 h-4 text-xs text-black">
-                              <Input 
-                                name="balanceQty" 
-                                value={formData.balanceQty} 
-                                onChange={handleChange} 
-                                className="h-4 text-xs text-black w-full border-none bg-transparent" 
+                              <Input
+                                name="balanceQty"
+                                value={formData.balanceQty}
+                                onChange={handleChange}
+                                className="h-4 text-xs text-black w-full border-none bg-transparent"
                                 placeholder="Balance"
                                 type="number"
                               />
@@ -3682,37 +4404,78 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
               )}
 
               {/* Show Sales Form when selectedForm is 'sales' */}
-              {selectedForm === 'sales' && (
+              {selectedForm === "sales" && (
                 <div className="h-full flex flex-col">
-
                   {/* Sales Table Header - with delete action column */}
-                  <div className="grid gap-px bg-gray-300 text-xs font-semibold mb-1" style={{gridTemplateColumns: "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px", width: "1250px"}}>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DC #</div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO #</div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Customer Name</div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Vehicle No</div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Do Date</div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Item Description</div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DC Qty</div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">DO Qty</div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">Branch</div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">✖</div>
+                  <div
+                    className="grid gap-px bg-gray-300 text-xs font-semibold mb-1"
+                    style={{
+                      gridTemplateColumns:
+                        "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px",
+                      width: "1250px",
+                    }}
+                  >
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      DC #
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      DO #
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Customer Name
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Vehicle No
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Do Date
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Item Description
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      DC Qty
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      DO Qty
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Branch
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      ✖
+                    </div>
                   </div>
 
                   {/* Sales Table Body - Fixed height with 8 rows */}
-                  <div className="bg-gray-200 mb-4" style={{height: "240px"}}>
+                  <div className="bg-gray-200 mb-4" style={{ height: "240px" }}>
                     {[...Array(8)].map((_, index) => (
-                      <div key={index} className="grid gap-px text-xs" style={{gridTemplateColumns: "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px", width: "1250px", height: "30px"}}>
+                      <div
+                        key={index}
+                        className="grid gap-px text-xs"
+                        style={{
+                          gridTemplateColumns:
+                            "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px",
+                          width: "1250px",
+                          height: "30px",
+                        }}
+                      >
                         <div className="bg-white border border-gray-300 p-1">
                           <input
                             type="text"
                             className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.dcNo || ''}
-                            onChange={(e) => handleSalesDataChange(index, 'dcNo', e.target.value)}
+                            value={salesData[index]?.dcNo || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "dcNo",
+                                e.target.value,
+                              )
+                            }
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter') {
+                              if (e.key === "Enter") {
                                 const dcNo = salesData[index]?.dcNo;
-                                if (dcNo && dcNo.trim() !== '') {
+                                if (dcNo && dcNo.trim() !== "") {
                                   fetchDcData(dcNo.trim());
                                 }
                               }
@@ -3729,8 +4492,14 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                           <input
                             type="text"
                             className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.doNo || ''}
-                            onChange={(e) => handleSalesDataChange(index, 'doNo', e.target.value)}
+                            value={salesData[index]?.doNo || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "doNo",
+                                e.target.value,
+                              )
+                            }
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -3742,8 +4511,14 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                           <input
                             type="text"
                             className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.customerName || ''}
-                            onChange={(e) => handleSalesDataChange(index, 'customerName', e.target.value)}
+                            value={salesData[index]?.customerName || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "customerName",
+                                e.target.value,
+                              )
+                            }
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -3755,8 +4530,14 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                           <input
                             type="text"
                             className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.vehicleNo || ''}
-                            onChange={(e) => handleSalesDataChange(index, 'vehicleNo', e.target.value)}
+                            value={salesData[index]?.vehicleNo || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "vehicleNo",
+                                e.target.value,
+                              )
+                            }
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -3768,8 +4549,14 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                           <input
                             type="text"
                             className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.doDate || ''}
-                            onChange={(e) => handleSalesDataChange(index, 'doDate', e.target.value)}
+                            value={salesData[index]?.doDate || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "doDate",
+                                e.target.value,
+                              )
+                            }
                             placeholder="DD.MM.YYYY"
                             autoComplete="off"
                             autoCorrect="off"
@@ -3782,8 +4569,14 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                           <input
                             type="text"
                             className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.itemDescription || ''}
-                            onChange={(e) => handleSalesDataChange(index, 'itemDescription', e.target.value)}
+                            value={salesData[index]?.itemDescription || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "itemDescription",
+                                e.target.value,
+                              )
+                            }
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -3795,8 +4588,14 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                           <input
                             type="text"
                             className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
-                            value={salesData[index]?.dcQty || ''}
-                            onChange={(e) => handleSalesDataChange(index, 'dcQty', e.target.value)}
+                            value={salesData[index]?.dcQty || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "dcQty",
+                                e.target.value,
+                              )
+                            }
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -3808,8 +4607,14 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                           <input
                             type="text"
                             className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
-                            value={salesData[index]?.doQty || ''}
-                            onChange={(e) => handleSalesDataChange(index, 'doQty', e.target.value)}
+                            value={salesData[index]?.doQty || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "doQty",
+                                e.target.value,
+                              )
+                            }
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -3821,8 +4626,14 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                           <input
                             type="text"
                             className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.branch || ''}
-                            onChange={(e) => handleSalesDataChange(index, 'branch', e.target.value)}
+                            value={salesData[index]?.branch || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "branch",
+                                e.target.value,
+                              )
+                            }
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"
@@ -3845,7 +4656,15 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                   </div>
 
                   {/* Total Row */}
-                  <div className="grid gap-px text-xs font-semibold mb-4" style={{gridTemplateColumns: "100px 100px 240px 140px 120px 180px 100px 100px 140px", width: "1220px", height: "30px"}}>
+                  <div
+                    className="grid gap-px text-xs font-semibold mb-4"
+                    style={{
+                      gridTemplateColumns:
+                        "100px 100px 240px 140px 120px 180px 100px 100px 140px",
+                      width: "1220px",
+                      height: "30px",
+                    }}
+                  >
                     <div className="bg-gray-200 border border-gray-400 p-1"></div>
                     <div className="bg-gray-200 border border-gray-400 p-1"></div>
                     <div className="bg-gray-200 border border-gray-400 p-1"></div>
@@ -3859,7 +4678,10 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                         type="text"
                         className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
                         readOnly
-                        value={salesData.reduce((sum, row) => sum + (parseFloat(row.dcQty) || 0), 0)}
+                        value={salesData.reduce(
+                          (sum, row) => sum + (parseFloat(row.dcQty) || 0),
+                          0,
+                        )}
                       />
                     </div>
                     <div className="bg-white border border-gray-400 p-1">
@@ -3867,17 +4689,25 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                         type="text"
                         className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
                         readOnly
-                        value={salesData.reduce((sum, row) => sum + (parseFloat(row.doQty) || 0), 0)}
+                        value={salesData.reduce(
+                          (sum, row) => sum + (parseFloat(row.doQty) || 0),
+                          0,
+                        )}
                       />
                     </div>
                     <div className="bg-gray-200 border border-gray-400 p-1"></div>
                   </div>
 
                   {/* Bottom section with Weight Per Bags, Total Weight Out, and Total Feed Bags - matching image layout */}
-                  <div className="bg-gray-100 p-2 flex justify-between items-center border border-gray-300 mt-2" style={{width: "1220px"}}>
+                  <div
+                    className="bg-gray-100 p-2 flex justify-between items-center border border-gray-300 mt-2"
+                    style={{ width: "1220px" }}
+                  >
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center space-x-2">
-                        <label className="text-xs font-medium text-black">Weight Per Bags:</label>
+                        <label className="text-xs font-medium text-black">
+                          Weight Per Bags:
+                        </label>
                         <input
                           type="text"
                           className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
@@ -3890,7 +4720,9 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                       </div>
 
                       <div className="flex items-center space-x-2">
-                        <label className="text-xs font-medium text-black">Total Weight Out:</label>
+                        <label className="text-xs font-medium text-black">
+                          Total Weight Out:
+                        </label>
                         <input
                           type="text"
                           className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
@@ -3903,7 +4735,9 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                       </div>
 
                       <div className="flex items-center space-x-2">
-                        <label className="text-xs font-medium text-black">Total Feed Bags:</label>
+                        <label className="text-xs font-medium text-black">
+                          Total Feed Bags:
+                        </label>
                         <input
                           type="text"
                           className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
@@ -3917,7 +4751,9 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-black">Total Weight Dill:</label>
+                      <label className="text-sm font-medium text-black">
+                        Total Weight Dill:
+                      </label>
                       <input
                         type="text"
                         className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
@@ -3930,7 +4766,9 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-black">Total Feed Bags:</label>
+                      <label className="text-sm font-medium text-black">
+                        Total Feed Bags:
+                      </label>
                       <input
                         type="text"
                         className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
@@ -3942,12 +4780,11 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
                       />
                     </div>
                   </div>
-
                 </div>
               )}
 
               {/* Show Sales Form when selectedForm is 'sales' */}
-              {selectedForm === 'sales' && (
+              {selectedForm === "sales" && (
                 <div className="h-full flex flex-col">
                   {/* Sales form content will go here */}
                   <div className="text-center p-4">
@@ -3957,65 +4794,115 @@ const currentTime = new Date().toLocaleTimeString('en-GB', {
               )}
 
               {/* Show Offline Form when selectedForm is 'offline' */}
-              {selectedForm === 'offline' && (
-                <div className="h-full flex flex-col" style={{maxWidth: "100%", width: "100%"}}>
-                  <div className="bg-white p-4 rounded border" style={{maxWidth: "100%", width: "100%"}}>
-                    <h3 className="text-lg font-semibold mb-4 text-black">Purchase Offline Entries</h3>
+              {selectedForm === "offline" && (
+                <div
+                  className="h-full flex flex-col"
+                  style={{ maxWidth: "100%", width: "100%" }}
+                >
+                  <div
+                    className="bg-white p-4 rounded border"
+                    style={{ maxWidth: "100%", width: "100%" }}
+                  >
+                    <h3 className="text-lg font-semibold mb-4 text-black">
+                      Purchase Offline Entries
+                    </h3>
 
                     {/* Offline entries table with scroll */}
-                    <div className="overflow-auto" style={{maxHeight: "600px", height: "600px"}}>
+                    <div
+                      className="overflow-auto"
+                      style={{ maxHeight: "600px", height: "600px" }}
+                    >
                       <table className="w-full text-sm border-collapse border border-black">
                         <thead className="bg-gray-100 sticky top-0">
                           <tr>
-                            <th className="px-3 py-2 text-left border border-black text-black">Slip No</th>
-                            <th className="px-3 py-2 text-left border border-black text-black">Slip Date</th>
-                            <th className="px-3 py-2 text-left border border-black text-black">Entry Type</th>
-                            <th className="px-3 py-2 text-left border border-black text-black">First Weight</th>
-                            <th className="px-3 py-2 text-left border border-black text-black">Second Weight</th>
-                            <th className="px-3 py-2 text-left border border-black text-black">Vehicle No</th>
-                            <th className="px-3 py-2 text-left border border-black text-black">Company Name</th>
-                            <th className="px-3 py-2 text-left border border-black text-black">Manual Trans #</th>
+                            <th className="px-3 py-2 text-left border border-black text-black">
+                              Slip No
+                            </th>
+                            <th className="px-3 py-2 text-left border border-black text-black">
+                              Slip Date
+                            </th>
+                            <th className="px-3 py-2 text-left border border-black text-black">
+                              Entry Type
+                            </th>
+                            <th className="px-3 py-2 text-left border border-black text-black">
+                              First Weight
+                            </th>
+                            <th className="px-3 py-2 text-left border border-black text-black">
+                              Second Weight
+                            </th>
+                            <th className="px-3 py-2 text-left border border-black text-black">
+                              Vehicle No
+                            </th>
+                            <th className="px-3 py-2 text-left border border-black text-black">
+                              Company Name
+                            </th>
+                            <th className="px-3 py-2 text-left border border-black text-black">
+                              Manual Trans #
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {(offlineRecords as any[])
-                            .filter((record: any) => record.entry_type === 'PURCHASE' && record.offline_entry === 'Yes')
+                            .filter(
+                              (record: any) =>
+                                record.entry_type === "PURCHASE" &&
+                                record.offline_entry === "Yes",
+                            )
                             .map((record: any) => (
-                            <tr key={record.wb_id} className="hover:bg-gray-50">
-                              <td className="px-3 py-2 border border-black text-black">
-                                <button 
-                                  className="text-blue-600 hover:text-blue-800 font-medium underline"
-                                  onClick={() => {
-                                    loadDataByWbId(record.wb_id);
-                                    setSelectedForm('purchase');
-                                  }}
-                                >
-                                  {record.slip_no}
-                                </button>
-                              </td>
-                              <td className="px-3 py-2 border border-black text-black">
-                                {record.slip_in_time ? new Date(record.slip_in_time).toLocaleDateString() : '---'}
-                              </td>
-                              <td className="px-3 py-2 border border-black text-black">PURCHASE</td>
-                              <td className="px-3 py-2 border border-black text-black">
-                                {record.first_weight ? record.first_weight : '---'}
-                              </td>
-                              <td className="px-3 py-2 border border-black text-black">
-                                {record.second_weight ? record.second_weight : '---'}
-                              </td>
-                              <td className="px-3 py-2 border border-black text-black">
-                                {record.vehicle_no || '---'}
-                              </td>
-                              <td className="px-3 py-2 border border-black text-black">
-                                {record.vendor_name || '---'}
-                              </td>
-                              <td className="px-3 py-2 border border-black text-black">---</td>
-                            </tr>
-                          ))}
+                              <tr
+                                key={record.wb_id}
+                                className="hover:bg-gray-50"
+                              >
+                                <td className="px-3 py-2 border border-black text-black">
+                                  <button
+                                    className="text-blue-600 hover:text-blue-800 font-medium underline"
+                                    onClick={() => {
+                                      loadDataByWbId(record.wb_id);
+                                      setSelectedForm("purchase");
+                                    }}
+                                  >
+                                    {record.slip_no}
+                                  </button>
+                                </td>
+                                <td className="px-3 py-2 border border-black text-black">
+                                  {record.slip_in_time
+                                    ? new Date(
+                                        record.slip_in_time,
+                                      ).toLocaleDateString()
+                                    : "---"}
+                                </td>
+                                <td className="px-3 py-2 border border-black text-black">
+                                  PURCHASE
+                                </td>
+                                <td className="px-3 py-2 border border-black text-black">
+                                  {record.first_weight
+                                    ? record.first_weight
+                                    : "---"}
+                                </td>
+                                <td className="px-3 py-2 border border-black text-black">
+                                  {record.second_weight
+                                    ? record.second_weight
+                                    : "---"}
+                                </td>
+                                <td className="px-3 py-2 border border-black text-black">
+                                  {record.vehicle_no || "---"}
+                                </td>
+                                <td className="px-3 py-2 border border-black text-black">
+                                  {record.vendor_name || "---"}
+                                </td>
+                                <td className="px-3 py-2 border border-black text-black">
+                                  ---
+                                </td>
+                              </tr>
+                            ))}
                         </tbody>
                       </table>
 
-                      {(offlineRecords as any[]).filter((record: any) => record.entry_type === 'PURCHASE' && record.offline_entry === 'Yes').length === 0 && (
+                      {(offlineRecords as any[]).filter(
+                        (record: any) =>
+                          record.entry_type === "PURCHASE" &&
+                          record.offline_entry === "Yes",
+                      ).length === 0 && (
                         <div className="text-center py-8 text-black border border-black">
                           No Purchase Offline records found
                         </div>
