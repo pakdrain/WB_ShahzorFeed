@@ -664,22 +664,18 @@ export default function SalesForm() {
           setOnlineMode(true);
         }
 
-        // Load sales data from details if it's a sales record
-        if (
-          master.entry_type === "SALE" &&
-          data.details &&
-          data.details.length > 0
-        ) {
+        // Load sales data from details - check for both SALE and if we have detail data
+        if (data.details && data.details.length > 0) {
           const salesRows = data.details.map((detail: any, index: number) => ({
             doId: String(index + 1),
             dcNo: detail.manual_dc_no || detail.igp_no || "", // Depending on source
-            doNo: detail.do_no || "",
-            customerName: detail.customer_name || "",
+            doNo: detail.do_no || detail.po_no || "", // Try both fields
+            customerName: detail.customer_name || detail.vendor_name || "",
             vehicleNo: detail.vehicle_no || "",
-            doDate: detail.do_date || "", // May be null
+            doDate: detail.do_date || detail.igp_date || "", // May be null
             itemDescription: detail.item_desc || "",
-            dcQty: detail.dc_qty ? String(detail.dc_qty) : "",
-            doQty: detail.do_qty ? String(detail.do_qty) : "",
+            dcQty: detail.dc_qty ? String(detail.dc_qty) : (detail.igp_qty ? String(detail.igp_qty) : ""),
+            doQty: detail.do_qty ? String(detail.do_qty) : (detail.po_qty ? String(detail.po_qty) : ""),
             branch: "",
             // Hidden / internal fields
             dcId: detail.dc_id || "", // if applicable
@@ -710,6 +706,27 @@ export default function SalesForm() {
 
           setSalesData(salesRows);
           console.log("✅ Sales data loaded in edit mode:", salesRows);
+        } else {
+          // No detail data found, reset to empty table
+          setSalesData(
+            Array.from({ length: 8 }, (_, index) => ({
+              doId: "",
+              dcNo: "",
+              doNo: "",
+              customerName: "",
+              vehicleNo: "",
+              doDate: "",
+              itemDescription: "",
+              dcQty: "",
+              doQty: "",
+              branch: "",
+              dcId: "",
+              customerId: "",
+              itemId: "",
+              itemCode: "",
+            }))
+          );
+          console.log("No sales detail data found, using empty table");
         }
       }
     } catch (error) {
