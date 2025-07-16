@@ -3426,6 +3426,26 @@ function PurchaseForm() {
                           setLocation(targetUrl);
                         } else {
                           setSelectedForm("purchase");
+                          
+                          // Check if this is an offline entry and set mode accordingly
+                          if (record.offline_entry === "Yes") {
+                            // Set offline mode and update URL
+                            setOnlineMode(false);
+                            const urlParams = new URLSearchParams(window.location.search);
+                            urlParams.set("type", "offline");
+                            urlParams.set("edit", record.wb_id.toString());
+                            const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                            window.history.replaceState({}, "", newUrl);
+                          } else {
+                            // Set online mode and update URL
+                            setOnlineMode(true);
+                            const urlParams = new URLSearchParams(window.location.search);
+                            urlParams.set("type", "online");
+                            urlParams.set("edit", record.wb_id.toString());
+                            const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                            window.history.replaceState({}, "", newUrl);
+                          }
+                          
                           // Load the data for editing
                           loadDataByWbId(record.wb_id);
                         }
@@ -4947,8 +4967,19 @@ function PurchaseForm() {
                                   <button
                                     className="text-blue-600 hover:text-blue-800 font-medium underline"
                                     onClick={() => {
-                                      loadDataByWbId(record.wb_id);
+                                      // Set offline mode and update URL
+                                      setOnlineMode(false);
                                       setSelectedForm("purchase");
+                                      
+                                      // Update URL to reflect offline mode and edit state
+                                      const urlParams = new URLSearchParams(window.location.search);
+                                      urlParams.set("type", "offline");
+                                      urlParams.set("edit", record.wb_id.toString());
+                                      const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                                      window.history.replaceState({}, "", newUrl);
+                                      
+                                      // Load the data for editing
+                                      loadDataByWbId(record.wb_id);
                                     }}
                                   >
                                     {record.slip_no}

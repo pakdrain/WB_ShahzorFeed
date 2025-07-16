@@ -124,6 +124,12 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
 - **Database URLs**: Flexible PostgreSQL connection string support
 
 ## Changelog
+- July 16, 2025. Fixed offline entry redirect issue in purchase form:
+  - Fixed click handlers for offline entries to properly set offline mode
+  - Added URL parameter updates to reflect offline state when clicking offline entries
+  - Updated both main purchase records display table and offline entries table
+  - Now when clicking on offline entry, it correctly shows as offline at the top and doesn't redirect to online mode
+  - Enhanced click handler to detect offline_entry="Yes" and set appropriate mode
 - July 08, 2025. Added Sale Return and Purchase Return forms with separate slip number sequences:
   - Created comprehensive Sale Return form with return-specific fields (return reason, return date)
   - Created comprehensive Purchase Return form based on Purchase form structure with additional return fields
