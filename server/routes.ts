@@ -3772,6 +3772,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET vendor data from sys_data_configg table for offline mode
+  app.get("/api/vendor-data", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT data_config_desc 
+        FROM sys_data_configg 
+        WHERE sys_config_id = 16
+        ORDER BY data_config_desc
+      `;
+      
+      const result = await pool.query(query);
+      
+      console.log(`Fetched ${result.rows.length} vendor records from sys_data_configg`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching vendor data:", error);
+      res.status(500).json({ error: "Failed to fetch vendor data" });
+    }
+  });
+
   // Voucher API endpoints for gl_vouchers table
 
   // Create gl_vouchers table if it doesn't exist
