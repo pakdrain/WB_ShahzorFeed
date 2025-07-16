@@ -3875,7 +3875,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/vendor-data", async (req: Request, res: Response) => {
     try {
       const query = `
-        SELECT data_config_desc 
+        SELECT data_config_desc as view, data_config_desc as return 
         FROM sys_data_configg 
         WHERE sys_config_id = 16
         ORDER BY data_config_desc
