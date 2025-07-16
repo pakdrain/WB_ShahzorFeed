@@ -77,6 +77,9 @@ function PurchaseForm() {
     })),
   );
   const [nextBagId, setNextBagId] = useState(1);
+  
+  // Vendor data state for offline mode
+  const [vendorData, setVendorData] = useState<any[]>([]);
 
   const handleSalesDataChange = (
     index: number,
@@ -1883,6 +1886,29 @@ function PurchaseForm() {
     formData.bardanaWeight,
     formData.supplierWeight,
   ]);
+
+  // Fetch vendor data for offline mode
+  useEffect(() => {
+    if (!onlineMode) {
+      const fetchVendorData = async () => {
+        try {
+          console.log("Fetching vendor data for offline mode...");
+          const response = await fetch('/api/vendor-data');
+          if (response.ok) {
+            const data = await response.json();
+            setVendorData(data);
+            console.log("Vendor data fetched successfully:", data);
+          } else {
+            console.error("Failed to fetch vendor data");
+          }
+        } catch (error) {
+          console.error("Error fetching vendor data:", error);
+        }
+      };
+      
+      fetchVendorData();
+    }
+  }, [onlineMode]);
 
   // Load existing deduction data when editing
   const loadDeductionData = async (wbId: number) => {
@@ -4158,21 +4184,11 @@ function PurchaseForm() {
                               />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="ABC Suppliers">
-                                ABC Suppliers
-                              </SelectItem>
-                              <SelectItem value="XYZ Trading">
-                                XYZ Trading
-                              </SelectItem>
-                              <SelectItem value="Global Vendors">
-                                Global Vendors
-                              </SelectItem>
-                              <SelectItem value="Local Suppliers">
-                                Local Suppliers
-                              </SelectItem>
-                              <SelectItem value="Premium Traders">
-                                Premium Traders
-                              </SelectItem>
+                              {vendorData.map((vendor, index) => (
+                                <SelectItem key={index} value={vendor.view}>
+                                  {vendor.view}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         )}
