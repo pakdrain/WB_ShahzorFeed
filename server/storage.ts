@@ -1,4 +1,6 @@
 import { cameras, streamSessions, streamStats, type Camera, type InsertCamera, type StreamSession, type InsertStreamSession, type StreamStats, type InsertStreamStats } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // Camera operations
