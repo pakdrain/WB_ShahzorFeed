@@ -770,10 +770,122 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
       `);
 
-      res.json({ success: true, message: "Users table initialized" });
+      // Create customers table for customer authentication
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS customers (
+          customer_id SERIAL PRIMARY KEY,
+          username VARCHAR(1000) UNIQUE NOT NULL,
+          userpassword VARCHAR(1000) NOT NULL,
+          email VARCHAR(500),
+          phone VARCHAR(50),
+          address TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+
+      res.json({ success: true, message: "Users and customers tables initialized" });
     } catch (error: any) {
       console.error("❌ Init DB error:", error);
       res.status(500).json({ error: "Database initialization failed" });
+    }
+  });
+
+  // Customer registration endpoint
+  app.post("/api/auth/customer-register", async (req, res) => {
+    try {
+      const { userName, userPassword, confirmPassword, email, phone, address } = req.body;
+
+      if (!userName || !userPassword || !confirmPassword) {
+        return res.status(400).json({ error: "Username and password are required" });
+      }
+
+      if (userPassword !== confirmPassword) {
+        return res.status(400).json({ error: "Passwords do not match" });
+      }
+
+      const existingCustomer = await pool.query(
+        "SELECT * FROM customers WHERE username = $1",
+        [userName],
+      );
+
+      if (existingCustomer.rows.length > 0) {
+        return res.status(400).json({ error: "Username already exists" });
+      }
+
+      const result = await pool.query(
+        "INSERT INTO customers (username, userpassword, email, phone, address) VALUES ($1, $2, $3, $4, $5) RETURNING customer_id, username, email",
+        [userName, userPassword, email || null, phone || null, address || null],
+      );
+
+      console.log("✅ Customer registered successfully:", userName);
+      res.status(201).json({
+        success: true,
+        message: "Customer registered successfully",
+        customer: {
+          customer_id: result.rows[0].customer_id,
+          userName: result.rows[0].username,
+          email: result.rows[0].email,
+        },
+      });
+    } catch (error: any) {
+      console.error("❌ Customer registration error:", error);
+      res.status(500).json({ error: "Customer registration failed: " + error.message });
+    }
+  });
+
+  // Customer login endpoint
+  app.post("/api/auth/customer-login", async (req: Request, res: Response) => {
+    const { userName, userPassword } = req.body;
+
+    if (!userName || !userPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Username and password are required",
+      });
+    }
+
+    try {
+      const result = await pool.query(
+        `SELECT customer_id, username, userpassword, email, phone, address 
+         FROM customers 
+         WHERE username = $1`,
+        [userName],
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid username or password",
+        });
+      }
+
+      const customer = result.rows[0];
+
+      // Simple password comparison (in production, use bcrypt)
+      if (customer.userpassword !== userPassword) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid username or password",
+        });
+      }
+
+      // Remove password from response and format to match expected structure
+      res.json({
+        success: true,
+        customer: {
+          customer_id: customer.customer_id,
+          userName: customer.username,
+          email: customer.email,
+          phone: customer.phone,
+          address: customer.address,
+        },
+      });
+    } catch (error) {
+      console.error("Customer login error:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
     }
   });
 
