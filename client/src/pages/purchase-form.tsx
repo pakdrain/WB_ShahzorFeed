@@ -1590,16 +1590,52 @@ function PurchaseForm() {
       setOnlineMode(true);
     }
 
-    // Load data
-    if (editWbId) {
-      loadDataByWbId(parseInt(editWbId));
-    } else if (offlineEditSlip) {
-      loadDataBySlipNo(offlineEditSlip);
-      setOnlineMode(false);
-    } else {
+    // Check if this is a page reload by checking if we have edit mode in sessionStorage
+    const wasInEditMode = sessionStorage.getItem('purchaseFormEditMode') === 'true';
+    
+    // Clear any previous edit mode state from sessionStorage on every page load
+    sessionStorage.removeItem('purchaseFormEditMode');
+
+    // If we were in edit mode and page was reloaded, clear edit parameter and reset to new form
+    if (wasInEditMode && editWbId) {
+      console.log("Page reload detected while in edit mode, clearing edit parameter and resetting to new form");
+      // Clear edit parameter from URL
+      urlParams.delete("edit");
+      const newUrl = urlParams.toString()
+        ? `${window.location.pathname}?${urlParams.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+      
+      // Reset to new form
+      setIsEditMode(false);
+      setEditingWbId(null);
       setTimeout(() => {
         resetFormToInitial();
       }, 100);
+      return;
+    }
+
+    // Check if we should be in edit mode ONLY based on URL parameter (fresh navigation)
+    if (editWbId && !wasInEditMode) {
+      // Load record for editing by wb_id
+      console.log("Edit mode detected from URL parameter, loading data");
+      sessionStorage.setItem('purchaseFormEditMode', 'true');
+      loadDataByWbId(parseInt(editWbId));
+      return; // Exit early to prevent any other initialization
+    } else if (offlineEditSlip && !wasInEditMode) {
+      sessionStorage.setItem('purchaseFormEditMode', 'true');
+      loadDataBySlipNo(offlineEditSlip);
+      setOnlineMode(false);
+      return;
+    } else {
+      // No edit parameter in URL, always reset to new form
+      console.log("No edit parameter in URL, resetting to new form");
+      setIsEditMode(false);
+      setEditingWbId(null);
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
+      return;
     }
   }, [location]);
 
