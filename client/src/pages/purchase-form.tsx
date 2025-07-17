@@ -1708,11 +1708,8 @@ function PurchaseForm() {
         setBranches(branchData);
         console.log("Branches fetched:", data);
 
-        // Set default branch based on logged-in user's branch
-        if (
-          branchData.length > 0 &&
-          (!formData.branchId || formData.branchId === "")
-        ) {
+        // Always set default branch based on logged-in user's branch
+        if (branchData.length > 0) {
           const userBranchId = user?.branchId;
           const defaultBranch = userBranchId
             ? branchData.find((b) => b.branch_id === userBranchId) ||

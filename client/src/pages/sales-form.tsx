@@ -1247,11 +1247,8 @@ export default function SalesForm() {
         setBranches(data);
         console.log("Branches fetched:", data);
 
-        // Set default branch based on logged-in user's branch
-        if (
-          data.length > 0 &&
-          (!formData.branchId || formData.branchId === "")
-        ) {
+        // Always set default branch based on logged-in user's branch
+        if (data.length > 0) {
           const userBranchId = user?.branchId;
           const defaultBranch = userBranchId
             ? data.find((b) => b.branch_id === userBranchId) || data[0]
@@ -2322,7 +2319,7 @@ export default function SalesForm() {
                     ) : (
                       <Select
                         name="branch"
-                        value={formData.branch}
+                        value={formData.branchId || formData.branch}
                         onValueChange={(value) =>
                           setFormData((prev) => ({
                             ...prev,
@@ -2333,7 +2330,10 @@ export default function SalesForm() {
                       >
                         <SelectTrigger className="h-5 text-xs text-black">
                           <SelectValue
-                            placeholder="Select branch"
+                            placeholder={
+                              branches.find(b => b.branch_id.toString() === (formData.branchId || formData.branch))?.branch_name || 
+                              "Select branch"
+                            }
                             className="text-black"
                           />
                         </SelectTrigger>
@@ -2673,17 +2673,7 @@ export default function SalesForm() {
                         <input
                           type="text"
                           className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
-                          value={
-                            // Only show branch name if the row has DC data
-                            (salesData[index]?.dcNo || salesData[index]?.doNo || salesData[index]?.customerName) 
-                              ? (salesData[index]?.branch ||
-                                 branches.find(
-                                   (b) =>
-                                     b.branch_id.toString() === formData.branchId?.toString()
-                                 )?.branch_name ||
-                                 "")
-                              : ""
-                          }
+                          value={salesData[index]?.branch || ""}
                           onChange={(e) =>
                             handleSalesDataChange(
                               index,
