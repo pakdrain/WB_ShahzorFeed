@@ -936,6 +936,7 @@ function PurchaseForm() {
     // Vendor information
     vendor: "",
     vendorName: "",
+    vendorId: "",
     customerId: "",
     customerName: "",
     // System fields
@@ -4169,12 +4170,46 @@ function PurchaseForm() {
                       {/* Vendor */}
                       <div className="flex items-center gap-1">
                         <span className="text-xs text-black w-28">Vendor</span>
-                        <Input
-                          name="vendor"
-                          value={formData.vendor}
-                          onChange={handleChange}
-                          className="h-8 text-xs text-black w-60"
-                        />
+                        {onlineMode ? (
+                          <Input
+                            name="vendor"
+                            value={formData.vendor}
+                            onChange={handleChange}
+                            className="h-8 text-xs text-black w-60"
+                          />
+                        ) : (
+                          <Select
+                            name="vendor"
+                            value={formData.vendor}
+                            onValueChange={(value) => {
+                              const selectedVendor = vendorData.find(
+                                (vendor) => vendor.view === value,
+                              );
+                              setFormData((prev) => ({
+                                ...prev,
+                                vendor: value,
+                                vendorId: selectedVendor ? selectedVendor.return : prev.vendorId,
+                              }));
+                            }}
+                          >
+                            <SelectTrigger className="h-8 text-xs text-black w-60">
+                              <SelectValue
+                                placeholder="Select vendor"
+                                className="text-black"
+                              />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {vendorData.map((vendor, index) => (
+                                <SelectItem
+                                  key={index}
+                                  value={vendor.view}
+                                >
+                                  {vendor.view}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
 
                       {/* Vehicle No */}

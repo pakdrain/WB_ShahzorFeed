@@ -3901,29 +3901,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET vendor data from sys_data_configg table for offline mode (keep for backward compatibility)
+  // GET vendor data from inv_vendors table for offline mode
   app.get("/api/vendor-data", async (req: Request, res: Response) => {
     try {
       const query = `
-        SELECT data_config_desc as view, data_config_desc as return 
-        FROM sys_data_configg 
-        WHERE sys_config_id = 16
-        ORDER BY data_config_desc
+        SELECT vendor_name as view, vendor_id as return 
+        FROM inv_vendors 
+        ORDER BY vendor_name
       `;
       
       const result = await pool.query(query);
       
-      console.log(`Fetched ${result.rows.length} vendor records from sys_data_configg`);
+      console.log(`Fetched ${result.rows.length} vendor records from inv_vendors table`);
       res.json(result.rows);
     } catch (error: any) {
-      console.error("Error fetching vendor data:", error);
-      // Fallback data when database is not available - from sys_data_configg sys_config_id=16
+      console.error("Error fetching vendor data from inv_vendors:", error);
+      // Fallback data when database is not available
       const fallbackData = [
-        { view: "Ali Traders", return: "Ali Traders" },
-        { view: "Ahmed & Co", return: "Ahmed & Co" },
-        { view: "Malik Industries", return: "Malik Industries" },
-        { view: "Khan Suppliers", return: "Khan Suppliers" },
-        { view: "Fatima Trading", return: "Fatima Trading" }
+        { view: "Ali Traders", return: "1" },
+        { view: "Ahmed & Co", return: "2" },
+        { view: "Malik Industries", return: "3" },
+        { view: "Khan Suppliers", return: "4" },
+        { view: "Fatima Trading", return: "5" }
       ];
       console.log("Using fallback vendor data");
       res.json(fallbackData);
