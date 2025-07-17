@@ -1170,6 +1170,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bardana_weight = null,
         no_of_bags = null,
         vendor_name = null,
+        vendor_id = null,
         bag_condition = null,
         po_no = null,
         item_code = null,
@@ -1186,11 +1187,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const query = `
         INSERT INTO wb_weighbridge_items_purchase (
           wb_id, bardana_type, igp_no, vehicle_no, weight_per_bags, igp_date,
-          supplier_weight, quality_deduction, bardana_weight, no_of_bags, vendor_name, bag_condition,
+          supplier_weight, quality_deduction, bardana_weight, no_of_bags, vendor_name, vendor_id, bag_condition,
           po_no, item_code, item_desc, po_qty, igp_qty, balance_qty, customer_name, do_no, do_qty, dc_qty
         )
         VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
         )
         RETURNING *;
       `;
@@ -1207,6 +1208,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bardana_weight ? parseFloat(bardana_weight) : null,
         no_of_bags ? parseInt(no_of_bags) : null,
         vendor_name,
+        vendor_id ? parseInt(vendor_id) : null,
         bag_condition,
         po_no,
         item_code,
@@ -3871,7 +3873,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET vendor data from sys_data_configg table for offline mode
+  // GET vendor data from inv_vendors table for offline mode
+  app.get("/api/vendors", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT vendor_id, vendor_name 
+        FROM inv_vendors 
+        ORDER BY vendor_name
+      `;
+      
+      const result = await pool.query(query);
+      
+      console.log(`Fetched ${result.rows.length} vendors from inv_vendors table`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching vendors from inv_vendors:", error);
+      // Fallback data when database is not available
+      const fallbackData = [
+        { vendor_id: 1, vendor_name: "Ali Traders" },
+        { vendor_id: 2, vendor_name: "Ahmed & Co" },
+        { vendor_id: 3, vendor_name: "Malik Industries" },
+        { vendor_id: 4, vendor_name: "Khan Suppliers" },
+        { vendor_id: 5, vendor_name: "Fatima Trading" }
+      ];
+      console.log("Using fallback vendor data");
+      res.json(fallbackData);
+    }
+  });
+
+  // GET vendor data from sys_data_configg table for offline mode (keep for backward compatibility)
   app.get("/api/vendor-data", async (req: Request, res: Response) => {
     try {
       const query = `
