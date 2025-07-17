@@ -4097,13 +4097,21 @@ function PurchaseForm() {
                 }`}
               >
                 <h2 className="text-3xl font-bold tracking-wide">
-                  {isReturnMode
-                    ? onlineMode === true
-                      ? "Purchase Return Online"
-                      : "Purchase Return Offline"
-                    : onlineMode === true
-                      ? "Purchase Online"
-                      : "Purchase Offline"}
+                  {(() => {
+                    // Determine the base entry type from formData.entryType or selectedForm
+                    const entryType = formData.entryType || (selectedForm === "sales" ? "SALE" : "PURCHASE");
+                    
+                    if (entryType === "SALE") {
+                      return onlineMode ? "Sale Online" : "Sale Offline";
+                    } else if (entryType === "SALE_RETURN") {
+                      return onlineMode ? "Sale Return Online" : "Sale Return Offline";
+                    } else if (entryType === "PURCHASE_RETURN") {
+                      return onlineMode ? "Purchase Return Online" : "Purchase Return Offline";
+                    } else {
+                      // Default to PURCHASE
+                      return onlineMode ? "Purchase Online" : "Purchase Offline";
+                    }
+                  })()}
                 </h2>
               </div>
             </div>
