@@ -1608,8 +1608,20 @@ function PurchaseForm() {
         setOnlineMode(false);
         return;
       } else {
-        // No edit parameter in URL, reset to new form
+        // No edit parameter in URL, clean up any edit parameters from URL and reset to new form
         console.log("No edit parameter in URL, resetting to new form");
+        
+        // Clean up URL parameters if they exist
+        const hasEditParams = urlParams.has("edit") || urlParams.has("offline_edit");
+        if (hasEditParams) {
+          urlParams.delete("edit");
+          urlParams.delete("offline_edit");
+          const newUrl = urlParams.toString()
+            ? `${window.location.pathname}?${urlParams.toString()}`
+            : window.location.pathname;
+          window.history.replaceState({}, "", newUrl);
+        }
+        
         setIsEditMode(false);
         setEditingWbId(null);
         setTimeout(() => {
@@ -4166,18 +4178,23 @@ function PurchaseForm() {
               >
                 <h2 className="text-3xl font-bold tracking-wide">
                   {(() => {
-                    // Determine the base entry type from formData.entryType or selectedForm
-                    const entryType = formData.entryType || (selectedForm === "sales" ? "SALE" : "PURCHASE");
-                    
-                    if (entryType === "SALE") {
+                    // Check selectedForm first to determine the correct display
+                    if (selectedForm === "sales") {
                       return onlineMode ? "Sale Online" : "Sale Offline";
-                    } else if (entryType === "SALE_RETURN") {
-                      return onlineMode ? "Sale Return Online" : "Sale Return Offline";
-                    } else if (entryType === "PURCHASE_RETURN") {
-                      return onlineMode ? "Purchase Return Online" : "Purchase Return Offline";
                     } else {
-                      // Default to PURCHASE
-                      return onlineMode ? "Purchase Online" : "Purchase Offline";
+                      // Check formData.entryType for other cases
+                      const entryType = formData.entryType;
+                      
+                      if (entryType === "SALE") {
+                        return onlineMode ? "Sale Online" : "Sale Offline";
+                      } else if (entryType === "SALE_RETURN") {
+                        return onlineMode ? "Sale Return Online" : "Sale Return Offline";
+                      } else if (entryType === "PURCHASE_RETURN") {
+                        return onlineMode ? "Purchase Return Online" : "Purchase Return Offline";
+                      } else {
+                        // Default to PURCHASE
+                        return onlineMode ? "Purchase Online" : "Purchase Offline";
+                      }
                     }
                   })()}
                 </h2>
