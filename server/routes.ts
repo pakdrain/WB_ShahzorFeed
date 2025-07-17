@@ -3922,7 +3922,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET vendor data from sys_data_configg table for offline mode
+  // GET vendor data from sys_data_configg table for offline mode (weight field)
   app.get("/api/vendor-data", async (req: Request, res: Response) => {
     try {
       const query = `
@@ -3949,6 +3949,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         { view: "Fatima Trading", return: "Fatima Trading" },
       ];
       console.log("Using fallback vendor data");
+      res.json(fallbackData);
+    }
+  });
+
+  // GET vendors from inv_vendors table for vendor LOV
+  app.get("/api/vendors", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT vendor_id, vendor_name 
+        FROM inv_vendors 
+        ORDER BY vendor_name
+      `;
+
+      const result = await pool.query(query);
+
+      console.log(
+        `Fetched ${result.rows.length} vendors from inv_vendors table`,
+      );
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching vendors from inv_vendors:", error);
+      // Fallback data when database is not available
+      const fallbackData = [
+        { vendor_id: 1, vendor_name: "Ali Traders" },
+        { vendor_id: 2, vendor_name: "Ahmed & Co" },
+        { vendor_id: 3, vendor_name: "Malik Industries" },
+        { vendor_id: 4, vendor_name: "Khan Suppliers" },
+        { vendor_id: 5, vendor_name: "Fatima Trading" },
+      ];
+      console.log("Using fallback vendors data");
       res.json(fallbackData);
     }
   });
