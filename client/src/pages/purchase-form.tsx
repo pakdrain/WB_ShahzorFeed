@@ -2061,7 +2061,7 @@ function PurchaseForm() {
       }));
       
       // Clear IGP data table
-      setIgpData([]);
+      setIgpItems([]);
       
       console.log("Cleared IGP fields when switching online/offline mode");
     }
