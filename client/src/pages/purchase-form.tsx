@@ -4189,32 +4189,6 @@ function PurchaseForm() {
                         <div className="flex gap-1 w-60">
                           {/* Weight Input */}
                           {formData.isPercentageMode ? (
-                            <select
-                              name="weight"
-                              value={formData.weight}
-                              onChange={handleChange}
-                              className="h-8 text-xs text-black flex-1 border border-gray-300 rounded"
-                            >
-                              <option value="">Select %</option>
-                              <option value="0.1">0.1</option>
-                              <option value="0.2">0.2</option>
-                              <option value="0.3">0.3</option>
-                              <option value="0.4">0.4</option>
-                              <option value="0.5">0.5</option>
-                              <option value="0.6">0.6</option>
-                              <option value="0.7">0.7</option>
-                              <option value="0.8">0.8</option>
-                              <option value="0.9">0.9</option>
-                              <option value="1.0">1.0</option>
-                            </select>
-                          ) : onlineMode ? (
-                            <Input
-                              name="weight"
-                              value={formData.weight}
-                              onChange={handleChange}
-                              className="h-8 text-xs text-black flex-1"
-                            />
-                          ) : (
                             <Select
                               name="weight"
                               value={formData.weight}
@@ -4239,6 +4213,13 @@ function PurchaseForm() {
                                 ))}
                               </SelectContent>
                             </Select>
+                          ) : (
+                            <Input
+                              name="weight"
+                              value={formData.weight}
+                              onChange={handleChange}
+                              className="h-8 text-xs text-black flex-1"
+                            />
                           )}
 
                           {/* Bags Input */}
