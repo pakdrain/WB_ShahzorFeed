@@ -895,8 +895,10 @@ export default function SalesForm() {
       if (data && data.items && data.items.length > 0) {
         const item = data.items[0]; // ✅ Single DC No for one row
 
-        // ✅ Use branch name directly from formData.branch
-        const branchName = formData.branch || "";
+        // ✅ Get branch name from branches array using formData.branchId
+        const branchName = branches.find(
+          (b) => b.branch_id.toString() === formData.branchId?.toString()
+        )?.branch_name || "";
 
         setSalesData((prev) => {
           const updated = [...prev];
@@ -911,7 +913,7 @@ export default function SalesForm() {
             itemDescription: item.item_desc || "",
             dcQty: item.dc_qty ? String(item.dc_qty) : "",
             doQty: item.del_qty ? String(item.del_qty) : "",
-            branch: branchName, // 👈 For UI
+            branch: branchName, // 👈 For UI - now shows branch name
             branchId: formData.branchId, // 👈 For backend
             dcId: item.dc_id || "",
             customerId: item.customer_id || "",
