@@ -3475,22 +3475,22 @@ function PurchaseForm() {
                         if (record.entry_type === "SALE") {
                           const modeParam = isOfflineEntry ? "offline" : "online";
                           const targetUrl = `/purchase-form?form=sales&type=${modeParam}&edit=${record.wb_id}`;
-                          setLocation(targetUrl);
+                          window.location.href = targetUrl;
                         } else if (record.entry_type === "SALE_RETURN") {
                           // Navigate to sales return form
                           const modeParam = isOfflineEntry ? "offline" : "online";
                           const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
-                          setLocation(targetUrl);
+                          window.location.href = targetUrl;
                         } else if (record.entry_type === "PURCHASE_RETURN") {
                           // Navigate to purchase return form
                           const modeParam = isOfflineEntry ? "offline" : "online";
                           const targetUrl = `/purchase-return?type=${modeParam}&edit=${record.wb_id}`;
-                          setLocation(targetUrl);
+                          window.location.href = targetUrl;
                         } else {
                           // For purchase entries, redirect with proper mode
                           const modeParam = isOfflineEntry ? "offline" : "online";
                           const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
-                          setLocation(targetUrl);
+                          window.location.href = targetUrl;
                         }
                       }
                     }}
