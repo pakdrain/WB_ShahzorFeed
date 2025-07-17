@@ -1568,55 +1568,78 @@ function PurchaseForm() {
 
   // Handle URL parameters for edit mode and form type
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const editWbId = urlParams.get("edit");
-    const formType = urlParams.get("form") || "purchase"; // Default to 'purchase' if null
-    const typeMode = urlParams.get("type");
-    const offlineEditSlip = urlParams.get("offline_edit");
+    const handleURLParameters = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const editWbId = urlParams.get("edit");
+      const formType = urlParams.get("form") || "purchase"; // Default to 'purchase' if null
+      const typeMode = urlParams.get("type");
+      const offlineEditSlip = urlParams.get("offline_edit");
 
-    console.log("URL parameters:", {
-      editWbId,
-      formType,
-      typeMode,
-      offlineEditSlip,
-    });
+      console.log("URL parameters:", {
+        editWbId,
+        formType,
+        typeMode,
+        offlineEditSlip,
+      });
 
-    // Set selected form robustly
-    if (["sales", "purchase", "offline"].includes(formType)) {
-      setSelectedForm(formType as "sales" | "purchase" | "offline");
-    }
+      // Set selected form robustly
+      if (["sales", "purchase", "offline"].includes(formType)) {
+        setSelectedForm(formType as "sales" | "purchase" | "offline");
+      }
 
-    // Online/offline mode
-    if (typeMode === "offline") {
-      console.log("Setting OFFLINE mode from URL parameter");
-      setOnlineMode(false);
-    } else if (typeMode === "online") {
-      console.log("Setting ONLINE mode from URL parameter");
-      setOnlineMode(true);
-    }
+      // Online/offline mode
+      if (typeMode === "offline") {
+        console.log("Setting OFFLINE mode from URL parameter");
+        setOnlineMode(false);
+      } else if (typeMode === "online") {
+        console.log("Setting ONLINE mode from URL parameter");
+        setOnlineMode(true);
+      }
 
-    // Load data if edit parameter is present in URL
-    if (editWbId) {
-      // Load record for editing by wb_id
-      console.log("Edit mode detected from URL parameter, loading data for wb_id:", editWbId);
-      loadDataByWbId(parseInt(editWbId));
-      return; // Exit early to prevent any other initialization
-    } else if (offlineEditSlip) {
-      console.log("Offline edit mode detected, loading data for slip:", offlineEditSlip);
-      loadDataBySlipNo(offlineEditSlip);
-      setOnlineMode(false);
-      return;
-    } else {
-      // No edit parameter in URL, reset to new form
-      console.log("No edit parameter in URL, resetting to new form");
-      setIsEditMode(false);
-      setEditingWbId(null);
-      setTimeout(() => {
-        resetFormToInitial();
-      }, 100);
-      return;
-    }
+      // Load data if edit parameter is present in URL
+      if (editWbId) {
+        // Load record for editing by wb_id
+        console.log("Edit mode detected from URL parameter, loading data for wb_id:", editWbId);
+        loadDataByWbId(parseInt(editWbId));
+        return; // Exit early to prevent any other initialization
+      } else if (offlineEditSlip) {
+        console.log("Offline edit mode detected, loading data for slip:", offlineEditSlip);
+        loadDataBySlipNo(offlineEditSlip);
+        setOnlineMode(false);
+        return;
+      } else {
+        // No edit parameter in URL, reset to new form
+        console.log("No edit parameter in URL, resetting to new form");
+        setIsEditMode(false);
+        setEditingWbId(null);
+        setTimeout(() => {
+          resetFormToInitial();
+        }, 100);
+        return;
+      }
+    };
+
+    // Handle URL parameters on mount and location change
+    handleURLParameters();
   }, [location]);
+
+  // Watch for URL changes in real-time
+  useEffect(() => {
+    const checkURLChanges = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const editWbId = urlParams.get("edit");
+      
+      if (editWbId && !isEditMode) {
+        console.log("URL changed to edit mode, loading data for wb_id:", editWbId);
+        loadDataByWbId(parseInt(editWbId));
+      }
+    };
+
+    // Check every 100ms for URL changes
+    const intervalId = setInterval(checkURLChanges, 100);
+
+    return () => clearInterval(intervalId);
+  }, [isEditMode]);
 
   // Sync form data when onlineMode changes
   useEffect(() => {
