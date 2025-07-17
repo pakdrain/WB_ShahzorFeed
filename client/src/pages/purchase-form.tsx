@@ -3567,21 +3567,21 @@ function PurchaseForm() {
                         if (record.entry_type === "SALE") {
                           const targetUrl = `/purchase-form?form=sales&type=${modeParam}&edit=${record.wb_id}`;
                           console.log("Navigating to sales form:", targetUrl);
-                          window.location.href = targetUrl;
+                          setLocation(targetUrl);
                         } else if (record.entry_type === "SALE_RETURN") {
                           const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
                           console.log(
                             "Navigating to sales return form:",
                             targetUrl,
                           );
-                          window.location.href = targetUrl;
+                          setLocation(targetUrl);
                         } else if (record.entry_type === "PURCHASE_RETURN") {
                           const targetUrl = `/purchase-return?type=${modeParam}&edit=${record.wb_id}`;
                           console.log(
                             "Navigating to purchase return form:",
                             targetUrl,
                           );
-                          window.location.href = targetUrl;
+                          setLocation(targetUrl);
                         } else {
                           // For purchase entries, redirect with proper mode
                           const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
@@ -3591,19 +3591,7 @@ function PurchaseForm() {
                             "isOfflineEntry:",
                             isOfflineEntry,
                           );
-
-                          // Force a hard reload to ensure proper state initialization
-                          if (isOfflineEntry && onlineMode) {
-                            console.log(
-                              "Forcing hard reload for offline entry",
-                            );
-                            window.location.href = targetUrl;
-                          } else if (!isOfflineEntry && !onlineMode) {
-                            console.log("Forcing hard reload for online entry");
-                            window.location.href = targetUrl;
-                          } else {
-                            window.location.href = targetUrl;
-                          }
+                          setLocation(targetUrl);
                         }
                       }
                     }}
@@ -5177,7 +5165,7 @@ function PurchaseForm() {
                                           "Navigating to offline purchase form:",
                                           targetUrl,
                                         );
-                                        window.location.href = targetUrl;
+                                        setLocation(targetUrl);
                                       }
                                     }}
                                   >
