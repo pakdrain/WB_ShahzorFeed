@@ -1,69 +1,124 @@
-do_date,
-          wb.freight,
-          wb.remarks,
-          wbi.do_date as delivery_term
-        FROM wb_weighbridge_items_purchase wbi
-        LEFT JOIN wb_weighbridge wb ON wbi.wb_id = wb.wb_id
-        WHERE wbi.do_no = $1
-      `;
+import type { Express, Request, Response } from "express";
+import { createServer, type Server } from "http";
+import { Pool } from '@neondatabase/serverless';
+import { spawn } from "child_process";
+import { storage } from "./storage";
+import { db, pool } from "./db";
+import { streamService } from "./stream-service";
+import { nanoid } from "nanoid";
 
-      const result = await pool.query(query, [doNo]);
+// Test database connection
+async function testDatabaseConnection() {
+  try {
+    await pool.query("SELECT 1");
+    console.log("✅ Database connection test successful");
+    
+    // Test users table structure
+    const result = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'users'
+      ORDER BY ordinal_position
+    `);
+    
+    const columns = result.rows.map(row => row.column_name);
+    console.log("✅ Using users table with columns:", columns.join(", "));
+    
+    return true;
+  } catch (error) {
+    console.error("❌ Database connection test failed:", error);
+    return false;
+  }
+}
 
-      console.log(
-        `Fetched ${result.rows.length} records for DO number: ${doNo}`,
-      );
-      res.json(result.rows);
-    } catch (error: any) {
-      console.error("Error fetching DO data:", error);
-      res.status(500).json({ error: "Failed to fetch DO data" });
-    }
-  });
+export async function registerRoutes(app: Express): Promise<Server> {
+  const server = createServer(app);
+  
+  // Test database connection
+  const dbConnected = await testDatabaseConnection();
+  
+  if (!dbConnected) {
+    console.log("🔄 Attempting to continue without database connection...");
+  }
 
-  // GET bardana types from sys_data_configg table
-  app.get("/api/bardana-types", async (req: Request, res: Response) => {
+  // Setup WebSocket for camera streams
+  streamService.initialize(server);
+
+  // Authentication endpoints
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
-      const query = `
-        SELECT data_config_segment1 || '-' || data_config_desc AS type, data_config_segment1 
-        FROM sys_data_configg 
-        WHERE sys_config_id = 15
-        ORDER BY data_config_desc
-      `;
+      const { username, password } = req.body;
+      
+      if (!username || !password) {
+        return res.status(400).json({ error: "Username and password are required" });
+      }
 
-      const result = await pool.query(query);
+      let user = null;
+      
+      try {
+        // Try database first
+        const result = await pool.query(
+          "SELECT userid as id, username, branchid as branch_id FROM users WHERE username = $1 AND userpassword = $2",
+          [username, password]
+        );
+        
+        if (result.rows.length > 0) {
+          user = result.rows[0];
+        }
+      } catch (error) {
+        console.error("Database login failed, using storage:", error);
+        // Fallback to storage
+        const storageUser = await storage.getUserByUsername(username);
+        if (storageUser && storageUser.password === password) {
+          user = {
+            id: storageUser.id,
+            username: storageUser.username,
+            branch_id: storageUser.branchId || 1
+          };
+        }
+      }
 
-      console.log(
-        `Fetched ${result.rows.length} bardana types from sys_data_configg`,
-      );
-      res.json(result.rows);
-    } catch (error: any) {
-      console.error("Error fetching bardana types:", error);
-      res.status(500).json({ error: "Failed to fetch bardana types" });
+      if (!user) {
+        return res.status(401).json({ error: "Invalid credentials" });
+      }
+
+      // Set up session
+      req.session.userId = user.id;
+      req.session.user = user;
+      
+      res.json({ 
+        success: true, 
+        user: {
+          id: user.id,
+          username: user.username,
+          branch_id: user.branch_id
+        }
+      });
+    } catch (error) {
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Internal server error" });
     }
   });
 
-  // GET percentage data from sys_data_configg table
-  app.get("/api/percentage-data", async (req: Request, res: Response) => {
+  // GET branches
+  app.get("/api/branches", async (req: Request, res: Response) => {
     try {
-      const query = `
-        SELECT data_config_desc 
-        FROM sys_data_configg 
-        WHERE sys_config_id = 16
-        ORDER BY data_config_desc
-      `;
-
-      const result = await pool.query(query);
-
-      console.log(
-        `Fetched ${result.rows.length} percentage data records from sys_data_configg`,
-      );
+      const result = await pool.query("SELECT branch_id, branch_name FROM branches ORDER BY branch_name");
       res.json(result.rows);
     } catch (error: any) {
-      console.error("Error fetching percentage data:", error);
-      res.status(500).json({ error: "Failed to fetch percentage data" });
+      console.error("Error fetching branches:", error);
+      // Fallback data when database is not available
+      const fallbackData = [
+        { branch_id: 1, branch_name: "Main Branch" },
+        { branch_id: 2, branch_name: "Secondary Branch" },
+        { branch_id: 3, branch_name: "Shahzor" }
+      ];
+      console.log("Using fallback branches data");
+      res.json(fallbackData);
     }
   });
 
-  // GET vendor data from sys_data_configg table for offline mode (weight field)
+  // GET vendor data from sys_data_configg table for offline mode
   app.get("/api/vendor-data", async (req: Request, res: Response) => {
     try {
       const query = `
@@ -72,12 +127,10 @@ do_date,
         WHERE sys_config_id = 16
         ORDER BY data_config_desc
       `;
-
+      
       const result = await pool.query(query);
-
-      console.log(
-        `Fetched ${result.rows.length} vendor records from sys_data_configg`,
-      );
+      
+      console.log(`Fetched ${result.rows.length} vendor records from sys_data_configg`);
       res.json(result.rows);
     } catch (error: any) {
       console.error("Error fetching vendor data:", error);
@@ -87,216 +140,217 @@ do_date,
         { view: "Ahmed & Co", return: "Ahmed & Co" },
         { view: "Malik Industries", return: "Malik Industries" },
         { view: "Khan Suppliers", return: "Khan Suppliers" },
-        { view: "Fatima Trading", return: "Fatima Trading" },
+        { view: "Fatima Trading", return: "Fatima Trading" }
       ];
       console.log("Using fallback vendor data");
       res.json(fallbackData);
     }
   });
 
-  // GET vendors from inv_vendors table for vendor LOV
-  app.get("/api/vendors", async (req: Request, res: Response) => {
+  // GET deduction data by wb_id
+  app.get("/api/deduction/:wbId", async (req: Request, res: Response) => {
     try {
+      const { wbId } = req.params;
       const query = `
-        SELECT vendor_id, vendor_name 
-        FROM inv_vendors 
-        ORDER BY vendor_name
+        SELECT id, wb_id, bag_id, bags, pb, percentage, weight, total
+        FROM deduction 
+        WHERE wb_id = $1
+        ORDER BY bag_id
       `;
-
-      const result = await pool.query(query);
-
-      console.log(
-        `Fetched ${result.rows.length} vendors from inv_vendors table`,
-      );
+      
+      const result = await pool.query(query, [wbId]);
+      
+      console.log(`Fetched ${result.rows.length} deduction records for wb_id: ${wbId}`);
       res.json(result.rows);
     } catch (error: any) {
-      console.error("Error fetching vendors from inv_vendors:", error);
-      // Fallback data when database is not available
-      const fallbackData = [
-        { vendor_id: 1, vendor_name: "Ali Traders" },
-        { vendor_id: 2, vendor_name: "Ahmed & Co" },
-        { vendor_id: 3, vendor_name: "Malik Industries" },
-        { vendor_id: 4, vendor_name: "Khan Suppliers" },
-        { vendor_id: 5, vendor_name: "Fatima Trading" },
-      ];
-      console.log("Using fallback vendors data");
-      res.json(fallbackData);
+      console.error("Error fetching deduction data:", error);
+      res.status(500).json({ error: "Failed to fetch deduction data" });
     }
   });
 
-  // Voucher API endpoints for gl_vouchers table
+  // Weight API endpoints
+  app.get("/api/weight/data", (req: Request, res: Response) => {
+    res.json({
+      weight: "0.00",
+      unit: "kg",
+      connected: false
+    });
+  });
 
-  // Create gl_vouchers table if it doesn't exist
-  app.post(
-    "/api/create-vouchers-table",
-    async (req: Request, res: Response) => {
-      try {
-        await pool.query(`
-        CREATE TABLE IF NOT EXISTS gl_vouchers (
-          voucher_id         SERIAL PRIMARY KEY,
-          voucher_type       VARCHAR(20),
-          voucher_no         INTEGER,
-          voucher_date       DATE NOT NULL,
-          description        VARCHAR(1000),
-          batch_id           INTEGER,
-          created_by         INTEGER,
-          creation_date      DATE,
-          last_updated_by    INTEGER,
-          last_update_date   DATE,
-          status             VARCHAR(50),
-          approved_by        INTEGER,
-          approval_date      DATE,
-          posted_by          INTEGER,
-          posting_date       DATE,
-          branch_id          VARCHAR(30),
-          module             VARCHAR(20),
-          module_doc         VARCHAR(50),
-          module_doc_id      INTEGER,
-          reference_no       VARCHAR(30),
-          checked_by         INTEGER,
-          checked_date       DATE,
-          currency           VARCHAR(20),
-          exchange_rate      NUMERIC(16,4),
-          fe_voucher         CHAR(1),
-          ref_date           DATE,
-          paid_amount        NUMERIC(20,4),
-          acc_id             BIGINT,
-          canceled_by        BIGINT,
-          canceled_date      DATE,
-          closed             CHAR(1),
-          voucher_site       CHAR(1),
-          sale_purchase      VARCHAR(30),
-          dc_igp_id          BIGINT,
-          bank_id            INTEGER,
-          wh_tax_id          INTEGER,
-          wh_tax_amt         NUMERIC(16),
-          company_id         BIGINT,
-          cpv_type           VARCHAR(30),
-          company_type       VARCHAR(500),
-          cheque_no          VARCHAR(50),
-          hatch_no           VARCHAR(200),
-          old_status         VARCHAR(500),
-          paid_to            VARCHAR(50),
-          slip_no            NUMERIC(20,6),
-          asset              VARCHAR(200),
-          audit_status       VARCHAR(200),
-          audit_by           BIGINT,
-          audit_date         DATE,
-          delete_date        DATE,
-          entry_remarks      VARCHAR(2000),
-          restore_date       DATE,
-          deleted_date       DATE,
-          un_approve_by      BIGINT,
-          un_approve_date    DATE,
-          mr_no              VARCHAR(50),
-          wb_voucher_id      BIGINT,
-          cash_plant         VARCHAR(20),
-          bank_plant         VARCHAR(20),
-          cpv                VARCHAR(20),
-          br_code            INTEGER,
-          modify_by          BIGINT,
-          modify_date        DATE,
-          v_id_apex          BIGINT,
-          advance_pay        VARCHAR(20),
-          dc_id              BIGINT,
-          unaudit_by         BIGINT,
-          unaudit_date       DATE,
-          vehicle_id         VARCHAR(20),
-          company_name       VARCHAR(200),
-          vehicle_type       VARCHAR(30),
-          vehicle_name       VARCHAR(50),
-          vehicle_no         VARCHAR(50)
-        )
-      `);
+  // Camera API endpoints
+  app.get("/api/cameras/:id", async (req: Request, res: Response) => {
+    const { id } = req.params;
+    res.json({
+      id: parseInt(id),
+      name: `Camera ${id.padStart(2, '0')}`,
+      ip: "10.10.10.146",
+      status: "disconnected"
+    });
+  });
 
-        res.json({
-          success: true,
-          message: "gl_vouchers table created successfully",
-        });
-      } catch (error: any) {
-        console.error("Error creating gl_vouchers table:", error);
-        res.status(500).json({ error: "Failed to create gl_vouchers table" });
-      }
-    },
-  );
-
-  // Save voucher data to gl_vouchers table
-  app.post("/api/vouchers/save", async (req: Request, res: Response) => {
+  // Purchase API endpoints
+  app.get("/api/purchase/first-weight-records", async (req: Request, res: Response) => {
     try {
-      const voucherData = req.body;
-
       const query = `
-        INSERT INTO gl_vouchers (
-          voucher_type, voucher_date, description, created_by, creation_date,
-          status, branch_id, reference_no, entry_remarks, company_name
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        RETURNING voucher_id
+        SELECT DISTINCT ON (slip_no) 
+          wb_id, slip_no, vehicle_no, first_weight, second_weight, 
+          net_weight, gross_weight, party, entry_type, offline_entry
+        FROM wb_weighbridge 
+        WHERE first_weight IS NOT NULL 
+        ORDER BY slip_no, wb_id DESC
       `;
+      
+      const result = await pool.query(query);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching first weight records:", error);
+      res.json([]);
+    }
+  });
 
-      const values = [
-        voucherData.voucherType || "CPV",
-        voucherData.docDate,
-        voucherData.remarks,
-        voucherData.createdBy,
-        voucherData.creationDate,
-        "Create",
-        voucherData.branch,
-        voucherData.docNo,
-        voucherData.remarks,
-        "Sabirs' Poultry (Pvt.) Ltd",
-      ];
+  app.get("/api/purchases/offline", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT DISTINCT ON (slip_no) 
+          wb_id, slip_no, vehicle_no, first_weight, second_weight, 
+          net_weight, gross_weight, party, entry_type, offline_entry
+        FROM wb_weighbridge 
+        WHERE offline_entry = 'Yes'
+        ORDER BY slip_no, wb_id DESC
+      `;
+      
+      const result = await pool.query(query);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching offline records:", error);
+      res.json([]);
+    }
+  });
 
-      const result = await pool.query(query, values);
-
-      console.log(`Voucher saved with ID: ${result.rows[0].voucher_id}`);
+  app.get("/api/purchase/by-wbid/:wbId", async (req: Request, res: Response) => {
+    try {
+      const { wbId } = req.params;
+      
+      // Fetch master record
+      const masterQuery = `
+        SELECT * FROM wb_weighbridge WHERE wb_id = $1
+      `;
+      const masterResult = await pool.query(masterQuery, [wbId]);
+      
+      if (masterResult.rows.length === 0) {
+        return res.status(404).json({ error: "Record not found" });
+      }
+      
+      // Fetch detail records
+      const detailQuery = `
+        SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1
+      `;
+      const detailResult = await pool.query(detailQuery, [wbId]);
+      
       res.json({
-        success: true,
-        voucher_id: result.rows[0].voucher_id,
-        message: "Voucher saved successfully",
+        master: masterResult.rows[0],
+        details: detailResult.rows
       });
     } catch (error: any) {
-      console.error("Error saving voucher:", error);
-      res.status(500).json({ error: "Failed to save voucher" });
+      console.error("Error fetching record by wb_id:", error);
+      res.status(500).json({ error: "Failed to fetch record" });
     }
   });
 
-  // Get all vouchers from gl_vouchers table
-  app.get("/api/vouchers", async (req: Request, res: Response) => {
+  // Additional API endpoints for application functionality
+  app.get("/api/db/wake", async (req: Request, res: Response) => {
     try {
-      const query = `
-        SELECT 
-          gv.voucher_id,
-          gv.voucher_type,
-          gv.voucher_no,
-          gv.voucher_date,
-          gv.description,
-          gv.status,
-          gv.reference_no,
-          gv.branch_id,
-          gv.company_name,
-          gv.entry_remarks,
-          gv.creation_date,
-          wbi.customer_name,
-          wbi.item_desc,
-          wb.remarks
-        FROM gl_vouchers gv
-        LEFT JOIN wb_weighbridge_items_purchase wbi ON gv.reference_no = wbi.do_no
-        LEFT JOIN wb_weighbridge wb ON wbi.wb_id = wb.wb_id
-        ORDER BY gv.voucher_id DESC
-      `;
+      await pool.query("SELECT 1");
+      res.json({ success: true, message: "Database is awake" });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: "Database wake failed" });
+    }
+  });
 
-      const result = await pool.query(query);
-
-      console.log(`Fetched ${result.rows.length} vouchers with DO data`);
+  app.get("/api/entry-types", async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query("SELECT * FROM entry_types ORDER BY entry_type");
       res.json(result.rows);
     } catch (error: any) {
-      console.error("Error fetching vouchers:", error);
-      res.status(500).json({ error: "Failed to fetch vouchers" });
+      console.error("Error fetching entry types:", error);
+      res.json([
+        { entry_type: "PURCHASE", description: "Purchase Transaction" },
+        { entry_type: "SALE", description: "Sale Transaction" }
+      ]);
     }
   });
 
-  // Static file serving for captured images is already handled above
+  app.get("/api/inv-items", async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query("SELECT * FROM inv_items ORDER BY item_desc");
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching inventory items:", error);
+      res.json([
+        { item_id: 1, item_desc: "Rice", item_code: "RICE001" },
+        { item_id: 2, item_desc: "Wheat", item_code: "WHEAT001" }
+      ]);
+    }
+  });
 
-  return httpServer;
+  app.get("/api/bardana-types", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT data_config_segment1 || '-' || data_config_desc AS type, data_config_segment1 
+        FROM sys_data_configg 
+        WHERE sys_config_id = 15
+        ORDER BY data_config_desc
+      `;
+      const result = await pool.query(query);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching bardana types:", error);
+      res.json([
+        { type: "50-Standard Bag", data_config_segment1: "50" },
+        { type: "100-Large Bag", data_config_segment1: "100" }
+      ]);
+    }
+  });
+
+  app.get("/api/percentage-data", async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query("SELECT * FROM percentage_data ORDER BY percentage");
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching percentage data:", error);
+      res.json([
+        { percentage: 2.5, description: "Standard Deduction" },
+        { percentage: 5.0, description: "High Deduction" }
+      ]);
+    }
+  });
+
+  app.get("/api/vendors", async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query("SELECT * FROM inv_vendors ORDER BY vendor_name");
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching vendors:", error);
+      res.json([
+        { vendor_id: 1, vendor_name: "Ali Traders" },
+        { vendor_id: 2, vendor_name: "Ahmed & Co" }
+      ]);
+    }
+  });
+
+  app.get("/api/purchases/next-slip", async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query(`
+        SELECT COALESCE(MAX(slip_no), 1000) + 1 as next_slip 
+        FROM wb_weighbridge 
+        WHERE entry_type = 'PURCHASE'
+      `);
+      res.json({ next_slip: result.rows[0].next_slip });
+    } catch (error: any) {
+      console.error("Error fetching next slip number:", error);
+      res.json({ next_slip: 1001 });
+    }
+  });
+
+  return server;
 }

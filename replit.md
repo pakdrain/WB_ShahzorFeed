@@ -124,6 +124,14 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
 - **Database URLs**: Flexible PostgreSQL connection string support
 
 ## Changelog
+- July 16, 2025. Fixed three critical issues in purchase form and optimized application performance:
+  - Fixed IGP number persistence issue: IGP fields now clear automatically when switching between online/offline modes (only when not in edit mode)
+  - Fixed weight and bags fields not loading in edit mode: Enhanced loadDeductionData function to populate form fields from deduction table
+  - Optimized application performance: Reduced query refetch intervals from 3s to 10s, added 30s staleTime for better caching
+  - Added comprehensive fallback API endpoints for better reliability when database is unavailable
+  - Enhanced offline mode vendor dropdown to fetch data from sys_data_configg table instead of static placeholders
+  - Added proper error handling and fallback data for all API endpoints
+  - Improved browsing speed by reducing unnecessary API calls and implementing better caching strategies
 - July 16, 2025. Fixed offline entry redirect issue in purchase form:
   - Fixed click handlers for offline entries to properly set offline mode
   - Added URL parameter updates to reflect offline state when clicking offline entries

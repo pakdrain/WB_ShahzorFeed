@@ -80,6 +80,9 @@ function PurchaseForm() {
 
   // Vendor data state for offline mode
   const [vendorData, setVendorData] = useState<any[]>([]);
+  
+  // IGP data state
+  const [igpData, setIgpData] = useState<any[]>([]);
   const [vendorsData, setVendorsData] = useState<any[]>([]);
 
   const handleSalesDataChange = (
@@ -116,16 +119,18 @@ function PurchaseForm() {
     });
   };
 
-  // Fetch all first weight records
+  // Fetch all first weight records with optimized intervals
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    refetchInterval: 3000, // Refresh every 3 seconds
+    refetchInterval: 10000, // Refresh every 10 seconds (reduced from 3s)
+    staleTime: 30000, // Consider data stale after 30 seconds
   });
 
-  // Fetch offline records specifically
+  // Fetch offline records specifically with optimized intervals
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    refetchInterval: 3000, // Refresh every 3 seconds
+    refetchInterval: 10000, // Refresh every 10 seconds (reduced from 3s)
+    staleTime: 30000, // Consider data stale after 30 seconds
   });
 
   // Filter records based on search criteria and form type
@@ -1992,7 +1997,7 @@ function PurchaseForm() {
     formData.supplierWeight,
   ]);
 
-  // Fetch vendor data for offline mode
+  // Fetch vendor data for offline mode and clear IGP fields when switching modes
   useEffect(() => {
     if (!onlineMode) {
       const fetchVendorData = async () => {
@@ -2031,7 +2036,36 @@ function PurchaseForm() {
       fetchVendorData();
       fetchVendorsData();
     }
-  }, [onlineMode]);
+    
+    // Clear IGP related fields when switching modes (only if not in edit mode)
+    if (!isEditMode) {
+      setFormData((prev) => ({
+        ...prev,
+        igpNo: "",
+        igpDate: "",
+        igpId: "",
+        manualIgpNo: "",
+        vendor: "",
+        vendorId: "",
+        poNo: "",
+        itemDesc: "",
+        itemId: "",
+        itemCode: "",
+        weightPerBags: "",
+        noOfBags: "",
+        bardanaType: "",
+        bardanaWeight: "",
+        dcQty: "",
+        dcId: "",
+        doNo: ""
+      }));
+      
+      // Clear IGP data table
+      setIgpData([]);
+      
+      console.log("Cleared IGP fields when switching online/offline mode");
+    }
+  }, [onlineMode, isEditMode]);
 
   // Load existing deduction data when editing
   const loadDeductionData = async (wbId: number) => {
@@ -2049,6 +2083,19 @@ function PurchaseForm() {
         }));
         setBagTableData(formattedData);
         console.log("Loaded existing deduction data:", formattedData);
+        
+        // Update form fields with deduction data
+        if (formattedData.length > 0) {
+          setFormData((prev) => ({
+            ...prev,
+            weight: String(formattedData[0].weight || ""),
+            bags: String(formattedData[0].bags || ""),
+          }));
+          console.log("Updated form fields with deduction data:", {
+            weight: formattedData[0].weight,
+            bags: formattedData[0].bags
+          });
+        }
       }
     } catch (error) {
       console.error("Error loading deduction data:", error);
