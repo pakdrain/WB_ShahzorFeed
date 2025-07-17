@@ -3709,19 +3709,28 @@ function PurchaseForm() {
         <div className="flex gap-1 text-xs">
           <Button
             className={`h-8 px-2 text-sm font-medium ${selectedForm === "purchase" ? "bg-blue-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
-            onClick={() => setSelectedForm("purchase")}
+            onClick={(e) => {
+              e.preventDefault();
+              setSelectedForm("purchase");
+            }}
           >
             Purchase
           </Button>
           <Button
             className={`h-8 px-2 text-sm font-medium ${selectedForm === "sales" ? "bg-rose-700 text-white" : "bg-rose-600 hover:bg-rose-700 text-white"}`}
-            onClick={() => setSelectedForm("sales")}
+            onClick={(e) => {
+              e.preventDefault();
+              setSelectedForm("sales");
+            }}
           >
             Sale
           </Button>
           <Button
             className={`h-8 px-2 text-sm font-medium ${selectedForm === "offline" ? "bg-yellow-600 text-white" : "bg-amber-600 hover:bg-amber-700 text-white"}`}
-            onClick={() => setSelectedForm("offline")}
+            onClick={(e) => {
+              e.preventDefault();
+              setSelectedForm("offline");
+            }}
           >
             Offline
           </Button>
@@ -4045,9 +4054,9 @@ function PurchaseForm() {
             <div className="flex gap-1">
               <Button
                 className={`h-6 text-xs px-3 ${selectedForm === "purchase" ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
                   setSelectedForm("purchase");
-                  setLocation("/purchase-form?form=purchase");
                 }}
               >
                 Purchase
@@ -4055,19 +4064,9 @@ function PurchaseForm() {
 
               <Button
                 className={`h-6 text-xs px-3 ${selectedForm === "sales" ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
-                onClick={() => {
-                  const urlParams = new URLSearchParams(window.location.search);
-                  const typeMode = urlParams.get("type");
-                  const modeParam = typeMode ? `?type=${typeMode}` : "";
-                  const targetUrl = `/sales-form${modeParam}`;
-
+                onClick={(e) => {
+                  e.preventDefault();
                   setSelectedForm("sales");
-                  setLocation(targetUrl);
-
-                  // Optional force reload if needed
-                  setTimeout(() => {
-                    window.location.href = targetUrl;
-                  }, 50);
                 }}
               >
                 Sales
@@ -4075,7 +4074,10 @@ function PurchaseForm() {
 
               <Button
                 className={`h-6 text-xs px-3 ${selectedForm === "offline" ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
-                onClick={() => setSelectedForm("offline")}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setSelectedForm("offline");
+                }}
               >
                 Offline
               </Button>
