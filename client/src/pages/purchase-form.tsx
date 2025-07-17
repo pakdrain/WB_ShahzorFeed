@@ -3465,29 +3465,32 @@ function PurchaseForm() {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
                       console.log("entry_type:", record.entry_type);
+                      console.log("offline_entry:", record.offline_entry);
 
                       if (record.wb_id) {
+                        // Check if this is an offline entry
+                        const isOfflineEntry = record.offline_entry === "Yes";
+                        
                         // Navigate based on entry type
                         if (record.entry_type === "SALE") {
-                          setSelectedForm("sales");
-                          // Load the data for editing
-                          loadDataByWbId(record.wb_id);
+                          const modeParam = isOfflineEntry ? "offline" : "online";
+                          const targetUrl = `/purchase-form?form=sales&type=${modeParam}&edit=${record.wb_id}`;
+                          setLocation(targetUrl);
                         } else if (record.entry_type === "SALE_RETURN") {
                           // Navigate to sales return form
-                          const urlParams = new URLSearchParams(window.location.search);
-                          const typeMode = urlParams.get("type") || "online";
-                          const targetUrl = `/sales-return?type=${typeMode}&edit=${record.wb_id}`;
+                          const modeParam = isOfflineEntry ? "offline" : "online";
+                          const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
                         } else if (record.entry_type === "PURCHASE_RETURN") {
                           // Navigate to purchase return form
-                          const urlParams = new URLSearchParams(window.location.search);
-                          const typeMode = urlParams.get("type") || "online";
-                          const targetUrl = `/purchase-return?type=${typeMode}&edit=${record.wb_id}`;
+                          const modeParam = isOfflineEntry ? "offline" : "online";
+                          const targetUrl = `/purchase-return?type=${modeParam}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
                         } else {
-                          setSelectedForm("purchase");
-                          // Load the data for editing
-                          loadDataByWbId(record.wb_id);
+                          // For purchase entries, redirect with proper mode
+                          const modeParam = isOfflineEntry ? "offline" : "online";
+                          const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
+                          setLocation(targetUrl);
                         }
                       }
                     }}
