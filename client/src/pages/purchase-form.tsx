@@ -77,8 +77,8 @@ function PurchaseForm() {
     })),
   );
   const [nextBagId, setNextBagId] = useState(1);
-  
-  // Vendor data state for offline mode  
+
+  // Vendor data state for offline mode
   const [vendorData, setVendorData] = useState<any[]>([]);
   const [vendorsData, setVendorsData] = useState<any[]>([]);
 
@@ -240,7 +240,11 @@ function PurchaseForm() {
         }
 
         // Load sales data if this is a SALE entry type
-        if (master.entry_type === "SALE" && data.details && data.details.length > 0) {
+        if (
+          master.entry_type === "SALE" &&
+          data.details &&
+          data.details.length > 0
+        ) {
           const salesRows = data.details.map((detail: any, index: number) => ({
             doId: String(index + 1),
             dcNo: detail.igp_no || detail.manual_dc_no || "", // DC No maps to igp_no
@@ -249,8 +253,16 @@ function PurchaseForm() {
             vehicleNo: detail.vehicle_no || "",
             doDate: detail.igp_date || detail.do_date || "",
             itemDescription: detail.item_desc || "",
-            dcQty: detail.igp_qty ? String(detail.igp_qty) : (detail.dc_qty ? String(detail.dc_qty) : ""),
-            doQty: detail.po_qty ? String(detail.po_qty) : (detail.do_qty ? String(detail.do_qty) : ""),
+            dcQty: detail.igp_qty
+              ? String(detail.igp_qty)
+              : detail.dc_qty
+                ? String(detail.dc_qty)
+                : "",
+            doQty: detail.po_qty
+              ? String(detail.po_qty)
+              : detail.do_qty
+                ? String(detail.do_qty)
+                : "",
             branch: "",
             // Hidden / internal fields
             dcId: detail.dc_id || "",
@@ -987,12 +999,12 @@ function PurchaseForm() {
     const typeMode = urlParams.get("type");
     console.log("Initial state calculation - typeMode:", typeMode);
     console.log("Full URL:", window.location.href);
-    
+
     if (typeMode === "offline") {
       console.log("Setting initial state to OFFLINE");
       return false;
     } else if (typeMode === "online") {
-      console.log("Setting initial state to ONLINE"); 
+      console.log("Setting initial state to ONLINE");
       return true;
     }
     // Default to online if no parameter specified
@@ -1504,7 +1516,9 @@ function PurchaseForm() {
         const response = await fetch("/api/percentage-data");
         if (response.ok) {
           const percentageData = await response.json();
-          setPercentageData(Array.isArray(percentageData) ? percentageData : []);
+          setPercentageData(
+            Array.isArray(percentageData) ? percentageData : [],
+          );
         }
       } catch (error) {
         console.error("Error fetching percentage data:", error);
@@ -1577,8 +1591,13 @@ function PurchaseForm() {
     const handleURLChange = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const typeMode = urlParams.get("type");
-      
-      console.log("URL change detected - typeMode:", typeMode, "current onlineMode:", onlineMode);
+
+      console.log(
+        "URL change detected - typeMode:",
+        typeMode,
+        "current onlineMode:",
+        onlineMode,
+      );
 
       if (typeMode === "offline" && onlineMode) {
         console.log("Switching to OFFLINE mode from URL");
@@ -1601,7 +1620,7 @@ function PurchaseForm() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const typeMode = urlParams.get("type");
-    
+
     if (typeMode === "offline") {
       setOnlineMode(false);
     } else if (typeMode === "online") {
@@ -1708,8 +1727,11 @@ function PurchaseForm() {
         setBranches(branchData);
         console.log("Branches fetched:", data);
 
-        // Always set default branch based on logged-in user's branch
-        if (branchData.length > 0) {
+        // Set default branch based on logged-in user's branch
+        if (
+          branchData.length > 0 &&
+          (!formData.branchId || formData.branchId === "")
+        ) {
           const userBranchId = user?.branchId;
           const defaultBranch = userBranchId
             ? branchData.find((b) => b.branch_id === userBranchId) ||
@@ -1940,7 +1962,7 @@ function PurchaseForm() {
       const fetchVendorData = async () => {
         try {
           console.log("Fetching vendor data for offline mode...");
-          const response = await fetch('/api/vendor-data');
+          const response = await fetch("/api/vendor-data");
           if (response.ok) {
             const data = await response.json();
             setVendorData(data);
@@ -1952,12 +1974,12 @@ function PurchaseForm() {
           console.error("Error fetching vendor data:", error);
         }
       };
-      
+
       // Fetch proper vendors from inv_vendors table
       const fetchVendorsData = async () => {
         try {
           console.log("Fetching vendors from inv_vendors table...");
-          const response = await fetch('/api/vendors');
+          const response = await fetch("/api/vendors");
           if (response.ok) {
             const data = await response.json();
             setVendorsData(data);
@@ -1969,7 +1991,7 @@ function PurchaseForm() {
           console.error("Error fetching vendors data:", error);
         }
       };
-      
+
       fetchVendorData();
       fetchVendorsData();
     }
@@ -3435,9 +3457,9 @@ function PurchaseForm() {
 
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
-      {/* Weight Display Table - Upper Right Side - Increased size */}
+      {/* Weight Display Table - Upper Right Side */}
       <div className="absolute top-20 right-14 z-50">
-        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80 mb-4"></div>
+        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72 mb-4">
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
             <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
@@ -3501,31 +3523,44 @@ function PurchaseForm() {
                       if (record.wb_id) {
                         // Check if this is an offline entry
                         const isOfflineEntry = record.offline_entry === "Yes";
-                        
+
                         // Navigate based on entry type
                         // Determine the correct mode parameter
                         const modeParam = isOfflineEntry ? "offline" : "online";
-                        
+
                         if (record.entry_type === "SALE") {
                           const targetUrl = `/purchase-form?form=sales&type=${modeParam}&edit=${record.wb_id}`;
                           console.log("Navigating to sales form:", targetUrl);
                           window.location.href = targetUrl;
                         } else if (record.entry_type === "SALE_RETURN") {
                           const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
-                          console.log("Navigating to sales return form:", targetUrl);
+                          console.log(
+                            "Navigating to sales return form:",
+                            targetUrl,
+                          );
                           window.location.href = targetUrl;
                         } else if (record.entry_type === "PURCHASE_RETURN") {
                           const targetUrl = `/purchase-return?type=${modeParam}&edit=${record.wb_id}`;
-                          console.log("Navigating to purchase return form:", targetUrl);
+                          console.log(
+                            "Navigating to purchase return form:",
+                            targetUrl,
+                          );
                           window.location.href = targetUrl;
                         } else {
                           // For purchase entries, redirect with proper mode
                           const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
-                          console.log("Navigating to purchase form:", targetUrl, "isOfflineEntry:", isOfflineEntry);
-                          
+                          console.log(
+                            "Navigating to purchase form:",
+                            targetUrl,
+                            "isOfflineEntry:",
+                            isOfflineEntry,
+                          );
+
                           // Force a hard reload to ensure proper state initialization
                           if (isOfflineEntry && onlineMode) {
-                            console.log("Forcing hard reload for offline entry");
+                            console.log(
+                              "Forcing hard reload for offline entry",
+                            );
                             window.location.href = targetUrl;
                           } else if (!isOfflineEntry && !onlineMode) {
                             console.log("Forcing hard reload for online entry");
@@ -3574,10 +3609,10 @@ function PurchaseForm() {
         </div>
       </div>
 
-      {/* Bag Details Table - Positioned parallel to details section (hide when Sales form is active) */}
-      {selectedForm === "purchase" && !isEditMode && (
-        <div className="absolute top-80 right-4 z-50">
-          <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80"></div>
+      {/* Bag Details Table - Below Weight Display Table (hide when Sales form is active) */}
+      {selectedForm === "purchase" && (
+        <div className="absolute top-96 right-4 z-50">
+          <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80">
             {/* Header Row */}
             <div className="grid grid-cols-6 border-b border-gray-400">
               <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
@@ -4112,7 +4147,9 @@ function PurchaseForm() {
                               setFormData((prev) => ({
                                 ...prev,
                                 bardanaType: value,
-                                wtPerBag: selectedBardana?.data_config_segment1 || prev.wtPerBag,
+                                wtPerBag:
+                                  selectedBardana?.data_config_segment1 ||
+                                  prev.wtPerBag,
                               }));
                             }}
                           >
@@ -4129,7 +4166,9 @@ function PurchaseForm() {
                                   type="text"
                                   placeholder="Search Bardana Type..."
                                   value={bardanaSearchQuery}
-                                  onChange={(e) => setBardanaSearchQuery(e.target.value)}
+                                  onChange={(e) =>
+                                    setBardanaSearchQuery(e.target.value)
+                                  }
                                   className="h-6 text-xs border-gray-300"
                                 />
                               </div>
@@ -4268,7 +4307,9 @@ function PurchaseForm() {
                               setFormData((prev) => ({
                                 ...prev,
                                 vendor: value,
-                                vendorId: selectedVendor ? selectedVendor.vendor_id.toString() : prev.vendorId,
+                                vendorId: selectedVendor
+                                  ? selectedVendor.vendor_id.toString()
+                                  : prev.vendorId,
                               }));
                             }}
                           >
@@ -4331,19 +4372,23 @@ function PurchaseForm() {
                                 />
                               </SelectTrigger>
                               <SelectContent>
-                                {onlineMode ? (
-                                  percentageData.map((item, index) => (
-                                    <SelectItem key={index} value={item.data_config_desc}>
-                                      {item.data_config_desc}
-                                    </SelectItem>
-                                  ))
-                                ) : (
-                                  vendorData.map((vendor, index) => (
-                                    <SelectItem key={index} value={vendor.view}>
-                                      {vendor.view}
-                                    </SelectItem>
-                                  ))
-                                )}
+                                {onlineMode
+                                  ? percentageData.map((item, index) => (
+                                      <SelectItem
+                                        key={index}
+                                        value={item.data_config_desc}
+                                      >
+                                        {item.data_config_desc}
+                                      </SelectItem>
+                                    ))
+                                  : vendorData.map((vendor, index) => (
+                                      <SelectItem
+                                        key={index}
+                                        value={vendor.view}
+                                      >
+                                        {vendor.view}
+                                      </SelectItem>
+                                    ))}
                               </SelectContent>
                             </Select>
                           ) : (
@@ -5060,7 +5105,8 @@ function PurchaseForm() {
                           </tr>
                         </thead>
                         <tbody>
-                          {Array.isArray(offlineRecords) && offlineRecords.length > 0 ? (
+                          {Array.isArray(offlineRecords) &&
+                          offlineRecords.length > 0 ? (
                             offlineRecords.map((record: any) => (
                               <tr
                                 key={record.wb_id}
@@ -5070,14 +5116,23 @@ function PurchaseForm() {
                                   <button
                                     className="text-blue-600 hover:text-blue-800 font-medium underline"
                                     onClick={() => {
-                                      console.log("Clicked offline record:", record);
+                                      console.log(
+                                        "Clicked offline record:",
+                                        record,
+                                      );
                                       console.log("wb_id:", record.wb_id);
-                                      console.log("offline_entry:", record.offline_entry);
-                                      
+                                      console.log(
+                                        "offline_entry:",
+                                        record.offline_entry,
+                                      );
+
                                       if (record.wb_id) {
                                         // Navigate to purchase form with offline mode
                                         const targetUrl = `/purchase-form?form=purchase&type=offline&edit=${record.wb_id}`;
-                                        console.log("Navigating to offline purchase form:", targetUrl);
+                                        console.log(
+                                          "Navigating to offline purchase form:",
+                                          targetUrl,
+                                        );
                                         window.location.href = targetUrl;
                                       }
                                     }}
@@ -5114,7 +5169,10 @@ function PurchaseForm() {
                             ))
                           ) : (
                             <tr>
-                              <td colSpan={8} className="text-center py-8 text-black border border-black">
+                              <td
+                                colSpan={8}
+                                className="text-center py-8 text-black border border-black"
+                              >
                                 No offline records found
                               </td>
                             </tr>
