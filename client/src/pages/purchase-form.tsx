@@ -986,11 +986,13 @@ function PurchaseForm() {
     const urlParams = new URLSearchParams(window.location.search);
     const typeMode = urlParams.get("type");
     console.log("Initial state calculation - typeMode:", typeMode);
+    console.log("Full URL:", window.location.href);
+    
     if (typeMode === "offline") {
       console.log("Setting initial state to OFFLINE");
       return false;
     } else if (typeMode === "online") {
-      console.log("Setting initial state to ONLINE");
+      console.log("Setting initial state to ONLINE"); 
       return true;
     }
     // Default to online if no parameter specified
@@ -1575,17 +1577,37 @@ function PurchaseForm() {
     const handleURLChange = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const typeMode = urlParams.get("type");
+      
+      console.log("URL change detected - typeMode:", typeMode, "current onlineMode:", onlineMode);
 
       if (typeMode === "offline" && onlineMode) {
+        console.log("Switching to OFFLINE mode from URL");
         setOnlineMode(false);
       } else if (typeMode === "online" && !onlineMode) {
+        console.log("Switching to ONLINE mode from URL");
+        setOnlineMode(true);
+      } else if (!typeMode && onlineMode === false) {
+        // If no type parameter, default to online
+        console.log("No type parameter, defaulting to ONLINE mode");
         setOnlineMode(true);
       }
     };
 
     // Check URL on component mount and location changes
     handleURLChange();
-  }, [location, onlineMode]);
+  }, [location]);
+
+  // Force re-render when location changes to ensure state sync
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const typeMode = urlParams.get("type");
+    
+    if (typeMode === "offline") {
+      setOnlineMode(false);
+    } else if (typeMode === "online") {
+      setOnlineMode(true);
+    }
+  }, [window.location.search]);
 
   useEffect(() => {
     // Fetch next slip number based on return mode with enhanced retry logic
@@ -3472,25 +3494,36 @@ function PurchaseForm() {
                         const isOfflineEntry = record.offline_entry === "Yes";
                         
                         // Navigate based on entry type
+                        // Determine the correct mode parameter
+                        const modeParam = isOfflineEntry ? "offline" : "online";
+                        
                         if (record.entry_type === "SALE") {
-                          const modeParam = isOfflineEntry ? "offline" : "online";
                           const targetUrl = `/purchase-form?form=sales&type=${modeParam}&edit=${record.wb_id}`;
+                          console.log("Navigating to sales form:", targetUrl);
                           window.location.href = targetUrl;
                         } else if (record.entry_type === "SALE_RETURN") {
-                          // Navigate to sales return form
-                          const modeParam = isOfflineEntry ? "offline" : "online";
                           const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
+                          console.log("Navigating to sales return form:", targetUrl);
                           window.location.href = targetUrl;
                         } else if (record.entry_type === "PURCHASE_RETURN") {
-                          // Navigate to purchase return form
-                          const modeParam = isOfflineEntry ? "offline" : "online";
                           const targetUrl = `/purchase-return?type=${modeParam}&edit=${record.wb_id}`;
+                          console.log("Navigating to purchase return form:", targetUrl);
                           window.location.href = targetUrl;
                         } else {
                           // For purchase entries, redirect with proper mode
-                          const modeParam = isOfflineEntry ? "offline" : "online";
                           const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
-                          window.location.href = targetUrl;
+                          console.log("Navigating to purchase form:", targetUrl, "isOfflineEntry:", isOfflineEntry);
+                          
+                          // Force a hard reload to ensure proper state initialization
+                          if (isOfflineEntry && onlineMode) {
+                            console.log("Forcing hard reload for offline entry");
+                            window.location.href = targetUrl;
+                          } else if (!isOfflineEntry && !onlineMode) {
+                            console.log("Forcing hard reload for online entry");
+                            window.location.href = targetUrl;
+                          } else {
+                            window.location.href = targetUrl;
+                          }
                         }
                       }
                     }}
