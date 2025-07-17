@@ -199,7 +199,7 @@ function PurchaseForm() {
           poQty: details.po_qty ? String(details.po_qty) : "",
           igpQty: details.igp_qty ? String(details.igp_qty) : "",
           balanceQty: details.balance_qty ? String(details.balance_qty) : "",
-          bardanaType: details.bardana_type || "",
+          bardanaType: details.bardana_type || details.baradana_type || "",
           wtPerBag: details.weight_per_bags
             ? String(details.weight_per_bags)
             : "",
@@ -358,7 +358,7 @@ function PurchaseForm() {
           poQty: details.po_qty ? String(details.po_qty) : "",
           igpQty: details.igp_qty ? String(details.igp_qty) : "",
           balanceQty: details.balance_qty ? String(details.balance_qty) : "",
-          bardanaType: details.bardana_type || "",
+          bardanaType: details.bardana_type || details.baradana_type || "",
           wtPerBag: details.weight_per_bags
             ? String(details.weight_per_bags)
             : "",
@@ -4012,55 +4012,65 @@ function PurchaseForm() {
                         <span className="text-xs text-black w-28">
                           Bardana Type
                         </span>
-                        <Select
-                          name="bardanaType"
-                          value={formData.bardanaType}
-                          onValueChange={(value) => {
-                            const selectedBardana = bardanaTypes.find(
-                              (item) => item.type === value,
-                            );
-                            setFormData((prev) => ({
-                              ...prev,
-                              bardanaType: value,
-                              wtPerBag: selectedBardana?.data_config_segment1 || prev.wtPerBag,
-                            }));
-                          }}
-                        >
-                          <SelectTrigger className="h-8 text-xs text-black w-60">
-                            <SelectValue
-                              placeholder="Select bardana type"
-                              className="text-black"
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {/* Search Box at top */}
-                            <div className="px-2 py-1 sticky top-0 bg-white z-10">
-                              <Input
-                                type="text"
-                                placeholder="Search Bardana Type..."
-                                value={bardanaSearchQuery}
-                                onChange={(e) => setBardanaSearchQuery(e.target.value)}
-                                className="h-6 text-xs border-gray-300"
+                        {onlineMode ? (
+                          <Input
+                            name="bardanaType"
+                            value={formData.bardanaType}
+                            onChange={handleChange}
+                            className="h-8 text-xs text-black w-60"
+                            placeholder="Enter bardana type"
+                          />
+                        ) : (
+                          <Select
+                            name="bardanaType"
+                            value={formData.bardanaType}
+                            onValueChange={(value) => {
+                              const selectedBardana = bardanaTypes.find(
+                                (item) => item.type === value,
+                              );
+                              setFormData((prev) => ({
+                                ...prev,
+                                bardanaType: value,
+                                wtPerBag: selectedBardana?.data_config_segment1 || prev.wtPerBag,
+                              }));
+                            }}
+                          >
+                            <SelectTrigger className="h-8 text-xs text-black w-60">
+                              <SelectValue
+                                placeholder="Select bardana type"
+                                className="text-black"
                               />
-                            </div>
+                            </SelectTrigger>
+                            <SelectContent>
+                              {/* Search Box at top */}
+                              <div className="px-2 py-1 sticky top-0 bg-white z-10">
+                                <Input
+                                  type="text"
+                                  placeholder="Search Bardana Type..."
+                                  value={bardanaSearchQuery}
+                                  onChange={(e) => setBardanaSearchQuery(e.target.value)}
+                                  className="h-6 text-xs border-gray-300"
+                                />
+                              </div>
 
-                            {/* Filtered Bardana Types */}
-                            {bardanaTypes
-                              .filter((bardanaType) =>
-                                bardanaType.type
-                                  .toLowerCase()
-                                  .includes(bardanaSearchQuery.toLowerCase()),
-                              )
-                              .map((bardanaType) => (
-                                <SelectItem
-                                  key={bardanaType.data_config_segment1}
-                                  value={bardanaType.type}
-                                >
-                                  {bardanaType.type}
-                                </SelectItem>
-                              ))}
-                          </SelectContent>
-                        </Select>
+                              {/* Filtered Bardana Types */}
+                              {bardanaTypes
+                                .filter((bardanaType) =>
+                                  bardanaType.type
+                                    .toLowerCase()
+                                    .includes(bardanaSearchQuery.toLowerCase()),
+                                )
+                                .map((bardanaType) => (
+                                  <SelectItem
+                                    key={bardanaType.data_config_segment1}
+                                    value={bardanaType.type}
+                                  >
+                                    {bardanaType.type}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
 
                       {/* Wt per Bag */}
