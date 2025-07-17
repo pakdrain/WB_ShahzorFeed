@@ -2003,7 +2003,7 @@ function PurchaseForm() {
     formData.supplierWeight,
   ]);
 
-  // Fetch vendor data for offline mode
+  // Fetch vendor data for offline mode and clear IGP field when switching to offline
   useEffect(() => {
     if (!onlineMode) {
       const fetchVendorData = async () => {
@@ -2042,7 +2042,16 @@ function PurchaseForm() {
       fetchVendorData();
       fetchVendorsData();
     }
-  }, [onlineMode]);
+    
+    // Clear IGP field when switching to offline mode (only if not in edit mode)
+    if (!onlineMode && !isEditMode) {
+      setFormData((prev) => ({
+        ...prev,
+        igpNo: "",
+      }));
+      console.log("Cleared IGP field when switching to offline mode");
+    }
+  }, [onlineMode, isEditMode]);
 
   // Load existing deduction data when editing
   const loadDeductionData = async (wbId: number) => {
