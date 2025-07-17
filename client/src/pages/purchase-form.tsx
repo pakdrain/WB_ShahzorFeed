@@ -5061,13 +5061,8 @@ function PurchaseForm() {
                           </tr>
                         </thead>
                         <tbody>
-                          {(offlineRecords as any[])
-                            .filter(
-                              (record: any) =>
-                                record.entry_type === "PURCHASE" &&
-                                record.offline_entry === "Yes",
-                            )
-                            .map((record: any) => (
+                          {Array.isArray(offlineRecords) && offlineRecords.length > 0 ? (
+                            offlineRecords.map((record: any) => (
                               <tr
                                 key={record.wb_id}
                                 className="hover:bg-gray-50"
@@ -5076,8 +5071,16 @@ function PurchaseForm() {
                                   <button
                                     className="text-blue-600 hover:text-blue-800 font-medium underline"
                                     onClick={() => {
-                                      loadDataByWbId(record.wb_id);
-                                      setSelectedForm("purchase");
+                                      console.log("Clicked offline record:", record);
+                                      console.log("wb_id:", record.wb_id);
+                                      console.log("offline_entry:", record.offline_entry);
+                                      
+                                      if (record.wb_id) {
+                                        // Navigate to purchase form with offline mode
+                                        const targetUrl = `/purchase-form?form=purchase&type=offline&edit=${record.wb_id}`;
+                                        console.log("Navigating to offline purchase form:", targetUrl);
+                                        window.location.href = targetUrl;
+                                      }
                                     }}
                                   >
                                     {record.slip_no}
@@ -5091,17 +5094,13 @@ function PurchaseForm() {
                                     : "---"}
                                 </td>
                                 <td className="px-3 py-2 border border-black text-black">
-                                  PURCHASE
+                                  {record.entry_type || "PURCHASE"}
                                 </td>
                                 <td className="px-3 py-2 border border-black text-black">
-                                  {record.first_weight
-                                    ? record.first_weight
-                                    : "---"}
+                                  {record.first_weight || "---"}
                                 </td>
                                 <td className="px-3 py-2 border border-black text-black">
-                                  {record.second_weight
-                                    ? record.second_weight
-                                    : "---"}
+                                  {record.second_weight || "---"}
                                 </td>
                                 <td className="px-3 py-2 border border-black text-black">
                                   {record.vehicle_no || "---"}
@@ -5113,19 +5112,16 @@ function PurchaseForm() {
                                   ---
                                 </td>
                               </tr>
-                            ))}
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan={8} className="text-center py-8 text-black border border-black">
+                                No offline records found
+                              </td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
-
-                      {(offlineRecords as any[]).filter(
-                        (record: any) =>
-                          record.entry_type === "PURCHASE" &&
-                          record.offline_entry === "Yes",
-                      ).length === 0 && (
-                        <div className="text-center py-8 text-black border border-black">
-                          No Purchase Offline records found
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
