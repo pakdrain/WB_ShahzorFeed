@@ -660,7 +660,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { userName, userPassword, confirmPassword, branchId } = req.body;
 
       if (!userName || !userPassword || !confirmPassword) {
-        return res.status(400).json({ error: "Username, password, and confirm password are required" });
+        return res
+          .status(400)
+          .json({
+            error: "Username, password, and confirm password are required",
+          });
       }
 
       if (userPassword !== confirmPassword) {
@@ -698,8 +702,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } catch (dbError) {
         // Database fallback - use in-memory storage
-        console.log("Database not available, using in-memory storage for registration");
-        
+        console.log(
+          "Database not available, using in-memory storage for registration",
+        );
+
         // Check if user exists in memory
         if (inMemoryUsers.has(userName)) {
           return res.status(400).json({ error: "Username already exists" });
@@ -710,11 +716,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userid: nextUserId++,
           username: userName,
           userpassword: userPassword,
-          branch_id: branchId ? parseInt(branchId) : null
+          branch_id: branchId ? parseInt(branchId) : null,
         };
-        
+
         inMemoryUsers.set(userName, newUser);
-        
+
         console.log("✅ User registered successfully in memory:", userName);
         res.status(201).json({
           success: true,
@@ -783,10 +789,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } catch (dbError) {
         // Database fallback - use in-memory storage
-        console.log("Database not available, using in-memory storage for login");
-        
+        console.log(
+          "Database not available, using in-memory storage for login",
+        );
+
         const user = inMemoryUsers.get(userName);
-        
+
         if (!user) {
           return res.status(401).json({
             success: false,
@@ -1170,7 +1178,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bardana_weight = null,
         no_of_bags = null,
         vendor_name = null,
-        vendor_id = null,
         bag_condition = null,
         po_no = null,
         item_code = null,
@@ -1187,11 +1194,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const query = `
         INSERT INTO wb_weighbridge_items_purchase (
           wb_id, bardana_type, igp_no, vehicle_no, weight_per_bags, igp_date,
-          supplier_weight, quality_deduction, bardana_weight, no_of_bags, vendor_name, vendor_id, bag_condition,
+          supplier_weight, quality_deduction, bardana_weight, no_of_bags, vendor_name, bag_condition,
           po_no, item_code, item_desc, po_qty, igp_qty, balance_qty, customer_name, do_no, do_qty, dc_qty
         )
         VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
         )
         RETURNING *;
       `;
@@ -1208,7 +1215,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bardana_weight ? parseFloat(bardana_weight) : null,
         no_of_bags ? parseInt(no_of_bags) : null,
         vendor_name,
-        vendor_id ? parseInt(vendor_id) : null,
         bag_condition,
         po_no,
         item_code,
@@ -1484,7 +1490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fallbackBranches = [
         { branch_id: 1, branch_name: "Main Branch" },
         { branch_id: 2, branch_name: "Shahzor" },
-        { branch_id: 3, branch_name: "Secondary Branch" }
+        { branch_id: 3, branch_name: "Secondary Branch" },
       ];
       console.log("Using fallback branches data");
       res.json(fallbackBranches);
@@ -2059,15 +2065,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.json({ nextSlipNo });
       } catch (dbError) {
         // Database fallback - use in-memory storage
-        console.log("Database not available, using in-memory storage for slip numbers");
-        
+        console.log(
+          "Database not available, using in-memory storage for slip numbers",
+        );
+
         const entryTypeKey = entry_type.toUpperCase();
-        const currentSlipNo = inMemorySlipNumbers.get(entryTypeKey) || nextSlipNumber;
+        const currentSlipNo =
+          inMemorySlipNumbers.get(entryTypeKey) || nextSlipNumber;
         const nextSlipNo = (currentSlipNo + 1).toString();
-        
+
         inMemorySlipNumbers.set(entryTypeKey, currentSlipNo + 1);
-        
-        console.log(`Generated next slip number for ${entry_type}: ${nextSlipNo}`);
+
+        console.log(
+          `Generated next slip number for ${entry_type}: ${nextSlipNo}`,
+        );
         res.json({ nextSlipNo });
       }
     } catch (error: any) {
@@ -3667,17 +3678,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         for (let i = 0; i < dataToProcess.length; i++) {
           const item = dataToProcess[i];
-          
+
           try {
             // Extract data_config_id - try multiple possible field names
             let dataConfigId = null;
-            if (item.data_config_id !== undefined && item.data_config_id !== null) {
+            if (
+              item.data_config_id !== undefined &&
+              item.data_config_id !== null
+            ) {
               dataConfigId = parseInt(String(item.data_config_id));
-            } else if (item.segment_id !== undefined && item.segment_id !== null) {
+            } else if (
+              item.segment_id !== undefined &&
+              item.segment_id !== null
+            ) {
               dataConfigId = parseInt(String(item.segment_id));
             } else if (item.id !== undefined && item.id !== null) {
               dataConfigId = parseInt(String(item.id));
-            } else if (item.config_id !== undefined && item.config_id !== null) {
+            } else if (
+              item.config_id !== undefined &&
+              item.config_id !== null
+            ) {
               dataConfigId = parseInt(String(item.config_id));
             } else {
               dataConfigId = 175256530159 + i; // Use a unique sequential ID based on timestamp
@@ -3688,16 +3708,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
               dataConfigId = 175256530159 + i;
             }
 
-            const sysConfigId = item.sys_config_id || item.system_config_id || 10;
-            const dataConfigDesc = item.data_config_desc || item.description || item.desc || item.name || item.title || "Finished Goods";
-            const dataConfigSegment1 = item.data_config_segment1 || item.segment1 || item.segment || null;
+            const sysConfigId =
+              item.sys_config_id || item.system_config_id || 10;
+            const dataConfigDesc =
+              item.data_config_desc ||
+              item.description ||
+              item.desc ||
+              item.name ||
+              item.title ||
+              "Finished Goods";
+            const dataConfigSegment1 =
+              item.data_config_segment1 ||
+              item.segment1 ||
+              item.segment ||
+              null;
 
             console.log(`Processing record ${i + 1}:`, {
               dataConfigId,
               sysConfigId,
               dataConfigDesc,
               dataConfigSegment1,
-              originalItem: item
+              originalItem: item,
             });
 
             // Check if record exists first
@@ -3730,26 +3761,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
               dataConfigId,
               parseInt(String(sysConfigId)),
               dataConfigDesc,
-              dataConfigSegment1
+              dataConfigSegment1,
             ]);
 
             recordsInserted++;
-            console.log(`✅ Successfully inserted record ${i + 1}: ID=${dataConfigId}, desc='${dataConfigDesc}'`);
+            console.log(
+              `✅ Successfully inserted record ${i + 1}: ID=${dataConfigId}, desc='${dataConfigDesc}'`,
+            );
           } catch (insertError: any) {
-            console.error(`❌ Error inserting record ${i + 1}:`, insertError.message);
+            console.error(
+              `❌ Error inserting record ${i + 1}:`,
+              insertError.message,
+            );
             console.error("Failed item:", JSON.stringify(item, null, 2));
             console.error("Error details:", insertError);
-            
+
             // Try with fallback values using simple insert
             try {
               const fallbackId = 175256530159 + i;
-              
+
               // Check if fallback ID exists
               const checkFallback = await pool.query(
-                `SELECT data_config_id FROM sys_data_configg WHERE data_config_id = $1`, 
-                [fallbackId]
+                `SELECT data_config_id FROM sys_data_configg WHERE data_config_id = $1`,
+                [fallbackId],
               );
-              
+
               if (checkFallback.rows.length === 0) {
                 const fallbackQuery = `
                   INSERT INTO sys_data_configg (
@@ -3759,33 +3795,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     data_config_segment1
                   ) VALUES ($1, $2, $3, $4)
                 `;
-                
+
                 await pool.query(fallbackQuery, [
                   fallbackId,
                   10,
                   "Finished Goods",
-                  null
+                  null,
                 ]);
-                
+
                 recordsInserted++;
-                console.log(`✅ Inserted fallback record ${i + 1}: ID=${fallbackId}`);
+                console.log(
+                  `✅ Inserted fallback record ${i + 1}: ID=${fallbackId}`,
+                );
               } else {
-                console.log(`⚠️ Fallback ID ${fallbackId} already exists, skipping`);
+                console.log(
+                  `⚠️ Fallback ID ${fallbackId} already exists, skipping`,
+                );
               }
             } catch (fallbackError: any) {
-              console.error(`❌ Fallback insert also failed for record ${i + 1}:`, fallbackError.message);
+              console.error(
+                `❌ Fallback insert also failed for record ${i + 1}:`,
+                fallbackError.message,
+              );
             }
           }
         }
 
-        console.log(`✅ Successfully inserted ${recordsInserted} records into sys_data_configg table`);
+        console.log(
+          `✅ Successfully inserted ${recordsInserted} records into sys_data_configg table`,
+        );
 
         res.json({
           success: true,
           message: `Data fetched and saved successfully to sys_data_configg table (${recordsInserted} records inserted into sys_data_configg table)`,
           recordsInserted,
           targetTable: "sys_data_configg",
-          data: dataToProcess.slice(0, 3)
+          data: dataToProcess.slice(0, 3),
         });
       } catch (error: any) {
         console.error("❌ Error fetching and saving sys config data:", error);
@@ -3842,10 +3887,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE sys_config_id = 15
         ORDER BY data_config_desc
       `;
-      
+
       const result = await pool.query(query);
-      
-      console.log(`Fetched ${result.rows.length} bardana types from sys_data_configg`);
+
+      console.log(
+        `Fetched ${result.rows.length} bardana types from sys_data_configg`,
+      );
       res.json(result.rows);
     } catch (error: any) {
       console.error("Error fetching bardana types:", error);
@@ -3862,10 +3909,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         WHERE sys_config_id = 16
         ORDER BY data_config_desc
       `;
-      
+
       const result = await pool.query(query);
-      
-      console.log(`Fetched ${result.rows.length} percentage data records from sys_data_configg`);
+
+      console.log(
+        `Fetched ${result.rows.length} percentage data records from sys_data_configg`,
+      );
       res.json(result.rows);
     } catch (error: any) {
       console.error("Error fetching percentage data:", error);
@@ -3873,56 +3922,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET vendor data from inv_vendors table for offline mode
-  app.get("/api/vendors", async (req: Request, res: Response) => {
-    try {
-      const query = `
-        SELECT vendor_id, vendor_name 
-        FROM inv_vendors 
-        ORDER BY vendor_name
-      `;
-      
-      const result = await pool.query(query);
-      
-      console.log(`Fetched ${result.rows.length} vendors from inv_vendors table`);
-      res.json(result.rows);
-    } catch (error: any) {
-      console.error("Error fetching vendors from inv_vendors:", error);
-      // Fallback data when database is not available
-      const fallbackData = [
-        { vendor_id: 1, vendor_name: "Ali Traders" },
-        { vendor_id: 2, vendor_name: "Ahmed & Co" },
-        { vendor_id: 3, vendor_name: "Malik Industries" },
-        { vendor_id: 4, vendor_name: "Khan Suppliers" },
-        { vendor_id: 5, vendor_name: "Fatima Trading" }
-      ];
-      console.log("Using fallback vendor data");
-      res.json(fallbackData);
-    }
-  });
-
-  // GET vendor data from inv_vendors table for offline mode
+  // GET vendor data from sys_data_configg table for offline mode
   app.get("/api/vendor-data", async (req: Request, res: Response) => {
     try {
       const query = `
-        SELECT vendor_name as view, vendor_id as return 
-        FROM inv_vendors 
-        ORDER BY vendor_name
+        SELECT data_config_desc as view, data_config_desc as return 
+        FROM sys_data_configg 
+        WHERE sys_config_id = 16
+        ORDER BY data_config_desc
       `;
-      
+
       const result = await pool.query(query);
-      
-      console.log(`Fetched ${result.rows.length} vendor records from inv_vendors table`);
+
+      console.log(
+        `Fetched ${result.rows.length} vendor records from sys_data_configg`,
+      );
       res.json(result.rows);
     } catch (error: any) {
-      console.error("Error fetching vendor data from inv_vendors:", error);
-      // Fallback data when database is not available
+      console.error("Error fetching vendor data:", error);
+      // Fallback data when database is not available - from sys_data_configg sys_config_id=16
       const fallbackData = [
-        { view: "Ali Traders", return: "1" },
-        { view: "Ahmed & Co", return: "2" },
-        { view: "Malik Industries", return: "3" },
-        { view: "Khan Suppliers", return: "4" },
-        { view: "Fatima Trading", return: "5" }
+        { view: "Ali Traders", return: "Ali Traders" },
+        { view: "Ahmed & Co", return: "Ahmed & Co" },
+        { view: "Malik Industries", return: "Malik Industries" },
+        { view: "Khan Suppliers", return: "Khan Suppliers" },
+        { view: "Fatima Trading", return: "Fatima Trading" },
       ];
       console.log("Using fallback vendor data");
       res.json(fallbackData);
