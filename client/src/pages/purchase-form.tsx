@@ -78,8 +78,9 @@ function PurchaseForm() {
   );
   const [nextBagId, setNextBagId] = useState(1);
   
-  // Vendor data state for offline mode
+  // Vendor data state for offline mode  
   const [vendorData, setVendorData] = useState<any[]>([]);
+  const [vendorsData, setVendorsData] = useState<any[]>([]);
 
   const handleSalesDataChange = (
     index: number,
@@ -1907,7 +1908,25 @@ function PurchaseForm() {
         }
       };
       
+      // Fetch proper vendors from inv_vendors table
+      const fetchVendorsData = async () => {
+        try {
+          console.log("Fetching vendors from inv_vendors table...");
+          const response = await fetch('/api/vendors');
+          if (response.ok) {
+            const data = await response.json();
+            setVendorsData(data);
+            console.log("Vendors data fetched successfully:", data);
+          } else {
+            console.error("Failed to fetch vendors data");
+          }
+        } catch (error) {
+          console.error("Error fetching vendors data:", error);
+        }
+      };
+      
       fetchVendorData();
+      fetchVendorsData();
     }
   }, [onlineMode]);
 
@@ -4182,13 +4201,13 @@ function PurchaseForm() {
                             name="vendor"
                             value={formData.vendor}
                             onValueChange={(value) => {
-                              const selectedVendor = vendorData.find(
-                                (vendor) => vendor.view === value,
+                              const selectedVendor = vendorsData.find(
+                                (vendor) => vendor.vendor_name === value,
                               );
                               setFormData((prev) => ({
                                 ...prev,
                                 vendor: value,
-                                vendorId: selectedVendor ? selectedVendor.return : prev.vendorId,
+                                vendorId: selectedVendor ? selectedVendor.vendor_id.toString() : prev.vendorId,
                               }));
                             }}
                           >
@@ -4199,12 +4218,12 @@ function PurchaseForm() {
                               />
                             </SelectTrigger>
                             <SelectContent>
-                              {vendorData.map((vendor, index) => (
+                              {vendorsData.map((vendor) => (
                                 <SelectItem
-                                  key={index}
-                                  value={vendor.view}
+                                  key={vendor.vendor_id}
+                                  value={vendor.vendor_name}
                                 >
-                                  {vendor.view}
+                                  {vendor.vendor_name}
                                 </SelectItem>
                               ))}
                             </SelectContent>
