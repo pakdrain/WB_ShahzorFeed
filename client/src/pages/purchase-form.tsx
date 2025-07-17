@@ -1610,6 +1610,18 @@ function PurchaseForm() {
   }, [window.location.search]);
 
   useEffect(() => {
+    // Don't fetch new slip number if we're in edit mode or editing a specific record
+    if (isEditMode || editingWbId) {
+      return;
+    }
+
+    // Check URL parameters for edit mode
+    const urlParams = new URLSearchParams(window.location.search);
+    const editWbId = urlParams.get("edit");
+    if (editWbId) {
+      return;
+    }
+
     // Fetch next slip number based on return mode with enhanced retry logic
     const entryType = isReturnMode ? "PURCHASE_RETURN" : "PURCHASE";
 
