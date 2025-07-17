@@ -525,6 +525,12 @@ export default function SalesReturnForm() {
 
         const branchName = formData.branch || "";
 
+        // Get the branch name from branches array based on current branchId
+        const selectedBranch = branches.find(
+          (b) => b.branch_id.toString() === formData.branchId?.toString()
+        );
+        const branchNameToShow = selectedBranch ? selectedBranch.branch_name : "";
+
         setSalesData((prev) => {
           const updated = [...prev];
           updated[rowIndex] = {
@@ -538,7 +544,7 @@ export default function SalesReturnForm() {
             itemDescription: item.item_desc || "",
             dcQty: item.dc_qty ? String(item.dc_qty) : "",
             doQty: item.del_qty ? String(item.del_qty) : "",
-            branch: branchName,
+            branch: branchNameToShow,
             branchId: formData.branchId,
             dcId: item.dc_id || "",
             customerId: item.customer_id || "",
@@ -1352,30 +1358,37 @@ export default function SalesReturnForm() {
 
         // Set sales data - pad with empty rows to always show 8 rows
         console.log("Raw sales data from database:", salesData);
-        const mappedSalesData = salesData.map((item: any) => ({
-          doId: item.do_id || "",
-          dcNo: item.igp_no || "", // DC No maps to igp_no in database
-          doNo: item.po_no || "", // DO No maps to po_no in database
-          customerName: item.customer_name || item.vendor_name || "",
-          vehicleNo: item.vehicle_no || "",
-          doDate: item.igp_date || item.do_date || "",
-          itemDescription: item.item_desc || "",
-          dcQty: item.igp_qty
-            ? String(item.igp_qty)
-            : item.dc_qty
-              ? String(item.dc_qty)
-              : "",
-          doQty: item.po_qty
-            ? String(item.po_qty)
-            : item.do_qty
-              ? String(item.do_qty)
-              : "",
-          branch: item.branch || "",
-          dcId: item.dc_id || "",
-          customerId: item.customer_id || "",
-          itemId: item.item_id || "",
-          itemCode: item.item_code || "",
-        }));
+        const mappedSalesData = salesData.map((item: any) => {
+          // Find branch name from branches array based on branch_id
+          const branchName = branches.find(
+            (b) => b.branch_id.toString() === (item.branch_id || masterData.branch_id)?.toString()
+          )?.branch_name || "";
+
+          return {
+            doId: item.do_id || "",
+            dcNo: item.igp_no || "", // DC No maps to igp_no in database
+            doNo: item.po_no || "", // DO No maps to po_no in database
+            customerName: item.customer_name || item.vendor_name || "",
+            vehicleNo: item.vehicle_no || "",
+            doDate: item.igp_date || item.do_date || "",
+            itemDescription: item.item_desc || "",
+            dcQty: item.igp_qty
+              ? String(item.igp_qty)
+              : item.dc_qty
+                ? String(item.dc_qty)
+                : "",
+            doQty: item.po_qty
+              ? String(item.po_qty)
+              : item.do_qty
+                ? String(item.do_qty)
+                : "",
+            branch: branchName,
+            dcId: item.dc_id || "",
+            customerId: item.customer_id || "",
+            itemId: item.item_id || "",
+            itemCode: item.item_code || "",
+          };
+        });
         console.log("Mapped sales data:", mappedSalesData);
 
         // Pad with empty rows to always show 8 rows
