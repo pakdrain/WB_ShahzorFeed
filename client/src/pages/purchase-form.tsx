@@ -4332,11 +4332,19 @@ function PurchaseForm() {
                                 />
                               </SelectTrigger>
                               <SelectContent>
-                                {vendorData.map((vendor, index) => (
-                                  <SelectItem key={index} value={vendor.view}>
-                                    {vendor.view}
-                                  </SelectItem>
-                                ))}
+                                {onlineMode ? (
+                                  percentageData.map((item, index) => (
+                                    <SelectItem key={index} value={item.data_config_desc}>
+                                      {item.data_config_desc}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  vendorData.map((vendor, index) => (
+                                    <SelectItem key={index} value={vendor.view}>
+                                      {vendor.view}
+                                    </SelectItem>
+                                  ))
+                                )}
                               </SelectContent>
                             </Select>
                           ) : (
