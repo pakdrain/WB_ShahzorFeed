@@ -1034,6 +1034,20 @@ function PurchaseForm() {
     formData.noOfBags,
   ]);
 
+  // Auto-calculate Balance Quantity for offline mode
+  useEffect(() => {
+    if (!onlineMode) {
+      const poQty = parseFloat(formData.poQty) || 0;
+      const igpQty = parseFloat(formData.igpQty) || 0;
+      const balanceQty = poQty - igpQty;
+
+      setFormData((prev) => ({
+        ...prev,
+        balanceQty: balanceQty >= 0 ? balanceQty.toFixed(2) : "0.00",
+      }));
+    }
+  }, [formData.poQty, formData.igpQty, onlineMode]);
+
   // Remove auto-fetch IGP data in edit mode - use saved table data only
 
   // IGP Data Fetching Function
