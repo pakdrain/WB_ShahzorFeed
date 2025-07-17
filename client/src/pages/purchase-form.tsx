@@ -3438,9 +3438,9 @@ function PurchaseForm() {
 
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
-      {/* Weight Display Table - Upper Right Side */}
+      {/* Weight Display Table - Upper Right Side - Increased size */}
       <div className="absolute top-20 right-14 z-50">
-        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72 mb-4">
+        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80 mb-4"></div>
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
             <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
@@ -3577,10 +3577,10 @@ function PurchaseForm() {
         </div>
       </div>
 
-      {/* Bag Details Table - Below Weight Display Table (hide when Sales form is active) */}
-      {selectedForm === "purchase" && (
-        <div className="absolute top-96 right-4 z-50">
-          <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80">
+      {/* Bag Details Table - Positioned parallel to details section (hide when Sales form is active) */}
+      {selectedForm === "purchase" && !isEditMode && (
+        <div className="absolute top-80 right-4 z-50">
+          <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80"></div>
             {/* Header Row */}
             <div className="grid grid-cols-6 border-b border-gray-400">
               <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
