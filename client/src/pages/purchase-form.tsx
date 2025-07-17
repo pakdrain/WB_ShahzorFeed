@@ -80,9 +80,6 @@ function PurchaseForm() {
 
   // Vendor data state for offline mode
   const [vendorData, setVendorData] = useState<any[]>([]);
-  
-  // IGP data state
-  const [igpData, setIgpData] = useState<any[]>([]);
   const [vendorsData, setVendorsData] = useState<any[]>([]);
 
   const handleSalesDataChange = (
@@ -119,18 +116,16 @@ function PurchaseForm() {
     });
   };
 
-  // Fetch all first weight records with optimized intervals
+  // Fetch all first weight records
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    refetchInterval: 10000, // Refresh every 10 seconds (reduced from 3s)
-    staleTime: 30000, // Consider data stale after 30 seconds
+    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
-  // Fetch offline records specifically with optimized intervals
+  // Fetch offline records specifically
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    refetchInterval: 10000, // Refresh every 10 seconds (reduced from 3s)
-    staleTime: 30000, // Consider data stale after 30 seconds
+    refetchInterval: 3000, // Refresh every 3 seconds
   });
 
   // Filter records based on search criteria and form type
@@ -252,9 +247,9 @@ function PurchaseForm() {
         ) {
           const salesRows = data.details.map((detail: any, index: number) => {
             // Find branch name from branches array using master's branch_id
-            const branchName = branches.find(
-              (b) => b.branch_id === master.branch_id
-            )?.branch_name || "";
+            const branchName =
+              branches.find((b) => b.branch_id === master.branch_id)
+                ?.branch_name || "";
 
             return {
               doId: String(index + 1),
@@ -1549,17 +1544,26 @@ function PurchaseForm() {
 
   // Update sales data with branch names when branches are loaded and we're in edit mode
   useEffect(() => {
-    if (branches.length > 0 && isEditMode && formData.branchId && salesData.length > 0) {
-      const branchName = branches.find(
-        (b) => b.branch_id.toString() === formData.branchId?.toString()
-      )?.branch_name || "";
+    if (
+      branches.length > 0 &&
+      isEditMode &&
+      formData.branchId &&
+      salesData.length > 0
+    ) {
+      const branchName =
+        branches.find(
+          (b) => b.branch_id.toString() === formData.branchId?.toString(),
+        )?.branch_name || "";
 
-      if (branchName && salesData.some(row => row.branch === "")) {
-        setSalesData(prevData => 
-          prevData.map(row => ({
+      if (branchName && salesData.some((row) => row.branch === "")) {
+        setSalesData((prevData) =>
+          prevData.map((row) => ({
             ...row,
-            branch: row.customerName || row.dcNo || row.doNo ? branchName : row.branch
-          }))
+            branch:
+              row.customerName || row.dcNo || row.doNo
+                ? branchName
+                : row.branch,
+          })),
         );
         console.log("Updated sales data with branch names:", branchName);
       }
@@ -1568,90 +1572,45 @@ function PurchaseForm() {
 
   // Handle URL parameters for edit mode and form type
   useEffect(() => {
-    const handleURLParameters = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const editWbId = urlParams.get("edit");
-      const formType = urlParams.get("form") || "purchase"; // Default to 'purchase' if null
-      const typeMode = urlParams.get("type");
-      const offlineEditSlip = urlParams.get("offline_edit");
+    const urlParams = new URLSearchParams(window.location.search);
+    const editWbId = urlParams.get("edit");
+    const formType = urlParams.get("form") || "purchase"; // Default to 'purchase' if null
+    const typeMode = urlParams.get("type");
+    const offlineEditSlip = urlParams.get("offline_edit");
 
-      console.log("URL parameters:", {
-        editWbId,
-        formType,
-        typeMode,
-        offlineEditSlip,
-      });
+    console.log("URL parameters:", {
+      editWbId,
+      formType,
+      typeMode,
+      offlineEditSlip,
+    });
 
-      // Set selected form robustly
-      if (["sales", "purchase", "offline"].includes(formType)) {
-        setSelectedForm(formType as "sales" | "purchase" | "offline");
-      }
+    // Set selected form robustly
+    if (["sales", "purchase", "offline"].includes(formType)) {
+      setSelectedForm(formType as "sales" | "purchase" | "offline");
+    }
 
-      // Online/offline mode
-      if (typeMode === "offline") {
-        console.log("Setting OFFLINE mode from URL parameter");
-        setOnlineMode(false);
-      } else if (typeMode === "online") {
-        console.log("Setting ONLINE mode from URL parameter");
-        setOnlineMode(true);
-      }
+    // Online/offline mode
+    if (typeMode === "offline") {
+      console.log("Setting OFFLINE mode from URL parameter");
+      setOnlineMode(false);
+    } else if (typeMode === "online") {
+      console.log("Setting ONLINE mode from URL parameter");
+      setOnlineMode(true);
+    }
 
-      // Load data if edit parameter is present in URL
-      if (editWbId) {
-        // Load record for editing by wb_id
-        console.log("Edit mode detected from URL parameter, loading data for wb_id:", editWbId);
-        loadDataByWbId(parseInt(editWbId));
-        return; // Exit early to prevent any other initialization
-      } else if (offlineEditSlip) {
-        console.log("Offline edit mode detected, loading data for slip:", offlineEditSlip);
-        loadDataBySlipNo(offlineEditSlip);
-        setOnlineMode(false);
-        return;
-      } else {
-        // No edit parameter in URL, clean up any edit parameters from URL and reset to new form
-        console.log("No edit parameter in URL, resetting to new form");
-        
-        // Clean up URL parameters if they exist
-        const hasEditParams = urlParams.has("edit") || urlParams.has("offline_edit");
-        if (hasEditParams) {
-          urlParams.delete("edit");
-          urlParams.delete("offline_edit");
-          const newUrl = urlParams.toString()
-            ? `${window.location.pathname}?${urlParams.toString()}`
-            : window.location.pathname;
-          window.history.replaceState({}, "", newUrl);
-        }
-        
-        setIsEditMode(false);
-        setEditingWbId(null);
-        setTimeout(() => {
-          resetFormToInitial();
-        }, 100);
-        return;
-      }
-    };
-
-    // Handle URL parameters on mount and location change
-    handleURLParameters();
+    // Load data
+    if (editWbId) {
+      loadDataByWbId(parseInt(editWbId));
+    } else if (offlineEditSlip) {
+      loadDataBySlipNo(offlineEditSlip);
+      setOnlineMode(false);
+    } else {
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
+    }
   }, [location]);
-
-  // Watch for URL changes in real-time
-  useEffect(() => {
-    const checkURLChanges = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const editWbId = urlParams.get("edit");
-      
-      if (editWbId && !isEditMode) {
-        console.log("URL changed to edit mode, loading data for wb_id:", editWbId);
-        loadDataByWbId(parseInt(editWbId));
-      }
-    };
-
-    // Check every 100ms for URL changes
-    const intervalId = setInterval(checkURLChanges, 100);
-
-    return () => clearInterval(intervalId);
-  }, [isEditMode]);
 
   // Sync form data when onlineMode changes
   useEffect(() => {
@@ -2032,7 +1991,7 @@ function PurchaseForm() {
     formData.supplierWeight,
   ]);
 
-  // Fetch vendor data for offline mode and clear IGP fields when switching modes
+  // Fetch vendor data for offline mode
   useEffect(() => {
     if (!onlineMode) {
       const fetchVendorData = async () => {
@@ -2071,36 +2030,7 @@ function PurchaseForm() {
       fetchVendorData();
       fetchVendorsData();
     }
-    
-    // Clear IGP related fields when switching modes (only if not in edit mode)
-    if (!isEditMode) {
-      setFormData((prev) => ({
-        ...prev,
-        igpNo: "",
-        igpDate: "",
-        igpId: "",
-        manualIgpNo: "",
-        vendor: "",
-        vendorId: "",
-        poNo: "",
-        itemDesc: "",
-        itemId: "",
-        itemCode: "",
-        weightPerBags: "",
-        noOfBags: "",
-        bardanaType: "",
-        bardanaWeight: "",
-        dcQty: "",
-        dcId: "",
-        doNo: ""
-      }));
-      
-      // Clear IGP data table
-      setIgpItems([]);
-      
-      console.log("Cleared IGP fields when switching online/offline mode");
-    }
-  }, [onlineMode, isEditMode]);
+  }, [onlineMode]);
 
   // Load existing deduction data when editing
   const loadDeductionData = async (wbId: number) => {
@@ -2118,19 +2048,6 @@ function PurchaseForm() {
         }));
         setBagTableData(formattedData);
         console.log("Loaded existing deduction data:", formattedData);
-        
-        // Update form fields with deduction data
-        if (formattedData.length > 0) {
-          setFormData((prev) => ({
-            ...prev,
-            weight: String(formattedData[0].weight || ""),
-            bags: String(formattedData[0].bags || ""),
-          }));
-          console.log("Updated form fields with deduction data:", {
-            weight: formattedData[0].weight,
-            bags: formattedData[0].bags
-          });
-        }
       }
     } catch (error) {
       console.error("Error loading deduction data:", error);
@@ -3649,21 +3566,21 @@ function PurchaseForm() {
                         if (record.entry_type === "SALE") {
                           const targetUrl = `/purchase-form?form=sales&type=${modeParam}&edit=${record.wb_id}`;
                           console.log("Navigating to sales form:", targetUrl);
-                          setLocation(targetUrl);
+                          window.location.href = targetUrl;
                         } else if (record.entry_type === "SALE_RETURN") {
                           const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
                           console.log(
                             "Navigating to sales return form:",
                             targetUrl,
                           );
-                          setLocation(targetUrl);
+                          window.location.href = targetUrl;
                         } else if (record.entry_type === "PURCHASE_RETURN") {
                           const targetUrl = `/purchase-return?type=${modeParam}&edit=${record.wb_id}`;
                           console.log(
                             "Navigating to purchase return form:",
                             targetUrl,
                           );
-                          setLocation(targetUrl);
+                          window.location.href = targetUrl;
                         } else {
                           // For purchase entries, redirect with proper mode
                           const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
@@ -3673,7 +3590,19 @@ function PurchaseForm() {
                             "isOfflineEntry:",
                             isOfflineEntry,
                           );
-                          setLocation(targetUrl);
+
+                          // Force a hard reload to ensure proper state initialization
+                          if (isOfflineEntry && onlineMode) {
+                            console.log(
+                              "Forcing hard reload for offline entry",
+                            );
+                            window.location.href = targetUrl;
+                          } else if (!isOfflineEntry && !onlineMode) {
+                            console.log("Forcing hard reload for online entry");
+                            window.location.href = targetUrl;
+                          } else {
+                            window.location.href = targetUrl;
+                          }
                         }
                       }
                     }}
@@ -4177,26 +4106,13 @@ function PurchaseForm() {
                 }`}
               >
                 <h2 className="text-3xl font-bold tracking-wide">
-                  {(() => {
-                    // Check selectedForm first to determine the correct display
-                    if (selectedForm === "sales") {
-                      return onlineMode ? "Sale Online" : "Sale Offline";
-                    } else {
-                      // Check formData.entryType for other cases
-                      const entryType = formData.entryType;
-                      
-                      if (entryType === "SALE") {
-                        return onlineMode ? "Sale Online" : "Sale Offline";
-                      } else if (entryType === "SALE_RETURN") {
-                        return onlineMode ? "Sale Return Online" : "Sale Return Offline";
-                      } else if (entryType === "PURCHASE_RETURN") {
-                        return onlineMode ? "Purchase Return Online" : "Purchase Return Offline";
-                      } else {
-                        // Default to PURCHASE
-                        return onlineMode ? "Purchase Online" : "Purchase Offline";
-                      }
-                    }
-                  })()}
+                  {isReturnMode
+                    ? onlineMode === true
+                      ? "Purchase Return Online"
+                      : "Purchase Return Offline"
+                    : onlineMode === true
+                      ? "Purchase Online"
+                      : "Purchase Offline"}
                 </h2>
               </div>
             </div>
@@ -5252,7 +5168,7 @@ function PurchaseForm() {
                                           "Navigating to offline purchase form:",
                                           targetUrl,
                                         );
-                                        setLocation(targetUrl);
+                                        window.location.href = targetUrl;
                                       }
                                     }}
                                   >
