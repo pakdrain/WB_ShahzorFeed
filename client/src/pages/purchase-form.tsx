@@ -2068,6 +2068,17 @@ function PurchaseForm() {
           total: item.bags * item.pb,
         }));
         setBagTableData(formattedData);
+        
+        // Populate weight and bags fields from first deduction entry
+        if (formattedData.length > 0) {
+          const firstEntry = formattedData[0];
+          setFormData((prev) => ({
+            ...prev,
+            weight: firstEntry.weight ? String(firstEntry.weight) : "",
+            bags: firstEntry.bags ? String(firstEntry.bags) : "",
+          }));
+        }
+        
         console.log("Loaded existing deduction data:", formattedData);
       }
     } catch (error) {
