@@ -657,11 +657,27 @@ export default function SalesForm() {
           branchId: master.branch_id ? String(master.branch_id) : "",
         }));
 
-        // Set online/offline status based on database values
+        // Set online/offline status based on database values - prioritize offline_entry
+        console.log("Database entry mode - offline_entry:", master.offline_entry, "online_entry:", master.online_entry);
+        
         if (master.offline_entry === "Yes") {
+          console.log("Setting offline mode for sale entry");
           setOnlineMode(false);
+          
+          // Update URL to reflect offline mode
+          const urlParams = new URLSearchParams(window.location.search);
+          urlParams.set("type", "offline");
+          const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+          window.history.replaceState({}, "", newUrl);
         } else if (master.online_entry === "Yes") {
+          console.log("Setting online mode for sale entry");
           setOnlineMode(true);
+          
+          // Update URL to reflect online mode
+          const urlParams = new URLSearchParams(window.location.search);
+          urlParams.set("type", "online");
+          const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+          window.history.replaceState({}, "", newUrl);
         }
 
         // Load sales data from details - check for both SALE and if we have detail data
