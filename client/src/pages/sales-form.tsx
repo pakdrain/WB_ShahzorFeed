@@ -1000,6 +1000,14 @@ export default function SalesForm() {
         
         console.log("Found record - Entry Type:", entryType, "Offline:", isOffline);
         
+        // Update online/offline status based on the found record
+        setOnlineMode(!isOffline);
+        
+        // Update URL to reflect the correct mode
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set("type", isOffline ? "offline" : "online");
+        urlParams.set("edit", master.wb_id.toString());
+        
         // Determine the correct URL based on entry type and online/offline status
         let targetUrl = "";
         const modeParam = isOffline ? "offline" : "online";
@@ -1014,7 +1022,17 @@ export default function SalesForm() {
           if (entryType === "SALE_RETURN") {
             targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
           } else {
-            targetUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
+            // For SALE entries, stay on current page and load the data
+            await loadDataByWbId(master.wb_id);
+            
+            // Update URL to show edit mode with correct type
+            const newUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
+            window.history.replaceState({}, "", newUrl);
+            
+            // Exit search mode
+            setIsSearchMode(false);
+            setLoading(false);
+            return;
           }
         } else {
           // Default to sales form for unknown entry types

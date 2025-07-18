@@ -350,17 +350,50 @@ function PurchaseForm() {
 
       const data = await response.json();
       if (data && data.master) {
-        // Load the found record
-        await loadDataByWbId(data.master.wb_id);
+        const master = data.master;
+        const entryType = master.entry_type;
+        const isOffline = master.offline_entry === "Yes";
         
-        // Update URL to show we're now editing this record
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set("edit", data.master.wb_id.toString());
-        urlParams.delete("search");
-        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-        window.history.replaceState({}, "", newUrl);
+        console.log("Found record - Entry Type:", entryType, "Offline:", isOffline);
         
-        setIsSearchMode(false);
+        // Update online/offline status based on the found record
+        setOnlineMode(!isOffline);
+        
+        // Determine the correct URL based on entry type and online/offline status
+        let targetUrl = "";
+        const modeParam = isOffline ? "offline" : "online";
+        
+        if (entryType === "PURCHASE" || entryType === "PURCHASE_RETURN") {
+          if (entryType === "PURCHASE_RETURN") {
+            targetUrl = `/purchase-return?type=${modeParam}&edit=${master.wb_id}`;
+          } else {
+            // For PURCHASE entries, stay on current page and load the data
+            await loadDataByWbId(master.wb_id);
+            
+            // Update URL to show edit mode with correct type
+            const newUrl = `/purchase-form?type=${modeParam}&edit=${master.wb_id}`;
+            window.history.replaceState({}, "", newUrl);
+            
+            // Exit search mode
+            setIsSearchMode(false);
+            setLoading(false);
+            return;
+          }
+        } else if (entryType === "SALE" || entryType === "SALE_RETURN") {
+          if (entryType === "SALE_RETURN") {
+            targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
+          } else {
+            targetUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
+          }
+        } else {
+          // Default to purchase form for unknown entry types
+          targetUrl = `/purchase-form?type=${modeParam}&edit=${master.wb_id}`;
+        }
+        
+        console.log(`Found ${entryType} entry (${isOffline ? 'Offline' : 'Online'}), redirecting to:`, targetUrl);
+        
+        // Redirect to the appropriate form
+        setLocation(targetUrl);
       } else {
         alert("Invalid record data found");
       }
