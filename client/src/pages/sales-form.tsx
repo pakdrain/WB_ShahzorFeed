@@ -2492,18 +2492,7 @@ export default function SalesForm() {
               </Button>
               <Button
                 className="h-6 text-xs px-3 bg-gray-300 text-black"
-                onClick={() => {
-                  // Navigate to offline form
-                  window.history.replaceState(
-                    {},
-                    "",
-                    "/purchase-form?type=offline",
-                  );
-                  setLocation("/purchase-form?type=offline");
-                  setTimeout(() => {
-                    window.location.href = "/purchase-form?type=offline";
-                  }, 50);
-                }}
+                onClick={() => toggleOnlineMode(false)}
               >
                 Offline
               </Button>
