@@ -2106,6 +2106,11 @@ export default function SalesForm() {
 
           {/* Data Rows - showing filtered records */}
           <div className="max-h-48 overflow-y-auto">
+            {showOfflineTable && (
+              <div className="bg-yellow-100 p-2 text-xs text-center border-b border-gray-400">
+                <span className="font-semibold text-black">Purchase Offline Entries</span>
+              </div>
+            )}
             {filteredRecords && filteredRecords.length > 0 ? (
               filteredRecords.map((record: any, index: number) => (
                 <div
@@ -2502,13 +2507,13 @@ export default function SalesForm() {
                 Purchase
               </Button>
               <Button 
-                className="h-6 text-xs px-3 bg-blue-600 text-white"
+                className={`h-6 text-xs px-3 ${!showOfflineTable ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
                 onClick={() => setShowOfflineTable(false)}
               >
                 Sales
               </Button>
               <Button
-                className="h-6 text-xs px-3 bg-gray-300 text-black"
+                className={`h-6 text-xs px-3 ${showOfflineTable ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
                 onClick={() => {
                   setShowOfflineTable(true);
                 }}
