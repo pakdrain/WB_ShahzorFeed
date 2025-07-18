@@ -578,24 +578,37 @@ export default function SalesForm() {
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
-  // Filter records based on search criteria
-  const filteredRecords = Array.isArray(firstWeightRecords)
-    ? firstWeightRecords.filter((record: any) => {
-        const matchesSlipNo =
-          !searchSlipNo ||
-          (record.slip_no || "")
-            .toString()
-            .toLowerCase()
-            .includes(searchSlipNo.toLowerCase());
-        const matchesVehicleNo =
-          !searchVehicleNo ||
-          (record.vehicle_no || "")
-            .toString()
-            .toLowerCase()
-            .includes(searchVehicleNo.toLowerCase());
-        return matchesSlipNo && matchesVehicleNo;
-      })
-    : [];
+  // State to control which table to show
+  const [showOfflineTable, setShowOfflineTable] = useState(false);
+
+  // Filter records based on search criteria and current display mode
+  const filteredRecords = (() => {
+    let records = [];
+
+    if (showOfflineTable) {
+      // Show offline records when offline table is active
+      records = Array.isArray(offlineRecords) ? offlineRecords : [];
+    } else {
+      // Show all first weight records for normal display
+      records = Array.isArray(firstWeightRecords) ? firstWeightRecords : [];
+    }
+
+    return records.filter((record: any) => {
+      const matchesSlipNo =
+        !searchSlipNo ||
+        (record.slip_no || "")
+          .toString()
+          .toLowerCase()
+          .includes(searchSlipNo.toLowerCase());
+      const matchesVehicleNo =
+        !searchVehicleNo ||
+        (record.vehicle_no || "")
+          .toString()
+          .toLowerCase()
+          .includes(searchVehicleNo.toLowerCase());
+      return matchesSlipNo && matchesVehicleNo;
+    });
+  })();
 
   // Function to load data by wb_id for editing
   const loadDataByWbId = async (wbId: number) => {
@@ -2165,7 +2178,7 @@ export default function SalesForm() {
             className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 text-xs"
             onClick={() => window.location.reload()}
           >
-            Load Data
+            {showOfflineTable ? "Load Offline Data" : "Load Data"}
           </button>
         </div>
       </div>
@@ -2474,6 +2487,7 @@ export default function SalesForm() {
               <Button
                 className="h-6 text-xs px-3 bg-gray-300 text-black"
                 onClick={() => {
+                  setShowOfflineTable(false);
                   // Navigate to purchase form with same type
                   const urlParams = new URLSearchParams(window.location.search);
                   const typeMode = urlParams.get("type") || "online";
@@ -2487,12 +2501,18 @@ export default function SalesForm() {
               >
                 Purchase
               </Button>
-              <Button className="h-6 text-xs px-3 bg-blue-600 text-white">
+              <Button 
+                className="h-6 text-xs px-3 bg-blue-600 text-white"
+                onClick={() => setShowOfflineTable(false)}
+              >
                 Sales
               </Button>
               <Button
                 className="h-6 text-xs px-3 bg-gray-300 text-black"
-                onClick={() => toggleOnlineMode(false)}
+                onClick={() => {
+                  setShowOfflineTable(true);
+                  toggleOnlineMode(false);
+                }}
               >
                 Offline
               </Button>
