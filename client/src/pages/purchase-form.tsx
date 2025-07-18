@@ -340,11 +340,11 @@ function PurchaseForm() {
       setLoading(true);
       console.log("Searching for slip:", formData.slipNo);
       
-      // Search for records with specific entry types for purchase form
-      const response = await fetch(`/api/purchase/by-slip/${formData.slipNo.trim()}?entry_type=PURCHASE,PURCHASE_RETURN`);
+      // First try to search without entry type filtering to find any record with this slip number
+      const response = await fetch(`/api/purchase/by-slip/${formData.slipNo.trim()}`);
       
       if (!response.ok) {
-        alert(`No PURCHASE record found for slip number ${formData.slipNo}`);
+        alert(`No record found for slip number ${formData.slipNo}`);
         setLoading(false);
         return;
       }
@@ -355,30 +355,45 @@ function PurchaseForm() {
         const entryType = master.entry_type;
         const isOffline = master.offline_entry === "Yes";
         
-        console.log("Found PURCHASE record - Entry Type:", entryType, "Offline:", isOffline);
+        console.log("Found record - Entry Type:", entryType, "Offline:", isOffline);
         
-        // Update online/offline status based on the found record
-        setOnlineMode(!isOffline);
-        
-        // Determine the correct URL based on entry type and online/offline status
-        const modeParam = isOffline ? "offline" : "online";
-        
-        if (entryType === "PURCHASE_RETURN") {
-          const targetUrl = `/purchase-return?type=${modeParam}&edit=${master.wb_id}`;
-          console.log(`Found ${entryType} entry (${isOffline ? 'Offline' : 'Online'}), redirecting to:`, targetUrl);
-          setLocation(targetUrl);
+        // Check if this is a purchase-related entry that can be edited in purchase form
+        if (entryType === "PURCHASE" || entryType === "PURCHASE_RETURN") {
+          // Update online/offline status based on the found record
+          setOnlineMode(!isOffline);
+          
+          // Determine the correct URL based on entry type and online/offline status
+          const modeParam = isOffline ? "offline" : "online";
+          
+          if (entryType === "PURCHASE_RETURN") {
+            const targetUrl = `/purchase-return?type=${modeParam}&edit=${master.wb_id}`;
+            console.log(`Found ${entryType} entry (${isOffline ? 'Offline' : 'Online'}), redirecting to:`, targetUrl);
+            setLocation(targetUrl);
+          } else {
+            // For PURCHASE entries, stay on current page and load the data
+            await loadDataByWbId(master.wb_id);
+            
+            // Update URL to show edit mode with correct type
+            const newUrl = `/purchase-form?type=${modeParam}&edit=${master.wb_id}`;
+            window.history.replaceState({}, "", newUrl);
+            
+            // Exit search mode
+            setIsSearchMode(false);
+            setLoading(false);
+            return;
+          }
         } else {
-          // For PURCHASE entries, stay on current page and load the data
-          await loadDataByWbId(master.wb_id);
-          
-          // Update URL to show edit mode with correct type
-          const newUrl = `/purchase-form?type=${modeParam}&edit=${master.wb_id}`;
-          window.history.replaceState({}, "", newUrl);
-          
-          // Exit search mode
-          setIsSearchMode(false);
-          setLoading(false);
-          return;
+          // This is a SALE entry - redirect to appropriate form
+          const modeParam = isOffline ? "offline" : "online";
+          if (entryType === "SALE_RETURN") {
+            const targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
+            console.log(`Found ${entryType} entry, redirecting to sales return form:`, targetUrl);
+            setLocation(targetUrl);
+          } else {
+            const targetUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
+            console.log(`Found ${entryType} entry, redirecting to sales form:`, targetUrl);
+            setLocation(targetUrl);
+          }
         }
       } else {
         alert("Invalid record data found");
@@ -3953,18 +3968,18 @@ function PurchaseForm() {
           <Button 
             className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium"
             onClick={() => {
-              if (isSearchMode) {
-                // If already in search mode, clear form and exit search mode
+              if (isSearchMode || isEditMode) {
+                // If in search mode or edit mode, reset to new form
                 resetFormToInitial();
                 setIsSearchMode(false);
                 setIsEditMode(false);
                 setEditingWbId(null);
                 
-                // Clear URL parameters
+                // Clear URL parameters and set to new form mode
                 const newUrl = window.location.pathname + "?type=" + (onlineMode ? "online" : "offline");
                 window.history.replaceState({}, "", newUrl);
               } else {
-                // Update URL to enable search mode
+                // Enter search mode
                 const urlParams = new URLSearchParams(window.location.search);
                 urlParams.set("search", "true");
                 const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
@@ -3974,7 +3989,7 @@ function PurchaseForm() {
               }
             }}
           >
-            {isSearchMode ? "New" : "Edit"}
+            {(isSearchMode || isEditMode) ? "New" : "Edit"}
           </Button>
           <Button
             className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium"
