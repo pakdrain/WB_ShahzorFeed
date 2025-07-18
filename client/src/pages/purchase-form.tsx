@@ -329,6 +329,49 @@ function PurchaseForm() {
     }
   };
 
+  // Function to search and load data by slip number
+  const searchAndLoadBySlipNo = async () => {
+    if (!formData.slipNo || formData.slipNo.trim() === "") {
+      alert("Please enter a slip number to search");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log("Searching for slip:", formData.slipNo);
+      
+      const response = await fetch(`/api/purchase/by-slip/${formData.slipNo.trim()}`);
+      
+      if (!response.ok) {
+        alert(`No record found for slip number ${formData.slipNo}`);
+        setLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      if (data && data.master) {
+        // Load the found record
+        await loadDataByWbId(data.master.wb_id);
+        
+        // Update URL to show we're now editing this record
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set("edit", data.master.wb_id.toString());
+        urlParams.delete("search");
+        const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+        window.history.replaceState({}, "", newUrl);
+        
+        setIsSearchMode(false);
+      } else {
+        alert("Invalid record data found");
+      }
+    } catch (error) {
+      console.error("Error searching for slip:", error);
+      alert("Failed to search for slip number");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Function to load data by slip number for editing (kept for backward compatibility)
   const loadDataBySlipNo = async (slipNo: string) => {
     try {
@@ -999,6 +1042,7 @@ function PurchaseForm() {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
+  const [isSearchMode, setIsSearchMode] = useState(false);
 
   const [onlineMode, setOnlineMode] = useState(() => {
     // Initialize based on URL parameter immediately
@@ -1574,12 +1618,14 @@ function PurchaseForm() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const editWbId = urlParams.get("edit");
+    const searchMode = urlParams.get("search");
     const formType = urlParams.get("form") || "purchase"; // Default to 'purchase' if null
     const typeMode = urlParams.get("type");
     const offlineEditSlip = urlParams.get("offline_edit");
 
     console.log("URL parameters:", {
       editWbId,
+      searchMode,
       formType,
       typeMode,
       offlineEditSlip,
@@ -1597,6 +1643,13 @@ function PurchaseForm() {
     } else if (typeMode === "online") {
       console.log("Setting ONLINE mode from URL parameter");
       setOnlineMode(true);
+    }
+
+    // Check if we should be in search mode
+    if (searchMode === "true") {
+      setIsSearchMode(true);
+      setFormData(prev => ({ ...prev, slipNo: "" }));
+      return;
     }
 
     // Check if we should be in edit mode based on URL parameter
@@ -1624,6 +1677,7 @@ function PurchaseForm() {
           resetFormToInitial();
         }, 100);
       }
+      setIsSearchMode(false);
       return;
     }
   }, [location]);
@@ -3879,7 +3933,15 @@ function PurchaseForm() {
           )}
           <Button 
             className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium"
-            onClick={() => setLocation("/edit-record")}
+            onClick={() => {
+              // Update URL to enable search mode
+              const urlParams = new URLSearchParams(window.location.search);
+              urlParams.set("search", "true");
+              const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+              window.history.replaceState({}, "", newUrl);
+              setIsSearchMode(true);
+              setFormData(prev => ({ ...prev, slipNo: "" }));
+            }}
           >
             Edit
           </Button>
@@ -3927,12 +3989,36 @@ function PurchaseForm() {
                   {/* Slip No */}
                   <div className="flex items-center gap-[2px]">
                     <Label className="text-xs text-black w-20">Slip No</Label>
-                    <Input
-                      name="slipNo"
-                      value={formData.slipNo}
-                      readOnly
-                      className="h-8 text-xs text-black w-52"
-                    />
+                    {isSearchMode ? (
+                      <div className="flex gap-1 w-52">
+                        <Input
+                          name="slipNo"
+                          value={formData.slipNo}
+                          onChange={handleChange}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              searchAndLoadBySlipNo();
+                            }
+                          }}
+                          placeholder="Enter slip number to search"
+                          className="h-8 text-xs text-black flex-1"
+                        />
+                        <Button
+                          onClick={searchAndLoadBySlipNo}
+                          className="h-8 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
+                          disabled={loading}
+                        >
+                          {loading ? "..." : "Search"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Input
+                        name="slipNo"
+                        value={formData.slipNo}
+                        readOnly
+                        className="h-8 text-xs text-black w-52"
+                      />
+                    )}
                   </div>
 
                   {/* Net Weight */}
