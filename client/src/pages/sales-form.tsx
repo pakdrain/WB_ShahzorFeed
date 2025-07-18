@@ -860,6 +860,8 @@ export default function SalesForm() {
   const [loading, setLoading] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [onlineMode, setOnlineMode] = useState(() => {
     // Initialize based on URL parameter immediately
@@ -968,6 +970,69 @@ export default function SalesForm() {
       alert(
         "Failed to fetch DC data. Please check the DC number and try again.",
       );
+    }
+  };
+
+  // Function to search and load data by slip number
+  const searchAndLoadBySlipNo = async () => {
+    if (!formData.slipNo || formData.slipNo.trim() === "") {
+      alert("Please enter a slip number to search");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log("Searching for slip:", formData.slipNo);
+      
+      const response = await fetch(`/api/purchase/by-slip/${formData.slipNo.trim()}`);
+      
+      if (!response.ok) {
+        alert(`No record found for slip number ${formData.slipNo}`);
+        setLoading(false);
+        return;
+      }
+
+      const data = await response.json();
+      if (data && data.master) {
+        const master = data.master;
+        const entryType = master.entry_type;
+        const isOffline = master.offline_entry === "Yes";
+        
+        console.log("Found record - Entry Type:", entryType, "Offline:", isOffline);
+        
+        // Determine the correct URL based on entry type and online/offline status
+        let targetUrl = "";
+        const modeParam = isOffline ? "offline" : "online";
+        
+        if (entryType === "PURCHASE" || entryType === "PURCHASE_RETURN") {
+          if (entryType === "PURCHASE_RETURN") {
+            targetUrl = `/purchase-return?type=${modeParam}&edit=${master.wb_id}`;
+          } else {
+            targetUrl = `/purchase-form?type=${modeParam}&edit=${master.wb_id}`;
+          }
+        } else if (entryType === "SALE" || entryType === "SALE_RETURN") {
+          if (entryType === "SALE_RETURN") {
+            targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
+          } else {
+            targetUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
+          }
+        } else {
+          // Default to sales form for unknown entry types
+          targetUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
+        }
+        
+        console.log(`Found ${entryType} entry (${isOffline ? 'Offline' : 'Online'}), redirecting to:`, targetUrl);
+        
+        // Redirect to the appropriate form
+        setLocation(targetUrl);
+      } else {
+        alert("Invalid record data found");
+      }
+    } catch (error) {
+      console.error("Error searching for slip:", error);
+      alert("Failed to search for slip number");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -1218,9 +1283,10 @@ export default function SalesForm() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const editWbId = urlParams.get("edit");
+    const searchMode = urlParams.get("search");
     const typeMode = urlParams.get("type");
 
-    console.log("URL parameters:", { editWbId, typeMode });
+    console.log("URL parameters:", { editWbId, searchMode, typeMode });
 
     // Set online/offline mode based on type parameter - IMMEDIATE UPDATE
     if (typeMode === "offline") {
@@ -1229,6 +1295,15 @@ export default function SalesForm() {
     } else if (typeMode === "online") {
       console.log("Setting ONLINE mode from URL parameter");
       setOnlineMode(true);
+    }
+
+    // Check if we should be in search mode
+    if (searchMode === "true") {
+      setIsSearchMode(true);
+      setIsEditMode(false);
+      setEditingWbId(null);
+      setFormData(prev => ({ ...prev, slipNo: "" }));
+      return;
     }
 
     if (editWbId) {
@@ -2254,7 +2329,11 @@ export default function SalesForm() {
           )}
           <Button 
             className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium"
-            onClick={() => setLocation("/edit-record")}
+            onClick={() => {
+              const urlParams = new URLSearchParams(window.location.search);
+              const typeMode = urlParams.get("type") || "online";
+              setLocation(`/sales-form?type=${typeMode}&search=true`);
+            }}
           >
             Edit
           </Button>
@@ -2304,8 +2383,16 @@ export default function SalesForm() {
                     <Input
                       name="slipNo"
                       value={formData.slipNo}
-                      readOnly
+                      onChange={handleChange}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          searchAndLoadBySlipNo();
+                        }
+                      }}
+                      readOnly={!isSearchMode && !isEditMode}
                       className="h-5 text-xs text-black w-20"
+                      placeholder={isSearchMode ? "Enter slip number" : ""}
                     />
                   </div>
                   <div>
