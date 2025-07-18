@@ -2511,7 +2511,6 @@ export default function SalesForm() {
                 className="h-6 text-xs px-3 bg-gray-300 text-black"
                 onClick={() => {
                   setShowOfflineTable(true);
-                  toggleOnlineMode(false);
                 }}
               >
                 Offline
