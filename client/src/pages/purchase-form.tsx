@@ -340,10 +340,11 @@ function PurchaseForm() {
       setLoading(true);
       console.log("Searching for slip:", formData.slipNo);
       
-      const response = await fetch(`/api/purchase/by-slip/${formData.slipNo.trim()}`);
+      // Search for records with specific entry types for purchase form
+      const response = await fetch(`/api/purchase/by-slip/${formData.slipNo.trim()}?entry_type=PURCHASE,PURCHASE_RETURN`);
       
       if (!response.ok) {
-        alert(`No record found for slip number ${formData.slipNo}`);
+        alert(`No PURCHASE record found for slip number ${formData.slipNo}`);
         setLoading(false);
         return;
       }
@@ -354,24 +355,16 @@ function PurchaseForm() {
         const entryType = master.entry_type;
         const isOffline = master.offline_entry === "Yes";
         
-        console.log("Found record - Entry Type:", entryType, "Offline:", isOffline);
-        
-        // Only allow PURCHASE and PURCHASE_RETURN entries in purchase form
-        if (entryType !== "PURCHASE" && entryType !== "PURCHASE_RETURN") {
-          alert(`This is a ${entryType} entry. Only PURCHASE entries can be edited in the purchase form.`);
-          setLoading(false);
-          return;
-        }
+        console.log("Found PURCHASE record - Entry Type:", entryType, "Offline:", isOffline);
         
         // Update online/offline status based on the found record
         setOnlineMode(!isOffline);
         
         // Determine the correct URL based on entry type and online/offline status
-        let targetUrl = "";
         const modeParam = isOffline ? "offline" : "online";
         
         if (entryType === "PURCHASE_RETURN") {
-          targetUrl = `/purchase-return?type=${modeParam}&edit=${master.wb_id}`;
+          const targetUrl = `/purchase-return?type=${modeParam}&edit=${master.wb_id}`;
           console.log(`Found ${entryType} entry (${isOffline ? 'Offline' : 'Online'}), redirecting to:`, targetUrl);
           setLocation(targetUrl);
         } else {
