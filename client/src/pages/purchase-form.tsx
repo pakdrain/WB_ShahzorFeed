@@ -356,6 +356,13 @@ function PurchaseForm() {
         
         console.log("Found record - Entry Type:", entryType, "Offline:", isOffline);
         
+        // Only allow PURCHASE and PURCHASE_RETURN entries in purchase form
+        if (entryType !== "PURCHASE" && entryType !== "PURCHASE_RETURN") {
+          alert(`This is a ${entryType} entry. Only PURCHASE entries can be edited in the purchase form.`);
+          setLoading(false);
+          return;
+        }
+        
         // Update online/offline status based on the found record
         setOnlineMode(!isOffline);
         
@@ -363,37 +370,23 @@ function PurchaseForm() {
         let targetUrl = "";
         const modeParam = isOffline ? "offline" : "online";
         
-        if (entryType === "PURCHASE" || entryType === "PURCHASE_RETURN") {
-          if (entryType === "PURCHASE_RETURN") {
-            targetUrl = `/purchase-return?type=${modeParam}&edit=${master.wb_id}`;
-          } else {
-            // For PURCHASE entries, stay on current page and load the data
-            await loadDataByWbId(master.wb_id);
-            
-            // Update URL to show edit mode with correct type
-            const newUrl = `/purchase-form?type=${modeParam}&edit=${master.wb_id}`;
-            window.history.replaceState({}, "", newUrl);
-            
-            // Exit search mode
-            setIsSearchMode(false);
-            setLoading(false);
-            return;
-          }
-        } else if (entryType === "SALE" || entryType === "SALE_RETURN") {
-          if (entryType === "SALE_RETURN") {
-            targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
-          } else {
-            targetUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
-          }
+        if (entryType === "PURCHASE_RETURN") {
+          targetUrl = `/purchase-return?type=${modeParam}&edit=${master.wb_id}`;
+          console.log(`Found ${entryType} entry (${isOffline ? 'Offline' : 'Online'}), redirecting to:`, targetUrl);
+          setLocation(targetUrl);
         } else {
-          // Default to purchase form for unknown entry types
-          targetUrl = `/purchase-form?type=${modeParam}&edit=${master.wb_id}`;
+          // For PURCHASE entries, stay on current page and load the data
+          await loadDataByWbId(master.wb_id);
+          
+          // Update URL to show edit mode with correct type
+          const newUrl = `/purchase-form?type=${modeParam}&edit=${master.wb_id}`;
+          window.history.replaceState({}, "", newUrl);
+          
+          // Exit search mode
+          setIsSearchMode(false);
+          setLoading(false);
+          return;
         }
-        
-        console.log(`Found ${entryType} entry (${isOffline ? 'Offline' : 'Online'}), redirecting to:`, targetUrl);
-        
-        // Redirect to the appropriate form
-        setLocation(targetUrl);
       } else {
         alert("Invalid record data found");
       }
@@ -3967,16 +3960,28 @@ function PurchaseForm() {
           <Button 
             className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium"
             onClick={() => {
-              // Update URL to enable search mode
-              const urlParams = new URLSearchParams(window.location.search);
-              urlParams.set("search", "true");
-              const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-              window.history.replaceState({}, "", newUrl);
-              setIsSearchMode(true);
-              setFormData(prev => ({ ...prev, slipNo: "" }));
+              if (isSearchMode) {
+                // If already in search mode, clear form and exit search mode
+                resetFormToInitial();
+                setIsSearchMode(false);
+                setIsEditMode(false);
+                setEditingWbId(null);
+                
+                // Clear URL parameters
+                const newUrl = window.location.pathname + "?type=" + (onlineMode ? "online" : "offline");
+                window.history.replaceState({}, "", newUrl);
+              } else {
+                // Update URL to enable search mode
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.set("search", "true");
+                const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                window.history.replaceState({}, "", newUrl);
+                setIsSearchMode(true);
+                setFormData(prev => ({ ...prev, slipNo: "" }));
+              }
             }}
           >
-            Edit
+            {isSearchMode ? "New" : "Edit"}
           </Button>
           <Button
             className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium"
