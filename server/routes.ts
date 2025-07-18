@@ -1552,24 +1552,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { slipNo } = req.params;
         const { entry_type } = req.query;
 
-        if (!entry_type) {
-          return res
-            .status(400)
-            .json({ error: "entry_type query parameter is required" });
+        let masterQuery;
+        let queryParams;
+
+        if (entry_type) {
+          // If entry_type is provided, use it in the query
+          masterQuery = `
+            SELECT * FROM wb_weighbridge 
+            WHERE slip_no = $1 AND entry_type = $2
+            ORDER BY wb_id DESC
+            LIMIT 1
+          `;
+          queryParams = [slipNo, entry_type];
+        } else {
+          // If no entry_type provided, search for any record with that slip number
+          masterQuery = `
+            SELECT * FROM wb_weighbridge 
+            WHERE slip_no = $1
+            ORDER BY wb_id DESC
+            LIMIT 1
+          `;
+          queryParams = [slipNo];
         }
 
-        const masterQuery = `
-      SELECT * FROM wb_weighbridge 
-      WHERE slip_no = $1 AND entry_type = $2
-    `;
-        const masterResult = await pool.query(masterQuery, [
-          slipNo,
-          entry_type,
-        ]);
+        const masterResult = await pool.query(masterQuery, queryParams);
 
         if (masterResult.rows.length === 0) {
           return res.status(404).json({
-            message: "No record found for this slip number and entry type",
+            message: `No record found for slip number ${slipNo}`,
           });
         }
 
@@ -1580,7 +1590,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
 
         console.log(
-          `Fetched purchase record for slip ${slipNo}, type ${entry_type}`,
+          `Fetched purchase record for slip ${slipNo}${entry_type ? `, type ${entry_type}` : ''}`,
         );
         res.json({
           master,
@@ -1588,7 +1598,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } catch (error: any) {
         console.error(
-          "Error fetching purchase by slip number and entry type:",
+          "Error fetching purchase by slip number:",
           error,
         );
         res.status(500).json({ error: "Failed to fetch purchase record" });
