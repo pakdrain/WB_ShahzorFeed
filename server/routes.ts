@@ -296,6 +296,82 @@
     }
   });
 
+  // GET purchase record by slip number
+  app.get("/api/purchase/by-slip/:slipNo", async (req: Request, res: Response) => {
+    try {
+      const { slipNo } = req.params;
+      const { entry_type } = req.query;
+
+      console.log("Searching for slip:", slipNo, "with entry_type:", entry_type);
+
+      // Build the WHERE clause based on whether entry_type is provided
+      let whereClause = "wb.slip_no = $1";
+      let queryParams: any[] = [slipNo];
+
+      if (entry_type) {
+        // If searching for PURCHASE, also include PURCHASE_RETURN
+        if (entry_type === 'PURCHASE') {
+          whereClause += " AND wb.entry_type IN ('PURCHASE', 'PURCHASE_RETURN')";
+        } else if (entry_type === 'SALE') {
+          whereClause += " AND wb.entry_type IN ('SALE', 'SALE_RETURN')";
+        } else {
+          whereClause += " AND wb.entry_type = $2";
+          queryParams.push(entry_type);
+        }
+      }
+
+      // Query to get master data
+      const masterQuery = `
+        SELECT 
+          wb.*,
+          CASE 
+            WHEN wb.offline_entry = 'Yes' THEN 'Yes'
+            ELSE 'No'
+          END as offline_entry,
+          CASE 
+            WHEN wb.online_entry = 'Yes' THEN 'Yes'
+            ELSE 'No'
+          END as online_entry
+        FROM wb_weighbridge wb 
+        WHERE ${whereClause}
+        ORDER BY wb.wb_id DESC
+        LIMIT 1
+      `;
+
+      const masterResult = await pool.query(masterQuery, queryParams);
+
+      if (masterResult.rows.length === 0) {
+        return res.status(404).json({ 
+          error: entry_type 
+            ? `No ${entry_type} record found for slip number ${slipNo}` 
+            : `No record found for slip number ${slipNo}` 
+        });
+      }
+
+      const master = masterResult.rows[0];
+
+      // Query to get detail data
+      const detailQuery = `
+        SELECT 
+          wbi.*,
+          wbi.baradana_type as bardana_type
+        FROM wb_weighbridge_items_purchase wbi 
+        WHERE wbi.wb_id = $1
+      `;
+
+      const detailResult = await pool.query(detailQuery, [master.wb_id]);
+
+      console.log(`Found slip ${slipNo} with entry_type: ${master.entry_type}`);
+      res.json({
+        master: master,
+        details: detailResult.rows
+      });
+    } catch (error: any) {
+      console.error("Error fetching purchase by slip number:", error);
+      res.status(500).json({ error: "Failed to fetch purchase data" });
+    }
+  });
+
   // Static file serving for captured images is already handled above
 
   return httpServer;

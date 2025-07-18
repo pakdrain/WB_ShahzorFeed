@@ -340,11 +340,11 @@ function PurchaseForm() {
       setLoading(true);
       console.log("Searching for slip:", formData.slipNo);
       
-      // First try to search without entry type filtering to find any record with this slip number
-      const response = await fetch(`/api/purchase/by-slip/${formData.slipNo.trim()}`);
+      // Search with entry type filtering to only find purchase-related entries
+      const response = await fetch(`/api/purchase/by-slip/${formData.slipNo.trim()}?entry_type=PURCHASE`);
       
       if (!response.ok) {
-        alert(`No record found for slip number ${formData.slipNo}`);
+        alert(`No PURCHASE record found for slip number ${formData.slipNo}`);
         setLoading(false);
         return;
       }
@@ -383,17 +383,7 @@ function PurchaseForm() {
             return;
           }
         } else {
-          // This is a SALE entry - redirect to appropriate form
-          const modeParam = isOffline ? "offline" : "online";
-          if (entryType === "SALE_RETURN") {
-            const targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
-            console.log(`Found ${entryType} entry, redirecting to sales return form:`, targetUrl);
-            setLocation(targetUrl);
-          } else {
-            const targetUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
-            console.log(`Found ${entryType} entry, redirecting to sales form:`, targetUrl);
-            setLocation(targetUrl);
-          }
+          alert(`Found ${entryType} entry for slip ${formData.slipNo}, but this is the Purchase form. Please use the appropriate form for ${entryType} entries.`);
         }
       } else {
         alert("Invalid record data found");
