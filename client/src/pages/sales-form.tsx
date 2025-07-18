@@ -581,15 +581,15 @@ export default function SalesForm() {
   // State to control which table to show
   const [showOfflineTable, setShowOfflineTable] = useState(false);
 
-  // Filter records based on search criteria and current display mode
+  // Filter records based on search criteria and form type
   const filteredRecords = (() => {
     let records = [];
 
     if (showOfflineTable) {
-      // Show offline records when offline table is active
+      // Show offline records when offline tab is selected
       records = Array.isArray(offlineRecords) ? offlineRecords : [];
     } else {
-      // Show all first weight records for normal display
+      // Show all first weight records for other tabs
       records = Array.isArray(firstWeightRecords) ? firstWeightRecords : [];
     }
 
@@ -2108,7 +2108,7 @@ export default function SalesForm() {
           <div className="max-h-48 overflow-y-auto">
             {showOfflineTable && (
               <div className="bg-yellow-100 p-2 text-xs text-center border-b border-gray-400">
-                <span className="font-semibold text-black">Purchase Offline Entries</span>
+                <span className="font-semibold text-black">Sales Offline Entries</span>
               </div>
             )}
             {filteredRecords && filteredRecords.length > 0 ? (
