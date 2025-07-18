@@ -10,6 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import WeightIndicator from "@/components/weight-indicator";
 import WeightDisplayTable from "@/components/weight-display-table";
 import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
@@ -879,6 +886,8 @@ export default function SalesForm() {
   const [plateReading, setPlateReading] = useState(false);
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editSearchSlip, setEditSearchSlip] = useState("");
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
@@ -975,6 +984,60 @@ export default function SalesForm() {
     setIsEditMode(false);
     setEditingWbId(null);
     resetFormToInitial();
+  };
+
+  // Function to handle edit search
+  const handleEditSearch = async () => {
+    if (!editSearchSlip || editSearchSlip.trim() === "") {
+      alert("Please enter a slip number");
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/purchase/by-slip/${editSearchSlip.trim()}`);
+      
+      if (!response.ok) {
+        alert(`No record found for slip number ${editSearchSlip}`);
+        return;
+      }
+
+      const data = await response.json();
+      
+      if (data && data.master) {
+        const master = data.master;
+        const entryType = master.entry_type;
+        const isOffline = master.offline_entry === "Yes";
+        
+        // Determine the correct form URL based on entry type
+        let targetUrl = "";
+        const modeParam = isOffline ? "offline" : "online";
+        
+        if (entryType === "PURCHASE") {
+          targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${master.wb_id}`;
+        } else if (entryType === "PURCHASE_RETURN") {
+          targetUrl = `/purchase-return?type=${modeParam}&edit=${master.wb_id}`;
+        } else if (entryType === "SALE") {
+          targetUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
+        } else if (entryType === "SALE_RETURN") {
+          targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
+        } else {
+          // Default to current form if entry type is unclear
+          targetUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
+        }
+        
+        console.log(`Found ${entryType} entry (${isOffline ? 'Offline' : 'Online'}), navigating to:`, targetUrl);
+        
+        // Close modal and navigate
+        setShowEditModal(false);
+        setEditSearchSlip("");
+        window.location.href = targetUrl;
+      } else {
+        alert("Invalid record data found");
+      }
+    } catch (error) {
+      console.error("Error searching for slip:", error);
+      alert("Failed to search for slip number");
+    }
   };
 
   // Function to reset form to clean state
@@ -2249,6 +2312,51 @@ export default function SalesForm() {
               Cancel
             </Button>
           )}
+          <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+            <DialogTrigger asChild>
+              <Button className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium">
+                Edit
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Record</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="editSlipSearch" className="text-sm font-medium">
+                    Slip Number
+                  </Label>
+                  <Input
+                    id="editSlipSearch"
+                    placeholder="Enter slip number to search"
+                    value={editSearchSlip}
+                    onChange={(e) => setEditSearchSlip(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleEditSearch();
+                      }
+                    }}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditSearchSlip("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleEditSearch}>
+                    Search & Load
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Button
             className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium"
             onClick={handlePrintReport}
