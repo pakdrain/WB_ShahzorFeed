@@ -666,23 +666,30 @@ export default function SalesForm() {
 
         // Load sales data from details - check for both SALE and if we have detail data
         if (data.details && data.details.length > 0) {
-          const salesRows = data.details.map((detail: any, index: number) => ({
-            doId: String(index + 1),
-            dcNo: detail.manual_dc_no || detail.igp_no || "", // Depending on source
-            doNo: detail.do_no || detail.po_no || "", // Try both fields
-            customerName: detail.customer_name || detail.vendor_name || "",
-            vehicleNo: detail.vehicle_no || "",
-            doDate: detail.do_date || detail.igp_date || "", // May be null
-            itemDescription: detail.item_desc || "",
-            dcQty: detail.dc_qty ? String(detail.dc_qty) : (detail.igp_qty ? String(detail.igp_qty) : ""),
-            doQty: detail.do_qty ? String(detail.do_qty) : (detail.po_qty ? String(detail.po_qty) : ""),
-            branch: "",
-            // Hidden / internal fields
-            dcId: detail.dc_id || "", // if applicable
-            customerId: detail.customer_id || "",
-            itemId: detail.item_id || "",
-            itemCode: detail.item_code || "",
-          }));
+          const salesRows = data.details.map((detail: any, index: number) => {
+            // Find branch name from branches array using master's branch_id
+            const branchName =
+              branches.find((b) => b.branch_id === master.branch_id)
+                ?.branch_name || "";
+
+            return {
+              doId: String(index + 1),
+              dcNo: detail.manual_dc_no || detail.igp_no || "", // Depending on source
+              doNo: detail.do_no || detail.po_no || "", // Try both fields
+              customerName: detail.customer_name || detail.vendor_name || "",
+              vehicleNo: detail.vehicle_no || "",
+              doDate: detail.do_date || detail.igp_date || "", // May be null
+              itemDescription: detail.item_desc || "",
+              dcQty: detail.dc_qty ? String(detail.dc_qty) : (detail.igp_qty ? String(detail.igp_qty) : ""),
+              doQty: detail.do_qty ? String(detail.do_qty) : (detail.po_qty ? String(detail.po_qty) : ""),
+              branch: branchName,
+              // Hidden / internal fields
+              dcId: detail.dc_id || "", // if applicable
+              customerId: detail.customer_id || "",
+              itemId: detail.item_id || "",
+              itemCode: detail.item_code || "",
+            };
+          });
 
           // Ensure 8 rows
           while (salesRows.length < 8) {
@@ -1210,6 +1217,34 @@ export default function SalesForm() {
       offlineEntry: onlineMode ? "No" : "Yes",
     }));
   }, [onlineMode]);
+
+  // Update sales data with branch names when branches are loaded and we're in edit mode
+  useEffect(() => {
+    if (
+      branches.length > 0 &&
+      isEditMode &&
+      formData.branchId &&
+      salesData.length > 0
+    ) {
+      const branchName =
+        branches.find(
+          (b) => b.branch_id.toString() === formData.branchId?.toString(),
+        )?.branch_name || "";
+
+      if (branchName && salesData.some((row) => row.branch === "")) {
+        setSalesData((prevData) =>
+          prevData.map((row) => ({
+            ...row,
+            branch:
+              row.customerName || row.dcNo || row.doNo
+                ? branchName
+                : row.branch,
+          })),
+        );
+        console.log("Updated sales data with branch names:", branchName);
+      }
+    }
+  }, [branches, isEditMode, formData.branchId, salesData]);
 
   // Additional effect to handle URL changes for real-time mode switching
   useEffect(() => {
