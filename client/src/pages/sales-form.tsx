@@ -578,37 +578,24 @@ export default function SalesForm() {
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
-  // State to control which table to show
-  const [showOfflineTable, setShowOfflineTable] = useState(false);
-
-  // Filter records based on search criteria and form type
-  const filteredRecords = (() => {
-    let records = [];
-
-    if (showOfflineTable) {
-      // Show offline records when offline tab is selected
-      records = Array.isArray(offlineRecords) ? offlineRecords : [];
-    } else {
-      // Show all first weight records for other tabs
-      records = Array.isArray(firstWeightRecords) ? firstWeightRecords : [];
-    }
-
-    return records.filter((record: any) => {
-      const matchesSlipNo =
-        !searchSlipNo ||
-        (record.slip_no || "")
-          .toString()
-          .toLowerCase()
-          .includes(searchSlipNo.toLowerCase());
-      const matchesVehicleNo =
-        !searchVehicleNo ||
-        (record.vehicle_no || "")
-          .toString()
-          .toLowerCase()
-          .includes(searchVehicleNo.toLowerCase());
-      return matchesSlipNo && matchesVehicleNo;
-    });
-  })();
+  // Filter records based on search criteria
+  const filteredRecords = Array.isArray(firstWeightRecords)
+    ? firstWeightRecords.filter((record: any) => {
+        const matchesSlipNo =
+          !searchSlipNo ||
+          (record.slip_no || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchSlipNo.toLowerCase());
+        const matchesVehicleNo =
+          !searchVehicleNo ||
+          (record.vehicle_no || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchVehicleNo.toLowerCase());
+        return matchesSlipNo && matchesVehicleNo;
+      })
+    : [];
 
   // Function to load data by wb_id for editing
   const loadDataByWbId = async (wbId: number) => {
@@ -671,12 +658,17 @@ export default function SalesForm() {
         }));
 
         // Set online/offline status based on database values - prioritize offline_entry
-        console.log("Database entry mode - offline_entry:", master.offline_entry, "online_entry:", master.online_entry);
-        
+        console.log(
+          "Database entry mode - offline_entry:",
+          master.offline_entry,
+          "online_entry:",
+          master.online_entry,
+        );
+
         if (master.offline_entry === "Yes") {
           console.log("Setting offline mode for sale entry");
           setOnlineMode(false);
-          
+
           // Update URL to reflect offline mode
           const urlParams = new URLSearchParams(window.location.search);
           urlParams.set("type", "offline");
@@ -685,7 +677,7 @@ export default function SalesForm() {
         } else if (master.online_entry === "Yes") {
           console.log("Setting online mode for sale entry");
           setOnlineMode(true);
-          
+
           // Update URL to reflect online mode
           const urlParams = new URLSearchParams(window.location.search);
           urlParams.set("type", "online");
@@ -709,8 +701,16 @@ export default function SalesForm() {
               vehicleNo: detail.vehicle_no || "",
               doDate: detail.do_date || detail.igp_date || "", // May be null
               itemDescription: detail.item_desc || "",
-              dcQty: detail.dc_qty ? String(detail.dc_qty) : (detail.igp_qty ? String(detail.igp_qty) : ""),
-              doQty: detail.do_qty ? String(detail.do_qty) : (detail.po_qty ? String(detail.po_qty) : ""),
+              dcQty: detail.dc_qty
+                ? String(detail.dc_qty)
+                : detail.igp_qty
+                  ? String(detail.igp_qty)
+                  : "",
+              doQty: detail.do_qty
+                ? String(detail.do_qty)
+                : detail.po_qty
+                  ? String(detail.po_qty)
+                  : "",
               branch: branchName,
               // Hidden / internal fields
               dcId: detail.dc_id || "", // if applicable
@@ -760,7 +760,7 @@ export default function SalesForm() {
               customerId: "",
               itemId: "",
               itemCode: "",
-            }))
+            })),
           );
           console.log("No sales detail data found, using empty table");
         }
@@ -932,9 +932,10 @@ export default function SalesForm() {
         const item = data.items[0]; // ✅ Single DC No for one row
 
         // ✅ Get branch name from branches array using formData.branchId
-        const branchName = branches.find(
-          (b) => b.branch_id.toString() === formData.branchId?.toString()
-        )?.branch_name || "";
+        const branchName =
+          branches.find(
+            (b) => b.branch_id.toString() === formData.branchId?.toString(),
+          )?.branch_name || "";
 
         setSalesData((prev) => {
           const updated = [...prev];
@@ -2106,11 +2107,6 @@ export default function SalesForm() {
 
           {/* Data Rows - showing filtered records */}
           <div className="max-h-48 overflow-y-auto">
-            {showOfflineTable && (
-              <div className="bg-yellow-100 p-2 text-xs text-center border-b border-gray-400">
-                <span className="font-semibold text-black">Sales Offline Entries</span>
-              </div>
-            )}
             {filteredRecords && filteredRecords.length > 0 ? (
               filteredRecords.map((record: any, index: number) => (
                 <div
@@ -2128,19 +2124,25 @@ export default function SalesForm() {
                         // Navigate based on entry type
                         if (record.entry_type === "PURCHASE") {
                           // Navigate to purchase form
-                          const urlParams = new URLSearchParams(window.location.search);
+                          const urlParams = new URLSearchParams(
+                            window.location.search,
+                          );
                           const typeMode = urlParams.get("type") || "online";
                           const targetUrl = `/purchase-form?type=${typeMode}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
                         } else if (record.entry_type === "PURCHASE_RETURN") {
                           // Navigate to purchase return form
-                          const urlParams = new URLSearchParams(window.location.search);
+                          const urlParams = new URLSearchParams(
+                            window.location.search,
+                          );
                           const typeMode = urlParams.get("type") || "online";
                           const targetUrl = `/purchase-return?type=${typeMode}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
                         } else if (record.entry_type === "SALE_RETURN") {
                           // Navigate to sales return form
-                          const urlParams = new URLSearchParams(window.location.search);
+                          const urlParams = new URLSearchParams(
+                            window.location.search,
+                          );
                           const typeMode = urlParams.get("type") || "online";
                           const targetUrl = `/sales-return?type=${typeMode}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
@@ -2183,7 +2185,7 @@ export default function SalesForm() {
             className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 text-xs"
             onClick={() => window.location.reload()}
           >
-            {showOfflineTable ? "Load Offline Data" : "Load Data"}
+            Load Data
           </button>
         </div>
       </div>
@@ -2400,8 +2402,11 @@ export default function SalesForm() {
                         <SelectTrigger className="h-5 text-xs text-black">
                           <SelectValue
                             placeholder={
-                              branches.find(b => b.branch_id.toString() === (formData.branchId || formData.branch))?.branch_name || 
-                              "Select branch"
+                              branches.find(
+                                (b) =>
+                                  b.branch_id.toString() ===
+                                  (formData.branchId || formData.branch),
+                              )?.branch_name || "Select branch"
                             }
                             className="text-black"
                           />
@@ -2492,7 +2497,6 @@ export default function SalesForm() {
               <Button
                 className="h-6 text-xs px-3 bg-gray-300 text-black"
                 onClick={() => {
-                  setShowOfflineTable(false);
                   // Navigate to purchase form with same type
                   const urlParams = new URLSearchParams(window.location.search);
                   const typeMode = urlParams.get("type") || "online";
@@ -2506,16 +2510,22 @@ export default function SalesForm() {
               >
                 Purchase
               </Button>
-              <Button 
-                className={`h-6 text-xs px-3 ${!showOfflineTable ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
-                onClick={() => setShowOfflineTable(false)}
-              >
+              <Button className="h-6 text-xs px-3 bg-blue-600 text-white">
                 Sales
               </Button>
               <Button
-                className={`h-6 text-xs px-3 ${showOfflineTable ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+                className="h-6 text-xs px-3 bg-gray-300 text-black"
                 onClick={() => {
-                  setShowOfflineTable(true);
+                  // Navigate to offline form
+                  window.history.replaceState(
+                    {},
+                    "",
+                    "/purchase-form?type=offline",
+                  );
+                  setLocation("/purchase-form?type=offline");
+                  setTimeout(() => {
+                    window.location.href = "/purchase-form?type=offline";
+                  }, 50);
                 }}
               >
                 Offline
