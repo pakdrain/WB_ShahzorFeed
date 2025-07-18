@@ -1606,14 +1606,18 @@ function PurchaseForm() {
       loadDataByWbId(parseInt(editWbId));
       return; // Exit early to prevent any other initialization
     } else if (offlineEditSlip) {
-      console.log("Offline edit mode detected from URL parameter, loading data");
+      console.log(
+        "Offline edit mode detected from URL parameter, loading data",
+      );
       loadDataBySlipNo(offlineEditSlip);
       setOnlineMode(false);
       return; // Exit early to prevent any other initialization
     } else {
       // No edit parameter in URL, reset to new form only if we're currently in edit mode
       if (isEditMode || editingWbId) {
-        console.log("No edit parameter in URL and currently in edit mode, resetting to new form");
+        console.log(
+          "No edit parameter in URL and currently in edit mode, resetting to new form",
+        );
         setIsEditMode(false);
         setEditingWbId(null);
         setTimeout(() => {
@@ -1971,7 +1975,7 @@ function PurchaseForm() {
     const supplierWeight = parseFloat(formData.supplierWeight) || 0;
 
     // Net Weight = First Weight - Second Weight
-    const netWeight = firstWeight - secondWeight;
+    const netWeight = firstWeight - secondWeight - bardanaWeight;
 
     // Gross Weight = First Weight - Second Weight - Bardana Weight
     const grossWeight = firstWeight - secondWeight - bardanaWeight;
@@ -1982,7 +1986,8 @@ function PurchaseForm() {
     // Supplier Weight - Out Weight = Supplier Weight - Supp Wt - Bardana
     const suppWtMinusBardana =
       parseFloat(formData.supplierWeightMinusBardana) || 0;
-    const supplierWeightMinusOutWeight = supplierWeight - suppWtMinusBardana;
+    const supplierWeightMinusOutWeight =
+      supplierWeight - bardanaWeight - netWeight;
 
     setFormData((prev) => ({
       ...prev,
@@ -2042,7 +2047,7 @@ function PurchaseForm() {
       fetchVendorData();
       fetchVendorsData();
     }
-    
+
     // Clear IGP field when switching to offline mode (only if not in edit mode)
     if (!onlineMode && !isEditMode) {
       setFormData((prev) => ({
@@ -2068,7 +2073,7 @@ function PurchaseForm() {
           total: item.bags * item.pb,
         }));
         setBagTableData(formattedData);
-        
+
         // Populate weight and bags fields from first deduction entry
         if (formattedData.length > 0) {
           const firstEntry = formattedData[0];
@@ -2078,7 +2083,7 @@ function PurchaseForm() {
             bags: firstEntry.bags ? String(firstEntry.bags) : "",
           }));
         }
-        
+
         console.log("Loaded existing deduction data:", formattedData);
       }
     } catch (error) {
