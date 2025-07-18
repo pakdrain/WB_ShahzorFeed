@@ -22,6 +22,7 @@ import PurchaseReturn from "@/pages/purchase-return";
 import VoucherEntry from "./pages/voucher-entry";
 import VoucherView from "./pages/voucher-view";
 import GetData from "./pages/get-data";
+import EditRecord from "./pages/edit-record";
 
 function ProtectedApp() {
   return (
@@ -43,6 +44,7 @@ function ProtectedApp() {
           <Route path="/sale-node" component={SaleNode} />
           <Route path="/reports" component={Reports} />
           <Route path="/image-upload" component={ImageUpload} />
+          <Route path="/edit-record" component={EditRecord} />
           <Route component={NotFound} />
         </Switch>
       </div>

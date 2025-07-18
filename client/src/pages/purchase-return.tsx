@@ -1275,6 +1275,12 @@ export default function PurchaseReturnForm() {
           <Button className="h-8 px-2 text-sm font-medium bg-orange-700 text-white">
             Purchase Return
           </Button>
+          <Button 
+            className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium"
+            onClick={() => setLocation("/edit-record")}
+          >
+            Edit
+          </Button>
           <Button
             className="bg-green-600 hover:bg-green-700 h-8 px-3 text-sm text-white font-medium"
             onClick={handleSave}

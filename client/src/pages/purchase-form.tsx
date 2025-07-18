@@ -3877,6 +3877,12 @@ function PurchaseForm() {
               Cancel
             </Button>
           )}
+          <Button 
+            className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium"
+            onClick={() => setLocation("/edit-record")}
+          >
+            Edit
+          </Button>
           <Button
             className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium"
             onClick={handlePrintReport}
