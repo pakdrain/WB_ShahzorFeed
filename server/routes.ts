@@ -257,6 +257,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/purchase/by-slip/:slipNo", async (req: Request, res: Response) => {
+    try {
+      const { slipNo } = req.params;
+      
+      // Fetch master record by slip number
+      const masterQuery = `
+        SELECT * FROM wb_weighbridge WHERE slip_no = $1 ORDER BY wb_id DESC LIMIT 1
+      `;
+      const masterResult = await pool.query(masterQuery, [slipNo]);
+      
+      if (masterResult.rows.length === 0) {
+        return res.status(404).json({ error: "Record not found" });
+      }
+      
+      // Fetch detail records
+      const detailQuery = `
+        SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1
+      `;
+      const detailResult = await pool.query(detailQuery, [masterResult.rows[0].wb_id]);
+      
+      res.json({
+        master: masterResult.rows[0],
+        details: detailResult.rows
+      });
+    } catch (error: any) {
+      console.error("Error fetching record by slip number:", error);
+      res.status(500).json({ error: "Failed to fetch record" });
+    }
+  });
+
   // Additional API endpoints for application functionality
   app.get("/api/db/wake", async (req: Request, res: Response) => {
     try {
