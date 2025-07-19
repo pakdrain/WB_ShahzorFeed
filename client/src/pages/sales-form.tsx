@@ -2318,11 +2318,11 @@ export default function SalesForm() {
           >
             Purchase
           </Button>
-          <Button 
-                className={`h-6 text-xs px-3 ${!showOfflineEntries ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
-              >
-                Sales
-              </Button>
+          <Button
+            className={`h-6 text-xs px-3 ${!showOfflineEntries ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+          >
+            Sales
+          </Button>
           <Button
             className="h-8 px-2 text-sm font-medium bg-amber-600 hover:bg-amber-700 text-white"
             onClick={() => toggleOnlineMode(false)}
@@ -2407,8 +2407,7 @@ export default function SalesForm() {
             ONLINE
           </button>
           <button
-            ```text
- className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
+            className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
@@ -2671,7 +2670,7 @@ export default function SalesForm() {
               >
                 Purchase
               </Button>
-              <Button 
+              <Button
                 className={`h-6 text-xs px-3 ${!showOfflineEntries ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
               >
                 Sales
@@ -2689,49 +2688,89 @@ export default function SalesForm() {
               {showOfflineEntries ? (
                 /* Offline Entries Table */
                 <div className="h-full flex flex-col">
-                  <h3 className="text-lg font-semibold mb-2 text-black">Sale Offline Entries</h3>
+                  <h3 className="text-lg font-semibold mb-2 text-black">
+                    Sale Offline Entries
+                  </h3>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm border-collapse">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th className="px-4 py-2 text-left border border-black text-black">Slip No</th>
-                          <th className="px-4 py-2 text-left border border-black text-black">Slip Date</th>
-                          <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
-                          <th className="px-4 py-2 text-left border border-black text-black">First Weight</th>
-                          <th className="px-4 py-2 text-left border border-black text-black">Second Weight</th>
-                          <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
-                          <th className="px-4 py-2 text-left border border-black text-black">Company Name</th>
-                          <th className="px-4 py-2 text-left border border-black text-black">Manual Trans #</th>
+                          <th className="px-4 py-2 text-left border border-black text-black">
+                            Slip No
+                          </th>
+                          <th className="px-4 py-2 text-left border border-black text-black">
+                            Slip Date
+                          </th>
+                          <th className="px-4 py-2 text-left border border-black text-black">
+                            Entry Type
+                          </th>
+                          <th className="px-4 py-2 text-left border border-black text-black">
+                            First Weight
+                          </th>
+                          <th className="px-4 py-2 text-left border border-black text-black">
+                            Second Weight
+                          </th>
+                          <th className="px-4 py-2 text-left border border-black text-black">
+                            Vehicle No
+                          </th>
+                          <th className="px-4 py-2 text-left border border-black text-black">
+                            Company Name
+                          </th>
+                          <th className="px-4 py-2 text-left border border-black text-black">
+                            Manual Trans #
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {filteredRecords && filteredRecords.length > 0 ? (
                           filteredRecords.map((record: any, index: number) => (
-                            <tr key={record.wb_id || index} className="hover:bg-gray-50">
+                            <tr
+                              key={record.wb_id || index}
+                              className="hover:bg-gray-50"
+                            >
                               <td className="px-4 py-2 border border-black text-black">
-                                <button 
+                                <button
                                   className="text-blue-600 hover:text-blue-800 font-medium underline"
                                   onClick={() => {
-                                    console.log("Clicked offline record:", record);
+                                    console.log(
+                                      "Clicked offline record:",
+                                      record,
+                                    );
                                     if (record.wb_id) {
                                       // Check if this is an offline entry
-                                      const isOfflineEntry = record.offline_entry === "Yes";
+                                      const isOfflineEntry =
+                                        record.offline_entry === "Yes";
 
                                       // Determine the correct mode parameter
-                                      const modeParam = isOfflineEntry ? "offline" : "online";
+                                      const modeParam = isOfflineEntry
+                                        ? "offline"
+                                        : "online";
 
                                       if (record.entry_type === "PURCHASE") {
                                         // Navigate to purchase form
                                         const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
-                                        console.log("Navigating to purchase form:", targetUrl);
+                                        console.log(
+                                          "Navigating to purchase form:",
+                                          targetUrl,
+                                        );
                                         window.location.href = targetUrl;
-                                      } else if (record.entry_type === "PURCHASE_RETURN") {
+                                      } else if (
+                                        record.entry_type === "PURCHASE_RETURN"
+                                      ) {
                                         const targetUrl = `/purchase-return?type=${modeParam}&edit=${record.wb_id}`;
-                                        console.log("Navigating to purchase return form:", targetUrl);
+                                        console.log(
+                                          "Navigating to purchase return form:",
+                                          targetUrl,
+                                        );
                                         window.location.href = targetUrl;
-                                      } else if (record.entry_type === "SALE_RETURN") {
+                                      } else if (
+                                        record.entry_type === "SALE_RETURN"
+                                      ) {
                                         const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
-                                        console.log("Navigating to sales return form:", targetUrl);
+                                        console.log(
+                                          "Navigating to sales return form:",
+                                          targetUrl,
+                                        );
                                         window.location.href = targetUrl;
                                       } else {
                                         // For SALE entries, stay on current page and load the data
@@ -2739,7 +2778,11 @@ export default function SalesForm() {
 
                                         // Update URL to show edit mode with correct type
                                         const newUrl = `/sales-form?type=${modeParam}&edit=${record.wb_id}`;
-                                        window.history.replaceState({}, "", newUrl);
+                                        window.history.replaceState(
+                                          {},
+                                          "",
+                                          newUrl,
+                                        );
 
                                         // Close offline entries view
                                         setShowOfflineEntries(false);
@@ -2751,19 +2794,38 @@ export default function SalesForm() {
                                 </button>
                               </td>
                               <td className="px-4 py-2 border border-black text-black">
-                                {record.slip_in_time ? new Date(record.slip_in_time).toLocaleDateString() : '---'}
+                                {record.slip_in_time
+                                  ? new Date(
+                                      record.slip_in_time,
+                                    ).toLocaleDateString()
+                                  : "---"}
                               </td>
-                              <td className="px-4 py-2 border border-black text-black">{record.entry_type || 'SALE'}</td>
-                              <td className="px-4 py-2 border border-black text-black">---</td>
-                              <td className="px-4 py-2 border border-black text-black">---</td>
-                              <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
-                              <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
-                              <td className="px-4 py-2 border border-black text-black">---</td>
+                              <td className="px-4 py-2 border border-black text-black">
+                                {record.entry_type || "SALE"}
+                              </td>
+                              <td className="px-4 py-2 border border-black text-black">
+                                ---
+                              </td>
+                              <td className="px-4 py-2 border border-black text-black">
+                                ---
+                              </td>
+                              <td className="px-4 py-2 border border-black text-black">
+                                {record.vehicle_no || "---"}
+                              </td>
+                              <td className="px-4 py-2 border border-black text-black">
+                                {record.vendor_name || "---"}
+                              </td>
+                              <td className="px-4 py-2 border border-black text-black">
+                                ---
+                              </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan={8} className="px-4 py-8 text-center text-gray-500 border border-black">
+                            <td
+                              colSpan={8}
+                              className="px-4 py-8 text-center text-gray-500 border border-black"
+                            >
                               No offline entries found
                             </td>
                           </tr>
@@ -2816,245 +2878,253 @@ export default function SalesForm() {
                     </div>
                   </div>
 
-                {/* Sales Table Body - Fixed height with 8 rows */}
-                <div className="bg-gray-200 mb-4" style={{ height: "240px" }}>
-                  {[...Array(8)].map((_, index) => (
-                    <div
-                      key={index}
-                      className="grid gap-px text-xs"
-                      style={{
-                        gridTemplateColumns:
-                          "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px",
-                        width: "1250px",
-                        height: "30px",
-                      }}
-                    >
-                      <div className="bg-white border border-gray-300 p-1">
-                        <input
-                          type="text"
-                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                          value={salesData[index]?.dcNo || ""}
-                          onChange={(e) =>
-                            handleSalesDataChange(index, "dcNo", e.target.value)
-                          }
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              const dcNo = salesData[index]?.dcNo;
-                              if (dcNo && dcNo.trim() !== "") {
-                                fetchDcData(dcNo.trim(), index); // ✅ index pass kar rahe hain
-                              }
+                  {/* Sales Table Body - Fixed height with 8 rows */}
+                  <div className="bg-gray-200 mb-4" style={{ height: "240px" }}>
+                    {[...Array(8)].map((_, index) => (
+                      <div
+                        key={index}
+                        className="grid gap-px text-xs"
+                        style={{
+                          gridTemplateColumns:
+                            "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px",
+                          width: "1250px",
+                          height: "30px",
+                        }}
+                      >
+                        <div className="bg-white border border-gray-300 p-1">
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.dcNo || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "dcNo",
+                                e.target.value,
+                              )
                             }
-                          }}
-                          placeholder="Press Enter to fetch"
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-                      <div className="bg-white border border-gray-300 p-1">
-                        <input
-                          type="text"
-                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                          value={salesData[index]?.doNo || ""}
-                          onChange={(e) =>
-                            handleSalesDataChange(index, "doNo", e.target.value)
-                          }
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-                      <div className="bg-white border border-gray-300 p-1">
-                        <input
-                          type="text"
-                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                          value={salesData[index]?.customerName || ""}
-                          onChange={(e) =>
-                            handleSalesDataChange(
-                              index,
-                              "customerName",
-                              e.target.value,
-                            )
-                          }
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-                      <div className="bg-white border border-gray-300 p-1">
-                        <input
-                          type="text"
-                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                          value={salesData[index]?.vehicleNo || ""}
-                          onChange={(e) =>
-                            handleSalesDataChange(
-                              index,
-                              "vehicleNo",
-                              e.target.value,
-                            )
-                          }
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-                      <div className="bg-white border border-gray-300 p-1">
-                        <input
-                          type="text"
-                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                          value={salesData[index]?.doDate || ""}
-                          onChange={(e) =>
-                            handleSalesDataChange(
-                              index,
-                              "doDate",
-                              e.target.value,
-                            )
-                          }
-                          placeholder="DD.MM.YYYY"
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-                      <div className="bg-white border border-gray-300 p-1">
-                        <input
-                          type="text"
-                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                          value={salesData[index]?.itemDescription || ""}
-                          onChange={(e) =>
-                            handleSalesDataChange(
-                              index,
-                              "itemDescription",
-                              e.target.value,
-                            )
-                          }
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-                      <div className="bg-white border border-gray-300 p-1">
-                        <input
-                          type="text"
-                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
-                          value={salesData[index]?.dcQty || ""}
-                          onChange={(e) =>
-                            handleSalesDataChange(
-                              index,
-                              "dcQty",
-                              e.target.value,
-                            )
-                          }
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-                      <div className="bg-white border border-gray-300 p-1">
-                        <input
-                          type="text"
-                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
-                          value={salesData[index]?.doQty || ""}
-                          onChange={(e) =>
-                            handleSalesDataChange(
-                              index,
-                              "doQty",
-                              e.target.value,
-                            )
-                          }
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-                      <div className="bg-white border border-gray-300 p-1">
-                        <input
-                          type="text"
-                          className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
-                          value={salesData[index]?.branch || ""}
-                          onChange={(e) =>
-                            handleSalesDataChange(
-                              index,
-                              "branch",
-                              e.target.value,
-                            )
-                          }
-                          autoComplete="off"
-                        />
-                      </div>
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                const dcNo = salesData[index]?.dcNo;
+                                if (dcNo && dcNo.trim() !== "") {
+                                  fetchDcData(dcNo.trim(), index); // ✅ index pass kar rahe hain
+                                }
+                              }
+                            }}
+                            placeholder="Press Enter to fetch"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
+                          />
+                        </div>
+                        <div className="bg-white border border-gray-300 p-1">
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.doNo || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "doNo",
+                                e.target.value,
+                              )
+                            }
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
+                          />
+                        </div>
+                        <div className="bg-white border border-gray-300 p-1">
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.customerName || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "customerName",
+                                e.target.value,
+                              )
+                            }
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
+                          />
+                        </div>
+                        <div className="bg-white border border-gray-300 p-1">
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.vehicleNo || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "vehicleNo",
+                                e.target.value,
+                              )
+                            }
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
+                          />
+                        </div>
+                        <div className="bg-white border border-gray-300 p-1">
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.doDate || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "doDate",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="DD.MM.YYYY"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
+                          />
+                        </div>
+                        <div className="bg-white border border-gray-300 p-1">
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            value={salesData[index]?.itemDescription || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "itemDescription",
+                                e.target.value,
+                              )
+                            }
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
+                          />
+                        </div>
+                        <div className="bg-white border border-gray-300 p-1">
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
+                            value={salesData[index]?.dcQty || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "dcQty",
+                                e.target.value,
+                              )
+                            }
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
+                          />
+                        </div>
+                        <div className="bg-white border border-gray-300 p-1">
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
+                            value={salesData[index]?.doQty || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "doQty",
+                                e.target.value,
+                              )
+                            }
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoCapitalize="off"
+                            spellCheck="false"
+                            data-form-type="other"
+                          />
+                        </div>
+                        <div className="bg-white border border-gray-300 p-1">
+                          <input
+                            type="text"
+                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
+                            value={salesData[index]?.branch || ""}
+                            onChange={(e) =>
+                              handleSalesDataChange(
+                                index,
+                                "branch",
+                                e.target.value,
+                              )
+                            }
+                            autoComplete="off"
+                          />
+                        </div>
 
-                      <div className="bg-white border border-gray-300 p-1 flex items-center justify-center">
-                        <button
-                          type="button"
-                          onClick={() => handleSalesRowDelete(index)}
-                          className="text-red-500 hover:text-red-700 text-lg font-bold"
-                          title="Delete row"
-                        >
-                          ✖
-                        </button>
+                        <div className="bg-white border border-gray-300 p-1 flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => handleSalesRowDelete(index)}
+                            className="text-red-500 hover:text-red-700 text-lg font-bold"
+                            title="Delete row"
+                          >
+                            ✖
+                          </button>
+                        </div>
                       </div>
+                    ))}
+                  </div>
+
+                  {/* Total Row */}
+                  <div
+                    className="grid gap-px text-xs font-semibold mb-4"
+                    style={{
+                      gridTemplateColumns:
+                        "100px 100px 240px 140px 120px 180px 100px 100px 140px",
+                      width: "1220px",
+                      height: "30px",
+                    }}
+                  >
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+                    <div className="bg-gray-200 border border-gray-400 p-1 flex items-center justify-end">
+                      <span className="text-black">Total:</span>
                     </div>
-                  ))}
-                </div>
-
-                {/* Total Row */}
-                <div
-                  className="grid gap-px text-xs font-semibold mb-4"
-                  style={{
-                    gridTemplateColumns:
-                      "100px 100px 240px 140px 120px 180px 100px 100px 140px",
-                    width: "1220px",
-                    height: "30px",
-                  }}
-                >
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                  <div className="bg-gray-200 border border-gray-400 p-1 flex items-center justify-end">
-                    <span className="text-black">Total:</span>
+                    <div className="bg-white border border-gray-400 p-1">
+                      <input
+                        type="text"
+                        className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
+                        readOnly
+                        value={salesData.reduce(
+                          (sum, row) => sum + (parseFloat(row.dcQty) || 0),
+                          0,
+                        )}
+                      />
+                    </div>
+                    <div className="bg-white border border-gray-400 p-1">
+                      <input
+                        type="text"
+                        className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
+                        readOnly
+                        value={salesData.reduce(
+                          (sum, row) => sum + (parseFloat(row.doQty) || 0),
+                          0,
+                        )}
+                      />
+                    </div>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
                   </div>
-                  <div className="bg-white border border-gray-400 p-1">
-                    <input
-                      type="text"
-                      className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
-                      readOnly
-                      value={salesData.reduce(
-                        (sum, row) => sum + (parseFloat(row.dcQty) || 0),
-                        0,
-                      )}
-                    />
-                  </div>
-                  <div className="bg-white border border-gray-400 p-1">
-                    <input
-                      type="text"
-                      className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
-                      readOnly
-                      value={salesData.reduce(
-                        (sum, row) => sum + (parseFloat(row.doQty) || 0),
-                        0,
-                      )}
-                    />
-                  </div>
-                  <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                </div>
 
                   {/* Bottom section with Weight Per Bags, Total Weight Out, and Total Feed Bags - matching image layout */}
                   <div
