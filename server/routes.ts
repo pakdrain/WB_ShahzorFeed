@@ -1603,6 +1603,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // GET sales by slip number
+  app.get(
+    "/api/sales/by-slip/:slipNo",
+    async (req: Request, res: Response) => {
+      try {
+        const { slipNo } = req.params;
+        const { entry_type } = req.query;
+
+        let masterQuery;
+        let queryParams;
+
+        if (entry_type) {
+          // If entry_type is provided, use it in the query
+          masterQuery = `
+            SELECT * FROM wb_weighbridge 
+            WHERE slip_no = $1 AND entry_type = $2
+            ORDER BY wb_id DESC
+            LIMIT 1
+          `;
+          queryParams = [slipNo, entry_type];
+        } else {
+          // If no entry_type provided, search for SALE entry types only
+          masterQuery = `
+            SELECT * FROM wb_weighbridge 
+            WHERE slip_no = $1 AND entry_type = 'SALE'
+            ORDER BY wb_id DESC
+            LIMIT 1
+          `;
+          queryParams = [slipNo];
+        }
+
+        const masterResult = await pool.query(masterQuery, queryParams);
+
+        if (masterResult.rows.length === 0) {
+          return res.status(404).json({
+            message: `No SALE record found for slip number ${slipNo}`,
+          });
+        }
+
+        const master = masterResult.rows[0];
+
+        const detailsQuery =
+          "SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1";
+        const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
+
+        console.log(
+          `Fetched sales record for slip ${slipNo}${entry_type ? `, type ${entry_type}` : ""}`,
+        );
+        res.json({
+          master,
+          details: detailsResult.rows,
+        });
+      } catch (error: any) {
+        console.error("Error fetching sales by slip number:", error);
+        res.status(500).json({ error: "Failed to fetch sales record" });
+      }
+    },
+  );
+
   // PUT update purchase record
   app.put("/api/purchase/update/:wbId", async (req: Request, res: Response) => {
     try {
