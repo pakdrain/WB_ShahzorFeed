@@ -984,10 +984,8 @@ export default function SalesForm() {
       setLoading(true);
       console.log("Searching for slip:", formData.slipNo);
 
-      // Search for records with specific entry types for sales form
-      const response = await fetch(
-        `/api/purchase/by-slip/${formData.slipNo.trim()}?entry_type=SALE,SALE_RETURN`,
-      );
+      // Search with entry type filtering to only find sale-related entries
+      const response = await fetch(`/api/sales/by-slip/${formData.slipNo.trim()}?entry_type=SALE`);
 
       if (!response.ok) {
         alert(`No SALE record found for slip number ${formData.slipNo}`);
@@ -1008,31 +1006,36 @@ export default function SalesForm() {
           isOffline,
         );
 
-        // Update online/offline status based on the found record
-        setOnlineMode(!isOffline);
+        // Check if this is a sale-related entry that can be edited in sales form
+        if (entryType === "SALE" || entryType === "SALE_RETURN") {
+          // Update online/offline status based on the found record
+          setOnlineMode(!isOffline);
 
-        // Determine the correct URL based on entry type and online/offline status
-        const modeParam = isOffline ? "offline" : "online";
+          // Determine the correct URL based on entry type and online/offline status
+          const modeParam = isOffline ? "offline" : "online";
 
-        if (entryType === "SALE_RETURN") {
-          const targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
-          console.log(
-            `Found ${entryType} entry (${isOffline ? "Offline" : "Online"}), redirecting to:`,
-            targetUrl,
-          );
-          setLocation(targetUrl);
+          if (entryType === "SALE_RETURN") {
+            const targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
+            console.log(
+              `Found ${entryType} entry (${isOffline ? "Offline" : "Online"}), redirecting to:`,
+              targetUrl,
+            );
+            setLocation(targetUrl);
+          } else {
+            // For SALE entries, stay on current page and load the data
+            await loadDataByWbId(master.wb_id);
+
+            // Update URL to show edit mode with correct type
+            const newUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
+            window.history.replaceState({}, "", newUrl);
+
+            // Exit search mode
+            setIsSearchMode(false);
+            setLoading(false);
+            return;
+          }
         } else {
-          // For SALE entries, stay on current page and load the data
-          await loadDataByWbId(master.wb_id);
-
-          // Update URL to show edit mode with correct type
-          const newUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
-          window.history.replaceState({}, "", newUrl);
-
-          // Exit search mode
-          setIsSearchMode(false);
-          setLoading(false);
-          return;
+          alert(`Found ${entryType} entry for slip ${formData.slipNo}, but this is the Sales form. Please use the appropriate form for ${entryType} entries.`);
         }
       } else {
         alert("Invalid record data found");
@@ -2334,15 +2337,31 @@ export default function SalesForm() {
               Cancel
             </Button>
           )}
-          <Button
+          <Button 
             className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium"
             onClick={() => {
-              const urlParams = new URLSearchParams(window.location.search);
-              const typeMode = urlParams.get("type") || "online";
-              setLocation(`/sales-form?type=${typeMode}&search=true`);
+              if (isSearchMode || isEditMode) {
+                // If in search mode or edit mode, reset to new form
+                resetFormToInitial();
+                setIsSearchMode(false);
+                setIsEditMode(false);
+                setEditingWbId(null);
+                
+                // Clear URL parameters and set to new form mode
+                const newUrl = window.location.pathname + "?type=" + (onlineMode ? "online" : "offline");
+                window.history.replaceState({}, "", newUrl);
+              } else {
+                // Enter search mode
+                const urlParams = new URLSearchParams(window.location.search);
+                urlParams.set("search", "true");
+                const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                window.history.replaceState({}, "", newUrl);
+                setIsSearchMode(true);
+                setFormData(prev => ({ ...prev, slipNo: "" }));
+              }
             }}
           >
-            Edit
+            {(isSearchMode || isEditMode) ? "New" : "Edit"}
           </Button>
           <Button
             className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium"
@@ -2387,20 +2406,36 @@ export default function SalesForm() {
                 <div className="col-span-3 space-y-1">
                   <div>
                     <Label className="text-xs text-black">Slip No</Label>
-                    <Input
-                      name="slipNo"
-                      value={formData.slipNo}
-                      onChange={handleChange}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          searchAndLoadBySlipNo();
-                        }
-                      }}
-                      readOnly={!isSearchMode && !isEditMode}
-                      className="h-5 text-xs text-black w-20"
-                      placeholder={isSearchMode ? "Enter slip number" : ""}
-                    />
+                    {isSearchMode ? (
+                      <div className="flex gap-1 w-52">
+                        <Input
+                          name="slipNo"
+                          value={formData.slipNo}
+                          onChange={handleChange}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              searchAndLoadBySlipNo();
+                            }
+                          }}
+                          placeholder="Enter slip number to search"
+                          className="h-5 text-xs text-black flex-1"
+                        />
+                        <Button
+                          onClick={searchAndLoadBySlipNo}
+                          className="h-5 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
+                          disabled={loading}
+                        >
+                          {loading ? "..." : "Search"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Input
+                        name="slipNo"
+                        value={formData.slipNo}
+                        readOnly
+                        className="h-5 text-xs text-black w-20"
+                      />
+                    )}
                   </div>
                   <div>
                     <Label className="text-xs text-black">Net Weight</Label>
