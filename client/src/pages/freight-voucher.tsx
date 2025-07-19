@@ -53,48 +53,32 @@ const FreightVoucher = () => {
             <option value="create">Create</option>
             <option value="checked">Checked</option>
             <option value="approved">Approved</option>
+            <option value="prepared">Prepared</option>
           </select>
         </div>
         <div className="col-md-4">
-          <label className="form-label fw-bold text-dark">Company</label>
+          <label className="form-label fw-bold text-dark">Branch</label>
           <select className="form-select form-select-sm">
-            <option>Sabirs' Poultry (Pvt.) Ltd</option>
-          </select>
-        </div>
-        <div className="col-md-2">
-          <label className="form-label fw-bold text-dark">Month</label>
-          <select className="form-select form-select-sm">
-            <option value="">Select Month</option>
-            <option value="january">January</option>
-            <option value="february">February</option>
-            <option value="march">March</option>
-            <option value="april">April</option>
-            <option value="may">May</option>
-            <option value="june">June</option>
-            <option value="july">July</option>
-            <option value="august">August</option>
-            <option value="september">September</option>
-            <option value="october">October</option>
-            <option value="november">November</option>
-            <option value="december">December</option>
+            <option value="1">Main Branch</option>
+            <option value="2">Shahzor</option>
+            <option value="3">Secondary Branch</option>
           </select>
         </div>
         <div className="col-md-2">
           <label className="form-label fw-bold text-dark">Voucher Type</label>
           <select className="form-select form-select-sm">
-            <option value="">Select Type</option>
             <option value="cpv">CPV</option>
             <option value="cv">CV</option>
           </select>
         </div>
 
         {/* New Entry button */}
-        <div className="col-md-2 d-flex align-items-end justify-content-end">
+        <div className="col-md-4 d-flex align-items-end justify-content-end">
           <button className="btn btn-success btn-sm" onClick={handleNewEntry}>
             New Entry
           </button>
         </div>
-      </div>
+      </div></div>
 
       {/* Voucher Table with Buttons */}
       <div className="d-flex mt-3" style={{ height: "50%" }}>
