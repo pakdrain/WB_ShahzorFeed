@@ -2684,85 +2684,60 @@ export default function SalesForm() {
                 /* Offline Entries Table */
                 <div className="h-full flex flex-col">
                   <h3 className="text-lg font-semibold mb-2 text-black">Sale Offline Entries</h3>
-                  {/* Offline Table Header */}
-                  <div className="grid grid-cols-8 gap-px bg-gray-300 text-xs font-semibold mb-1">
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Slip No
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Slip Date
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Entry Type
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      First Weight
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Second Weight
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Vehicle No
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Company Name
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Manual Trans #
-                    </div>
-                  </div>
-                  
-                  {/* Offline Table Body */}
-                  <div className="bg-gray-200 max-h-80 overflow-y-auto">
-                    {filteredRecords && filteredRecords.length > 0 ? (
-                      filteredRecords.map((record: any, index: number) => (
-                        <div key={record.wb_id || index} className="grid grid-cols-8 gap-px text-xs hover:bg-gray-100">
-                          <div className="bg-white border border-gray-300 p-1 text-center">
-                            <button
-                              className="text-blue-600 hover:text-blue-800 underline font-medium"
-                              onClick={() => {
-                                console.log("Clicked offline record:", record);
-                                if (record.wb_id) {
-                                  // Navigate to sales form in edit mode with offline type
-                                  const targetUrl = `/sales-form?type=offline&edit=${record.wb_id}`;
-                                  console.log("Navigating to offline sales edit:", targetUrl);
-                                  setLocation(targetUrl);
-                                }
-                              }}
-                            >
-                              {record.slip_no || "---"}
-                            </button>
-                          </div>
-                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
-                            {record.slip_in_time ? new Date(record.slip_in_time).toLocaleDateString() : "---"}
-                          </div>
-                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
-                            {record.entry_type || "SALE"}
-                          </div>
-                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
-                            ---
-                          </div>
-                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
-                            ---
-                          </div>
-                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
-                            {record.vehicle_no || "---"}
-                          </div>
-                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
-                            {record.vendor_name || "---"}
-                          </div>
-                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
-                            ---
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="grid grid-cols-8 gap-px text-xs">
-                        <div className="col-span-8 bg-white border border-gray-300 p-4 text-center text-gray-500">
-                          No offline entries found
-                        </div>
-                      </div>
-                    )}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm border-collapse">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-4 py-2 text-left border border-black text-black">Slip No</th>
+                          <th className="px-4 py-2 text-left border border-black text-black">Slip Date</th>
+                          <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
+                          <th className="px-4 py-2 text-left border border-black text-black">First Weight</th>
+                          <th className="px-4 py-2 text-left border border-black text-black">Second Weight</th>
+                          <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
+                          <th className="px-4 py-2 text-left border border-black text-black">Company Name</th>
+                          <th className="px-4 py-2 text-left border border-black text-black">Manual Trans #</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredRecords && filteredRecords.length > 0 ? (
+                          filteredRecords.map((record: any, index: number) => (
+                            <tr key={record.wb_id || index} className="hover:bg-gray-50">
+                              <td className="px-4 py-2 border border-black text-black">
+                                <button 
+                                  className="text-blue-600 hover:text-blue-800 font-medium underline"
+                                  onClick={() => {
+                                    console.log("Clicked offline record:", record);
+                                    if (record.wb_id) {
+                                      // Navigate to sales form in edit mode with offline type
+                                      const targetUrl = `/sales-form?type=offline&edit=${record.wb_id}`;
+                                      console.log("Navigating to offline sales edit:", targetUrl);
+                                      setLocation(targetUrl);
+                                    }
+                                  }}
+                                >
+                                  {record.slip_no || "---"}
+                                </button>
+                              </td>
+                              <td className="px-4 py-2 border border-black text-black">
+                                {record.slip_in_time ? new Date(record.slip_in_time).toLocaleDateString() : '---'}
+                              </td>
+                              <td className="px-4 py-2 border border-black text-black">{record.entry_type || 'SALE'}</td>
+                              <td className="px-4 py-2 border border-black text-black">---</td>
+                              <td className="px-4 py-2 border border-black text-black">---</td>
+                              <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
+                              <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
+                              <td className="px-4 py-2 border border-black text-black">---</td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={8} className="px-4 py-8 text-center text-gray-500 border border-black">
+                              No offline entries found
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               ) : (
