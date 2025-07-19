@@ -1735,32 +1735,45 @@ function PurchaseForm() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const editWbId = urlParams.get("edit");
+    
+    // Set a flag when page loads to detect reloads
+    const pageLoadTime = Date.now();
+    const lastPageLoad = sessionStorage.getItem('purchaseFormPageLoad');
     const wasInEditMode = sessionStorage.getItem('purchaseFormEditMode') === 'true';
+    
+    // Store current page load time
+    sessionStorage.setItem('purchaseFormPageLoad', pageLoadTime.toString());
 
-    // If we were in edit mode and page was reloaded, clear edit parameter and reset to new form
-    if (wasInEditMode && editWbId && performance.navigation?.type === 1) {
-      console.log("Page reload detected while in edit mode, clearing edit parameter and resetting to new form");
-      // Clear edit parameter from URL
-      urlParams.delete("edit");
-      const newUrl = urlParams.toString()
-        ? `${window.location.pathname}?${urlParams.toString()}`
-        : window.location.pathname;
-      window.history.replaceState({}, "", newUrl);
-      
-      // Clear session storage and reset to new form
-      sessionStorage.removeItem('purchaseFormEditMode');
-      setIsEditMode(false);
-      setEditingWbId(null);
-      setTimeout(() => {
-        resetFormToInitial();
-      }, 100);
-      return;
+    // If we were in edit mode and this appears to be a page reload (edit param still in URL)
+    if (wasInEditMode && editWbId) {
+      const timeDiff = lastPageLoad ? (pageLoadTime - parseInt(lastPageLoad)) : 0;
+      // If less than 5 seconds since last page load, likely a reload
+      if (timeDiff < 5000) {
+        console.log("Page reload detected while in edit mode, clearing edit parameter and resetting to new form");
+        // Clear edit parameter from URL
+        urlParams.delete("edit");
+        const newUrl = urlParams.toString()
+          ? `${window.location.pathname}?${urlParams.toString()}`
+          : window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+        
+        // Clear session storage and reset to new form
+        sessionStorage.removeItem('purchaseFormEditMode');
+        sessionStorage.removeItem('purchaseFormPageLoad');
+        setIsEditMode(false);
+        setEditingWbId(null);
+        setTimeout(() => {
+          resetFormToInitial();
+        }, 100);
+        return;
+      }
     }
 
     // Check if user navigated to purchase form while in edit mode
     if (!editWbId && wasInEditMode) {
       console.log("Navigation to purchase form detected while in edit mode, clearing edit state");
       sessionStorage.removeItem('purchaseFormEditMode');
+      sessionStorage.removeItem('purchaseFormPageLoad');
       setIsEditMode(false);
       setEditingWbId(null);
       resetFormToInitial();
