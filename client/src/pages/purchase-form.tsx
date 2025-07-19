@@ -5329,19 +5329,36 @@ function PurchaseForm() {
                                         record,
                                       );
                                       console.log("wb_id:", record.wb_id);
+                                      console.log("entry_type:", record.entry_type);
                                       console.log(
                                         "offline_entry:",
                                         record.offline_entry,
                                       );
 
                                       if (record.wb_id) {
-                                        // Navigate to purchase form with offline mode
-                                        const targetUrl = `/purchase-form?form=purchase&type=offline&edit=${record.wb_id}`;
-                                        console.log(
-                                          "Navigating to offline purchase form:",
-                                          targetUrl,
-                                        );
-                                        window.location.href = targetUrl;
+                                        // Check if this is an offline entry
+                                        const isOfflineEntry = record.offline_entry === "Yes";
+                                        const modeParam = isOfflineEntry ? "offline" : "online";
+
+                                        // Navigate based on entry type
+                                        if (record.entry_type === "SALE") {
+                                          const targetUrl = `/sales-form?type=${modeParam}&edit=${record.wb_id}`;
+                                          console.log("Navigating to sales form:", targetUrl);
+                                          window.location.href = targetUrl;
+                                        } else if (record.entry_type === "SALE_RETURN") {
+                                          const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
+                                          console.log("Navigating to sales return form:", targetUrl);
+                                          window.location.href = targetUrl;
+                                        } else if (record.entry_type === "PURCHASE_RETURN") {
+                                          const targetUrl = `/purchase-return?type=${modeParam}&edit=${record.wb_id}`;
+                                          console.log("Navigating to purchase return form:", targetUrl);
+                                          window.location.href = targetUrl;
+                                        } else {
+                                          // For purchase entries, stay on purchase form
+                                          const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
+                                          console.log("Navigating to purchase form:", targetUrl);
+                                          window.location.href = targetUrl;
+                                        }
                                       }
                                     }}
                                   >
