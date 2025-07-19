@@ -3986,6 +3986,250 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Fetch and save data to chart_of_accounts table
+  app.post(
+    "/api/fetch-and-save-chart-accounts",
+    async (req: Request, res: Response) => {
+      try {
+        const { url } = req.body;
+
+        console.log("Received fetch request for chart_of_accounts URL:", url);
+
+        if (!url) {
+          return res.status(400).json({
+            success: false,
+            error: "URL is required",
+          });
+        }
+
+        // Fetch data from the provided URL
+        console.log("Fetching data from:", url);
+        const response = await fetch(url, {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+            "User-Agent": "WeighbridgeSystem/1.0",
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Fetched raw data:", JSON.stringify(data, null, 2));
+
+        // Create chart_of_accounts table if it doesn't exist
+        await pool.query(`
+          CREATE TABLE IF NOT EXISTS chart_of_accounts (
+            chart_of_account_id INTEGER PRIMARY KEY,
+            chart_of_account_code VARCHAR(50) NOT NULL,
+            description TEXT,
+            cust_vendor_id INTEGER,
+            chk_cust_vendor BOOLEAN DEFAULT FALSE,
+            chk_cash_bank_acc BOOLEAN DEFAULT FALSE
+          )
+        `);
+
+        let recordsInserted = 0;
+        let dataToProcess = [];
+
+        // Handle different data structures - look for arrays in nested properties
+        if (Array.isArray(data)) {
+          dataToProcess = data;
+        } else if (data && typeof data === "object") {
+          // Check for common API response structures
+          if (data.items && Array.isArray(data.items)) {
+            dataToProcess = data.items;
+          } else if (data.data && Array.isArray(data.data)) {
+            dataToProcess = data.data;
+          } else if (data.results && Array.isArray(data.results)) {
+            dataToProcess = data.results;
+          } else if (data.records && Array.isArray(data.records)) {
+            dataToProcess = data.records;
+          } else {
+            // Single object
+            dataToProcess = [data];
+          }
+        }
+
+        console.log(`Found ${dataToProcess.length} records to process`);
+
+        if (dataToProcess.length === 0) {
+          throw new Error("No valid data found in API response");
+        }
+
+        // Clear existing data and insert new data
+        await pool.query("DELETE FROM chart_of_accounts");
+
+        for (let i = 0; i < dataToProcess.length; i++) {
+          const item = dataToProcess[i];
+
+          try {
+            // Extract chart_of_account_id - try multiple possible field names
+            let chartOfAccountId = null;
+            if (
+              item.chart_of_account_id !== undefined &&
+              item.chart_of_account_id !== null
+            ) {
+              chartOfAccountId = parseInt(String(item.chart_of_account_id));
+            } else if (
+              item.account_id !== undefined &&
+              item.account_id !== null
+            ) {
+              chartOfAccountId = parseInt(String(item.account_id));
+            } else if (item.id !== undefined && item.id !== null) {
+              chartOfAccountId = parseInt(String(item.id));
+            } else {
+              chartOfAccountId = 1000 + i; // Use a unique sequential ID
+            }
+
+            // Ensure we have a valid numeric ID
+            if (isNaN(chartOfAccountId) || chartOfAccountId <= 0) {
+              chartOfAccountId = 1000 + i;
+            }
+
+            const chartOfAccountCode =
+              item.chart_of_account_code ||
+              item.account_code ||
+              item.code ||
+              `ACC${chartOfAccountId}`;
+            const description =
+              item.description ||
+              item.desc ||
+              item.name ||
+              item.title ||
+              "Account Description";
+            const custVendorId =
+              item.cust_vendor_id || item.customer_vendor_id || null;
+            const chkCustVendor =
+              item.chk_cust_vendor || item.is_customer_vendor || false;
+            const chkCashBankAcc =
+              item.chk_cash_bank_acc || item.is_cash_bank || false;
+
+            console.log(`Processing record ${i + 1}:`, {
+              chartOfAccountId,
+              chartOfAccountCode,
+              description,
+              custVendorId,
+              chkCustVendor,
+              chkCashBankAcc,
+            });
+
+            // Check if record exists first
+            const checkQuery = `SELECT chart_of_account_id FROM chart_of_accounts WHERE chart_of_account_id = $1`;
+            const existingRecord = await pool.query(checkQuery, [chartOfAccountId]);
+
+            let insertQuery;
+            if (existingRecord.rows.length > 0) {
+              // Update existing record
+              insertQuery = `
+                UPDATE chart_of_accounts SET 
+                  chart_of_account_code = $2,
+                  description = $3,
+                  cust_vendor_id = $4,
+                  chk_cust_vendor = $5,
+                  chk_cash_bank_acc = $6
+                WHERE chart_of_account_id = $1
+              `;
+            } else {
+              // Insert new record
+              insertQuery = `
+                INSERT INTO chart_of_accounts (
+                  chart_of_account_id,
+                  chart_of_account_code,
+                  description,
+                  cust_vendor_id,
+                  chk_cust_vendor,
+                  chk_cash_bank_acc
+                ) VALUES ($1, $2, $3, $4, $5, $6)
+                ON CONFLICT (chart_of_account_id) DO UPDATE SET
+                  chart_of_account_code = EXCLUDED.chart_of_account_code,
+                  description = EXCLUDED.description,
+                  cust_vendor_id = EXCLUDED.cust_vendor_id,
+                  chk_cust_vendor = EXCLUDED.chk_cust_vendor,
+                  chk_cash_bank_acc = EXCLUDED.chk_cash_bank_acc
+              `;
+            }
+
+            await pool.query(insertQuery, [
+              chartOfAccountId,
+              chartOfAccountCode,
+              description,
+              custVendorId ? parseInt(String(custVendorId)) : null,
+              Boolean(chkCustVendor),
+              Boolean(chkCashBankAcc),
+            ]);
+
+            recordsInserted++;
+            console.log(
+              `✅ Successfully inserted record ${i + 1}: ID=${chartOfAccountId}, code='${chartOfAccountCode}'`,
+            );
+          } catch (insertError: any) {
+            console.error(
+              `❌ Error inserting record ${i + 1}:`,
+              insertError.message,
+            );
+            console.error("Failed item:", JSON.stringify(item, null, 2));
+
+            // Try with fallback values
+            try {
+              const fallbackId = 1000 + i;
+              const fallbackQuery = `
+                INSERT INTO chart_of_accounts (
+                  chart_of_account_id,
+                  chart_of_account_code,
+                  description,
+                  cust_vendor_id,
+                  chk_cust_vendor,
+                  chk_cash_bank_acc
+                ) VALUES ($1, $2, $3, $4, $5, $6)
+                ON CONFLICT (chart_of_account_id) DO NOTHING
+              `;
+
+              await pool.query(fallbackQuery, [
+                fallbackId,
+                `ACC${fallbackId}`,
+                "Default Account",
+                null,
+                false,
+                false,
+              ]);
+
+              recordsInserted++;
+              console.log(
+                `✅ Inserted fallback record ${i + 1}: ID=${fallbackId}`,
+              );
+            } catch (fallbackError: any) {
+              console.error(
+                `❌ Fallback insert also failed for record ${i + 1}:`,
+                fallbackError.message,
+              );
+            }
+          }
+        }
+
+        console.log(
+          `✅ Successfully inserted ${recordsInserted} records into chart_of_accounts table`,
+        );
+
+        res.json({
+          success: true,
+          message: `Data fetched and saved successfully to chart_of_accounts table`,
+          recordsInserted,
+          data: dataToProcess.slice(0, 3),
+        });
+      } catch (error: any) {
+        console.error("❌ Error fetching and saving chart accounts data:", error);
+        res.status(500).json({
+          success: false,
+          error: "Failed to fetch and save chart accounts data",
+          details: error.message,
+        });
+      }
+    },
+  );
+
   // GET vendor data from sys_data_configg table for offline mode (weight field)
   app.get("/api/vendor-data", async (req: Request, res: Response) => {
     try {
