@@ -4,39 +4,44 @@ import { useLocation } from "wouter";
 
 const FreightVoucher = () => {
   const [, setLocation] = useLocation();
-  const [vouchers, setVouchers] = useState([]);
+  const [freightVouchers, setFreightVouchers] = useState([]);
+  const [freightDetails, setFreightDetails] = useState([]);
+  const [selectedFreightId, setSelectedFreightId] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("1");
   const [selectedVoucherType, setSelectedVoucherType] = useState("cpv");
-  const [invItems, setInvItems] = useState([]);
 
   useEffect(() => {
-    fetchVouchers();
-    fetchInvItems();
+    fetchFreightVouchers();
   }, []);
 
-  const fetchVouchers = async () => {
+  const fetchFreightVouchers = async () => {
     try {
-      const response = await fetch("/api/vouchers");
+      const response = await fetch("/api/freight-vouchers");
       if (response.ok) {
         const data = await response.json();
-        setVouchers(data);
+        setFreightVouchers(data);
       }
     } catch (error) {
-      console.error("Error fetching vouchers:", error);
+      console.error("Error fetching freight vouchers:", error);
     }
   };
 
-  const fetchInvItems = async () => {
+  const fetchFreightDetails = async (freightId) => {
     try {
-      const response = await fetch("/api/inv_items");
+      const response = await fetch(`/api/freight-vouchers/${freightId}/details`);
       if (response.ok) {
         const data = await response.json();
-        setInvItems(data);
+        setFreightDetails(data);
       }
     } catch (error) {
-      console.error("Error fetching inv_items:", error);
+      console.error("Error fetching freight details:", error);
     }
+  };
+
+  const handleFreightVoucherClick = (freightId) => {
+    setSelectedFreightId(freightId);
+    fetchFreightDetails(freightId);
   };
 
   const handleNewEntry = () => {
@@ -148,9 +153,14 @@ const FreightVoucher = () => {
               </tr>
             </thead>
             <tbody>
-            {invItems.length > 0
-              ? invItems.map((item, index) => (
-                  <tr key={item.item_id}>
+            {freightVouchers.length > 0
+              ? freightVouchers.map((voucher, index) => (
+                  <tr 
+                    key={voucher.freight_id}
+                    onClick={() => handleFreightVoucherClick(voucher.freight_id)}
+                    style={{ cursor: 'pointer' }}
+                    className={selectedFreightId === voucher.freight_id ? 'table-active' : ''}
+                  >
                     <td>
                       <input type="checkbox" />
                     </td>
@@ -158,7 +168,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={new Date().toISOString().split('T')[0]}
+                        value={voucher.doc_date ? new Date(voucher.doc_date).toISOString().split('T')[0] : ""}
                         readOnly
                       />
                     </td>
@@ -166,7 +176,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={item.item_code || ""}
+                        value={voucher.wb_doc_no || voucher.doc_no || ""}
                         readOnly
                       />
                     </td>
@@ -174,7 +184,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={selectedVoucherType.toUpperCase()}
+                        value={voucher.freight_type || selectedVoucherType.toUpperCase()}
                         readOnly
                       />
                     </td>
@@ -182,7 +192,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={item.item_id || ""}
+                        value={voucher.freight_id || ""}
                         readOnly
                       />
                     </td>
@@ -190,7 +200,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={item.payable_acc_id || ""}
+                        value=""
                         readOnly
                       />
                     </td>
@@ -198,7 +208,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={item.gl_asset_id || ""}
+                        value=""
                         readOnly
                       />
                     </td>
@@ -206,7 +216,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={item.item_desc || ""}
+                        value={voucher.remarks || ""}
                         readOnly
                       />
                     </td>
@@ -214,7 +224,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={item.weight_in_kg || ""}
+                        value=""
                         readOnly
                       />
                     </td>
@@ -335,14 +345,46 @@ const FreightVoucher = () => {
             </tr>
           </thead>
           <tbody>
-            {vouchers.length > 0
-              ? vouchers.map((voucher, index) => (
-                  <tr key={index}>
+            {freightDetails.length > 0
+              ? freightDetails.map((detail, index) => (
+                  <tr key={detail.detail_id}>
                     <td>
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={voucher.customer_name || ""}
+                        value={detail.vendor_name || ""}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={detail.item_code || ""}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={detail.item_desc || ""}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={`Slip: ${detail.slip_no || ""}, Vehicle: ${detail.vehicle_no || ""}`}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={detail.delivery_term || ""}
                         readOnly
                       />
                     </td>
@@ -351,21 +393,6 @@ const FreightVoucher = () => {
                         type="text"
                         className="form-control form-control-sm"
                         value=""
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={voucher.item_desc || ""}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={voucher.remarks || ""}
                         readOnly
                       />
                     </td>
@@ -374,34 +401,23 @@ const FreightVoucher = () => {
                         type="text"
                         className="form-control form-control-sm"
                         value=""
+                        readOnly
                       />
                     </td>
                     <td>
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value=""
+                        value={detail.debit_amount || ""}
+                        readOnly
                       />
                     </td>
                     <td>
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value=""
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value=""
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value=""
+                        value={detail.credit_amount || ""}
+                        readOnly
                       />
                     </td>
                   </tr>

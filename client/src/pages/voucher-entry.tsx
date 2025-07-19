@@ -159,38 +159,48 @@ const VoucheEntry = () => {
 
   const handleSave = async () => {
     try {
-      await fetch("/api/create-vouchers-table", {
+      await fetch("/api/create-freight-table", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
 
       const voucherData = {
+        docNo: maxDocNo,
         voucherType: voucherType,
         docDate: document.querySelector('input[type="date"]')?.value,
         remarks: document.querySelector("textarea")?.value,
         createdBy: 1,
         creationDate: currentDate,
         branch: selectedBranch,
-        docNo: selectedDoNo,
+        selectedDoNo: selectedDoNo,
       };
 
-      const response = await fetch("/api/vouchers/save", {
+      // Collect slip data from selected rows
+      const slipData = [];
+      selectedRows.forEach(index => {
+        if (tableData[index]) {
+          slipData.push(tableData[index]);
+        }
+      });
+
+      const response = await fetch("/api/freight/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(voucherData),
+        body: JSON.stringify({ voucherData, slipData }),
       });
 
       if (response.ok) {
         const result = await response.json();
-        console.log("Voucher saved successfully:", result);
-        alert("Voucher saved successfully!");
-        setLocation("/voucher-view");
+        console.log("Freight voucher saved successfully:", result);
+        alert("Freight voucher saved successfully!");
+        setLocation("/freight-voucher");
       } else {
-        throw new Error("Failed to save voucher");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to save freight voucher");
       }
     } catch (error) {
-      console.error("Error saving voucher:", error);
-      alert("Failed to save voucher. Please try again.");
+      console.error("Error saving freight voucher:", error);
+      alert("Failed to save freight voucher. Please try again.");
     }
   };
 
