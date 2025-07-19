@@ -861,7 +861,6 @@ export default function SalesForm() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingWbId, setEditingWbId] = useState<number | null>(null);
   const [isSearchMode, setIsSearchMode] = useState(false);
-  const [loading, setLoading] = useState(false);
 
   const [onlineMode, setOnlineMode] = useState(() => {
     // Initialize based on URL parameter immediately
@@ -985,7 +984,9 @@ export default function SalesForm() {
       console.log("Searching for slip:", formData.slipNo);
 
       // Search with entry type filtering to only find sale-related entries
-      const response = await fetch(`/api/sales/by-slip/${formData.slipNo.trim()}?entry_type=SALE`);
+      const response = await fetch(
+        `/api/sales/by-slip/${formData.slipNo.trim()}?entry_type=SALE`,
+      );
 
       if (!response.ok) {
         alert(`No SALE record found for slip number ${formData.slipNo}`);
@@ -1035,7 +1036,9 @@ export default function SalesForm() {
             return;
           }
         } else {
-          alert(`Found ${entryType} entry for slip ${formData.slipNo}, but this is the Sales form. Please use the appropriate form for ${entryType} entries.`);
+          alert(
+            `Found ${entryType} entry for slip ${formData.slipNo}, but this is the Sales form. Please use the appropriate form for ${entryType} entries.`,
+          );
         }
       } else {
         alert("Invalid record data found");
@@ -2337,7 +2340,7 @@ export default function SalesForm() {
               Cancel
             </Button>
           )}
-          <Button 
+          <Button
             className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium"
             onClick={() => {
               if (isSearchMode || isEditMode) {
@@ -2346,9 +2349,12 @@ export default function SalesForm() {
                 setIsSearchMode(false);
                 setIsEditMode(false);
                 setEditingWbId(null);
-                
+
                 // Clear URL parameters and set to new form mode
-                const newUrl = window.location.pathname + "?type=" + (onlineMode ? "online" : "offline");
+                const newUrl =
+                  window.location.pathname +
+                  "?type=" +
+                  (onlineMode ? "online" : "offline");
                 window.history.replaceState({}, "", newUrl);
               } else {
                 // Enter search mode
@@ -2357,11 +2363,11 @@ export default function SalesForm() {
                 const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
                 window.history.replaceState({}, "", newUrl);
                 setIsSearchMode(true);
-                setFormData(prev => ({ ...prev, slipNo: "" }));
+                setFormData((prev) => ({ ...prev, slipNo: "" }));
               }
             }}
           >
-            {(isSearchMode || isEditMode) ? "New" : "Edit"}
+            {isSearchMode || isEditMode ? "New" : "Edit"}
           </Button>
           <Button
             className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium"
