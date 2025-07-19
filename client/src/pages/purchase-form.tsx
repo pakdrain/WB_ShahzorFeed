@@ -1655,7 +1655,10 @@ function PurchaseForm() {
       offlineEditSlip,
     });
 
-    // Always clear session storage on any navigation to prevent stale state
+    // Check if this is a page reload by checking if we have edit mode in sessionStorage
+    const wasInEditMode = sessionStorage.getItem('purchaseFormEditMode') === 'true';
+    
+    // Clear any previous edit mode state from sessionStorage on every page load
     sessionStorage.removeItem('purchaseFormEditMode');
 
     // Set selected form robustly
@@ -1675,18 +1678,39 @@ function PurchaseForm() {
     // Check if we should be in search mode
     if (searchMode === "true") {
       setIsSearchMode(true);
+      setIsEditMode(false);
+      setEditingWbId(null);
       setFormData(prev => ({ ...prev, slipNo: "" }));
       return;
     }
 
-    // Check if we should be in edit mode based on URL parameter
-    if (editWbId) {
+    // If we were in edit mode and page was reloaded, clear edit parameter and reset to new form
+    if (wasInEditMode && editWbId) {
+      console.log("Page reload detected while in edit mode, clearing edit parameter and resetting to new form");
+      // Clear edit parameter from URL
+      urlParams.delete("edit");
+      const newUrl = urlParams.toString()
+        ? `${window.location.pathname}?${urlParams.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+      
+      // Reset to new form
+      setIsEditMode(false);
+      setEditingWbId(null);
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
+      return;
+    }
+
+    // Check if we should be in edit mode ONLY based on URL parameter (fresh navigation)
+    if (editWbId && !wasInEditMode) {
       // Load record for editing by wb_id
       console.log("Edit mode detected from URL parameter, loading data");
       sessionStorage.setItem('purchaseFormEditMode', 'true');
       loadDataByWbId(parseInt(editWbId));
       return; // Exit early to prevent any other initialization
-    } else if (offlineEditSlip) {
+    } else if (offlineEditSlip && !wasInEditMode) {
       console.log(
         "Offline edit mode detected from URL parameter, loading data",
       );
@@ -1709,33 +1733,38 @@ function PurchaseForm() {
 
   // Handle page reload detection and edit mode management
   useEffect(() => {
-    const checkPageReloadAndEditMode = () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const editWbId = urlParams.get("edit");
-      const wasInEditMode = sessionStorage.getItem('purchaseFormEditMode') === 'true';
+    const urlParams = new URLSearchParams(window.location.search);
+    const editWbId = urlParams.get("edit");
+    const wasInEditMode = sessionStorage.getItem('purchaseFormEditMode') === 'true';
 
-      // Check if this is a page reload while in edit mode
-      if (editWbId && wasInEditMode && performance.navigation?.type === 1) {
-        console.log("Page reload detected in edit mode, resetting to new form");
-        // Clear edit mode and redirect to new form
-        sessionStorage.removeItem('purchaseFormEditMode');
-        const typeMode = urlParams.get("type") || "online";
-        const newUrl = `/purchase-form?type=${typeMode}`;
-        window.location.href = newUrl;
-        return;
-      }
-
-      // Check if user navigated to purchase form while in edit mode
-      if (!editWbId && wasInEditMode) {
-        console.log("Navigation to purchase form detected while in edit mode, clearing edit state");
-        sessionStorage.removeItem('purchaseFormEditMode');
-        setIsEditMode(false);
-        setEditingWbId(null);
+    // If we were in edit mode and page was reloaded, clear edit parameter and reset to new form
+    if (wasInEditMode && editWbId && performance.navigation?.type === 1) {
+      console.log("Page reload detected while in edit mode, clearing edit parameter and resetting to new form");
+      // Clear edit parameter from URL
+      urlParams.delete("edit");
+      const newUrl = urlParams.toString()
+        ? `${window.location.pathname}?${urlParams.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+      
+      // Clear session storage and reset to new form
+      sessionStorage.removeItem('purchaseFormEditMode');
+      setIsEditMode(false);
+      setEditingWbId(null);
+      setTimeout(() => {
         resetFormToInitial();
-      }
-    };
+      }, 100);
+      return;
+    }
 
-    checkPageReloadAndEditMode();
+    // Check if user navigated to purchase form while in edit mode
+    if (!editWbId && wasInEditMode) {
+      console.log("Navigation to purchase form detected while in edit mode, clearing edit state");
+      sessionStorage.removeItem('purchaseFormEditMode');
+      setIsEditMode(false);
+      setEditingWbId(null);
+      resetFormToInitial();
+    }
   }, []);
 
   // Sync form data when onlineMode changes
