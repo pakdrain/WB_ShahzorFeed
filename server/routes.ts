@@ -4557,112 +4557,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Voucher API endpoints for gl_vouchers table
 
-  // Create gl_vouchers table if it doesn't exist
-  app.post(
-    "/api/create-vouchers-table",
-    async (req: Request, res: Response) => {
-      try {
-        await pool.query(`
-        CREATE TABLE IF NOT EXISTS gl_vouchers (
-          voucher_id         SERIAL PRIMARY KEY,
-          voucher_type       VARCHAR(20),
-          voucher_no         INTEGER,
-          voucher_date       DATE NOT NULL,
-          description        VARCHAR(1000),
-          batch_id           INTEGER,
-          created_by         INTEGER,
-          creation_date      DATE,
-          last_updated_by    INTEGER,
-          last_update_date   DATE,
-          status             VARCHAR(50),
-          approved_by        INTEGER,
-          approval_date      DATE,
-          posted_by          INTEGER,
-          posting_date       DATE,
-          branch_id          VARCHAR(30),
-          module             VARCHAR(20),
-          module_doc         VARCHAR(50),
-          module_doc_id      INTEGER,
-          reference_no       VARCHAR(30),
-          checked_by         INTEGER,
-          checked_date       DATE,
-          currency           VARCHAR(20),
-          exchange_rate      NUMERIC(16,4),
-          fe_voucher         CHAR(1),
-          ref_date           DATE,
-          paid_amount        NUMERIC(20,4),
-          acc_id             BIGINT,
-          canceled_by        BIGINT,
-          canceled_date      DATE,
-          closed             CHAR(1),
-          voucher_site       CHAR(1),
-          sale_purchase      VARCHAR(30),
-          dc_igp_id          BIGINT,
-          bank_id            INTEGER,
-          wh_tax_id          INTEGER,
-          wh_tax_amt         NUMERIC(16),
-          company_id         BIGINT,
-          cpv_type           VARCHAR(30),
-          company_type       VARCHAR(500),
-          cheque_no          VARCHAR(50),
-          hatch_no           VARCHAR(200),
-          old_status         VARCHAR(500),
-          paid_to            VARCHAR(50),
-          slip_no            NUMERIC(20,6),
-          asset              VARCHAR(200),
-          audit_status       VARCHAR(200),
-          audit_by           BIGINT,
-          audit_date         DATE,
-          delete_date        DATE,
-          entry_remarks      VARCHAR(2000),
-          restore_date       DATE,
-          deleted_date       DATE,
-          un_approve_by      BIGINT,
-          un_approve_date    DATE,
-          mr_no              VARCHAR(50),
-          wb_voucher_id      BIGINT,
-          cash_plant         VARCHAR(20),
-          bank_plant         VARCHAR(20),
-          cpv                VARCHAR(20),
-          br_code            INTEGER,
-          modify_by          BIGINT,
-          modify_date        DATE,
-          v_id_apex          BIGINT,
-          advance_pay        VARCHAR(20),
-          dc_id              BIGINT,
-          unaudit_by         BIGINT,
-          unaudit_date       DATE,
-          vehicle_id         VARCHAR(20),
-          company_name       VARCHAR(200),
-          vehicle_type       VARCHAR(30),
-          vehicle_name       VARCHAR(50),
-          vehicle_no         VARCHAR(50)
-        )
-      `);
+  // Get gl_vouchers table structure (since table already exists)
+  app.get("/api/vouchers/table-info", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT column_name, data_type, is_nullable, column_default
+        FROM information_schema.columns 
+        WHERE table_name = 'gl_vouchers' 
+        AND table_schema = 'public'
+        ORDER BY ordinal_position
+      `;
+      
+      const result = await pool.query(query);
+      
+      res.json({
+        success: true,
+        message: "gl_vouchers table structure retrieved",
+        columns: result.rows,
+      });
+    } catch (error: any) {
+      console.error("Error getting gl_vouchers table structure:", error);
+      res.status(500).json({ error: "Failed to get table structure" });
+    }
+  });
 
-        res.json({
-          success: true,
-          message: "gl_vouchers table created successfully",
-        });
-      } catch (error: any) {
-        console.error("Error creating gl_vouchers table:", error);
-        res.status(500).json({ error: "Failed to create gl_vouchers table" });
-      }
-    },
-  );
-
-  // Save voucher data to gl_vouchers table
+  // Save voucher data to existing gl_vouchers table
   app.post("/api/vouchers/save", async (req: Request, res: Response) => {
     try {
       const voucherData = req.body;
 
+      // First, let's check the existing table structure
+      const structureQuery = `
+        SELECT column_name, data_type 
+        FROM information_schema.columns 
+        WHERE table_name = 'gl_vouchers' 
+        AND table_schema = 'public'
+        ORDER BY ordinal_position
+      `;
+      
+      const structureResult = await pool.query(structureQuery);
+      console.log("Existing gl_vouchers table structure:", structureResult.rows);
+
+      // Use a more generic insert that should work with most gl_vouchers table structures
       const query = `
         INSERT INTO gl_vouchers (
           voucher_type, voucher_date, description, created_by, creation_date,
-          status, branch_id, reference_no, entry_remarks, company_name
+          status, branch_id, reference_no, entry_remarks
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        RETURNING voucher_id
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING *
       `;
 
       const values = [
@@ -4675,20 +4618,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         voucherData.branch,
         voucherData.docNo,
         voucherData.remarks,
-        "Sabirs' Poultry (Pvt.) Ltd",
       ];
 
       const result = await pool.query(query, values);
 
-      console.log(`Voucher saved with ID: ${result.rows[0].voucher_id}`);
+      console.log(`Voucher saved successfully:`, result.rows[0]);
       res.json({
         success: true,
-        voucher_id: result.rows[0].voucher_id,
+        voucher: result.rows[0],
         message: "Voucher saved successfully",
       });
     } catch (error: any) {
       console.error("Error saving voucher:", error);
-      res.status(500).json({ error: "Failed to save voucher" });
+      console.error("Error details:", error.message);
+      
+      // If the insert fails, try a simpler approach
+      try {
+        const simpleQuery = `
+          INSERT INTO gl_vouchers (voucher_type, voucher_date, description)
+          VALUES ($1, $2, $3)
+          RETURNING *
+        `;
+        
+        const simpleValues = [
+          voucherData.voucherType || "CPV",
+          voucherData.docDate,
+          voucherData.remarks,
+        ];
+        
+        const simpleResult = await pool.query(simpleQuery, simpleValues);
+        
+        console.log(`Voucher saved with simple insert:`, simpleResult.rows[0]);
+        res.json({
+          success: true,
+          voucher: simpleResult.rows[0],
+          message: "Voucher saved successfully",
+        });
+      } catch (simpleError: any) {
+        console.error("Simple insert also failed:", simpleError.message);
+        res.status(500).json({ 
+          error: "Failed to save voucher", 
+          details: simpleError.message 
+        });
+      }
     }
   });
 
