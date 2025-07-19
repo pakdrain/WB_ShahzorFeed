@@ -4261,6 +4261,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Modify inv_items table structure - add new columns
+  app.post("/api/modify-inv-items-table", async (req: Request, res: Response) => {
+    try {
+      console.log("Starting modification of inv_items table structure...");
+
+      // Check if columns already exist to avoid errors
+      const checkColumnsQuery = `
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'inv_items' 
+        AND table_schema = 'public'
+        AND column_name IN ('payable_acc_id', 'gl_asset_id', 'gl_cost_acc_id', 'gl_sale_acc_id', 'gl_f_sale_acc_id', 'sale_return_acc_id', 'w_i_p_id', 'delivery_term')
+      `;
+
+      const existingColumns = await pool.query(checkColumnsQuery);
+      const existingColumnNames = existingColumns.rows.map(row => row.column_name);
+
+      console.log("Existing columns:", existingColumnNames);
+
+      // Add columns that don't exist
+      const columnsToAdd = [
+        { name: 'payable_acc_id', type: 'INTEGER' },
+        { name: 'gl_asset_id', type: 'INTEGER' },
+        { name: 'gl_cost_acc_id', type: 'INTEGER' },
+        { name: 'gl_sale_acc_id', type: 'INTEGER' },
+        { name: 'gl_f_sale_acc_id', type: 'INTEGER' },
+        { name: 'sale_return_acc_id', type: 'INTEGER' },
+        { name: 'w_i_p_id', type: 'INTEGER' },
+        { name: 'delivery_term', type: 'VARCHAR(100)' }
+      ];
+
+      let addedColumns = [];
+
+      for (const column of columnsToAdd) {
+        if (!existingColumnNames.includes(column.name)) {
+          try {
+            const alterQuery = `ALTER TABLE public.inv_items ADD COLUMN ${column.name} ${column.type}`;
+            await pool.query(alterQuery);
+            addedColumns.push(column.name);
+            console.log(`✅ Added column: ${column.name}`);
+          } catch (columnError: any) {
+            console.error(`❌ Error adding column ${column.name}:`, columnError.message);
+          }
+        } else {
+          console.log(`⚠️ Column ${column.name} already exists, skipping`);
+        }
+      }
+
+      console.log(`✅ Successfully modified inv_items table. Added columns: ${addedColumns.join(', ')}`);
+
+      res.json({
+        success: true,
+        message: "inv_items table structure modified successfully",
+        addedColumns: addedColumns,
+        existingColumns: existingColumnNames
+      });
+    } catch (error: any) {
+      console.error("❌ Error modifying inv_items table:", error);
+      res.status(500).json({
+        error: "Failed to modify inv_items table structure",
+        details: error.message
+      });
+    }
+  });
+
+  // Enhanced GET items from inv_items table including new columns
+  app.get("/api/inv-items-enhanced", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT 
+          item_id, 
+          item_code, 
+          item_desc, 
+          uom, 
+          weight_in_kg,
+          payable_acc_id,
+          gl_asset_id,
+          gl_cost_acc_id,
+          gl_sale_acc_id,
+          gl_f_sale_acc_id,
+          sale_return_acc_id,
+          w_i_p_id,
+          delivery_term
+        FROM inv_items 
+        ORDER BY item_code
+      `;
+      const result = await pool.query(query);
+
+      console.log(`Fetched ${result.rows.length} enhanced items from inv_items table`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching enhanced items from inv_items:", error);
+      res.status(500).json({ error: "Failed to fetch enhanced items from inv_items table" });
+    }
+  });
+
+  // Save enhanced item data to inv_items table
+  app.post("/api/save-enhanced-inv-item", async (req: Request, res: Response) => {
+    try {
+      const {
+        item_code,
+        item_desc,
+        uom,
+        weight_in_kg,
+        payable_acc_id,
+        gl_asset_id,
+        gl_cost_acc_id,
+        gl_sale_acc_id,
+        gl_f_sale_acc_id,
+        sale_return_acc_id,
+        w_i_p_id,
+        delivery_term
+      } = req.body;
+
+      const query = `
+        INSERT INTO inv_items (
+          item_code, item_desc, uom, weight_in_kg,
+          payable_acc_id, gl_asset_id, gl_cost_acc_id, gl_sale_acc_id,
+          gl_f_sale_acc_id, sale_return_acc_id, w_i_p_id, delivery_term
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        ON CONFLICT (item_code) DO UPDATE SET
+          item_desc = EXCLUDED.item_desc,
+          uom = EXCLUDED.uom,
+          weight_in_kg = EXCLUDED.weight_in_kg,
+          payable_acc_id = EXCLUDED.payable_acc_id,
+          gl_asset_id = EXCLUDED.gl_asset_id,
+          gl_cost_acc_id = EXCLUDED.gl_cost_acc_id,
+          gl_sale_acc_id = EXCLUDED.gl_sale_acc_id,
+          gl_f_sale_acc_id = EXCLUDED.gl_f_sale_acc_id,
+          sale_return_acc_id = EXCLUDED.sale_return_acc_id,
+          w_i_p_id = EXCLUDED.w_i_p_id,
+          delivery_term = EXCLUDED.delivery_term
+        RETURNING *
+      `;
+
+      const values = [
+        item_code,
+        item_desc,
+        uom,
+        weight_in_kg ? parseFloat(weight_in_kg) : null,
+        payable_acc_id ? parseInt(payable_acc_id) : null,
+        gl_asset_id ? parseInt(gl_asset_id) : null,
+        gl_cost_acc_id ? parseInt(gl_cost_acc_id) : null,
+        gl_sale_acc_id ? parseInt(gl_sale_acc_id) : null,
+        gl_f_sale_acc_id ? parseInt(gl_f_sale_acc_id) : null,
+        sale_return_acc_id ? parseInt(sale_return_acc_id) : null,
+        w_i_p_id ? parseInt(w_i_p_id) : null,
+        delivery_term
+      ];
+
+      const result = await pool.query(query, values);
+
+      console.log(`✅ Saved enhanced item data: ${item_code}`);
+      res.json({
+        success: true,
+        message: "Enhanced item data saved successfully",
+        item: result.rows[0]
+      });
+    } catch (error: any) {
+      console.error("❌ Error saving enhanced item data:", error);
+      res.status(500).json({
+        error: "Failed to save enhanced item data",
+        details: error.message
+      });
+    }
+  });
+
   // GET maximum Doc No from gl_freight table for voucher entry
   app.get("/api/vouchers/max-doc-no", async (req: Request, res: Response) => {
     try {

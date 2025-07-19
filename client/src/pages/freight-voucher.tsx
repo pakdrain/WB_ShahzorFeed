@@ -8,9 +8,11 @@ const FreightVoucher = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("1");
   const [selectedVoucherType, setSelectedVoucherType] = useState("cpv");
+  const [invItems, setInvItems] = useState([]);
 
   useEffect(() => {
     fetchVouchers();
+    fetchInvItems();
   }, []);
 
   const fetchVouchers = async () => {
@@ -22,6 +24,18 @@ const FreightVoucher = () => {
       }
     } catch (error) {
       console.error("Error fetching vouchers:", error);
+    }
+  };
+
+  const fetchInvItems = async () => {
+    try {
+      const response = await fetch("/api/inv_items");
+      if (response.ok) {
+        const data = await response.json();
+        setInvItems(data);
+      }
+    } catch (error) {
+      console.error("Error fetching inv_items:", error);
     }
   };
 
@@ -134,94 +148,94 @@ const FreightVoucher = () => {
               </tr>
             </thead>
             <tbody>
-              {vouchers.length > 0
-                ? vouchers.map((voucher, index) => (
-                    <tr key={voucher.voucher_id}>
-                      <td>
-                        <input type="checkbox" />
-                      </td>
-                      <td>
+            {invItems.length > 0
+              ? invItems.map((item, index) => (
+                  <tr key={item.item_id}>
+                    <td>
+                      <input type="checkbox" />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={new Date().toISOString().split('T')[0]}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={item.item_code || ""}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={selectedVoucherType.toUpperCase()}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={item.item_id || ""}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={item.payable_acc_id || ""}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={item.gl_asset_id || ""}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={item.item_desc || ""}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={item.weight_in_kg || ""}
+                        readOnly
+                      />
+                    </td>
+                  </tr>
+                ))
+              : Array.from({ length: 15 }).map((_, index) => (
+                  <tr key={index}>
+                    <td>
+                      <input type="checkbox" />
+                    </td>
+                    {[...Array(8)].map((_, i) => (
+                      <td key={i}>
                         <input
                           type="text"
                           className="form-control form-control-sm"
-                          value={voucher.voucher_date || ""}
-                          readOnly
                         />
                       </td>
-                      <td>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={voucher.reference_no || ""}
-                          readOnly
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={voucher.voucher_type || ""}
-                          readOnly
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={voucher.voucher_id || ""}
-                          readOnly
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value=""
-                          readOnly
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value=""
-                          readOnly
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value={voucher.company_name || ""}
-                          readOnly
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          className="form-control form-control-sm"
-                          value=""
-                          readOnly
-                        />
-                      </td>
-                    </tr>
-                  ))
-                : Array.from({ length: 15 }).map((_, index) => (
-                    <tr key={index}>
-                      <td>
-                        <input type="checkbox" />
-                      </td>
-                      {[...Array(8)].map((_, i) => (
-                        <td key={i}>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-            </tbody>
+                    ))}
+                  </tr>
+                ))}
+</tbody>
           </table>
         </div>
         {/* Buttons beside table */}
