@@ -1655,6 +1655,9 @@ function PurchaseForm() {
       offlineEditSlip,
     });
 
+    // Always clear session storage on any navigation to prevent stale state
+    sessionStorage.removeItem('purchaseFormEditMode');
+
     // Set selected form robustly
     if (["sales", "purchase", "offline"].includes(formType)) {
       setSelectedForm(formType as "sales" | "purchase" | "offline");
@@ -1680,31 +1683,60 @@ function PurchaseForm() {
     if (editWbId) {
       // Load record for editing by wb_id
       console.log("Edit mode detected from URL parameter, loading data");
+      sessionStorage.setItem('purchaseFormEditMode', 'true');
       loadDataByWbId(parseInt(editWbId));
       return; // Exit early to prevent any other initialization
     } else if (offlineEditSlip) {
       console.log(
         "Offline edit mode detected from URL parameter, loading data",
       );
+      sessionStorage.setItem('purchaseFormEditMode', 'true');
       loadDataBySlipNo(offlineEditSlip);
       setOnlineMode(false);
       return; // Exit early to prevent any other initialization
     } else {
-      // No edit parameter in URL, reset to new form only if we're currently in edit mode
-      if (isEditMode || editingWbId) {
-        console.log(
-          "No edit parameter in URL and currently in edit mode, resetting to new form",
-        );
-        setIsEditMode(false);
-        setEditingWbId(null);
-        setTimeout(() => {
-          resetFormToInitial();
-        }, 100);
-      }
+      // No edit parameter in URL, always reset to new form
+      console.log("No edit parameter in URL, resetting to new form");
+      setIsEditMode(false);
+      setEditingWbId(null);
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
       setIsSearchMode(false);
       return;
     }
   }, [location]);
+
+  // Handle page reload detection and edit mode management
+  useEffect(() => {
+    const checkPageReloadAndEditMode = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const editWbId = urlParams.get("edit");
+      const wasInEditMode = sessionStorage.getItem('purchaseFormEditMode') === 'true';
+
+      // Check if this is a page reload while in edit mode
+      if (editWbId && wasInEditMode && performance.navigation?.type === 1) {
+        console.log("Page reload detected in edit mode, resetting to new form");
+        // Clear edit mode and redirect to new form
+        sessionStorage.removeItem('purchaseFormEditMode');
+        const typeMode = urlParams.get("type") || "online";
+        const newUrl = `/purchase-form?type=${typeMode}`;
+        window.location.href = newUrl;
+        return;
+      }
+
+      // Check if user navigated to purchase form while in edit mode
+      if (!editWbId && wasInEditMode) {
+        console.log("Navigation to purchase form detected while in edit mode, clearing edit state");
+        sessionStorage.removeItem('purchaseFormEditMode');
+        setIsEditMode(false);
+        setEditingWbId(null);
+        resetFormToInitial();
+      }
+    };
+
+    checkPageReloadAndEditMode();
+  }, []);
 
   // Sync form data when onlineMode changes
   useEffect(() => {
@@ -3893,7 +3925,17 @@ function PurchaseForm() {
             className={`h-8 px-2 text-sm font-medium ${selectedForm === "purchase" ? "bg-blue-700 text-white" : "bg-emerald-600 hover:bg-emerald-700 text-white"}`}
             onClick={(e) => {
               e.preventDefault();
-              setSelectedForm("purchase");
+              if (isEditMode) {
+                // Always navigate to new purchase form
+                const urlParams = new URLSearchParams(window.location.search);
+                const typeMode = urlParams.get("type") || "online";
+                const targetUrl = `/purchase-form?type=${typeMode}`;
+                // Clear any edit state and force navigation
+                sessionStorage.removeItem('purchaseFormEditMode');
+                window.location.href = targetUrl;
+              } else {
+                setSelectedForm("purchase");
+              }
             }}
           >
             Purchase
@@ -3902,7 +3944,17 @@ function PurchaseForm() {
             className={`h-8 px-2 text-sm font-medium ${selectedForm === "sales" ? "bg-rose-700 text-white" : "bg-rose-600 hover:bg-rose-700 text-white"}`}
             onClick={(e) => {
               e.preventDefault();
-              setSelectedForm("sales");
+              if (isEditMode) {
+                // Always navigate to new sales form
+                const urlParams = new URLSearchParams(window.location.search);
+                const typeMode = urlParams.get("type") || "online";
+                const targetUrl = `/sales-form?type=${typeMode}`;
+                // Clear any edit state and force navigation
+                sessionStorage.removeItem('purchaseFormEditMode');
+                window.location.href = targetUrl;
+              } else {
+                setSelectedForm("sales");
+              }
             }}
           >
             Sale
