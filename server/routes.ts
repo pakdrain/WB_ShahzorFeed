@@ -4261,6 +4261,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET maximum Doc No from gl_freight table for voucher entry
+  app.get("/api/vouchers/max-doc-no", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT COALESCE(MAX(COALESCE(CAST(doc_no AS INTEGER), 0)), 0) + 1 AS doc_no
+        FROM gl_freight
+        WHERE creation_date::date > '2025-06-30'
+      `;
+
+      const result = await pool.query(query);
+      
+      const maxDocNo = result.rows[0]?.doc_no || 1;
+
+      console.log(`Fetched maximum Doc No: ${maxDocNo}`);
+      res.json({ maxDocNo });
+    } catch (error: any) {
+      console.error("Error fetching maximum Doc No:", error);
+      // Fallback to 1 if table doesn't exist or query fails
+      res.json({ maxDocNo: 1 });
+    }
+  });
+
   // GET vendors from inv_vendors table for vendor LOV
   app.get("/api/vendors", async (req: Request, res: Response) => {
     try {

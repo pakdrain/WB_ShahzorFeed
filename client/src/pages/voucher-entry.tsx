@@ -10,9 +10,11 @@ const VoucheEntry = () => {
   const [selectedBranch, setSelectedBranch] = useState("");
   const [voucherType, setVoucherType] = useState("CPV");
   const [currentDate, setCurrentDate] = useState("");
+  const [maxDocNo, setMaxDocNo] = useState("");
 
   useEffect(() => {
     fetchDoNumbers();
+    fetchMaxDocNo();
     
     // Set current date
     const today = new Date().toISOString().split('T')[0];
@@ -47,6 +49,19 @@ const VoucheEntry = () => {
       }
     } catch (error) {
       console.error("Error fetching DO numbers:", error);
+    }
+  };
+
+  const fetchMaxDocNo = async () => {
+    try {
+      const response = await fetch("/api/vouchers/max-doc-no");
+      if (response.ok) {
+        const data = await response.json();
+        setMaxDocNo(data.maxDocNo.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching max Doc No:", error);
+      setMaxDocNo("1"); // Fallback value
     }
   };
 
@@ -164,6 +179,15 @@ const VoucheEntry = () => {
       <div className="row mb-3">
         <div className="col-md-4">
           <strong className="text-black">Doc No</strong>
+          <input
+            className="form-control"
+            value={maxDocNo}
+            readOnly
+            placeholder="Loading..."
+          />
+        </div>
+        <div className="col-md-4">
+          <strong className="text-black">DO No</strong>
           <select
             className="form-control"
             value={selectedDoNo}
