@@ -983,10 +983,12 @@ export default function SalesForm() {
     try {
       setLoading(true);
       console.log("Searching for slip:", formData.slipNo);
-      
+
       // Search for records with specific entry types for sales form
-      const response = await fetch(`/api/purchase/by-slip/${formData.slipNo.trim()}?entry_type=SALE,SALE_RETURN`);
-      
+      const response = await fetch(
+        `/api/purchase/by-slip/${formData.slipNo.trim()}?entry_type=SALE,SALE_RETURN`,
+      );
+
       if (!response.ok) {
         alert(`No SALE record found for slip number ${formData.slipNo}`);
         setLoading(false);
@@ -998,27 +1000,35 @@ export default function SalesForm() {
         const master = data.master;
         const entryType = master.entry_type;
         const isOffline = master.offline_entry === "Yes";
-        
-        console.log("Found SALE record - Entry Type:", entryType, "Offline:", isOffline);
-        
+
+        console.log(
+          "Found SALE record - Entry Type:",
+          entryType,
+          "Offline:",
+          isOffline,
+        );
+
         // Update online/offline status based on the found record
         setOnlineMode(!isOffline);
-        
+
         // Determine the correct URL based on entry type and online/offline status
         const modeParam = isOffline ? "offline" : "online";
-        
+
         if (entryType === "SALE_RETURN") {
           const targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
-          console.log(`Found ${entryType} entry (${isOffline ? 'Offline' : 'Online'}), redirecting to:`, targetUrl);
+          console.log(
+            `Found ${entryType} entry (${isOffline ? "Offline" : "Online"}), redirecting to:`,
+            targetUrl,
+          );
           setLocation(targetUrl);
         } else {
           // For SALE entries, stay on current page and load the data
           await loadDataByWbId(master.wb_id);
-          
+
           // Update URL to show edit mode with correct type
           const newUrl = `/sales-form?type=${modeParam}&edit=${master.wb_id}`;
           window.history.replaceState({}, "", newUrl);
-          
+
           // Exit search mode
           setIsSearchMode(false);
           setLoading(false);
@@ -1041,8 +1051,6 @@ export default function SalesForm() {
     setEditingWbId(null);
     resetFormToInitial();
   };
-
-  
 
   // Function to reset form to clean state
   const resetFormToInitial = async () => {
@@ -1301,7 +1309,7 @@ export default function SalesForm() {
       setIsSearchMode(true);
       setIsEditMode(false);
       setEditingWbId(null);
-      setFormData(prev => ({ ...prev, slipNo: "" }));
+      setFormData((prev) => ({ ...prev, slipNo: "" }));
       return;
     }
 
@@ -2326,7 +2334,7 @@ export default function SalesForm() {
               Cancel
             </Button>
           )}
-          <Button 
+          <Button
             className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium"
             onClick={() => {
               const urlParams = new URLSearchParams(window.location.search);
