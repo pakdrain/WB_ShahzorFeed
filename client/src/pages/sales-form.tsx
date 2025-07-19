@@ -215,9 +215,9 @@ export default function SalesForm() {
         <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
-        
+
         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-        
+
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -324,7 +324,7 @@ export default function SalesForm() {
               <div class="header-right"></div>
             </div>
  <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-        
+
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -430,7 +430,7 @@ export default function SalesForm() {
               </div>
 
               <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-        
+
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -738,6 +738,7 @@ export default function SalesForm() {
           while (salesRows.length < 8) {
             salesRows.push({
               doId: "",
+              dcId: "",
               dcNo: "",
               doNo: "",
               customerName: "",
@@ -1822,9 +1823,9 @@ export default function SalesForm() {
         <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
-        
+
         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-        
+
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -1930,7 +1931,7 @@ export default function SalesForm() {
               <div class="header-right"></div>
             </div>
  <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-        
+
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -2036,7 +2037,7 @@ export default function SalesForm() {
               </div>
 
               <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-        
+
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
@@ -2317,9 +2318,11 @@ export default function SalesForm() {
           >
             Purchase
           </Button>
-          <Button className="h-8 px-2 text-sm font-medium bg-rose-700 text-white">
-            Sale
-          </Button>
+          <Button 
+                className={`h-6 text-xs px-3 ${!showOfflineEntries ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+              >
+                Sales
+              </Button>
           <Button
             className="h-8 px-2 text-sm font-medium bg-amber-600 hover:bg-amber-700 text-white"
             onClick={() => toggleOnlineMode(false)}
@@ -2404,7 +2407,8 @@ export default function SalesForm() {
             ONLINE
           </button>
           <button
-            className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
+            ```text
+ className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
@@ -2667,7 +2671,9 @@ export default function SalesForm() {
               >
                 Purchase
               </Button>
-              <Button className="h-6 text-xs px-3 bg-blue-600 text-white">
+              <Button 
+                className={`h-6 text-xs px-3 ${!showOfflineEntries ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+              >
                 Sales
               </Button>
               <Button
@@ -2710,10 +2716,10 @@ export default function SalesForm() {
                                     if (record.wb_id) {
                                       // Check if this is an offline entry
                                       const isOfflineEntry = record.offline_entry === "Yes";
-                                      
+
                                       // Determine the correct mode parameter
                                       const modeParam = isOfflineEntry ? "offline" : "online";
-                                      
+
                                       if (record.entry_type === "PURCHASE") {
                                         // Navigate to purchase form
                                         const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
@@ -2730,11 +2736,11 @@ export default function SalesForm() {
                                       } else {
                                         // For SALE entries, stay on current page and load the data
                                         loadDataByWbId(record.wb_id);
-                                        
+
                                         // Update URL to show edit mode with correct type
                                         const newUrl = `/sales-form?type=${modeParam}&edit=${record.wb_id}`;
                                         window.history.replaceState({}, "", newUrl);
-                                        
+
                                         // Close offline entries view
                                         setShowOfflineEntries(false);
                                       }

@@ -3679,7 +3679,7 @@ function PurchaseForm() {
                         const modeParam = isOfflineEntry ? "offline" : "online";
 
                         if (record.entry_type === "SALE") {
-                          const targetUrl = `/purchase-form?form=sales&type=${modeParam}&edit=${record.wb_id}`;
+                          const targetUrl = `/sales-form?type=${modeParam}&edit=${record.wb_id}`;
                           console.log("Navigating to sales form:", targetUrl);
                           window.location.href = targetUrl;
                         } else if (record.entry_type === "SALE_RETURN") {
