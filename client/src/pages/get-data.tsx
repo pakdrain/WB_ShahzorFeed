@@ -20,6 +20,10 @@ export default function GetData() {
   const [response, setResponse] = useState<any>(null);
   const [vendorResponse, setVendorResponse] = useState<any>(null);
   const [sysConfigResponse, setSysConfigResponse] = useState<any>(null);
+  const [chartAccountsUrl, setChartAccountsUrl] = useState("");
+  const [chartAccountsLoading, setChartAccountsLoading] = useState(false);
+  const [chartAccountsMessage, setChartAccountsMessage] = useState("");
+  const [chartAccountsResponse, setChartAccountsResponse] = useState<any>(null);
 
   const { toast } = useToast();
 
@@ -141,6 +145,42 @@ export default function GetData() {
       setSysConfigMessage(`❌ Network error: ${error.message}`);
     } finally {
       setSysConfigLoading(false);
+    }
+  };
+
+    const fetchAndSaveChartAccountsData = async () => {
+    if (!chartAccountsUrl.trim()) {
+      setChartAccountsMessage("Please enter a URL");
+      return;
+    }
+
+    setChartAccountsLoading(true);
+    setChartAccountsMessage("");
+    setChartAccountsResponse(null);
+
+    try {
+      const response = await fetch("/api/fetch-and-save-chart-accounts", { //  Assuming you'll create a new api endpoint
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url: chartAccountsUrl }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setChartAccountsMessage(
+          `✅ ${data.message} (${data.recordsInserted} records inserted into chart_of_accounts table)`,
+        );
+        setChartAccountsResponse(data);
+      } else {
+        setChartAccountsMessage(`❌ Error: ${data.error || "Unknown error"}`);
+      }
+    } catch (error: any) {
+      setChartAccountsMessage(`❌ Network error: ${error.message}`);
+    } finally {
+      setChartAccountsLoading(false);
     }
   };
 
@@ -287,6 +327,48 @@ export default function GetData() {
                 <h4 className="font-semibold mb-2">Response Preview:</h4>
                 <pre className="text-sm overflow-auto max-h-40">
                   {JSON.stringify(sysConfigResponse.data, null, 2)}
+                </pre>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Chart of Accounts Data Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Fetch and Save Chart of Accounts Data</CardTitle>
+            <CardDescription>
+              Enter API URL to fetch Chart of Accounts data and save to chart_of_accounts table
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex space-x-2">
+              <Input
+                placeholder="Enter Chart of Accounts API URL..."
+                value={chartAccountsUrl}
+                onChange={(e) => setChartAccountsUrl(e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                onClick={fetchAndSaveChartAccountsData}
+                disabled={chartAccountsLoading}
+                className="px-6"
+              >
+                {chartAccountsLoading ? "Fetching..." : "Fetch & Save Chart Accounts"}
+              </Button>
+            </div>
+
+            {chartAccountsMessage && (
+              <Alert className={chartAccountsMessage.includes("✅") ? "border-green-500" : "border-red-500"}>
+                <AlertDescription>{chartAccountsMessage}</AlertDescription>
+              </Alert>
+            )}
+
+            {chartAccountsResponse && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-semibold mb-2">Response Preview:</h4>
+                <pre className="text-sm overflow-auto max-h-40">
+                  {JSON.stringify(chartAccountsResponse.data, null, 2)}
                 </pre>
               </div>
             )}
