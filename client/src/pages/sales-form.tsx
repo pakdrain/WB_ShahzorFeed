@@ -627,6 +627,7 @@ export default function SalesForm() {
         // Enable edit mode
         setIsEditMode(true);
         setEditingWbId(master.wb_id);
+        sessionStorage.setItem('salesFormEditMode', 'true');
 
         // Load all the form data including detail table data
         setFormData((prev) => ({
@@ -1315,6 +1316,31 @@ export default function SalesForm() {
 
     console.log("URL parameters:", { editWbId, searchMode, typeMode });
 
+    // Check if we were in edit mode and page was reloaded
+    const wasInEditMode = sessionStorage.getItem('salesFormEditMode') === 'true';
+    
+    // If we were in edit mode and page was reloaded, clear edit parameter and reset to new form
+    if (wasInEditMode && editWbId) {
+      console.log("Page reload detected while in edit mode, clearing edit parameter and resetting to new form");
+      // Clear edit parameter from URL
+      urlParams.delete("edit");
+      const newUrl = urlParams.toString()
+        ? `${window.location.pathname}?${urlParams.toString()}`
+        : window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+      
+      // Clear session storage
+      sessionStorage.removeItem('salesFormEditMode');
+      
+      // Reset to new form
+      setIsEditMode(false);
+      setEditingWbId(null);
+      setTimeout(() => {
+        resetFormToInitial();
+      }, 100);
+      return;
+    }
+
     // Set online/offline mode based on type parameter - IMMEDIATE UPDATE
     if (typeMode === "offline") {
       console.log("Setting OFFLINE mode from URL parameter");
@@ -1333,11 +1359,18 @@ export default function SalesForm() {
       return;
     }
 
-    if (editWbId) {
+    // Check if we should be in edit mode ONLY based on URL parameter (fresh navigation)
+    if (editWbId && !wasInEditMode) {
       // Load record for editing by wb_id
+      console.log("Edit mode detected from URL parameter, loading data");
+      sessionStorage.setItem('salesFormEditMode', 'true');
       loadDataByWbId(parseInt(editWbId));
     } else {
-      // Reset form to clean state for new sales - delay to ensure proper initialization
+      // No edit parameter in URL, always reset to new form
+      console.log("No edit parameter in URL, resetting to new form");
+      sessionStorage.removeItem('salesFormEditMode');
+      setIsEditMode(false);
+      setEditingWbId(null);
       setTimeout(() => {
         resetFormToInitial();
       }, 100);
@@ -2312,14 +2345,28 @@ export default function SalesForm() {
               const urlParams = new URLSearchParams(window.location.search);
               const typeMode = urlParams.get("type") || "online";
               const targetUrl = `/purchase-form?type=${typeMode}`;
-              window.history.pushState({}, "", targetUrl);
-              setLocation(targetUrl);
+              if (isEditMode) {
+                // In edit mode, force new form by navigating directly
+                window.location.href = targetUrl;
+              } else {
+                window.history.pushState({}, "", targetUrl);
+                setLocation(targetUrl);
+              }
             }}
           >
             Purchase
           </Button>
           <Button
             className={`h-6 text-xs px-3 ${!showOfflineEntries ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+            onClick={() => {
+              if (isEditMode) {
+                // In edit mode, open new sales form
+                const urlParams = new URLSearchParams(window.location.search);
+                const typeMode = urlParams.get("type") || "online";
+                const targetUrl = `/sales-form?type=${typeMode}`;
+                window.location.href = targetUrl;
+              }
+            }}
           >
             Sales
           </Button>
@@ -2661,17 +2708,31 @@ export default function SalesForm() {
                   const urlParams = new URLSearchParams(window.location.search);
                   const typeMode = urlParams.get("type") || "online";
                   const targetUrl = `/purchase-form?type=${typeMode}`;
-                  window.history.replaceState({}, "", targetUrl);
-                  setLocation(targetUrl);
-                  setTimeout(() => {
+                  if (isEditMode) {
+                    // In edit mode, force new form by navigating directly
                     window.location.href = targetUrl;
-                  }, 50);
+                  } else {
+                    window.history.replaceState({}, "", targetUrl);
+                    setLocation(targetUrl);
+                    setTimeout(() => {
+                      window.location.href = targetUrl;
+                    }, 50);
+                  }
                 }}
               >
                 Purchase
               </Button>
               <Button
                 className={`h-6 text-xs px-3 ${!showOfflineEntries ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+                onClick={() => {
+                  if (isEditMode) {
+                    // In edit mode, open new sales form
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const typeMode = urlParams.get("type") || "online";
+                    const targetUrl = `/sales-form?type=${typeMode}`;
+                    window.location.href = targetUrl;
+                  }
+                }}
               >
                 Sales
               </Button>
