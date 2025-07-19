@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useLocation } from "wouter";
 
-const VoucherView = () => {
+const FreightVoucher = () => {
   const [, setLocation] = useLocation();
   const [vouchers, setVouchers] = useState([]);
 
@@ -413,4 +413,4 @@ const VoucherView = () => {
   );
 };
 
-export default VoucherView;
+export default FreightVoucher;

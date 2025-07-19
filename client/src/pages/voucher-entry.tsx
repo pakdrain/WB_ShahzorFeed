@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useLocation } from "wouter";
 
-const VoucherEntry = () => {
+const VoucheEntry = () => {
   const [, setLocation] = useLocation();
   const [doNumbers, setDoNumbers] = useState([]);
   const [selectedDoNo, setSelectedDoNo] = useState("");
@@ -352,4 +352,4 @@ const VoucherEntry = () => {
   );
 };
 
-export default VoucherEntry;
+export default VoucheEntry;

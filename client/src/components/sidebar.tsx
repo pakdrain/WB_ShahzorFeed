@@ -63,17 +63,12 @@ const getNavigation = (isAdmin: boolean) => {
     },
 
     {
-      name: "GL Voucher",
+      name: "Transection",
       icon: ShoppingCart,
       hasSubItems: true,
       subItems: [
         {
-          name: "Voucher Entry",
-          href: "/voucher-entry",
-          icon: FileText,
-        },
-        {
-          name: "Voucher View",
+          name: "Freight Voucher",
           href: "/voucher-view",
           icon: FileText,
         },
