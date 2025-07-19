@@ -579,24 +579,37 @@ export default function SalesForm() {
     refetchInterval: 10000, // Refresh every 10 seconds
   });
 
-  // Filter records based on search criteria
-  const filteredRecords = Array.isArray(firstWeightRecords)
-    ? firstWeightRecords.filter((record: any) => {
-        const matchesSlipNo =
-          !searchSlipNo ||
-          (record.slip_no || "")
-            .toString()
-            .toLowerCase()
-            .includes(searchSlipNo.toLowerCase());
-        const matchesVehicleNo =
-          !searchVehicleNo ||
-          (record.vehicle_no || "")
-            .toString()
-            .toLowerCase()
-            .includes(searchVehicleNo.toLowerCase());
-        return matchesSlipNo && matchesVehicleNo;
-      })
-    : [];
+  // State for showing offline entries
+  const [showOfflineEntries, setShowOfflineEntries] = useState(false);
+
+  // Filter records based on search criteria and form type
+  const filteredRecords = (() => {
+    let records = [];
+
+    if (showOfflineEntries) {
+      // Show offline records when offline tab is selected
+      records = Array.isArray(offlineRecords) ? offlineRecords : [];
+    } else {
+      // Show all first weight records for other tabs
+      records = Array.isArray(firstWeightRecords) ? firstWeightRecords : [];
+    }
+
+    return records.filter((record: any) => {
+      const matchesSlipNo =
+        !searchSlipNo ||
+        (record.slip_no || "")
+          .toString()
+          .toLowerCase()
+          .includes(searchSlipNo.toLowerCase());
+      const matchesVehicleNo =
+        !searchVehicleNo ||
+        (record.vehicle_no || "")
+          .toString()
+          .toLowerCase()
+          .includes(searchVehicleNo.toLowerCase());
+      return matchesSlipNo && matchesVehicleNo;
+    });
+  })();
 
   // Function to load data by wb_id for editing
   const loadDataByWbId = async (wbId: number) => {
@@ -2658,67 +2671,143 @@ export default function SalesForm() {
                 Sales
               </Button>
               <Button
-                className="h-6 text-xs px-3 bg-gray-300 text-black"
-                onClick={() => {
-                  // Navigate to offline form
-                  window.history.replaceState(
-                    {},
-                    "",
-                    "/purchase-form?type=offline",
-                  );
-                  setLocation("/purchase-form?type=offline");
-                  setTimeout(() => {
-                    window.location.href = "/purchase-form?type=offline";
-                  }, 50);
-                }}
+                className={`h-6 text-xs px-3 ${showOfflineEntries ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+                onClick={() => setShowOfflineEntries(!showOfflineEntries)}
               >
                 Offline
               </Button>
             </div>
 
-            {/* Sales Details Section */}
+            {/* Sales Details Section or Offline Entries */}
             <div className="bg-blue-50 p-2 rounded border">
-              <div className="h-full flex flex-col">
-                {/* Sales Table Header - with delete action column */}
-                <div
-                  className="grid gap-px bg-gray-300 text-xs font-semibold mb-1"
-                  style={{
-                    gridTemplateColumns:
-                      "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px",
-                    width: "1250px",
-                  }}
-                >
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                    DC #
+              {showOfflineEntries ? (
+                /* Offline Entries Table */
+                <div className="h-full flex flex-col">
+                  <h3 className="text-lg font-semibold mb-2 text-black">Sale Offline Entries</h3>
+                  {/* Offline Table Header */}
+                  <div className="grid grid-cols-8 gap-px bg-gray-300 text-xs font-semibold mb-1">
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Slip No
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Slip Date
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Entry Type
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      First Weight
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Second Weight
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Vehicle No
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Company Name
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Manual Trans #
+                    </div>
                   </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                    DO #
-                  </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                    Customer Name
-                  </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                    Vehicle No
-                  </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                    Do Date
-                  </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                    Item Description
-                  </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                    DC Qty
-                  </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                    DO Qty
-                  </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                    Branch
-                  </div>
-                  <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                    ✖
+                  
+                  {/* Offline Table Body */}
+                  <div className="bg-gray-200 max-h-80 overflow-y-auto">
+                    {filteredRecords && filteredRecords.length > 0 ? (
+                      filteredRecords.map((record: any, index: number) => (
+                        <div key={record.wb_id || index} className="grid grid-cols-8 gap-px text-xs hover:bg-gray-100">
+                          <div className="bg-white border border-gray-300 p-1 text-center">
+                            <button
+                              className="text-blue-600 hover:text-blue-800 underline font-medium"
+                              onClick={() => {
+                                console.log("Clicked offline record:", record);
+                                if (record.wb_id) {
+                                  // Navigate to sales form in edit mode with offline type
+                                  const targetUrl = `/sales-form?type=offline&edit=${record.wb_id}`;
+                                  console.log("Navigating to offline sales edit:", targetUrl);
+                                  setLocation(targetUrl);
+                                }
+                              }}
+                            >
+                              {record.slip_no || "---"}
+                            </button>
+                          </div>
+                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
+                            {record.slip_in_time ? new Date(record.slip_in_time).toLocaleDateString() : "---"}
+                          </div>
+                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
+                            {record.entry_type || "SALE"}
+                          </div>
+                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
+                            ---
+                          </div>
+                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
+                            ---
+                          </div>
+                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
+                            {record.vehicle_no || "---"}
+                          </div>
+                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
+                            {record.vendor_name || "---"}
+                          </div>
+                          <div className="bg-white border border-gray-300 p-1 text-center text-black">
+                            ---
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="grid grid-cols-8 gap-px text-xs">
+                        <div className="col-span-8 bg-white border border-gray-300 p-4 text-center text-gray-500">
+                          No offline entries found
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
+              ) : (
+                /* Regular Sales Form */
+                <div className="h-full flex flex-col">
+                  {/* Sales Table Header - with delete action column */}
+                  <div
+                    className="grid gap-px bg-gray-300 text-xs font-semibold mb-1"
+                    style={{
+                      gridTemplateColumns:
+                        "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px",
+                      width: "1250px",
+                    }}
+                  >
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      DC #
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      DO #
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Customer Name
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Vehicle No
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Do Date
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Item Description
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      DC Qty
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      DO Qty
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      Branch
+                    </div>
+                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
+                      ✖
+                    </div>
+                  </div>
 
                 {/* Sales Table Body - Fixed height with 8 rows */}
                 <div className="bg-gray-200 mb-4" style={{ height: "240px" }}>
@@ -2960,19 +3049,65 @@ export default function SalesForm() {
                   <div className="bg-gray-200 border border-gray-400 p-1"></div>
                 </div>
 
-                {/* Bottom section with Weight Per Bags, Total Weight Out, and Total Feed Bags - matching image layout */}
-                <div
-                  className="bg-gray-100 p-2 flex justify-between items-center border border-gray-300 mt-2"
-                  style={{ width: "1220px" }}
-                >
-                  <div className="flex items-center space-x-4">
+                  {/* Bottom section with Weight Per Bags, Total Weight Out, and Total Feed Bags - matching image layout */}
+                  <div
+                    className="bg-gray-100 p-2 flex justify-between items-center border border-gray-300 mt-2"
+                    style={{ width: "1220px" }}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <label className="text-xs font-medium text-black">
+                          Weight Per Bags:
+                        </label>
+                        <input
+                          type="text"
+                          className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
+                          autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          data-form-type="other"
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <label className="text-xs font-medium text-black">
+                          Total Weight Out:
+                        </label>
+                        <input
+                          type="text"
+                          className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
+                          autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          data-form-type="other"
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <label className="text-xs font-medium text-black">
+                          Total Feed Bags:
+                        </label>
+                        <input
+                          type="text"
+                          className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
+                          autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="off"
+                          spellCheck="false"
+                          data-form-type="other"
+                        />
+                      </div>
+                    </div>
+
                     <div className="flex items-center space-x-2">
-                      <label className="text-xs font-medium text-black">
-                        Weight Per Bags:
+                      <label className="text-sm font-medium text-black">
+                        Total Weight Dill:
                       </label>
                       <input
                         type="text"
-                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
+                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
                         autoComplete="off"
                         autoCorrect="off"
                         autoCapitalize="off"
@@ -2982,27 +3117,12 @@ export default function SalesForm() {
                     </div>
 
                     <div className="flex items-center space-x-2">
-                      <label className="text-xs font-medium text-black">
-                        Total Weight Out:
-                      </label>
-                      <input
-                        type="text"
-                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <label className="text-xs font-medium text-black">
+                      <label className="text-sm font-medium text-black">
                         Total Feed Bags:
                       </label>
                       <input
                         type="text"
-                        className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
+                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
                         autoComplete="off"
                         autoCorrect="off"
                         autoCapitalize="off"
@@ -3011,38 +3131,8 @@ export default function SalesForm() {
                       />
                     </div>
                   </div>
-
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-black">
-                      Total Weight Dill:
-                    </label>
-                    <input
-                      type="text"
-                      className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      data-form-type="other"
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-black">
-                      Total Feed Bags:
-                    </label>
-                    <input
-                      type="text"
-                      className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck="false"
-                      data-form-type="other"
-                    />
-                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Right Side - Weight Display and Bag Table (Columns 9-12) */}
