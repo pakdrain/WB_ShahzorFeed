@@ -1604,63 +1604,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // GET sales by slip number
-  app.get(
-    "/api/sales/by-slip/:slipNo",
-    async (req: Request, res: Response) => {
-      try {
-        const { slipNo } = req.params;
-        const { entry_type } = req.query;
+  app.get("/api/sales/by-slip/:slipNo", async (req: Request, res: Response) => {
+    try {
+      const { slipNo } = req.params;
+      const { entry_type } = req.query;
 
-        let masterQuery;
-        let queryParams;
+      let masterQuery;
+      let queryParams;
 
-        if (entry_type) {
-          // If entry_type is provided, use it in the query
-          masterQuery = `
+      if (entry_type) {
+        // If entry_type is provided, use it in the query
+        masterQuery = `
             SELECT * FROM wb_weighbridge 
             WHERE slip_no = $1 AND entry_type = $2
             ORDER BY wb_id DESC
             LIMIT 1
           `;
-          queryParams = [slipNo, entry_type];
-        } else {
-          // If no entry_type provided, search for SALE entry types only
-          masterQuery = `
+        queryParams = [slipNo, entry_type];
+      } else {
+        // If no entry_type provided, search for SALE entry types only
+        masterQuery = `
             SELECT * FROM wb_weighbridge 
             WHERE slip_no = $1 AND entry_type = 'SALE'
             ORDER BY wb_id DESC
             LIMIT 1
           `;
-          queryParams = [slipNo];
-        }
-
-        const masterResult = await pool.query(masterQuery, queryParams);
-
-        if (masterResult.rows.length === 0) {
-          return res.status(404).json({
-            message: `No SALE record found for slip number ${slipNo}`,
-          });
-        }
-
-        const master = masterResult.rows[0];
-
-        const detailsQuery =
-          "SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1";
-        const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
-
-        console.log(
-          `Fetched sales record for slip ${slipNo}${entry_type ? `, type ${entry_type}` : ""}`,
-        );
-        res.json({
-          master,
-          details: detailsResult.rows,
-        });
-      } catch (error: any) {
-        console.error("Error fetching sales by slip number:", error);
-        res.status(500).json({ error: "Failed to fetch sales record" });
+        queryParams = [slipNo];
       }
-    },
-  );
+
+      const masterResult = await pool.query(masterQuery, queryParams);
+
+      if (masterResult.rows.length === 0) {
+        return res.status(404).json({
+          message: `No SALE record found for slip number ${slipNo}`,
+        });
+      }
+
+      const master = masterResult.rows[0];
+
+      const detailsQuery =
+        "SELECT * FROM wb_weighbridge_items_purchase WHERE wb_id = $1";
+      const detailsResult = await pool.query(detailsQuery, [master.wb_id]);
+
+      console.log(
+        `Fetched sales record for slip ${slipNo}${entry_type ? `, type ${entry_type}` : ""}`,
+      );
+      res.json({
+        master,
+        details: detailsResult.rows,
+      });
+    } catch (error: any) {
+      console.error("Error fetching sales by slip number:", error);
+      res.status(500).json({ error: "Failed to fetch sales record" });
+    }
+  });
 
   // PUT update purchase record
   app.put("/api/purchase/update/:wbId", async (req: Request, res: Response) => {
@@ -4118,7 +4115,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // Check if record exists first
             const checkQuery = `SELECT chart_of_account_id FROM chart_of_accounts WHERE chart_of_account_id = $1`;
-            const existingRecord = await pool.query(checkQuery, [chartOfAccountId]);
+            const existingRecord = await pool.query(checkQuery, [
+              chartOfAccountId,
+            ]);
 
             let insertQuery;
             if (existingRecord.rows.length > 0) {
@@ -4220,7 +4219,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           data: dataToProcess.slice(0, 3),
         });
       } catch (error: any) {
-        console.error("❌ Error fetching and saving chart accounts data:", error);
+        console.error(
+          "❌ Error fetching and saving chart accounts data:",
+          error,
+        );
         res.status(500).json({
           success: false,
           error: "Failed to fetch and save chart accounts data",
@@ -4262,12 +4264,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Modify inv_items table structure - add new columns
-  app.post("/api/modify-inv-items-table", async (req: Request, res: Response) => {
-    try {
-      console.log("Starting modification of inv_items table structure...");
+  app.post(
+    "/api/modify-inv-items-table",
+    async (req: Request, res: Response) => {
+      try {
+        console.log("Starting modification of inv_items table structure...");
 
-      // Check if columns already exist to avoid errors
-      const checkColumnsQuery = `
+        // Check if columns already exist to avoid errors
+        const checkColumnsQuery = `
         SELECT column_name 
         FROM information_schema.columns 
         WHERE table_name = 'inv_items' 
@@ -4275,56 +4279,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         AND column_name IN ('payable_acc_id', 'gl_asset_id', 'gl_cost_acc_id', 'gl_sale_acc_id', 'gl_f_sale_acc_id', 'sale_return_acc_id', 'w_i_p_id', 'delivery_term')
       `;
 
-      const existingColumns = await pool.query(checkColumnsQuery);
-      const existingColumnNames = existingColumns.rows.map(row => row.column_name);
+        const existingColumns = await pool.query(checkColumnsQuery);
+        const existingColumnNames = existingColumns.rows.map(
+          (row) => row.column_name,
+        );
 
-      console.log("Existing columns:", existingColumnNames);
+        console.log("Existing columns:", existingColumnNames);
 
-      // Add columns that don't exist
-      const columnsToAdd = [
-        { name: 'payable_acc_id', type: 'INTEGER' },
-        { name: 'gl_asset_id', type: 'INTEGER' },
-        { name: 'gl_cost_acc_id', type: 'INTEGER' },
-        { name: 'gl_sale_acc_id', type: 'INTEGER' },
-        { name: 'gl_f_sale_acc_id', type: 'INTEGER' },
-        { name: 'sale_return_acc_id', type: 'INTEGER' },
-        { name: 'w_i_p_id', type: 'INTEGER' },
-        { name: 'delivery_term', type: 'VARCHAR(100)' }
-      ];
+        // Add columns that don't exist
+        const columnsToAdd = [
+          { name: "payable_acc_id", type: "INTEGER" },
+          { name: "gl_asset_id", type: "INTEGER" },
+          { name: "gl_cost_acc_id", type: "INTEGER" },
+          { name: "gl_sale_acc_id", type: "INTEGER" },
+          { name: "gl_f_sale_acc_id", type: "INTEGER" },
+          { name: "sale_return_acc_id", type: "INTEGER" },
+          { name: "w_i_p_id", type: "INTEGER" },
+          { name: "delivery_term", type: "VARCHAR(100)" },
+        ];
 
-      let addedColumns = [];
+        let addedColumns = [];
 
-      for (const column of columnsToAdd) {
-        if (!existingColumnNames.includes(column.name)) {
-          try {
-            const alterQuery = `ALTER TABLE public.inv_items ADD COLUMN ${column.name} ${column.type}`;
-            await pool.query(alterQuery);
-            addedColumns.push(column.name);
-            console.log(`✅ Added column: ${column.name}`);
-          } catch (columnError: any) {
-            console.error(`❌ Error adding column ${column.name}:`, columnError.message);
+        for (const column of columnsToAdd) {
+          if (!existingColumnNames.includes(column.name)) {
+            try {
+              const alterQuery = `ALTER TABLE public.inv_items ADD COLUMN ${column.name} ${column.type}`;
+              await pool.query(alterQuery);
+              addedColumns.push(column.name);
+              console.log(`✅ Added column: ${column.name}`);
+            } catch (columnError: any) {
+              console.error(
+                `❌ Error adding column ${column.name}:`,
+                columnError.message,
+              );
+            }
+          } else {
+            console.log(`⚠️ Column ${column.name} already exists, skipping`);
           }
-        } else {
-          console.log(`⚠️ Column ${column.name} already exists, skipping`);
         }
+
+        console.log(
+          `✅ Successfully modified inv_items table. Added columns: ${addedColumns.join(", ")}`,
+        );
+
+        res.json({
+          success: true,
+          message: "inv_items table structure modified successfully",
+          addedColumns: addedColumns,
+          existingColumns: existingColumnNames,
+        });
+      } catch (error: any) {
+        console.error("❌ Error modifying inv_items table:", error);
+        res.status(500).json({
+          error: "Failed to modify inv_items table structure",
+          details: error.message,
+        });
       }
-
-      console.log(`✅ Successfully modified inv_items table. Added columns: ${addedColumns.join(', ')}`);
-
-      res.json({
-        success: true,
-        message: "inv_items table structure modified successfully",
-        addedColumns: addedColumns,
-        existingColumns: existingColumnNames
-      });
-    } catch (error: any) {
-      console.error("❌ Error modifying inv_items table:", error);
-      res.status(500).json({
-        error: "Failed to modify inv_items table structure",
-        details: error.message
-      });
-    }
-  });
+    },
+  );
 
   // Enhanced GET items from inv_items table including new columns
   app.get("/api/inv-items-enhanced", async (req: Request, res: Response) => {
@@ -4349,33 +4361,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `;
       const result = await pool.query(query);
 
-      console.log(`Fetched ${result.rows.length} enhanced items from inv_items table`);
+      console.log(
+        `Fetched ${result.rows.length} enhanced items from inv_items table`,
+      );
       res.json(result.rows);
     } catch (error: any) {
       console.error("Error fetching enhanced items from inv_items:", error);
-      res.status(500).json({ error: "Failed to fetch enhanced items from inv_items table" });
+      res
+        .status(500)
+        .json({ error: "Failed to fetch enhanced items from inv_items table" });
     }
   });
 
   // Save enhanced item data to inv_items table
-  app.post("/api/save-enhanced-inv-item", async (req: Request, res: Response) => {
-    try {
-      const {
-        item_code,
-        item_desc,
-        uom,
-        weight_in_kg,
-        payable_acc_id,
-        gl_asset_id,
-        gl_cost_acc_id,
-        gl_sale_acc_id,
-        gl_f_sale_acc_id,
-        sale_return_acc_id,
-        w_i_p_id,
-        delivery_term
-      } = req.body;
+  app.post(
+    "/api/save-enhanced-inv-item",
+    async (req: Request, res: Response) => {
+      try {
+        const {
+          item_code,
+          item_desc,
+          uom,
+          weight_in_kg,
+          payable_acc_id,
+          gl_asset_id,
+          gl_cost_acc_id,
+          gl_sale_acc_id,
+          gl_f_sale_acc_id,
+          sale_return_acc_id,
+          w_i_p_id,
+          delivery_term,
+        } = req.body;
 
-      const query = `
+        const query = `
         INSERT INTO inv_items (
           item_code, item_desc, uom, weight_in_kg,
           payable_acc_id, gl_asset_id, gl_cost_acc_id, gl_sale_acc_id,
@@ -4397,37 +4415,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         RETURNING *
       `;
 
-      const values = [
-        item_code,
-        item_desc,
-        uom,
-        weight_in_kg ? parseFloat(weight_in_kg) : null,
-        payable_acc_id ? parseInt(payable_acc_id) : null,
-        gl_asset_id ? parseInt(gl_asset_id) : null,
-        gl_cost_acc_id ? parseInt(gl_cost_acc_id) : null,
-        gl_sale_acc_id ? parseInt(gl_sale_acc_id) : null,
-        gl_f_sale_acc_id ? parseInt(gl_f_sale_acc_id) : null,
-        sale_return_acc_id ? parseInt(sale_return_acc_id) : null,
-        w_i_p_id ? parseInt(w_i_p_id) : null,
-        delivery_term
-      ];
+        const values = [
+          item_code,
+          item_desc,
+          uom,
+          weight_in_kg ? parseFloat(weight_in_kg) : null,
+          payable_acc_id ? parseInt(payable_acc_id) : null,
+          gl_asset_id ? parseInt(gl_asset_id) : null,
+          gl_cost_acc_id ? parseInt(gl_cost_acc_id) : null,
+          gl_sale_acc_id ? parseInt(gl_sale_acc_id) : null,
+          gl_f_sale_acc_id ? parseInt(gl_f_sale_acc_id) : null,
+          sale_return_acc_id ? parseInt(sale_return_acc_id) : null,
+          w_i_p_id ? parseInt(w_i_p_id) : null,
+          delivery_term,
+        ];
 
-      const result = await pool.query(query, values);
+        const result = await pool.query(query, values);
 
-      console.log(`✅ Saved enhanced item data: ${item_code}`);
-      res.json({
-        success: true,
-        message: "Enhanced item data saved successfully",
-        item: result.rows[0]
-      });
-    } catch (error: any) {
-      console.error("❌ Error saving enhanced item data:", error);
-      res.status(500).json({
-        error: "Failed to save enhanced item data",
-        details: error.message
-      });
-    }
-  });
+        console.log(`✅ Saved enhanced item data: ${item_code}`);
+        res.json({
+          success: true,
+          message: "Enhanced item data saved successfully",
+          item: result.rows[0],
+        });
+      } catch (error: any) {
+        console.error("❌ Error saving enhanced item data:", error);
+        res.status(500).json({
+          error: "Failed to save enhanced item data",
+          details: error.message,
+        });
+      }
+    },
+  );
 
   // GET maximum Doc No from gl_freight table for voucher entry
   app.get("/api/vouchers/max-doc-no", async (req: Request, res: Response) => {
@@ -4439,7 +4458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `;
 
       const result = await pool.query(query);
-      
+
       const maxDocNo = result.rows[0]?.doc_no || 1;
 
       console.log(`Fetched maximum Doc No: ${maxDocNo}`);
@@ -4478,8 +4497,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `;
 
       const result = await pool.query(query);
-      
-      console.log(`Fetched ${result.rows.length} slip records for voucher entry`);
+
+      console.log(
+        `Fetched ${result.rows.length} slip records for voucher entry`,
+      );
       res.json(result.rows);
     } catch (error: any) {
       console.error("Error fetching slip data:", error);
@@ -4488,11 +4509,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // GET specific slip data by slip number
-  app.get("/api/vouchers/slip-data/:slipNo", async (req: Request, res: Response) => {
-    try {
-      const { slipNo } = req.params;
-      
-      const query = `
+  app.get(
+    "/api/vouchers/slip-data/:slipNo",
+    async (req: Request, res: Response) => {
+      try {
+        const { slipNo } = req.params;
+
+        const query = `
         SELECT 
           WW.SLIP_NO, 
           WW.WB_ID,
@@ -4515,15 +4538,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
                AND COALESCE(WW.SECOND_WEIGHT::numeric, 0) > 0)
       `;
 
-      const result = await pool.query(query, [slipNo]);
-      
-      console.log(`Fetched ${result.rows.length} records for slip number: ${slipNo}`);
-      res.json(result.rows);
-    } catch (error: any) {
-      console.error("Error fetching slip data by slip number:", error);
-      res.status(500).json({ error: "Failed to fetch slip data" });
-    }
-  });
+        const result = await pool.query(query, [slipNo]);
+
+        console.log(
+          `Fetched ${result.rows.length} records for slip number: ${slipNo}`,
+        );
+        res.json(result.rows);
+      } catch (error: any) {
+        console.error("Error fetching slip data by slip number:", error);
+        res.status(500).json({ error: "Failed to fetch slip data" });
+      }
+    },
+  );
 
   // GET vendors from inv_vendors table for vendor LOV
   app.get("/api/vendors", async (req: Request, res: Response) => {
@@ -4557,55 +4583,112 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Voucher API endpoints for gl_vouchers table
 
-  // Get gl_vouchers table structure (since table already exists)
-  app.get("/api/vouchers/table-info", async (req: Request, res: Response) => {
-    try {
-      const query = `
-        SELECT column_name, data_type, is_nullable, column_default
-        FROM information_schema.columns 
-        WHERE table_name = 'gl_vouchers' 
-        AND table_schema = 'public'
-        ORDER BY ordinal_position
-      `;
-      
-      const result = await pool.query(query);
-      
-      res.json({
-        success: true,
-        message: "gl_vouchers table structure retrieved",
-        columns: result.rows,
-      });
-    } catch (error: any) {
-      console.error("Error getting gl_vouchers table structure:", error);
-      res.status(500).json({ error: "Failed to get table structure" });
-    }
-  });
+  // Create gl_vouchers table if it doesn't exist
+  app.post(
+    "/api/create-vouchers-table",
+    async (req: Request, res: Response) => {
+      try {
+        await pool.query(`
+        CREATE TABLE IF NOT EXISTS gl_vouchers (
+          voucher_id         SERIAL PRIMARY KEY,
+          voucher_type       VARCHAR(20),
+          voucher_no         INTEGER,
+          voucher_date       DATE NOT NULL,
+          description        VARCHAR(1000),
+          batch_id           INTEGER,
+          created_by         INTEGER,
+          creation_date      DATE,
+          last_updated_by    INTEGER,
+          last_update_date   DATE,
+          status             VARCHAR(50),
+          approved_by        INTEGER,
+          approval_date      DATE,
+          posted_by          INTEGER,
+          posting_date       DATE,
+          branch_id          VARCHAR(30),
+          module             VARCHAR(20),
+          module_doc         VARCHAR(50),
+          module_doc_id      INTEGER,
+          reference_no       VARCHAR(30),
+          checked_by         INTEGER,
+          checked_date       DATE,
+          currency           VARCHAR(20),
+          exchange_rate      NUMERIC(16,4),
+          fe_voucher         CHAR(1),
+          ref_date           DATE,
+          paid_amount        NUMERIC(20,4),
+          acc_id             BIGINT,
+          canceled_by        BIGINT,
+          canceled_date      DATE,
+          closed             CHAR(1),
+          voucher_site       CHAR(1),
+          sale_purchase      VARCHAR(30),
+          dc_igp_id          BIGINT,
+          bank_id            INTEGER,
+          wh_tax_id          INTEGER,
+          wh_tax_amt         NUMERIC(16),
+          company_id         BIGINT,
+          cpv_type           VARCHAR(30),
+          company_type       VARCHAR(500),
+          cheque_no          VARCHAR(50),
+          hatch_no           VARCHAR(200),
+          old_status         VARCHAR(500),
+          paid_to            VARCHAR(50),
+          slip_no            NUMERIC(20,6),
+          asset              VARCHAR(200),
+          audit_status       VARCHAR(200),
+          audit_by           BIGINT,
+          audit_date         DATE,
+          delete_date        DATE,
+          entry_remarks      VARCHAR(2000),
+          restore_date       DATE,
+          deleted_date       DATE,
+          un_approve_by      BIGINT,
+          un_approve_date    DATE,
+          mr_no              VARCHAR(50),
+          wb_voucher_id      BIGINT,
+          cash_plant         VARCHAR(20),
+          bank_plant         VARCHAR(20),
+          cpv                VARCHAR(20),
+          br_code            INTEGER,
+          modify_by          BIGINT,
+          modify_date        DATE,
+          v_id_apex          BIGINT,
+          advance_pay        VARCHAR(20),
+          dc_id              BIGINT,
+          unaudit_by         BIGINT,
+          unaudit_date       DATE,
+          vehicle_id         VARCHAR(20),
+          company_name       VARCHAR(200),
+          vehicle_type       VARCHAR(30),
+          vehicle_name       VARCHAR(50),
+          vehicle_no         VARCHAR(50)
+        )
+      `);
 
-  // Save voucher data to existing gl_vouchers table
+        res.json({
+          success: true,
+          message: "gl_vouchers table created successfully",
+        });
+      } catch (error: any) {
+        console.error("Error creating gl_vouchers table:", error);
+        res.status(500).json({ error: "Failed to create gl_vouchers table" });
+      }
+    },
+  );
+
+  // Save voucher data to gl_vouchers table
   app.post("/api/vouchers/save", async (req: Request, res: Response) => {
     try {
       const voucherData = req.body;
 
-      // First, let's check the existing table structure
-      const structureQuery = `
-        SELECT column_name, data_type 
-        FROM information_schema.columns 
-        WHERE table_name = 'gl_vouchers' 
-        AND table_schema = 'public'
-        ORDER BY ordinal_position
-      `;
-      
-      const structureResult = await pool.query(structureQuery);
-      console.log("Existing gl_vouchers table structure:", structureResult.rows);
-
-      // Use a more generic insert that should work with most gl_vouchers table structures
       const query = `
         INSERT INTO gl_vouchers (
           voucher_type, voucher_date, description, created_by, creation_date,
-          status, branch_id, reference_no, entry_remarks
+          status, branch_id, reference_no, entry_remarks, company_name
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING *
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        RETURNING voucher_id
       `;
 
       const values = [
@@ -4618,49 +4701,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         voucherData.branch,
         voucherData.docNo,
         voucherData.remarks,
+        "Sabirs' Poultry (Pvt.) Ltd",
       ];
 
       const result = await pool.query(query, values);
 
-      console.log(`Voucher saved successfully:`, result.rows[0]);
+      console.log(`Voucher saved with ID: ${result.rows[0].voucher_id}`);
       res.json({
         success: true,
-        voucher: result.rows[0],
+        voucher_id: result.rows[0].voucher_id,
         message: "Voucher saved successfully",
       });
     } catch (error: any) {
       console.error("Error saving voucher:", error);
-      console.error("Error details:", error.message);
-      
-      // If the insert fails, try a simpler approach
-      try {
-        const simpleQuery = `
-          INSERT INTO gl_vouchers (voucher_type, voucher_date, description)
-          VALUES ($1, $2, $3)
-          RETURNING *
-        `;
-        
-        const simpleValues = [
-          voucherData.voucherType || "CPV",
-          voucherData.docDate,
-          voucherData.remarks,
-        ];
-        
-        const simpleResult = await pool.query(simpleQuery, simpleValues);
-        
-        console.log(`Voucher saved with simple insert:`, simpleResult.rows[0]);
-        res.json({
-          success: true,
-          voucher: simpleResult.rows[0],
-          message: "Voucher saved successfully",
-        });
-      } catch (simpleError: any) {
-        console.error("Simple insert also failed:", simpleError.message);
-        res.status(500).json({ 
-          error: "Failed to save voucher", 
-          details: simpleError.message 
-        });
-      }
+      res.status(500).json({ error: "Failed to save voucher" });
     }
   });
 
