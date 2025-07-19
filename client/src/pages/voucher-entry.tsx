@@ -11,10 +11,14 @@ const VoucheEntry = () => {
   const [voucherType, setVoucherType] = useState("CPV");
   const [currentDate, setCurrentDate] = useState("");
   const [maxDocNo, setMaxDocNo] = useState("");
+  const [slipData, setSlipData] = useState([]);
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [slipDropdownData, setSlipDropdownData] = useState({});
 
   useEffect(() => {
     fetchDoNumbers();
     fetchMaxDocNo();
+    fetchSlipData();
     
     // Set current date
     const today = new Date().toISOString().split('T')[0];
@@ -65,6 +69,18 @@ const VoucheEntry = () => {
     }
   };
 
+  const fetchSlipData = async () => {
+    try {
+      const response = await fetch("/api/vouchers/slip-data");
+      if (response.ok) {
+        const data = await response.json();
+        setSlipData(data);
+      }
+    } catch (error) {
+      console.error("Error fetching slip data:", error);
+    }
+  };
+
   const fetchDoData = async (doNo) => {
     try {
       const response = await fetch(`/api/do-data/${doNo}`);
@@ -91,6 +107,54 @@ const VoucheEntry = () => {
     const updatedData = [...tableData];
     updatedData[index] = { ...updatedData[index], [field]: value };
     setTableData(updatedData);
+  };
+
+  const handleItemCheckboxChange = (index, checked) => {
+    const newSelectedRows = new Set(selectedRows);
+    if (checked) {
+      newSelectedRows.add(index);
+    } else {
+      newSelectedRows.delete(index);
+      // Clear dropdown data for this row
+      const newSlipDropdownData = { ...slipDropdownData };
+      delete newSlipDropdownData[index];
+      setSlipDropdownData(newSlipDropdownData);
+    }
+    setSelectedRows(newSelectedRows);
+  };
+
+  const handleSlipSelection = async (index, slipNo) => {
+    if (!slipNo) return;
+
+    try {
+      const response = await fetch(`/api/vouchers/slip-data/${slipNo}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.length > 0) {
+          const slipRecord = data[0];
+          
+          // Update table data with selected slip information
+          const updatedData = [...tableData];
+          updatedData[index] = {
+            ...updatedData[index],
+            slip_no: slipRecord.slip_no,
+            vehicle_no: slipRecord.vehicle_no,
+            item_desc: slipRecord.item_desc,
+            vendor_name: slipRecord.vendor_name,
+            freight_amount: slipRecord.freight,
+            wb_id: slipRecord.wb_id,
+            item_code: slipRecord.item_code,
+            item_id: slipRecord.item_id,
+            vendor_id: slipRecord.vendor_id
+          };
+          setTableData(updatedData);
+          
+          console.log(`Loaded data for slip ${slipNo}:`, slipRecord);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching slip data:", error);
+    }
   };
 
   const handleSave = async () => {
@@ -247,17 +311,38 @@ const VoucheEntry = () => {
               ? tableData.map((row, i) => (
                   <tr key={i}>
                     <td className="text-center">
-                      <input type="checkbox" className="form-check-input" />
+                      <input 
+                        type="checkbox" 
+                        className="form-check-input" 
+                        checked={selectedRows.has(i)}
+                        onChange={(e) => handleItemCheckboxChange(i, e.target.checked)}
+                      />
                     </td>
                     <td className="text-center">
                       <input type="checkbox" className="form-check-input" />
                     </td>
                     <td>
-                      <input
-                        className="form-control form-control-sm"
-                        value={row.slip_no || ""}
-                        readOnly
-                      />
+                      {selectedRows.has(i) ? (
+                        <select
+                          className="form-control form-control-sm"
+                          value={row.slip_no || ""}
+                          onChange={(e) => handleSlipSelection(i, e.target.value)}
+                        >
+                          <option value="">Select Slip No</option>
+                          {slipData.map((slip, index) => (
+                            <option key={index} value={slip.slip_no}>
+                              {slip.slip_no}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          className="form-control form-control-sm"
+                          value={row.slip_no || ""}
+                          readOnly
+                          placeholder="Check item box to select slip"
+                        />
+                      )}
                     </td>
                     <td>
                       <input
@@ -283,7 +368,7 @@ const VoucheEntry = () => {
                     <td>
                       <input
                         className="form-control form-control-sm"
-                        value={row.customer_name || ""}
+                        value={row.vendor_name || row.customer_name || ""}
                         readOnly
                       />
                     </td>
@@ -336,13 +421,36 @@ const VoucheEntry = () => {
               : [...Array(10)].map((_, i) => (
                   <tr key={i}>
                     <td className="text-center">
-                      <input type="checkbox" className="form-check-input" />
+                      <input 
+                        type="checkbox" 
+                        className="form-check-input" 
+                        checked={selectedRows.has(i)}
+                        onChange={(e) => handleItemCheckboxChange(i, e.target.checked)}
+                      />
                     </td>
                     <td className="text-center">
                       <input type="checkbox" className="form-check-input" />
                     </td>
                     <td>
-                      <input className="form-control form-control-sm" />
+                      {selectedRows.has(i) ? (
+                        <select
+                          className="form-control form-control-sm"
+                          onChange={(e) => handleSlipSelection(i, e.target.value)}
+                        >
+                          <option value="">Select Slip No</option>
+                          {slipData.map((slip, index) => (
+                            <option key={index} value={slip.slip_no}>
+                              {slip.slip_no}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input 
+                          className="form-control form-control-sm" 
+                          placeholder="Check item box to select slip"
+                          readOnly
+                        />
+                      )}
                     </td>
                     <td>
                       <input className="form-control form-control-sm" />

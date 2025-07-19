@@ -4283,6 +4283,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET slip data for voucher entry dropdown
+  app.get("/api/vouchers/slip-data", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT 
+          WW.SLIP_NO, 
+          WW.WB_ID,
+          WWIP.VEHICLE_NO,
+          WWIP.ITEM_ID AS ITEM_ID,
+          WWIP.ITEM_CODE AS ITEM_CODE,
+          WWIP.ITEM_DESC AS ITEM_DESC, 
+          WWIP.VENDOR_ID AS VENDOR_ID,
+          WWIP.VENDOR_NAME AS VENDOR_NAME,
+          WW.FREIGHT
+        FROM 
+          WB_WEIGHBRIDGE WW
+        JOIN 
+          WB_WEIGHBRIDGE_ITEMS_PURCHASE WWIP
+        ON 
+          WW.WB_ID = WWIP.WB_ID
+        WHERE 
+          (COALESCE(WW.FIRST_WEIGHT::numeric, 0) > 0 
+           AND COALESCE(WW.SECOND_WEIGHT::numeric, 0) > 0)
+        ORDER BY WW.SLIP_NO DESC
+      `;
+
+      const result = await pool.query(query);
+      
+      console.log(`Fetched ${result.rows.length} slip records for voucher entry`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching slip data:", error);
+      res.status(500).json({ error: "Failed to fetch slip data" });
+    }
+  });
+
+  // GET specific slip data by slip number
+  app.get("/api/vouchers/slip-data/:slipNo", async (req: Request, res: Response) => {
+    try {
+      const { slipNo } = req.params;
+      
+      const query = `
+        SELECT 
+          WW.SLIP_NO, 
+          WW.WB_ID,
+          WWIP.VEHICLE_NO,
+          WWIP.ITEM_ID AS ITEM_ID,
+          WWIP.ITEM_CODE AS ITEM_CODE,
+          WWIP.ITEM_DESC AS ITEM_DESC, 
+          WWIP.VENDOR_ID AS VENDOR_ID,
+          WWIP.VENDOR_NAME AS VENDOR_NAME,
+          WW.FREIGHT
+        FROM 
+          WB_WEIGHBRIDGE WW
+        JOIN 
+          WB_WEIGHBRIDGE_ITEMS_PURCHASE WWIP
+        ON 
+          WW.WB_ID = WWIP.WB_ID
+        WHERE 
+          WW.SLIP_NO = $1
+          AND (COALESCE(WW.FIRST_WEIGHT::numeric, 0) > 0 
+               AND COALESCE(WW.SECOND_WEIGHT::numeric, 0) > 0)
+      `;
+
+      const result = await pool.query(query, [slipNo]);
+      
+      console.log(`Fetched ${result.rows.length} records for slip number: ${slipNo}`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching slip data by slip number:", error);
+      res.status(500).json({ error: "Failed to fetch slip data" });
+    }
+  });
+
   // GET vendors from inv_vendors table for vendor LOV
   app.get("/api/vendors", async (req: Request, res: Response) => {
     try {
