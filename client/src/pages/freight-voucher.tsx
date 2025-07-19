@@ -5,6 +5,9 @@ import { useLocation } from "wouter";
 const FreightVoucher = () => {
   const [, setLocation] = useLocation();
   const [vouchers, setVouchers] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("1");
+  const [selectedVoucherType, setSelectedVoucherType] = useState("cpv");
 
   useEffect(() => {
     fetchVouchers();
@@ -23,7 +26,10 @@ const FreightVoucher = () => {
   };
 
   const handleNewEntry = () => {
-    setLocation("/voucher-entry");
+    const params = new URLSearchParams();
+    params.set('branch', selectedBranch);
+    params.set('type', selectedVoucherType);
+    setLocation(`/voucher-entry?${params.toString()}`);
   };
 
   return (
@@ -48,7 +54,11 @@ const FreightVoucher = () => {
       <div className="row mt-3 mb-2">
         <div className="col-md-2">
           <label className="form-label fw-bold text-dark">Status</label>
-          <select className="form-select form-select-sm">
+          <select 
+            className="form-select form-select-sm"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+          >
             <option value="">Select Status</option>
             <option value="create">Create</option>
             <option value="checked">Checked</option>
@@ -58,7 +68,11 @@ const FreightVoucher = () => {
         </div>
         <div className="col-md-4">
           <label className="form-label fw-bold text-dark">Branch</label>
-          <select className="form-select form-select-sm">
+          <select 
+            className="form-select form-select-sm"
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+          >
             <option value="1">Main Branch</option>
             <option value="2">Shahzor</option>
             <option value="3">Secondary Branch</option>
@@ -66,7 +80,11 @@ const FreightVoucher = () => {
         </div>
         <div className="col-md-2">
           <label className="form-label fw-bold text-dark">Voucher Type</label>
-          <select className="form-select form-select-sm">
+          <select 
+            className="form-select form-select-sm"
+            value={selectedVoucherType}
+            onChange={(e) => setSelectedVoucherType(e.target.value)}
+          >
             <option value="cpv">CPV</option>
             <option value="cv">CV</option>
           </select>

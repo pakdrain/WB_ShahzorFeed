@@ -8,9 +8,34 @@ const VoucheEntry = () => {
   const [selectedDoNo, setSelectedDoNo] = useState("");
   const [tableData, setTableData] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState("");
+  const [voucherType, setVoucherType] = useState("CPV");
+  const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
     fetchDoNumbers();
+    
+    // Set current date
+    const today = new Date().toISOString().split('T')[0];
+    setCurrentDate(today);
+    
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const branchParam = urlParams.get('branch');
+    const typeParam = urlParams.get('type');
+    
+    if (branchParam) {
+      // Map branch ID to branch name
+      const branchMapping = {
+        '1': 'Main Branch',
+        '2': 'Shahzor',
+        '3': 'Secondary Branch'
+      };
+      setSelectedBranch(branchMapping[branchParam] || '');
+    }
+    
+    if (typeParam) {
+      setVoucherType(typeParam.toUpperCase());
+    }
   }, []);
 
   const fetchDoNumbers = async () => {
@@ -61,11 +86,11 @@ const VoucheEntry = () => {
       });
 
       const voucherData = {
-        voucherType: "CPV",
+        voucherType: voucherType,
         docDate: document.querySelector('input[type="date"]')?.value,
         remarks: document.querySelector("textarea")?.value,
         createdBy: 1,
-        creationDate: new Date().toISOString().split("T")[0],
+        creationDate: currentDate,
         branch: selectedBranch,
         docNo: selectedDoNo,
       };
@@ -131,7 +156,7 @@ const VoucheEntry = () => {
         </div>
         <div className="col-md-4">
           <strong className="text-black">Type</strong>
-          <input className="form-control" value="CPV" readOnly />
+          <input className="form-control" value={voucherType} readOnly />
         </div>
       </div>
 
@@ -158,7 +183,7 @@ const VoucheEntry = () => {
         </div>
         <div className="col-md-4">
           <strong className="text-black">Creation Date</strong>
-          <input className="form-control" type="date" />
+          <input className="form-control" type="date" value={currentDate} onChange={(e) => setCurrentDate(e.target.value)} />
         </div>
       </div>
 
