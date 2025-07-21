@@ -4423,27 +4423,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const data = await response.json();
-      console.log("✅ Fetched raw API data structure:", {
+      console.log("✅ Fetched raw API data:", {
         isArray: Array.isArray(data),
-        hasItems: data && data.items ? true : false,
-        totalRecords: Array.isArray(data)
-          ? data.length
-          : data && data.items
-            ? data.items.length
-            : 1,
-        firstRecord: Array.isArray(data)
-          ? data[0]
-          : data && data.items
-            ? data.items[0]
-            : data,
+        dataKeys: data && typeof data === 'object' ? Object.keys(data) : [],
+        firstRecord: Array.isArray(data) ? data[0] : data?.items?.[0] || data,
       });
 
-      // Recreate inv_items table with correct structure
+      // Drop and recreate inv_items table with correct structure and NOT NULL constraint for item_id
       console.log("🔧 Recreating inv_items table...");
       await pool.query(`DROP TABLE IF EXISTS inv_items CASCADE`);
       await pool.query(`
         CREATE TABLE inv_items (
-          item_id INTEGER NOT NULL,
+          item_id INTEGER NOT NULL PRIMARY KEY,
           item_code VARCHAR(50) NOT NULL UNIQUE,
           item_desc TEXT,
           uom VARCHAR(10),
@@ -4455,9 +4446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gl_f_sale_acc_id INTEGER,
           sale_return_acc_id INTEGER,
           w_i_p_id INTEGER,
-          delivery_term VARCHAR(100),
-          CONSTRAINT inv_items_pkey PRIMARY KEY (item_id),
-          CONSTRAINT inv_items_item_code_key UNIQUE (item_code)
+          delivery_term VARCHAR(100)
         )
       `);
 
@@ -4490,123 +4479,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const item = dataToProcess[i];
 
         try {
-          console.log(
-            `🔄 Processing record ${i + 1}:`,
-            JSON.stringify(item, null, 2),
-          );
+          console.log(`🔄 Processing record ${i + 1}:`, JSON.stringify(item, null, 2));
 
-          // Extract item_id with comprehensive field checking
+          // ✅ ENHANCED ITEM_ID EXTRACTION - GUARANTEED NON-NULL
           let itemId = null;
 
-          // Direct field mappings to try in order of preference
+          // Method 1: Direct field extraction with strict validation
           const itemIdFields = [
-            "item_id",
-            "ITEM_ID",
-            "ItemId",
-            "itemId",
-            "itemID",
-            "ITEMID",
-            "id",
-            "ID",
-            "Id",
-            "iD",
+            "item_id", "ITEM_ID", "ItemId", "itemId", "itemID", "ITEMID",
+            "id", "ID", "Id", "iD"
           ];
 
           for (const field of itemIdFields) {
-            if (
-              item.hasOwnProperty(field) &&
-              item[field] !== null &&
-              item[field] !== undefined
-            ) {
+            if (item.hasOwnProperty(field) && item[field] !== null && item[field] !== undefined && item[field] !== "") {
               const rawValue = item[field];
-              console.log(
-                `🔍 Checking field '${field}' with value:`,
-                rawValue,
-                typeof rawValue,
-              );
+              console.log(`🔍 Checking field '${field}' with value:`, rawValue, typeof rawValue);
 
-              if (typeof rawValue === "number" && rawValue > 0) {
-                itemId = Math.floor(rawValue);
-                console.log(
-                  `✅ Found numeric item_id=${itemId} from field: ${field}`,
-                );
+              if (typeof rawValue === "number" && rawValue > 0 && Number.isInteger(rawValue)) {
+                itemId = rawValue;
+                console.log(`✅ Found numeric item_id=${itemId} from field: ${field}`);
                 break;
-              } else if (typeof rawValue === "string") {
+              } else if (typeof rawValue === "string" && rawValue.trim()) {
                 const parsed = parseInt(rawValue.trim());
                 if (!isNaN(parsed) && parsed > 0) {
                   itemId = parsed;
-                  console.log(
-                    `✅ Parsed item_id=${itemId} from string field: ${field}`,
-                  );
+                  console.log(`✅ Parsed item_id=${itemId} from string field: ${field}`);
                   break;
                 }
               }
             }
           }
 
-          // If still no item_id, extract from item_code
-          if (!itemId) {
-            const itemCodeFields = ["item_code", "ITEM_CODE", "code", "CODE"];
+          // Method 2: Extract from item_code if item_id is still null
+          if (!itemId || itemId <= 0) {
+            const itemCodeFields = ["item_code", "ITEM_CODE", "code", "CODE", "itemCode"];
             for (const field of itemCodeFields) {
               if (item.hasOwnProperty(field) && item[field]) {
-                const codeValue = String(item[field]);
-                const match = codeValue.match(/(\d+)/);
-                if (match) {
-                  itemId = parseInt(match[1]);
-                  console.log(
-                    `✅ Extracted item_id=${itemId} from ${field}: ${codeValue}`,
-                  );
-                  break;
+                const codeValue = String(item[field]).trim();
+                // Try to extract numeric part from code
+                const numberMatch = codeValue.match(/(\d+)/);
+                if (numberMatch) {
+                  const extractedId = parseInt(numberMatch[1]);
+                  if (extractedId > 0) {
+                    itemId = extractedId;
+                    console.log(`✅ Extracted item_id=${itemId} from ${field}: ${codeValue}`);
+                    break;
+                  }
                 }
               }
             }
           }
 
-          // Final fallback - generate unique ID
+          // Method 3: Generate guaranteed unique ID if still null
           if (!itemId || itemId <= 0) {
-            itemId = 100000 + i;
-            console.log(
-              `⚠️ Generated fallback item_id=${itemId} for record ${i + 1}`,
-            );
+            // Generate unique ID based on current timestamp + index to avoid conflicts
+            const timestamp = Date.now();
+            itemId = parseInt(String(timestamp).slice(-6)) + i + 1;
+            console.log(`⚠️ Generated unique item_id=${itemId} for record ${i + 1}`);
           }
 
-          // Validate item_id
-          if (!itemId || itemId <= 0 || isNaN(itemId)) {
-            console.error(`❌ Invalid item_id for record ${i + 1}, skipping`);
+          // FINAL VALIDATION - ABSOLUTELY ENSURE ITEM_ID IS VALID
+          if (!itemId || itemId <= 0 || isNaN(itemId) || !Number.isInteger(itemId)) {
+            // Last resort - use a large base number + index
+            itemId = 999000 + i + 1;
+            console.log(`🚨 Emergency fallback item_id=${itemId} for record ${i + 1}`);
+          }
+
+          // Double check item_id is not null before proceeding
+          if (!itemId || itemId <= 0) {
+            console.error(`❌ CRITICAL: Could not generate valid item_id for record ${i + 1}, skipping`);
             recordsSkipped++;
             continue;
           }
 
-          // Extract other fields
-          const itemCode =
-            item.item_code ||
-            item.code ||
-            item.ITEM_CODE ||
-            item.CODE ||
-            `ITEM_${itemId}`;
-          const itemDesc =
-            item.item_desc ||
-            item.description ||
-            item.desc ||
-            item.ITEM_DESC ||
-            item.name ||
-            item.title ||
-            null;
+          // Extract other required fields with fallbacks
+          const itemCode = item.item_code || item.code || item.ITEM_CODE || item.CODE || item.itemCode || `ITEM_${itemId}`;
+          const itemDesc = item.item_desc || item.description || item.desc || item.ITEM_DESC || item.name || item.title || null;
           const uom = item.uom || item.unit || item.UOM || item.UNIT || null;
-          const weightInKg =
-            item.weight_in_kg || item.weight || item.WEIGHT_IN_KG || null;
+          const weightInKg = item.weight_in_kg || item.weight || item.WEIGHT_IN_KG || null;
           const payableAccId = item.payable_acc_id || item.payableAccId || null;
           const glAssetId = item.gl_asset_id || item.glAssetId || null;
           const glCostAccId = item.gl_cost_acc_id || item.glCostAccId || null;
           const glSaleAccId = item.gl_sale_acc_id || item.glSaleAccId || null;
-          const glFSaleAccId =
-            item.gl_f_sale_acc_id || item.glFSaleAccId || null;
-          const saleReturnAccId =
-            item.sale_return_acc_id || item.saleReturnAccId || null;
+          const glFSaleAccId = item.gl_f_sale_acc_id || item.glFSaleAccId || null;
+          const saleReturnAccId = item.sale_return_acc_id || item.saleReturnAccId || null;
           const wIPId = item.w_i_p_id || item.wIPId || null;
           const deliveryTerm = item.delivery_term || item.deliveryTerm || null;
 
-          console.log(`📝 Prepared values for insertion:`, {
+          console.log(`📝 Final values for insertion:`, {
             itemId: itemId,
             itemCode: itemCode,
             itemDesc: itemDesc?.substring(0, 50),
@@ -4614,7 +4574,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
             weightInKg: weightInKg,
           });
 
-          // Insert record into database
+          // Check if item_id already exists and increment if needed
+          const checkExistsQuery = `SELECT item_id FROM inv_items WHERE item_id = $1`;
+          const existsResult = await pool.query(checkExistsQuery, [itemId]);
+          
+          if (existsResult.rows.length > 0) {
+            // If ID exists, find next available ID
+            let newItemId = itemId;
+            let attempts = 0;
+            while (attempts < 1000) { // Prevent infinite loop
+              newItemId = itemId + attempts + 1;
+              const checkNewQuery = `SELECT item_id FROM inv_items WHERE item_id = $1`;
+              const newResult = await pool.query(checkNewQuery, [newItemId]);
+              if (newResult.rows.length === 0) {
+                itemId = newItemId;
+                console.log(`🔄 Adjusted item_id to ${itemId} to avoid conflict`);
+                break;
+              }
+              attempts++;
+            }
+          }
+
+          // Insert record with guaranteed non-null item_id
           const insertQuery = `
             INSERT INTO inv_items (
               item_id, item_code, item_desc, uom, weight_in_kg,
@@ -4622,23 +4603,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               gl_f_sale_acc_id, sale_return_acc_id, w_i_p_id, delivery_term
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-            ON CONFLICT (item_id) DO UPDATE SET
-              item_code = EXCLUDED.item_code,
-              item_desc = EXCLUDED.item_desc,
-              uom = EXCLUDED.uom,
-              weight_in_kg = EXCLUDED.weight_in_kg,
-              payable_acc_id = EXCLUDED.payable_acc_id,
-              gl_asset_id = EXCLUDED.gl_asset_id,
-              gl_cost_acc_id = EXCLUDED.gl_cost_acc_id,
-              gl_sale_acc_id = EXCLUDED.gl_sale_acc_id,
-              gl_f_sale_acc_id = EXCLUDED.gl_f_sale_acc_id,
-              sale_return_acc_id = EXCLUDED.sale_return_acc_id,
-              w_i_p_id = EXCLUDED.w_i_p_id,
-              delivery_term = EXCLUDED.delivery_term
           `;
 
           const values = [
-            itemId, // Keep as integer
+            itemId, // GUARANTEED TO BE NON-NULL INTEGER
             String(itemCode),
             itemDesc ? String(itemDesc) : null,
             uom ? String(uom) : null,
@@ -4653,48 +4621,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
             deliveryTerm ? String(deliveryTerm) : null,
           ];
 
-          console.log(
-            `💾 Inserting record ${i + 1} with item_id=${values[0]} (${typeof values[0]})`,
-          );
+          console.log(`💾 Inserting record ${i + 1} with GUARANTEED item_id=${values[0]} (${typeof values[0]})`);
 
           await pool.query(insertQuery, values);
           recordsInserted++;
 
-          console.log(
-            `✅ Successfully inserted record ${i + 1}: item_id=${values[0]}, code='${values[1]}'`,
-          );
+          console.log(`✅ Successfully inserted record ${i + 1}: item_id=${values[0]}, code='${values[1]}'`);
 
           // Verify the insertion
           const verifyQuery = `SELECT item_id, item_code FROM inv_items WHERE item_id = $1`;
           const verifyResult = await pool.query(verifyQuery, [values[0]]);
           if (verifyResult.rows.length > 0) {
             const saved = verifyResult.rows[0];
-            console.log(
-              `✅ Verified: item_id=${saved.item_id}, code='${saved.item_code}' saved correctly`,
-            );
+            console.log(`✅ Verified: item_id=${saved.item_id}, code='${saved.item_code}' saved correctly`);
           } else {
             console.error(`❌ Verification failed for item_id=${values[0]}`);
           }
         } catch (insertError: any) {
-          console.error(
-            `❌ Error inserting record ${i + 1}:`,
-            insertError.message,
-          );
+          console.error(`❌ Error inserting record ${i + 1}:`, insertError.message);
           console.error("❌ Failed item data:", JSON.stringify(item, null, 2));
           recordsSkipped++;
         }
       }
 
-      // Final verification
+      // Final verification - CHECK FOR ANY NULL ITEM_IDS
+      const nullCheckQuery = `SELECT COUNT(*) as null_count FROM inv_items WHERE item_id IS NULL`;
+      const nullCheckResult = await pool.query(nullCheckQuery);
+      const nullCount = nullCheckResult.rows[0].null_count;
+
       const finalCountQuery = `
         SELECT 
           COUNT(*) as total, 
           COUNT(CASE WHEN item_id IS NOT NULL THEN 1 END) as with_item_id,
-          COUNT(CASE WHEN item_id IS NULL THEN 1 END) as null_item_ids
+          MIN(item_id) as min_item_id,
+          MAX(item_id) as max_item_id
         FROM inv_items
       `;
       const finalCount = await pool.query(finalCountQuery);
       console.log(`📊 Final verification:`, finalCount.rows[0]);
+      console.log(`🔍 NULL item_id count: ${nullCount}`);
 
       const sampleQuery = `SELECT item_id, item_code, item_desc FROM inv_items ORDER BY item_id LIMIT 5`;
       const sampleResult = await pool.query(sampleQuery);
@@ -4702,9 +4667,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         success: true,
-        message: `Data processing completed - ${recordsInserted} records inserted, ${recordsSkipped} skipped`,
+        message: `Data processing completed - ${recordsInserted} records inserted, ${recordsSkipped} skipped, ${nullCount} NULL item_ids`,
         recordsInserted: recordsInserted,
         recordsSkipped: recordsSkipped,
+        nullItemIds: nullCount,
         verificationData: finalCount.rows[0],
         sampleData: sampleResult.rows,
         totalProcessed: dataToProcess.length,
