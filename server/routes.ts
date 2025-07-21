@@ -1,8 +1,338 @@
-tus(500).json({ error: "Failed to fetch slip data" });
+import { Request, Response } from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import { createClient } from "redis";
+import { Pool } from "pg";
+import path from "path";
+import fs from "fs";
+
+// Initialize PostgreSQL connection pool
+const pool = new Pool({
+  user: "sabirthedev",
+  host: "localhost",
+  database: "sabirs_poultry",
+  password: "sabirthedev",
+  port: 5432,
+});
+
+async function initializeDatabase() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS captured_images (
+        id SERIAL PRIMARY KEY,
+        image_name VARCHAR(255) NOT NULL,
+        image_path VARCHAR(255) NOT NULL,
+        upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log("✅ Database initialized successfully");
+  } catch (error) {
+    console.error("❌ Error initializing database:", error);
+  }
+}
+
+// Initialize Redis client
+const redisClient = createClient({
+  socket: {
+    host: "localhost",
+    port: 6379,
+  },
+});
+
+redisClient.on("connect", () => console.log("✅ Connected to Redis"));
+redisClient.on("error", (err) => console.log("❌ Redis Client Error", err));
+
+async function startServer() {
+  await redisClient.connect();
+
+  const httpServer = createServer();
+  const io = new Server(httpServer, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST"],
+    },
+  });
+
+  io.on("connection", (socket) => {
+    console.log("A user connected");
+
+    socket.on("disconnect", () => {
+      console.log("User disconnected");
+    });
+
+    socket.on("chat message", (msg) => {
+      io.emit("chat message", msg); // Broadcast to all clients
+    });
+  });
+
+  // Express app setup (assuming 'app' is defined here)
+  const express = require("express");
+  const app = express();
+  const cors = require("cors");
+
+  app.use(cors());
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+
+  // Serve static files from the 'uploads' directory
+  const uploadsDir = path.join(__dirname, "uploads");
+  app.use("/uploads", express.static(uploadsDir));
+
+  // API endpoint to handle image uploads
+  app.post("/api/upload", async (req: Request, res: Response) => {
+    try {
+      const { imageName, imageData } = req.body;
+
+      if (!imageName || !imageData) {
+        return res
+          .status(400)
+          .json({ error: "Image name and data are required." });
+      }
+
+      const imageBuffer = Buffer.from(imageData, "base64");
+      const imagePath = path.join(uploadsDir, imageName);
+
+      // Ensure the 'uploads' directory exists
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      fs.writeFileSync(imagePath, imageBuffer);
+
+      // Save image details to the database
+      await pool.query(
+        "INSERT INTO captured_images (image_name, image_path) VALUES ($1, $2)",
+        [imageName, imagePath],
+      );
+
+      console.log(`Image saved: ${imageName} to ${imagePath}`);
+      res.status(201).json({
+        message: "Image uploaded successfully!",
+        imageUrl: `/uploads/${imageName}`,
+      });
+    } catch (error: any) {
+      console.error("Upload error:", error);
+      res.status(500).json({ error: "Failed to upload image." });
     }
   });
 
-  // GET specific slip data by slip number
+  // API endpoint to fetch all captured images
+  app.get("/api/images", async (req: Request, res: Response) => {
+    try {
+      const result = await pool.query(
+        "SELECT id, image_name, image_path, upload_date FROM captured_images ORDER BY upload_date DESC",
+      );
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching images:", error);
+      res.status(500).json({ error: "Failed to fetch images" });
+    }
+  });
+
+  // Fetch and save data from external API to inv_items table
+  app.post("/api/fetch-and-save", async (req: Request, res: Response) => {
+    try {
+      console.log("🔄 Starting fetch and save operation...");
+
+      // Fetch data from external API
+      const apiResponse = await fetch("http://192.168.100.75:8080/api/inv_items");
+
+      if (!apiResponse.ok) {
+        throw new Error(`API request failed with status: ${apiResponse.status}`);
+      }
+
+      const apiData = await apiResponse.json();
+      console.log("✅ API data fetched successfully, total records:", apiData?.length || 0);
+
+      if (!Array.isArray(apiData) || apiData.length === 0) {
+        return res.status(400).json({ 
+          error: "No valid data received from API",
+          receivedData: apiData 
+        });
+      }
+
+      // Log sample of received data for debugging
+      console.log("📋 Sample API data structure:", JSON.stringify(apiData[0], null, 2));
+
+      const results = [];
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const item of apiData) {
+        try {
+          // Extract item_id - this is the critical fix
+          let itemId = null;
+
+          // Try different possible field names for item_id (case-insensitive)
+          const possibleIdFields = ['item_id', 'id', 'ID', 'ITEM_ID', 'itemId', 'ItemId'];
+          for (const field of possibleIdFields) {
+            if (item.hasOwnProperty(field) && item[field] !== undefined && item[field] !== null && item[field] !== '') {
+              // Convert to integer and validate
+              const parsedId = parseInt(String(item[field]));
+              if (!isNaN(parsedId) && parsedId > 0) {
+                itemId = parsedId;
+                console.log(`✅ Found valid item_id: ${itemId} from field: ${field} (value: ${item[field]})`);
+                break;
+              }
+            }
+          }
+
+          // If still no valid item_id found, skip this record or generate one
+          if (itemId === null || isNaN(itemId) || itemId <= 0) {
+            console.warn("⚠️ No valid item_id found in item:", JSON.stringify(item));
+            // Get next available item_id
+            const maxIdResult = await pool.query('SELECT COALESCE(MAX(item_id), 0) as max_id FROM inv_items');
+            itemId = (maxIdResult.rows[0]?.max_id || 0) + 1;
+            console.log(`🔧 Generated sequential item_id: ${itemId}`);
+          }
+
+          // Extract other fields with proper fallback logic
+          const itemCode = String(item.item_code || item.ITEM_CODE || item.code || item.CODE || `CODE_${itemId}`).trim();
+          const itemDesc = String(item.item_desc || item.ITEM_DESC || item.description || item.DESCRIPTION || item.desc || item.DESC || 'Unknown Item').trim();
+          const uom = String(item.uom || item.UOM || item.unit || item.UNIT || 'KGS').trim();
+
+          // Handle weight_in_kg as numeric
+          let weightInKg = null;
+          if (item.weight_in_kg !== undefined && item.weight_in_kg !== null && item.weight_in_kg !== '') {
+            const parsedWeight = parseFloat(String(item.weight_in_kg));
+            if (!isNaN(parsedWeight)) {
+              weightInKg = parsedWeight;
+            }
+          }
+
+          // Handle payable_acc as integer
+          let payableAcc = null;
+          if (item.payable_acc !== undefined && item.payable_acc !== null && item.payable_acc !== '') {
+            const parsedAcc = parseInt(String(item.payable_acc));
+            if (!isNaN(parsedAcc)) {
+              payableAcc = parsedAcc;
+            }
+          }
+
+          console.log(`💾 Preparing to save - item_id: ${itemId}, item_code: ${itemCode}, item_desc: ${itemDesc}`);
+
+          // First check if record exists
+          const existsQuery = 'SELECT item_id FROM inv_items WHERE item_id = $1 OR item_code = $2';
+          const existsResult = await pool.query(existsQuery, [itemId, itemCode]);
+
+          let result;
+          if (existsResult.rows.length > 0) {
+            // Update existing record
+            const updateQuery = `
+              UPDATE inv_items 
+              SET item_desc = $3, uom = $4, weight_in_kg = $5, payable_acc = $6
+              WHERE item_id = $1 OR item_code = $2
+              RETURNING *
+            `;
+            result = await pool.query(updateQuery, [itemId, itemCode, itemDesc, uom, weightInKg, payableAcc]);
+            console.log(`🔄 Updated existing item with item_id: ${itemId}`);
+          } else {
+            // Insert new record
+            const insertQuery = `
+              INSERT INTO inv_items (item_id, item_code, item_desc, uom, weight_in_kg, payable_acc) 
+              VALUES ($1, $2, $3, $4, $5, $6)
+              RETURNING *
+            `;
+            result = await pool.query(insertQuery, [itemId, itemCode, itemDesc, uom, weightInKg, payableAcc]);
+            console.log(`✅ Inserted new item with item_id: ${itemId}`);
+          }
+
+          if (result.rows && result.rows.length > 0) {
+            const savedItem = result.rows[0];
+            console.log(`✅ Successfully processed item:`, {
+              item_id: savedItem.item_id,
+              item_code: savedItem.item_code,
+              item_desc: savedItem.item_desc
+            });
+            results.push(savedItem);
+            successCount++;
+
+            // Immediate verification query for this specific item
+            const verifyQuery = 'SELECT item_id, item_code FROM inv_items WHERE item_id = $1';
+            const verifyResult = await pool.query(verifyQuery, [savedItem.item_id]);
+            if (verifyResult.rows.length > 0 && verifyResult.rows[0].item_id !== null) {
+              console.log(`🔍 Verification passed - item_id ${savedItem.item_id} is properly saved`);
+            } else {
+              console.error(`❌ Verification failed - item_id is NULL for record ${savedItem.item_id}`);
+            }
+          } else {
+            console.error(`❌ No result returned for item_id: ${itemId}`);
+            errorCount++;
+          }
+
+        } catch (itemError: any) {
+          console.error(`❌ Error processing individual item:`, itemError.message);
+          console.error(`❌ Failed item data:`, JSON.stringify(item, null, 2));
+          errorCount++;
+        }
+      }
+
+      // Final verification query
+      const finalVerificationQuery = 'SELECT item_id, item_code, item_desc FROM inv_items WHERE item_id IS NOT NULL ORDER BY item_id DESC LIMIT 10';
+      const finalVerificationResult = await pool.query(finalVerificationQuery);
+      console.log("🔍 Final database verification - Recent items with non-null item_id:", finalVerificationResult.rows);
+
+      // Check for NULL item_id entries
+      const nullCheckQuery = 'SELECT COUNT(*) as null_count FROM inv_items WHERE item_id IS NULL';
+      const nullCheckResult = await pool.query(nullCheckQuery);
+      console.log("🔍 NULL item_id count:", nullCheckResult.rows[0]?.null_count || 0);
+
+      console.log(`📊 Operation completed - Success: ${successCount}, Errors: ${errorCount}`);
+
+      res.json({
+        success: true,
+        message: `Data fetched and saved successfully. ${successCount} items processed successfully, ${errorCount} errors.`,
+        totalProcessed: apiData.length,
+        successCount: successCount,
+        errorCount: errorCount,
+        nullItemIdCount: nullCheckResult.rows[0]?.null_count || 0,
+        sampleSavedData: results.slice(0, 3),
+        recentDbEntries: finalVerificationResult.rows
+      });
+
+    } catch (error: any) {
+      console.error("❌ Fatal error in fetch-and-save:", error);
+      res.status(500).json({ 
+        error: "Failed to fetch and save data", 
+        details: error.message,
+        stack: error.stack
+      });
+    }
+  });
+
+  // GET specific item from inv_items table
+  app.get("/api/items/:itemId", async (req: Request, res: Response) => {
+    try {
+      const { itemId } = req.params;
+      const query = `SELECT item_id, item_code, item_desc, uom FROM inv_items WHERE item_id = $1`;
+      const result = await pool.query(query, [itemId]);
+
+      if (result.rows.length > 0) {
+        console.log(`Fetched item with item_id: ${itemId}`);
+        res.json(result.rows[0]);
+      } else {
+        res.status(404).json({ error: "Item not found" });
+      }
+    } catch (error: any) {
+      console.error("Error fetching item:", error);
+      res.status(500).json({ error: "Failed to fetch item" });
+    }
+  });
+
+  // GET all items from inv_items table
+  app.get("/api/items", async (req: Request, res: Response) => {
+    try {
+      const query = `SELECT item_id, item_code, item_desc, uom FROM inv_items ORDER BY item_desc`;
+      const result = await pool.query(query);
+
+      console.log(`Fetched ${result.rows.length} items`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching items:", error);
+      res.status(500).json({ error: "Failed to fetch items" });
+    }
+  });
+
   app.get(
     "/api/vouchers/slip-data/:slipNo",
     async (req: Request, res: Response) => {
