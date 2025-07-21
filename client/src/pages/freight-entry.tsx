@@ -126,7 +126,7 @@ const FreightEntry = () => {
       const newSlipDropdownData = { ...slipDropdownData };
       delete newSlipDropdownData[index];
       setSlipDropdownData(newSlipDropdownData);
-      
+
       // Clear the loaded data from this row
       const updatedData = [...tableData];
       updatedData[index] = {
@@ -187,7 +187,7 @@ const FreightEntry = () => {
         headers: { "Content-Type": "application/json" },
       });
 
-      const voucherData = {
+      const masterData = {
         docNo: maxDocNo,
         voucherType: voucherType,
         docDate: document.querySelector('input[type="date"]')?.value,
@@ -209,7 +209,7 @@ const FreightEntry = () => {
       const response = await fetch("/api/freight/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ voucherData, slipData }),
+        body: JSON.stringify({ masterData, slipData }),
       });
 
       if (response.ok) {
