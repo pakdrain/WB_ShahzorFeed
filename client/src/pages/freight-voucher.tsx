@@ -44,12 +44,14 @@ const FreightVoucher = () => {
 
   const fetchFreightItems = async (freightId) => {
     try {
+      console.log("Fetching freight items for freight ID:", freightId);
       const response = await fetch(`/api/freight-vouchers/${freightId}/items`);
       if (response.ok) {
         const data = await response.json();
+        console.log("Freight items data received:", data);
         setFreightItems(data);
       } else {
-        console.error("Failed to fetch freight items");
+        console.error("Failed to fetch freight items, status:", response.status);
         setFreightItems([]);
       }
     } catch (error) {
@@ -382,7 +384,7 @@ const FreightVoucher = () => {
           <tbody>
             {freightItems.length > 0
               ? freightItems.map((item, index) => (
-                  <tr key={item.freight_item_id}>
+                  <tr key={item.freight_item_id || index}>
                     <td>
                       <input
                         type="text"
@@ -411,7 +413,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={`Vehicle: ${item.vehicale_no || ""}, WB ID: ${item.wb_id || ""}`}
+                        value={`Vehicle: ${item.vehicale_no || "N/A"}, WB ID: ${item.wb_id || "N/A"}`}
                         readOnly
                       />
                     </td>

@@ -3336,9 +3336,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gfi.remarks as item_desc,
           gfi.debit,
           gfi.credit,
-          iv.vendor_name,
-          ii.item_code,
-          ii.item_desc as full_item_desc
+          COALESCE(iv.vendor_name, 'Unknown Vendor') as vendor_name,
+          COALESCE(ii.item_code, 'Unknown Code') as item_code,
+          COALESCE(ii.item_desc, gfi.remarks, 'Unknown Item') as full_item_desc
         FROM gl_freight_items gfi
         LEFT JOIN inv_vendors iv ON gfi.vendor_id = iv.vendor_id
         LEFT JOIN inv_items ii ON gfi.item_id = ii.item_id
@@ -3349,6 +3349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(query, [parseInt(freightId)]);
 
       console.log(`Fetched ${result.rows.length} freight items for freight ID: ${freightId}`);
+      console.log("Sample freight item:", result.rows[0]);
       res.json(result.rows);
     } catch (error: any) {
       console.error("Error fetching freight items:", error);
