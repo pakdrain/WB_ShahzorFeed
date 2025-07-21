@@ -45,20 +45,36 @@ const FreightVoucher = () => {
   const fetchFreightItems = async (freightId) => {
     try {
       console.log("Fetching freight items for freight ID:", freightId);
-      const response = await fetch(`/api/freight-vouchers/${freightId}/items`);
+      
+      // First try the specific freight items endpoint
+      let response = await fetch(`/api/freight-vouchers/${freightId}/items`);
+      
+      if (!response.ok) {
+        console.log("Primary endpoint failed, trying alternative...");
+        // Try alternative endpoint if first one fails
+        response = await fetch(`/api/freight-items?freightId=${freightId}`);
+      }
+      
       if (response.ok) {
         const data = await response.json();
-        console.log("Freight items data received:", data);
-        console.log("Number of freight items:", data.length);
-        setFreightItems(data || []);
+        console.log("✅ Freight items data received:", data);
+        console.log("✅ Number of freight items:", data.length);
+        
+        if (data && data.length > 0) {
+          console.log("✅ Setting freight items:", data);
+          setFreightItems(data);
+        } else {
+          console.log("⚠️ No freight items found for this freight ID");
+          setFreightItems([]);
+        }
       } else {
-        console.error("Failed to fetch freight items, status:", response.status);
+        console.error("❌ Failed to fetch freight items, status:", response.status);
         const errorText = await response.text();
-        console.error("Error response:", errorText);
+        console.error("❌ Error response:", errorText);
         setFreightItems([]);
       }
     } catch (error) {
-      console.error("Error fetching freight items:", error);
+      console.error("❌ Error fetching freight items:", error);
       setFreightItems([]);
     }
   };
@@ -386,101 +402,111 @@ const FreightVoucher = () => {
           </thead>
           <tbody>
             {freightItems && freightItems.length > 0 ? (
-              freightItems.map((item, index) => (
-                <tr key={item.freight_item_id || `freight-item-${index}`}>
-                  <td>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={item.vendor_name || ""}
-                      readOnly
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={item.item_code || ""}
-                      readOnly
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={item.full_item_desc || item.item_desc || ""}
-                      readOnly
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={`Vehicle: ${item.vehicale_no || "N/A"}, WB ID: ${item.wb_id || "N/A"}`}
-                      readOnly
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={item.delivery_terms || ""}
-                      readOnly
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value=""
-                      readOnly
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value=""
-                      readOnly
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={item.debit || "0.00"}
-                      readOnly
-                    />
-                  </td>
-                  <td>
-                    <input
-                      type="text"
-                      className="form-control form-control-sm"
-                      value={item.credit || item.freight_amount || "0.00"}
-                      readOnly
-                    />
-                  </td>
-                </tr>
-              ))
+              <>
+                {console.log("🔄 Rendering freight items in tbody:", freightItems)}
+                {freightItems.map((item, index) => {
+                  console.log(`🔄 Rendering item ${index + 1}:`, item);
+                  return (
+                    <tr key={item.freight_item_id || `freight-item-${index}`}>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={item.vendor_name || "N/A"}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={item.item_code || "N/A"}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={item.full_item_desc || item.item_desc || item.remarks || "N/A"}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={`Vehicle: ${item.vehicale_no || "N/A"}, WB ID: ${item.wb_id || "N/A"}`}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={item.delivery_terms || "N/A"}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={item.branch_id || "N/A"}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={item.freight_item_id || "N/A"}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={item.debit || "0.00"}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={item.credit || item.freight_amount || "0.00"}
+                          readOnly
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </>
             ) : (
-              Array(10)
-                .fill(null)
-                .map((_, rowIdx) => (
-                  <tr key={`empty-row-${rowIdx}`}>
-                    {Array(9)
-                      .fill(null)
-                      .map((_, colIdx) => (
-                        <td key={`empty-cell-${rowIdx}-${colIdx}`}>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            value=""
-                            readOnly
-                          />
-                        </td>
-                      ))}
-                  </tr>
-                ))
+              <>
+                {console.log("⚠️ No freight items to display, showing empty rows")}
+                {Array(10)
+                  .fill(null)
+                  .map((_, rowIdx) => (
+                    <tr key={`empty-row-${rowIdx}`}>
+                      {Array(9)
+                        .fill(null)
+                        .map((_, colIdx) => (
+                          <td key={`empty-cell-${rowIdx}-${colIdx}`}>
+                            <input
+                              type="text"
+                              className="form-control form-control-sm"
+                              value=""
+                              readOnly
+                              placeholder={colIdx === 0 ? "No freight items found" : ""}
+                            />
+                          </td>
+                        ))}
+                    </tr>
+                  ))}
+              </>
             )}
           </tbody>
         </table>
