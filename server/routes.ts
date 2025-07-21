@@ -126,7 +126,7 @@
           cpv_type           VARCHAR(30),
           company_type       VARCHAR(500),
           cheque_no          VARCHAR(50),
-          hatch_no           VARCHAR(200),
+          hatch_no          VARCHAR(200),
           old_status         VARCHAR(500),
           paid_to            VARCHAR(50),
           slip_no            NUMERIC(20,6),
@@ -252,7 +252,7 @@
   app.get("/api/freight-vouchers/:freightId/items", async (req: Request, res: Response) => {
     try {
       const { freightId } = req.params;
-      
+
       const query = `
         SELECT 
           gfi.freight_item_id,
@@ -297,6 +297,87 @@
     } catch (error: any) {
       console.error("Error fetching freight items:", error);
       res.status(500).json({ error: "Failed to fetch freight items" });
+    }
+  });
+
+  // Fetch and save data from URL to inv_items table
+  app.post("/api/fetch-and-save", async (req: Request, res: Response) => {
+    try {
+      const { url } = req.body;
+
+      if (!url) {
+        return res.status(400).json({ error: "URL is required" });
+      }
+
+      // Fetch data from the provided URL
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch data: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (!Array.isArray(data)) {
+        return res.status(400).json({ error: "Expected array data from URL" });
+      }
+
+      // Save each item to inv_items table
+      let savedCount = 0;
+      for (const item of data) {
+        try {
+          const insertQuery = `
+            INSERT INTO inv_items (
+              item_id, item_code, item_desc, uom, weight_in_kg, gl_asset_id, 
+              payable_acc_id, gl_cogs_acc_id, gl_sale_acc_id, 
+              gl_sale_return_acc_id, gl_purchase_acc_id, delivery_term
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            ON CONFLICT (item_code) DO UPDATE SET
+              item_id = EXCLUDED.item_id,
+              item_desc = EXCLUDED.item_desc,
+              uom = EXCLUDED.uom,
+              weight_in_kg = EXCLUDED.weight_in_kg,
+              gl_asset_id = EXCLUDED.gl_asset_id,
+              payable_acc_id = EXCLUDED.payable_acc_id,
+              gl_cogs_acc_id = EXCLUDED.gl_cogs_acc_id,
+              gl_sale_acc_id = EXCLUDED.gl_sale_acc_id,
+              gl_sale_return_acc_id = EXCLUDED.gl_sale_return_acc_id,
+              gl_purchase_acc_id = EXCLUDED.gl_purchase_acc_id,
+              delivery_term = EXCLUDED.delivery_term
+          `;
+
+          const values = [
+            item.item_id || null,  // Include item_id from API response
+            item.item_code || null,
+            item.item_desc || null,
+            item.uom || null,
+            item.weight_in_kg || null,
+            item.gl_asset_id || null,
+            item.payable_acc_id || null,
+            item.gl_cogs_acc_id || null,
+            item.gl_sale_acc_id || null,
+            item.gl_sale_return_acc_id || null,
+            item.gl_purchase_acc_id || null,
+            item.delivery_term || null,
+          ];
+
+          const result = await pool.query(insertQuery, values);
+          if (result.rowCount && result.rowCount > 0) {
+            savedCount++;
+          }
+        } catch (itemError: any) {
+          console.error(`Error saving item ${item.item_code}:`, itemError);
+        }
+      }
+
+      res.json({
+        success: true,
+        message: `Successfully fetched and saved ${savedCount} records to inv_items table`,
+        totalFetched: data.length,
+        savedCount,
+      });
+    } catch (error: any) {
+      console.error("Error fetching and saving data:", error);
+      res.status(500).json({ error: "Failed to fetch and save data" });
     }
   });
 
