@@ -19,7 +19,7 @@ import NotFound from "@/pages/not-found";
 import SalesReturnForm from "@/pages/sales-return";
 import SaleNode from "@/pages/sale-node";
 import PurchaseReturn from "@/pages/purchase-return";
-import VoucherEntry from "./pages/voucher-entry";
+import FreightEntry from "./pages/freight-entry";
 import FreightVoucher from "./pages/freight-voucher";
 import GetData from "./pages/get-data";
 
@@ -34,8 +34,9 @@ function ProtectedApp() {
           <Route path="/weighbridge-settings" component={WeighbridgeSettings} />
           <Route path="/role-management" component={RoleManagement} />
           <Route path="/purchase-form" component={PurchaseForm} />
-          <Route path="/voucher-entry" component={VoucherEntry} />
+          <Route path="/voucher-entry" component={FreightEntry} />
           <Route path="/voucher-view" component={FreightVoucher} />
+          <Route path="/get-data" component={GetData} />
           <Route path="/sales-form" component={SalesForm} />
           <Route path="/sales-return" component={SalesReturnForm} />
           <Route path="/purchase-return" component={PurchaseReturn} />

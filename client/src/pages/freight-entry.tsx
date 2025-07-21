@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useLocation } from "wouter";
 
-const VoucheEntry = () => {
+const FreightEntry = () => {
   const [, setLocation] = useLocation();
   const [doNumbers, setDoNumbers] = useState([]);
   const [selectedDoNo, setSelectedDoNo] = useState("");
@@ -19,26 +19,26 @@ const VoucheEntry = () => {
     fetchDoNumbers();
     fetchMaxDocNo();
     fetchSlipData();
-    
+
     // Set current date
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     setCurrentDate(today);
-    
+
     // Get URL parameters
     const urlParams = new URLSearchParams(window.location.search);
-    const branchParam = urlParams.get('branch');
-    const typeParam = urlParams.get('type');
-    
+    const branchParam = urlParams.get("branch");
+    const typeParam = urlParams.get("type");
+
     if (branchParam) {
       // Map branch ID to branch name
       const branchMapping = {
-        '1': 'Main Branch',
-        '2': 'Shahzor',
-        '3': 'Secondary Branch'
+        "1": "Main Branch",
+        "2": "Shahzor",
+        "3": "Secondary Branch",
       };
-      setSelectedBranch(branchMapping[branchParam] || '');
+      setSelectedBranch(branchMapping[branchParam] || "");
     }
-    
+
     if (typeParam) {
       setVoucherType(typeParam.toUpperCase());
     }
@@ -132,7 +132,7 @@ const VoucheEntry = () => {
         const data = await response.json();
         if (data.length > 0) {
           const slipRecord = data[0];
-          
+
           // Update table data with selected slip information
           const updatedData = [...tableData];
           updatedData[index] = {
@@ -145,10 +145,10 @@ const VoucheEntry = () => {
             wb_id: slipRecord.wb_id,
             item_code: slipRecord.item_code,
             item_id: slipRecord.item_id,
-            vendor_id: slipRecord.vendor_id
+            vendor_id: slipRecord.vendor_id,
           };
           setTableData(updatedData);
-          
+
           console.log(`Loaded data for slip ${slipNo}:`, slipRecord);
         }
       }
@@ -177,7 +177,7 @@ const VoucheEntry = () => {
 
       // Collect slip data from selected rows
       const slipData = [];
-      selectedRows.forEach(index => {
+      selectedRows.forEach((index) => {
         if (tableData[index]) {
           slipData.push(tableData[index]);
         }
@@ -260,28 +260,19 @@ const VoucheEntry = () => {
             placeholder="Loading..."
           />
         </div>
-        <div className="col-md-4">
-          <strong className="text-black">DO No</strong>
-          <select
-            className="form-control"
-            value={selectedDoNo}
-            onChange={handleDoNoChange}
-          >
-            <option value="">Select DO Number</option>
-            {doNumbers.map((doNo, index) => (
-              <option key={index} value={doNo}>
-                {doNo}
-              </option>
-            ))}
-          </select>
-        </div>
+
         <div className="col-md-4">
           <strong className="text-black">Doc Date</strong>
           <input className="form-control" type="date" />
         </div>
         <div className="col-md-4">
           <strong className="text-black">Creation Date</strong>
-          <input className="form-control" type="date" value={currentDate} onChange={(e) => setCurrentDate(e.target.value)} />
+          <input
+            className="form-control"
+            type="date"
+            value={currentDate}
+            onChange={(e) => setCurrentDate(e.target.value)}
+          />
         </div>
       </div>
 
@@ -321,11 +312,13 @@ const VoucheEntry = () => {
               ? tableData.map((row, i) => (
                   <tr key={i}>
                     <td className="text-center">
-                      <input 
-                        type="checkbox" 
-                        className="form-check-input" 
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
                         checked={selectedRows.has(i)}
-                        onChange={(e) => handleItemCheckboxChange(i, e.target.checked)}
+                        onChange={(e) =>
+                          handleItemCheckboxChange(i, e.target.checked)
+                        }
                       />
                     </td>
                     <td className="text-center">
@@ -336,7 +329,9 @@ const VoucheEntry = () => {
                         <select
                           className="form-control form-control-sm"
                           value={row.slip_no || ""}
-                          onChange={(e) => handleSlipSelection(i, e.target.value)}
+                          onChange={(e) =>
+                            handleSlipSelection(i, e.target.value)
+                          }
                         >
                           <option value="">Select Slip No</option>
                           {slipData.map((slip, index) => (
@@ -431,11 +426,13 @@ const VoucheEntry = () => {
               : [...Array(10)].map((_, i) => (
                   <tr key={i}>
                     <td className="text-center">
-                      <input 
-                        type="checkbox" 
-                        className="form-check-input" 
+                      <input
+                        type="checkbox"
+                        className="form-check-input"
                         checked={selectedRows.has(i)}
-                        onChange={(e) => handleItemCheckboxChange(i, e.target.checked)}
+                        onChange={(e) =>
+                          handleItemCheckboxChange(i, e.target.checked)
+                        }
                       />
                     </td>
                     <td className="text-center">
@@ -445,7 +442,9 @@ const VoucheEntry = () => {
                       {selectedRows.has(i) ? (
                         <select
                           className="form-control form-control-sm"
-                          onChange={(e) => handleSlipSelection(i, e.target.value)}
+                          onChange={(e) =>
+                            handleSlipSelection(i, e.target.value)
+                          }
                         >
                           <option value="">Select Slip No</option>
                           {slipData.map((slip, index) => (
@@ -455,8 +454,8 @@ const VoucheEntry = () => {
                           ))}
                         </select>
                       ) : (
-                        <input 
-                          className="form-control form-control-sm" 
+                        <input
+                          className="form-control form-control-sm"
                           placeholder="Check item box to select slip"
                           readOnly
                         />
@@ -519,4 +518,4 @@ const VoucheEntry = () => {
   );
 };
 
-export default VoucheEntry;
+export default FreightEntry;
