@@ -4807,8 +4807,8 @@ function PurchaseForm() {
                         />
                       </div>
 
-                      {/* IGP ID */}
-                      <div className="flex items-center gap-2">
+                      {/* IGP ID - Hidden but keeping functionality */}
+                      <div className="flex items-center gap-2" style={{ display: 'none' }}>
                         <span className="text-xs text-black w-28">IGP ID</span>
                         <Input
                           name="igpId"
@@ -4818,8 +4818,8 @@ function PurchaseForm() {
                         />
                       </div>
 
-                      {/* Item ID */}
-                      <div className="flex items-center gap-2">
+                      {/* Item ID - Hidden but keeping functionality */}
+                      <div className="flex items-center gap-2" style={{ display: 'none' }}>
                         <span className="text-xs text-black w-28">Item ID</span>
                         <Input
                           name="itemId"
@@ -4859,9 +4859,6 @@ function PurchaseForm() {
                             Item Description
                           </th>
                           <th className="border p-1 text-xs text-black">
-                            Item ID
-                          </th>
-                          <th className="border p-1 text-xs text-black">
                             PO Quantity
                           </th>
                           <th className="border p-1 text-xs text-black">
@@ -4889,9 +4886,6 @@ function PurchaseForm() {
                                 </td>
                                 <td className="border p-1 h-4 text-xs text-black">
                                   {item.item_desc || ""}
-                                </td>
-                                <td className="border p-1 h-4 text-xs text-black">
-                                  {item.item_id || formData.itemId || ""}
                                 </td>
                                 <td className="border p-1 h-4 text-xs text-black">
                                   {poQty.toFixed(2)}
@@ -4990,16 +4984,6 @@ function PurchaseForm() {
                               <Input
                                 name="itemDesc"
                                 value={formData.itemDesc}
-                                onChange={handleChange}
-                                className="h-4 text-xs text-black w-full border-none bg-transparent"
-                                placeholder="Auto-filled from Item Code"
-                                readOnly
-                              />
-                            </td>
-                            <td className="border p-1 h-4 text-xs text-black">
-                              <Input
-                                name="itemId"
-                                value={formData.itemId}
                                 onChange={handleChange}
                                 className="h-4 text-xs text-black w-full border-none bg-transparent"
                                 placeholder="Auto-filled from Item Code"
