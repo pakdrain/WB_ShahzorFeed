@@ -4840,6 +4840,9 @@ function PurchaseForm() {
                             Item Description
                           </th>
                           <th className="border p-1 text-xs text-black">
+                            Item ID
+                          </th>
+                          <th className="border p-1 text-xs text-black">
                             PO Quantity
                           </th>
                           <th className="border p-1 text-xs text-black">
@@ -4916,6 +4919,9 @@ function PurchaseForm() {
                                     itemDesc: selectedItem
                                       ? selectedItem.item_desc
                                       : "",
+                                    itemId: selectedItem
+                                      ? selectedItem.item_id.toString()
+                                      : "",
                                   }));
                                 }}
                               >
@@ -4962,6 +4968,16 @@ function PurchaseForm() {
                               <Input
                                 name="itemDesc"
                                 value={formData.itemDesc}
+                                onChange={handleChange}
+                                className="h-4 text-xs text-black w-full border-none bg-transparent"
+                                placeholder="Auto-filled from Item Code"
+                                readOnly
+                              />
+                            </td>
+                            <td className="border p-1 h-4 text-xs text-black">
+                              <Input
+                                name="itemId"
+                                value={formData.itemId}
                                 onChange={handleChange}
                                 className="h-4 text-xs text-black w-full border-none bg-transparent"
                                 placeholder="Auto-filled from Item Code"
