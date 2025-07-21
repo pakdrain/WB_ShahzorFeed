@@ -4411,8 +4411,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("🔧 Creating/ensuring inv_items table exists...");
       await pool.query(`
         CREATE TABLE IF NOT EXISTS inv_items (
-          item_id INTEGER PRIMARY KEY,
-          item_code VARCHAR(50) NOT NULL UNIQUE,
+          item_id INTEGER NOT NULL,
+          item_code VARCHAR(50) NOT NULL,
           item_desc TEXT,
           uom VARCHAR(10),
           weight_in_kg DECIMAL(10, 2),
@@ -4423,8 +4423,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gl_f_sale_acc_id INTEGER,
           sale_return_acc_id INTEGER,
           w_i_p_id INTEGER,
-          delivery_term VARCHAR(100)
+          delivery_term VARCHAR(100),
+          CONSTRAINT inv_items_item_code_key UNIQUE (item_code)
         )
+      `);
+
+      // Drop existing primary key constraint if it exists and add new one
+      await pool.query(`
+        DO $$ 
+        BEGIN
+          -- Drop existing primary key if it exists
+          IF EXISTS (
+            SELECT 1 FROM information_schema.table_constraints 
+            WHERE table_name = 'inv_items' 
+            AND constraint_type = 'PRIMARY KEY'
+          ) THEN
+            ALTER TABLE inv_items DROP CONSTRAINT inv_items_pkey;
+          END IF;
+          
+          -- Ensure item_id column exists and is not null
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.columns 
+            WHERE table_name = 'inv_items' 
+            AND column_name = 'item_id'
+            AND is_nullable = 'NO'
+          ) THEN
+            ALTER TABLE inv_items ALTER COLUMN item_id SET NOT NULL;
+          END IF;
+          
+        EXCEPTION WHEN OTHERS THEN
+          -- Ignore errors if constraints don't exist
+          NULL;
+        END $$;
       `);
 
       let recordsInserted = 0;
@@ -4462,14 +4492,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Enhanced item_id extraction with multiple fallback options
           let itemId = null;
           
-          // Try different possible field names for item_id
-          const idFields = ['item_id', 'id', 'ID', 'ITEM_ID', 'itemId', 'ItemId', 'pk', 'primary_key'];
+          // Try different possible field names for item_id with exact case matching first
+          const idFields = ['item_id', 'ITEM_ID', 'ItemId', 'itemId', 'id', 'ID', 'pk', 'primary_key'];
           for (const field of idFields) {
             if (item[field] !== undefined && item[field] !== null && item[field] !== '') {
               const parsedId = parseInt(String(item[field]));
               if (!isNaN(parsedId) && parsedId > 0) {
                 itemId = parsedId;
-                console.log(`✅ Found item_id=${itemId} using field: ${field}`);
+                console.log(`✅ Found item_id=${itemId} using field: ${field} from value: ${item[field]}`);
                 break;
               }
             }
@@ -4480,6 +4510,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             itemId = 1000 + i;
             console.log(`⚠️ Generated fallback item_id=${itemId} for record ${i + 1}`);
           }
+
+          console.log(`🔍 Processing item ${i + 1}: Raw item_id field = ${item.item_id}, Parsed itemId = ${itemId}`);
 
           // Extract other fields with multiple fallback options
           const itemCode = item.item_code || item.code || item.ITEM_CODE || item.CODE || item.sku || item.SKU || `ITEM_${itemId}`;
@@ -4543,7 +4575,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
             deliveryTerm
           ];
 
-          await pool.query(insertQuery, values);
+          console.log(`📝 About to insert with values:`, {
+            itemId,
+            itemCode,
+            itemDesc: itemDesc ? itemDesc.substring(0, 30) + '...' : null,
+            uom,
+            weightInKg
+          });
+
+          const insertResult = await pool.query(insertQuery, values);
           recordsInserted++;
 
           console.log(`✅ Successfully inserted record ${i + 1}: item_id=${itemId}, code='${itemCode}'`);
@@ -4553,6 +4593,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const verifyResult = await pool.query(verifyQuery, [itemId]);
           if (verifyResult.rows.length > 0) {
             console.log(`✅ Verification successful: item_id=${verifyResult.rows[0].item_id} exists in database`);
+          } else {
+            console.log(`❌ Verification failed: item_id=${itemId} not found in database after insert`);
           }
 
         } catch (insertError: any) {
