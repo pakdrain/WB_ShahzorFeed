@@ -3048,6 +3048,176 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create gl_freight table if it doesn't exist
+  app.post("/api/create-freight-table", async (req: Request, res: Response) => {
+    try {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS gl_freight (
+          freight_id bigint NOT NULL DEFAULT nextval('gl_freight_freight_id_seq'::regclass),
+          doc_no character varying(500),
+          doc_date date,
+          remarks character varying(500),
+          company_id bigint,
+          branch_id character varying(500),
+          dept_id bigint,
+          freight_type character varying(500),
+          status character varying(500),
+          last_update_by bigint,
+          last_update_date date,
+          voucher_id bigint,
+          approved_by bigint,
+          approval_date date,
+          checked_by bigint,
+          checked_date date,
+          cancelled_by bigint,
+          cancel_date date,
+          creation_date date,
+          created_by bigint,
+          wb_doc_no character varying(20),
+          CONSTRAINT gl_freight_pkey PRIMARY KEY (freight_id)
+        )
+      `);
+
+      // Create sequence if it doesn't exist
+      await pool.query(`
+        CREATE SEQUENCE IF NOT EXISTS gl_freight_freight_id_seq
+        START WITH 1
+        INCREMENT BY 1
+        NO MINVALUE
+        NO MAXVALUE
+        CACHE 1
+      `);
+
+      res.json({ success: true, message: "gl_freight table created successfully" });
+    } catch (error: any) {
+      console.error("Error creating gl_freight table:", error);
+      res.status(500).json({ error: "Failed to create gl_freight table" });
+    }
+  });
+
+  // Save freight data to gl_freight table
+  app.post("/api/freight/save", async (req: Request, res: Response) => {
+    try {
+      const { masterData, slipData } = req.body;
+
+      if (!masterData) {
+        return res.status(400).json({ error: "Master data is required" });
+      }
+
+      // Insert master data into gl_freight table
+      const freightQuery = `
+        INSERT INTO gl_freight (
+          doc_no, doc_date, remarks, company_id, branch_id,
+          freight_type, status, created_by, creation_date
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING freight_id
+      `;
+
+      const freightValues = [
+        masterData.docNo,
+        masterData.docDate,
+        masterData.remarks,
+        1, // company_id - default to 1
+        masterData.branch === "Shahzor" ? "2" : "1", // branch_id
+        masterData.voucherType,
+        "Create",
+        masterData.createdBy,
+        masterData.creationDate
+      ];
+
+      const freightResult = await pool.query(freightQuery, freightValues);
+      const freightId = freightResult.rows[0].freight_id;
+
+      console.log(`Freight master data saved with ID: ${freightId}`);
+
+      // If there's slip data, you can process it here as needed
+      if (slipData && Array.isArray(slipData) && slipData.length > 0) {
+        console.log(`Processing ${slipData.length} slip records`);
+        // Additional slip data processing can be added here if needed
+      }
+
+      res.json({
+        success: true,
+        freight_id: freightId,
+        message: "Freight data saved successfully"
+      });
+
+    } catch (error: any) {
+      console.error("Error saving freight data:", error);
+      res.status(500).json({
+        error: "Failed to save freight data",
+        details: error.message
+      });
+    }
+  });
+
+  // Get all freight vouchers for display in freight voucher form
+  app.get("/api/freight-vouchers", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT 
+          freight_id,
+          doc_no,
+          doc_date,
+          remarks,
+          branch_id,
+          freight_type,
+          status,
+          creation_date,
+          created_by
+        FROM gl_freight 
+        ORDER BY freight_id DESC
+      `;
+
+      const result = await pool.query(query);
+
+      console.log(`Fetched ${result.rows.length} freight vouchers`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching freight vouchers:", error);
+      res.status(500).json({ error: "Failed to fetch freight vouchers" });
+    }
+  });
+
+  // Get freight voucher details by freight_id
+  app.get("/api/freight-vouchers/:freightId/details", async (req: Request, res: Response) => {
+    try {
+      const { freightId } = req.params;
+
+      const query = `
+        SELECT 
+          freight_id,
+          doc_no,
+          doc_date,
+          remarks,
+          branch_id,
+          freight_type,
+          status,
+          creation_date,
+          created_by,
+          company_id,
+          dept_id,
+          voucher_id,
+          wb_doc_no
+        FROM gl_freight 
+        WHERE freight_id = $1
+      `;
+
+      const result = await pool.query(query, [parseInt(freightId)]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: "Freight voucher not found" });
+      }
+
+      console.log(`Fetched freight voucher details for ID: ${freightId}`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching freight voucher details:", error);
+      res.status(500).json({ error: "Failed to fetch freight voucher details" });
+    }
+  });
+
   // Create role table if it doesn't exist
   app.post("/api/create-role-table", async (req: Request, res: Response) => {
     try {
