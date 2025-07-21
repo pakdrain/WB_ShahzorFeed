@@ -2606,8 +2606,16 @@ function PurchaseForm() {
             dc_qty: firstIgpItem?.dc_qty
               ? parseFloat(firstIgpItem.dc_qty)
               : null,
-            igp_id: firstIgpItem?.igp_id || formData.igpId || null,
-            item_id: firstIgpItem?.item_id || formData.itemId || null,
+            igp_id: firstIgpItem?.igp_id 
+              ? parseInt(firstIgpItem.igp_id) 
+              : formData.igpId 
+                ? parseInt(formData.igpId) 
+                : null,
+            item_id: firstIgpItem?.item_id 
+              ? parseInt(firstIgpItem.item_id) 
+              : formData.itemId 
+                ? parseInt(formData.itemId) 
+                : null,
           };
 
           console.log("Items payload being sent:", itemsPayload);

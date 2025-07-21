@@ -1187,16 +1187,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         do_no = null,
         do_qty = null,
         dc_qty = null,
+        igp_id = null,
+        item_id = null,
       } = itemData;
 
       const query = `
         INSERT INTO wb_weighbridge_items_purchase (
           wb_id, bardana_type, igp_no, vehicle_no, weight_per_bags, igp_date,
           supplier_weight, quality_deduction, bardana_weight, no_of_bags, vendor_name, bag_condition,
-          po_no, item_code, item_desc, po_qty, igp_qty, balance_qty, customer_name, do_no, do_qty, dc_qty
+          po_no, item_code, item_desc, po_qty, igp_qty, balance_qty, customer_name, do_no, do_qty, dc_qty, igp_id, item_id
         )
         VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24
         )
         RETURNING *;
       `;
@@ -1224,6 +1226,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         do_no,
         do_qty ? parseFloat(do_qty) : null,
         dc_qty ? parseFloat(dc_qty) : null,
+        igp_id ? parseInt(igp_id) : null,
+        item_id ? parseInt(item_id) : null,
       ];
 
       const result = await pool.query(query, values);
