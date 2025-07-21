@@ -126,6 +126,22 @@ const FreightEntry = () => {
       const newSlipDropdownData = { ...slipDropdownData };
       delete newSlipDropdownData[index];
       setSlipDropdownData(newSlipDropdownData);
+      
+      // Clear the loaded data from this row
+      const updatedData = [...tableData];
+      updatedData[index] = {
+        ...updatedData[index],
+        slip_no: "",
+        vehicle_no: "",
+        item_desc: "",
+        vendor_name: "",
+        freight_amount: "",
+        wb_id: "",
+        item_code: "",
+        item_id: "",
+        vendor_id: "",
+      };
+      setTableData(updatedData);
     }
     setSelectedRows(newSelectedRows);
   };
