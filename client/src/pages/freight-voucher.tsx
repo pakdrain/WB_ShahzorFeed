@@ -44,16 +44,9 @@ const FreightVoucher = () => {
 
   const fetchFreightItems = async (freightId) => {
     try {
-      console.log("Fetching freight items for freight ID:", freightId);
+      console.log("🔍 Fetching freight items for freight ID:", freightId);
       
-      // First try the specific freight items endpoint
-      let response = await fetch(`/api/freight-vouchers/${freightId}/items`);
-      
-      if (!response.ok) {
-        console.log("Primary endpoint failed, trying alternative...");
-        // Try alternative endpoint if first one fails
-        response = await fetch(`/api/freight-items?freightId=${freightId}`);
-      }
+      const response = await fetch(`/api/freight-vouchers/${freightId}/items`);
       
       if (response.ok) {
         const data = await response.json();

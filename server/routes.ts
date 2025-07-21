@@ -3283,7 +3283,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  // Get freight items by freight_id for details table
+  // Get freight items by freight_id for details table (alternative endpoint)
   app.get("/api/freight-items", async (req: Request, res: Response) => {
     try {
       const { freightId } = req.query;
@@ -3305,9 +3305,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gfi.remarks as item_desc,
           gfi.debit,
           gfi.credit,
-          iv.vendor_name,
-          ii.item_code,
-          ii.item_desc as full_item_desc
+          COALESCE(iv.vendor_name, 'Unknown Vendor') as vendor_name,
+          COALESCE(ii.item_code, 'Unknown Code') as item_code,
+          COALESCE(ii.item_desc, gfi.remarks, 'Unknown Item') as full_item_desc
         FROM gl_freight_items gfi
         LEFT JOIN inv_vendors iv ON gfi.vendor_id = iv.vendor_id
         LEFT JOIN inv_items ii ON gfi.item_id = ii.item_id
@@ -3324,6 +3324,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching freight items:", error);
       res.status(500).json({ error: "Failed to fetch freight items" });
+    }
+  });
+
+  // Debug endpoint to check all freight items
+  app.get("/api/debug/freight-items", async (req: Request, res: Response) => {
+    try {
+      const allItemsQuery = `
+        SELECT 
+          gfi.freight_item_id,
+          gfi.freight_id,
+          gfi.vendor_id,
+          gfi.item_id,
+          gfi.freight_amount,
+          gfi.vehicale_no,
+          gfi.remarks as item_desc,
+          gf.doc_no,
+          gf.doc_date
+        FROM gl_freight_items gfi
+        LEFT JOIN gl_freight gf ON gfi.freight_id = gf.freight_id
+        ORDER BY gfi.freight_id DESC, gfi.freight_item_id
+      `;
+
+      const result = await pool.query(allItemsQuery);
+
+      console.log(`Debug: Found ${result.rows.length} total freight items in database`);
+      
+      res.json({
+        totalItems: result.rows.length,
+        items: result.rows,
+        groupedByFreightId: result.rows.reduce((acc, item) => {
+          if (!acc[item.freight_id]) {
+            acc[item.freight_id] = [];
+          }
+          acc[item.freight_id].push(item);
+          return acc;
+        }, {})
+      });
+    } catch (error: any) {
+      console.error("Error in debug freight items:", error);
+      res.status(500).json({ error: "Failed to fetch debug freight items" });
     }
   });
 
