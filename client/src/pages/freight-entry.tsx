@@ -216,7 +216,7 @@ const FreightEntry = () => {
         const result = await response.json();
         console.log("Freight voucher saved successfully:", result);
         alert("Freight voucher saved successfully!");
-        setLocation("/freight-voucher");
+        setLocation("/voucher-view");
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to save freight voucher");
