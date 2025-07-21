@@ -10,7 +10,7 @@ const FreightVoucher = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("1");
   const [selectedVoucherType, setSelectedVoucherType] = useState("cpv");
-    const [freightItems, setFreightItems] = useState([]);
+  const [freightItems, setFreightItems] = useState([]);
 
   useEffect(() => {
     fetchFreightVouchers();
@@ -30,7 +30,9 @@ const FreightVoucher = () => {
 
   const fetchFreightDetails = async (freightId) => {
     try {
-      const response = await fetch(`/api/freight-vouchers/${freightId}/details`);
+      const response = await fetch(
+        `/api/freight-vouchers/${freightId}/details`,
+      );
       if (response.ok) {
         const data = await response.json();
         setFreightDetails(data);
@@ -40,33 +42,32 @@ const FreightVoucher = () => {
     }
   };
 
-    const fetchFreightItems = async (freightId) => {
-        try {
-            const response = await fetch(`/api/freight-vouchers/${freightId}/items`);
-            if (response.ok) {
-                const data = await response.json();
-                setFreightItems(data);
-            } else {
-                console.error("Failed to fetch freight items");
-                setFreightItems([]);
-            }
-        } catch (error) {
-            console.error("Error fetching freight items:", error);
-            setFreightItems([]);
-        }
-    };
-
+  const fetchFreightItems = async (freightId) => {
+    try {
+      const response = await fetch(`/api/freight-vouchers/${freightId}/items`);
+      if (response.ok) {
+        const data = await response.json();
+        setFreightItems(data);
+      } else {
+        console.error("Failed to fetch freight items");
+        setFreightItems([]);
+      }
+    } catch (error) {
+      console.error("Error fetching freight items:", error);
+      setFreightItems([]);
+    }
+  };
 
   const handleFreightVoucherClick = (freightId) => {
     setSelectedFreightId(freightId);
     fetchFreightDetails(freightId);
-        fetchFreightItems(freightId);
+    fetchFreightItems(freightId);
   };
 
   const handleNewEntry = () => {
     const params = new URLSearchParams();
-    params.set('branch', selectedBranch);
-    params.set('type', selectedVoucherType);
+    params.set("branch", selectedBranch);
+    params.set("type", selectedVoucherType);
     setLocation(`/voucher-entry?${params.toString()}`);
   };
 
@@ -92,7 +93,7 @@ const FreightVoucher = () => {
       <div className="row mt-3 mb-2">
         <div className="col-md-2">
           <label className="form-label fw-bold text-dark">Status</label>
-          <select 
+          <select
             className="form-select form-select-sm"
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
@@ -106,7 +107,7 @@ const FreightVoucher = () => {
         </div>
         <div className="col-md-4">
           <label className="form-label fw-bold text-dark">Branch</label>
-          <select 
+          <select
             className="form-select form-select-sm"
             value={selectedBranch}
             onChange={(e) => setSelectedBranch(e.target.value)}
@@ -118,7 +119,7 @@ const FreightVoucher = () => {
         </div>
         <div className="col-md-2">
           <label className="form-label fw-bold text-dark">Voucher Type</label>
-          <select 
+          <select
             className="form-select form-select-sm"
             value={selectedVoucherType}
             onChange={(e) => setSelectedVoucherType(e.target.value)}
@@ -134,7 +135,7 @@ const FreightVoucher = () => {
             New Entry
           </button>
         </div>
-      </div></div>
+      </div>
 
       {/* Voucher Table with Buttons */}
       <div className="d-flex mt-3" style={{ height: "50%" }}>
@@ -172,99 +173,114 @@ const FreightVoucher = () => {
               </tr>
             </thead>
             <tbody>
-            {freightVouchers.length > 0
-              ? freightVouchers.map((voucher, index) => (
-                  <tr 
-                    key={voucher.freight_id}
-                    onClick={() => handleFreightVoucherClick(voucher.freight_id)}
-                    style={{ cursor: 'pointer' }}
-                    className={selectedFreightId === voucher.freight_id ? 'table-active' : ''}
-                  >
-                    <td>
-                      <input type="checkbox" />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={voucher.doc_date ? new Date(voucher.doc_date).toISOString().split('T')[0] : ""}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={voucher.wb_doc_no || voucher.doc_no || ""}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={voucher.freight_type || selectedVoucherType.toUpperCase()}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={voucher.freight_id || ""}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value=""
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value=""
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={voucher.remarks || ""}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value=""
-                        readOnly
-                      />
-                    </td>
-                  </tr>
-                ))
-              : Array.from({ length: 15 }).map((_, index) => (
-                  <tr key={index}>
-                    <td>
-                      <input type="checkbox" />
-                    </td>
-                    {[...Array(8)].map((_, i) => (
-                      <td key={i}>
+              {freightVouchers.length > 0
+                ? freightVouchers.map((voucher, index) => (
+                    <tr
+                      key={voucher.freight_id}
+                      onClick={() =>
+                        handleFreightVoucherClick(voucher.freight_id)
+                      }
+                      style={{ cursor: "pointer" }}
+                      className={
+                        selectedFreightId === voucher.freight_id
+                          ? "table-active"
+                          : ""
+                      }
+                    >
+                      <td>
+                        <input type="checkbox" />
+                      </td>
+                      <td>
                         <input
                           type="text"
                           className="form-control form-control-sm"
+                          value={
+                            voucher.doc_date
+                              ? new Date(voucher.doc_date)
+                                  .toISOString()
+                                  .split("T")[0]
+                              : ""
+                          }
+                          readOnly
                         />
                       </td>
-                    ))}
-                  </tr>
-                ))}
-</tbody>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={voucher.wb_doc_no || voucher.doc_no || ""}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={
+                            voucher.freight_type ||
+                            selectedVoucherType.toUpperCase()
+                          }
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={voucher.freight_id || ""}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value=""
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value=""
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={voucher.remarks || ""}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value=""
+                          readOnly
+                        />
+                      </td>
+                    </tr>
+                  ))
+                : Array.from({ length: 15 }).map((_, index) => (
+                    <tr key={index}>
+                      <td>
+                        <input type="checkbox" />
+                      </td>
+                      {[...Array(8)].map((_, i) => (
+                        <td key={i}>
+                          <input
+                            type="text"
+                            className="form-control form-control-sm"
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+            </tbody>
           </table>
         </div>
         {/* Buttons beside table */}
