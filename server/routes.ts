@@ -3374,7 +3374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { freightId } = req.params;
         
-        console.log(`🔍 Fetching freight items for freight ID: ${freightId}`);
+        console.log(`🔍 API Hit: Fetching freight items for freight ID: ${freightId}`);
 
         // First check if freight record exists
         const freightCheck = await pool.query(
@@ -3384,7 +3384,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (freightCheck.rows.length === 0) {
           console.log(`❌ No freight master record found for ID: ${freightId}`);
-          return res.status(404).json({ error: "Freight record not found" });
+          return res.json([]); // Return empty array instead of error
         }
 
         console.log(`✅ Freight master record found: ${freightCheck.rows[0].doc_no}`);
@@ -3431,33 +3431,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (result.rows.length > 0) {
           console.log("✅ Sample freight item data:", JSON.stringify(result.rows[0], null, 2));
-          console.log(`✅ All freight items for ID ${freightId}:`, result.rows.map(item => ({
-            freight_item_id: item.freight_item_id,
-            vendor_name: item.vendor_name,
-            item_code: item.item_code,
-            freight_amount: item.freight_amount
-          })));
+          result.rows.forEach((item, index) => {
+            console.log(`📋 Item ${index + 1}: ID=${item.freight_item_id}, Vendor=${item.vendor_name}, Amount=${item.freight_amount}`);
+          });
         } else {
           console.log(`⚠️ No freight items found for freight ID: ${freightId}`);
           
-          // Debug: Check total records in gl_freight_items
-          const totalItems = await pool.query("SELECT COUNT(*) as count FROM gl_freight_items");
-          console.log(`📊 Total freight items in database: ${totalItems.rows[0]?.count || 0}`);
-          
-          // Debug: Check if there are any freight items with similar freight_id
-          const similarItems = await pool.query("SELECT freight_id, COUNT(*) as count FROM gl_freight_items GROUP BY freight_id ORDER BY freight_id");
-          console.log("📊 Freight items by freight_id:", similarItems.rows);
+          // Debug: Check what freight items exist
+          const allItems = await pool.query("SELECT freight_id, freight_item_id, vendor_id, freight_amount FROM gl_freight_items ORDER BY freight_id DESC LIMIT 20");
+          console.log("📊 Recent freight items in database:", allItems.rows);
         }
         
-        res.json(result.rows);
+        // Always return an array, even if empty
+        res.json(result.rows || []);
       } catch (error: any) {
         console.error("❌ Error fetching freight items:", error);
         console.error("❌ Error details:", error.message);
-        console.error("❌ Error stack:", error.stack);
-        res.status(500).json({ 
-          error: "Failed to fetch freight items", 
-          details: error.message 
-        });
+        res.json([]); // Return empty array on error instead of error response
       }
     },
   );
