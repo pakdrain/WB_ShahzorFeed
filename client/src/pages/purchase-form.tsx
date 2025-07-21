@@ -1174,6 +1174,8 @@ function PurchaseForm() {
           bardanaType: firstItem.bardanatype || "",
           wtPerBag: firstItem.wtperbag ? String(firstItem.wtperbag) : "",
           igpDate: firstItem.igp_date || "",
+          igpId: firstItem.igp_id || "",
+          itemId: firstItem.item_id || "",
           // Change status from Online to Offline when IGP data loads
           onlineEntry: "No",
         }));
@@ -2604,6 +2606,8 @@ function PurchaseForm() {
             dc_qty: firstIgpItem?.dc_qty
               ? parseFloat(firstIgpItem.dc_qty)
               : null,
+            igp_id: firstIgpItem?.igp_id || formData.igpId || null,
+            item_id: firstIgpItem?.item_id || formData.itemId || null,
           };
 
           console.log("Items payload being sent:", itemsPayload);
@@ -4769,6 +4773,32 @@ function PurchaseForm() {
                           value={formData.supplierWeightMinusOutWeight}
                           readOnly
                           className="h-8 text-xs text-gray-600 bg-gray-100 w-60"
+                        />
+                      </div>
+
+                      {/* IGP ID */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-28">
+                          IGP ID
+                        </span>
+                        <Input
+                          name="igpId"
+                          value={formData.igpId}
+                          onChange={handleChange}
+                          className="h-8 text-xs text-black w-60"
+                        />
+                      </div>
+
+                      {/* Item ID */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-black w-28">
+                          Item ID
+                        </span>
+                        <Input
+                          name="itemId"
+                          value={formData.itemId}
+                          onChange={handleChange}
+                          className="h-8 text-xs text-black w-60"
                         />
                       </div>
 
