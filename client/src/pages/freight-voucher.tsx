@@ -50,14 +50,24 @@ const FreightVoucher = () => {
       
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Freight items data received:", data);
-        console.log("✅ Number of freight items:", data.length);
+        console.log("✅ Freight items response received:", data);
+        console.log("✅ Number of freight items:", data?.length || 0);
         
-        if (data && Array.isArray(data) && data.length > 0) {
+        if (data && Array.isArray(data)) {
           console.log("✅ Setting freight items:", data);
           setFreightItems(data);
+          
+          // Log each item for debugging
+          data.forEach((item, index) => {
+            console.log(`📋 Item ${index + 1}:`, {
+              id: item.freight_item_id,
+              vendor: item.vendor_name,
+              amount: item.freight_amount,
+              vehicle: item.vehicale_no
+            });
+          });
         } else {
-          console.log("⚠️ No freight items found for this freight ID");
+          console.log("⚠️ Invalid data format received");
           setFreightItems([]);
         }
       } else {
@@ -403,7 +413,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={item.vendor_name || "N/A"}
+                        value={item.vendor_name || "Unknown Vendor"}
                         readOnly
                       />
                     </td>
@@ -411,7 +421,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={item.item_code || "N/A"}
+                        value={item.item_code || "Unknown Code"}
                         readOnly
                       />
                     </td>
@@ -419,7 +429,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={item.full_item_desc || item.item_desc || item.remarks || "N/A"}
+                        value={item.full_item_desc || item.item_desc || item.remarks || "Unknown Item"}
                         readOnly
                       />
                     </td>
@@ -475,25 +485,36 @@ const FreightVoucher = () => {
                 );
               })
             ) : (
-              Array(10)
-                .fill(null)
-                .map((_, rowIdx) => (
-                  <tr key={`empty-row-${rowIdx}`}>
-                    {Array(9)
-                      .fill(null)
-                      .map((_, colIdx) => (
-                        <td key={`empty-cell-${rowIdx}-${colIdx}`}>
-                          <input
-                            type="text"
-                            className="form-control form-control-sm"
-                            value=""
-                            readOnly
-                            placeholder={rowIdx === 0 && colIdx === 0 ? "No freight items found" : ""}
-                          />
-                        </td>
-                      ))}
-                  </tr>
-                ))
+              <>
+                <tr>
+                  <td colSpan="9" style={{ textAlign: "center", padding: "20px" }}>
+                    <strong>
+                      {selectedFreightId ? 
+                        "No freight items found for selected freight voucher" : 
+                        "Select a freight voucher to view details"
+                      }
+                    </strong>
+                  </td>
+                </tr>
+                {Array(9)
+                  .fill(null)
+                  .map((_, rowIdx) => (
+                    <tr key={`empty-row-${rowIdx}`}>
+                      {Array(9)
+                        .fill(null)
+                        .map((_, colIdx) => (
+                          <td key={`empty-cell-${rowIdx}-${colIdx}`}>
+                            <input
+                              type="text"
+                              className="form-control form-control-sm"
+                              value=""
+                              readOnly
+                            />
+                          </td>
+                        ))}
+                    </tr>
+                  ))}
+              </>
             )}
           </tbody>
         </table>

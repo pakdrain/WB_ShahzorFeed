@@ -3374,20 +3374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { freightId } = req.params;
         
-        console.log(`🔍 API Hit: Fetching freight items for freight ID: ${freightId}`);
-
-        // First check if freight record exists
-        const freightCheck = await pool.query(
-          "SELECT freight_id, doc_no FROM gl_freight WHERE freight_id = $1", 
-          [parseInt(freightId)]
-        );
-        
-        if (freightCheck.rows.length === 0) {
-          console.log(`❌ No freight master record found for ID: ${freightId}`);
-          return res.json([]); // Return empty array instead of error
-        }
-
-        console.log(`✅ Freight master record found: ${freightCheck.rows[0].doc_no}`);
+        console.log(`🔍 Fetching freight items for freight ID: ${freightId}`);
 
         const query = `
           SELECT 
@@ -3427,27 +3414,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const result = await pool.query(query, [parseInt(freightId)]);
 
-        console.log(`📊 Query executed. Found ${result.rows.length} freight items for freight ID: ${freightId}`);
+        console.log(`✅ Found ${result.rows.length} freight items for freight ID: ${freightId}`);
         
         if (result.rows.length > 0) {
-          console.log("✅ Sample freight item data:", JSON.stringify(result.rows[0], null, 2));
-          result.rows.forEach((item, index) => {
-            console.log(`📋 Item ${index + 1}: ID=${item.freight_item_id}, Vendor=${item.vendor_name}, Amount=${item.freight_amount}`);
-          });
+          console.log("✅ Freight items data:", result.rows);
         } else {
           console.log(`⚠️ No freight items found for freight ID: ${freightId}`);
-          
-          // Debug: Check what freight items exist
-          const allItems = await pool.query("SELECT freight_id, freight_item_id, vendor_id, freight_amount FROM gl_freight_items ORDER BY freight_id DESC LIMIT 20");
-          console.log("📊 Recent freight items in database:", allItems.rows);
         }
         
-        // Always return an array, even if empty
-        res.json(result.rows || []);
+        res.json(result.rows);
       } catch (error: any) {
         console.error("❌ Error fetching freight items:", error);
-        console.error("❌ Error details:", error.message);
-        res.json([]); // Return empty array on error instead of error response
+        res.status(500).json({ 
+          error: "Failed to fetch freight items",
+          details: error.message 
+        });
       }
     },
   );
