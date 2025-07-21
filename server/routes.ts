@@ -3595,52 +3595,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create inv_items table if it doesn't exist (matching your existing structure)
       console.log("Creating/ensuring inv_items table exists...");
       await pool.query(`
-        CREATE TABLE IF NOT EXISTS inv_items (
-          item_id SERIAL PRIMARY KEY,
-          item_code VARCHAR(50) NOT NULL UNIQUE,
-          item_desc TEXT,
-          uom VARCHAR(10),
-          weight_in_kg DECIMAL(10, 2)
-        )
-      `);
+      CREATE TABLE IF NOT EXISTS inv_items (
+        item_id INTEGER,
+        item_code VARCHAR(50) NOT NULL UNIQUE,
+        item_desc TEXT,
+        uom VARCHAR(10),
+        weight_in_kg DECIMAL(10, 2),
+        CONSTRAINT inv_items_item_code_key UNIQUE (item_code)
+      )
+    `);
 
       let recordsInserted = 0;
 
-      // Helper function to insert item into database
+      // ✅ Updated insertItemToDatabase function
       const insertItemToDatabase = async (item: any, sourceUrl: string) => {
         try {
           const query = `
-            INSERT INTO inv_items (
-              item_code, item_desc, uom, weight_in_kg
-            )
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (item_code) DO UPDATE SET
-              item_desc = EXCLUDED.item_desc,
-              uom = EXCLUDED.uom,
-              weight_in_kg = EXCLUDED.weight_in_kg
-          `;
+      INSERT INTO inv_items (
+        item_id, item_code, item_desc, uom, weight_in_kg,
+        payable_acc_id, gl_asset_id, gl_cost_acc_id,
+        gl_sale_acc_id, gl_f_sale_acc_id, sale_return_acc_id,
+        w_i_p_id, delivery_term
+      )
+      VALUES (
+        $1, $2, $3, $4, $5,
+        $6, $7, $8,
+        $9, $10, $11,
+        $12, $13
+      )
+      ON CONFLICT (item_code) DO UPDATE SET
+        item_desc = EXCLUDED.item_desc,
+        uom = EXCLUDED.uom,
+        weight_in_kg = EXCLUDED.weight_in_kg,
+        payable_acc_id = EXCLUDED.payable_acc_id,
+        gl_asset_id = EXCLUDED.gl_asset_id,
+        gl_cost_acc_id = EXCLUDED.gl_cost_acc_id,
+        gl_sale_acc_id = EXCLUDED.gl_sale_acc_id,
+        gl_f_sale_acc_id = EXCLUDED.gl_f_sale_acc_id,
+        sale_return_acc_id = EXCLUDED.sale_return_acc_id,
+        w_i_p_id = EXCLUDED.w_i_p_id,
+        delivery_term = EXCLUDED.delivery_term
+    `;
 
           const values = [
-            item.item_code ||
-              item.code ||
-              item.id ||
-              item.ITEM_CODE ||
+            item.item_id ?? item.id ?? null,
+            item.item_code ??
+              item.code ??
+              item.ITEM_CODE ??
               `ITEM_${Date.now()}`,
-            item.item_desc ||
-              item.description ||
-              item.desc ||
-              item.ITEM_DESC ||
-              item.name ||
-              item.title ||
+            item.item_desc ??
+              item.description ??
+              item.desc ??
+              item.ITEM_DESC ??
               null,
-            item.uom || item.unit || item.UOM || item.UNIT || null,
-            item.weight_in_kg ||
-              item.weight ||
-              item.kg ||
-              item.WEIGHT_IN_KG ||
-              null,
+            item.uom ?? item.unit ?? item.UOM ?? null,
+            item.weight_in_kg ?? item.weight ?? item.kg ?? null,
+            item.payable_acc_id ?? null,
+            item.gl_asset_id ?? null,
+            item.gl_cost_acc_id ?? null,
+            item.gl_sale_acc_id ?? null,
+            item.gl_f_sale_acc_id ?? null,
+            item.sale_return_acc_id ?? null,
+            item.w_i_p_id ?? null,
+            item.delivery_term ?? null,
           ];
-
           await pool.query(query, values);
           console.log(
             "Inserted item:",
@@ -4408,8 +4426,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("✅ Fetched raw API data structure:", {
         isArray: Array.isArray(data),
         hasItems: data && data.items ? true : false,
-        totalRecords: Array.isArray(data) ? data.length : (data && data.items ? data.items.length : 1),
-        firstRecord: Array.isArray(data) ? data[0] : (data && data.items ? data.items[0] : data)
+        totalRecords: Array.isArray(data)
+          ? data.length
+          : data && data.items
+            ? data.items.length
+            : 1,
+        firstRecord: Array.isArray(data)
+          ? data[0]
+          : data && data.items
+            ? data.items[0]
+            : data,
       });
 
       // Recreate inv_items table with correct structure
@@ -4464,31 +4490,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const item = dataToProcess[i];
 
         try {
-          console.log(`🔄 Processing record ${i + 1}:`, JSON.stringify(item, null, 2));
+          console.log(
+            `🔄 Processing record ${i + 1}:`,
+            JSON.stringify(item, null, 2),
+          );
 
           // Extract item_id with comprehensive field checking
           let itemId = null;
 
           // Direct field mappings to try in order of preference
           const itemIdFields = [
-            'item_id', 'ITEM_ID', 'ItemId', 'itemId', 'itemID', 'ITEMID',
-            'id', 'ID', 'Id', 'iD'
+            "item_id",
+            "ITEM_ID",
+            "ItemId",
+            "itemId",
+            "itemID",
+            "ITEMID",
+            "id",
+            "ID",
+            "Id",
+            "iD",
           ];
 
           for (const field of itemIdFields) {
-            if (item.hasOwnProperty(field) && item[field] !== null && item[field] !== undefined) {
+            if (
+              item.hasOwnProperty(field) &&
+              item[field] !== null &&
+              item[field] !== undefined
+            ) {
               const rawValue = item[field];
-              console.log(`🔍 Checking field '${field}' with value:`, rawValue, typeof rawValue);
-              
-              if (typeof rawValue === 'number' && rawValue > 0) {
+              console.log(
+                `🔍 Checking field '${field}' with value:`,
+                rawValue,
+                typeof rawValue,
+              );
+
+              if (typeof rawValue === "number" && rawValue > 0) {
                 itemId = Math.floor(rawValue);
-                console.log(`✅ Found numeric item_id=${itemId} from field: ${field}`);
+                console.log(
+                  `✅ Found numeric item_id=${itemId} from field: ${field}`,
+                );
                 break;
-              } else if (typeof rawValue === 'string') {
+              } else if (typeof rawValue === "string") {
                 const parsed = parseInt(rawValue.trim());
                 if (!isNaN(parsed) && parsed > 0) {
                   itemId = parsed;
-                  console.log(`✅ Parsed item_id=${itemId} from string field: ${field}`);
+                  console.log(
+                    `✅ Parsed item_id=${itemId} from string field: ${field}`,
+                  );
                   break;
                 }
               }
@@ -4497,14 +4546,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // If still no item_id, extract from item_code
           if (!itemId) {
-            const itemCodeFields = ['item_code', 'ITEM_CODE', 'code', 'CODE'];
+            const itemCodeFields = ["item_code", "ITEM_CODE", "code", "CODE"];
             for (const field of itemCodeFields) {
               if (item.hasOwnProperty(field) && item[field]) {
                 const codeValue = String(item[field]);
                 const match = codeValue.match(/(\d+)/);
                 if (match) {
                   itemId = parseInt(match[1]);
-                  console.log(`✅ Extracted item_id=${itemId} from ${field}: ${codeValue}`);
+                  console.log(
+                    `✅ Extracted item_id=${itemId} from ${field}: ${codeValue}`,
+                  );
                   break;
                 }
               }
@@ -4514,7 +4565,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Final fallback - generate unique ID
           if (!itemId || itemId <= 0) {
             itemId = 100000 + i;
-            console.log(`⚠️ Generated fallback item_id=${itemId} for record ${i + 1}`);
+            console.log(
+              `⚠️ Generated fallback item_id=${itemId} for record ${i + 1}`,
+            );
           }
 
           // Validate item_id
@@ -4525,16 +4578,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Extract other fields
-          const itemCode = item.item_code || item.code || item.ITEM_CODE || item.CODE || `ITEM_${itemId}`;
-          const itemDesc = item.item_desc || item.description || item.desc || item.ITEM_DESC || item.name || item.title || null;
+          const itemCode =
+            item.item_code ||
+            item.code ||
+            item.ITEM_CODE ||
+            item.CODE ||
+            `ITEM_${itemId}`;
+          const itemDesc =
+            item.item_desc ||
+            item.description ||
+            item.desc ||
+            item.ITEM_DESC ||
+            item.name ||
+            item.title ||
+            null;
           const uom = item.uom || item.unit || item.UOM || item.UNIT || null;
-          const weightInKg = item.weight_in_kg || item.weight || item.WEIGHT_IN_KG || null;
+          const weightInKg =
+            item.weight_in_kg || item.weight || item.WEIGHT_IN_KG || null;
           const payableAccId = item.payable_acc_id || item.payableAccId || null;
           const glAssetId = item.gl_asset_id || item.glAssetId || null;
           const glCostAccId = item.gl_cost_acc_id || item.glCostAccId || null;
           const glSaleAccId = item.gl_sale_acc_id || item.glSaleAccId || null;
-          const glFSaleAccId = item.gl_f_sale_acc_id || item.glFSaleAccId || null;
-          const saleReturnAccId = item.sale_return_acc_id || item.saleReturnAccId || null;
+          const glFSaleAccId =
+            item.gl_f_sale_acc_id || item.glFSaleAccId || null;
+          const saleReturnAccId =
+            item.sale_return_acc_id || item.saleReturnAccId || null;
           const wIPId = item.w_i_p_id || item.wIPId || null;
           const deliveryTerm = item.delivery_term || item.deliveryTerm || null;
 
@@ -4543,7 +4611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             itemCode: itemCode,
             itemDesc: itemDesc?.substring(0, 50),
             uom: uom,
-            weightInKg: weightInKg
+            weightInKg: weightInKg,
           });
 
           // Insert record into database
@@ -4582,28 +4650,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
             glFSaleAccId ? parseInt(String(glFSaleAccId)) : null,
             saleReturnAccId ? parseInt(String(saleReturnAccId)) : null,
             wIPId ? parseInt(String(wIPId)) : null,
-            deliveryTerm ? String(deliveryTerm) : null
+            deliveryTerm ? String(deliveryTerm) : null,
           ];
 
-          console.log(`💾 Inserting record ${i + 1} with item_id=${values[0]} (${typeof values[0]})`);
+          console.log(
+            `💾 Inserting record ${i + 1} with item_id=${values[0]} (${typeof values[0]})`,
+          );
 
           await pool.query(insertQuery, values);
           recordsInserted++;
 
-          console.log(`✅ Successfully inserted record ${i + 1}: item_id=${values[0]}, code='${values[1]}'`);
+          console.log(
+            `✅ Successfully inserted record ${i + 1}: item_id=${values[0]}, code='${values[1]}'`,
+          );
 
           // Verify the insertion
           const verifyQuery = `SELECT item_id, item_code FROM inv_items WHERE item_id = $1`;
           const verifyResult = await pool.query(verifyQuery, [values[0]]);
           if (verifyResult.rows.length > 0) {
             const saved = verifyResult.rows[0];
-            console.log(`✅ Verified: item_id=${saved.item_id}, code='${saved.item_code}' saved correctly`);
+            console.log(
+              `✅ Verified: item_id=${saved.item_id}, code='${saved.item_code}' saved correctly`,
+            );
           } else {
             console.error(`❌ Verification failed for item_id=${values[0]}`);
           }
-
         } catch (insertError: any) {
-          console.error(`❌ Error inserting record ${i + 1}:`, insertError.message);
+          console.error(
+            `❌ Error inserting record ${i + 1}:`,
+            insertError.message,
+          );
           console.error("❌ Failed item data:", JSON.stringify(item, null, 2));
           recordsSkipped++;
         }
@@ -4631,15 +4707,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recordsSkipped: recordsSkipped,
         verificationData: finalCount.rows[0],
         sampleData: sampleResult.rows,
-        totalProcessed: dataToProcess.length
+        totalProcessed: dataToProcess.length,
       });
-
     } catch (error: any) {
       console.error("❌ Error in fetch-and-save:", error);
       res.status(500).json({
         success: false,
         error: "Failed to fetch and save data",
-        details: error.message
+        details: error.message,
       });
     }
   });
