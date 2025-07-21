@@ -3277,6 +3277,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get freight items by freight_id for details table
+  app.get("/api/freight-items", async (req: Request, res: Response) => {
+    try {
+      const { freightId } = req.query;
+
+      if (!freightId) {
+        return res.status(400).json({ error: "freightId is required" });
+      }
+
+      const query = `
+        SELECT 
+          gfi.freight_item_id,
+          gfi.freight_id,
+          gfi.vendor_id,
+          gfi.item_id,
+          gfi.freight_amount,
+          gfi.vehicale_no,
+          gfi.delivery_terms,
+          gfi.wb_id,
+          gfi.remarks as item_desc,
+          gfi.debit,
+          gfi.credit,
+          iv.vendor_name,
+          ii.item_code,
+          ii.item_desc as full_item_desc
+        FROM gl_freight_items gfi
+        LEFT JOIN inv_vendors iv ON gfi.vendor_id = iv.vendor_id
+        LEFT JOIN inv_items ii ON gfi.item_id = ii.item_id
+        WHERE gfi.freight_id = $1
+        ORDER BY gfi.freight_item_id
+      `;
+
+      const result = await pool.query(query, [parseInt(freightId as string)]);
+
+      console.log(`Fetched ${result.rows.length} freight items for freight ID: ${freightId}`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching freight items:", error);
+      res.status(500).json({ error: "Failed to fetch freight items" });
+    }
+  });
+
+  // Get freight items by freight_id for details table
   app.get("/api/freight-vouchers/:freightId/items", async (req: Request, res: Response) => {
     try {
       const { freightId } = req.params;

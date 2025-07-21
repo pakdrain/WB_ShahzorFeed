@@ -42,7 +42,7 @@ const FreightVoucher = () => {
 
     const fetchFreightItems = async (freightId) => {
         try {
-            const response = await fetch(`/api/freight-items?freightId=${freightId}`);
+            const response = await fetch(`/api/freight-vouchers/${freightId}/items`);
             if (response.ok) {
                 const data = await response.json();
                 setFreightItems(data);
@@ -52,6 +52,7 @@ const FreightVoucher = () => {
             }
         } catch (error) {
             console.error("Error fetching freight items:", error);
+            setFreightItems([]);
         }
     };
 
