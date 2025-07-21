@@ -4376,6 +4376,216 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Enhanced fetch-and-save endpoint with proper item_id handling
+  app.post("/api/fetch-and-save", async (req: Request, res: Response) => {
+    try {
+      const { url } = req.body;
+
+      console.log("🔍 Received enhanced fetch request for URL:", url);
+
+      if (!url) {
+        return res.status(400).json({
+          success: false,
+          error: "URL is required",
+        });
+      }
+
+      // Fetch data from the provided URL
+      console.log("📡 Fetching data from:", url);
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "WeighbridgeSystem/1.0",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("✅ Fetched raw API data:", JSON.stringify(data, null, 2));
+
+      // Create inv_items table with proper structure
+      console.log("🔧 Creating/ensuring inv_items table exists...");
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS inv_items (
+          item_id INTEGER PRIMARY KEY,
+          item_code VARCHAR(50) NOT NULL UNIQUE,
+          item_desc TEXT,
+          uom VARCHAR(10),
+          weight_in_kg DECIMAL(10, 2),
+          payable_acc_id INTEGER,
+          gl_asset_id INTEGER,
+          gl_cost_acc_id INTEGER,
+          gl_sale_acc_id INTEGER,
+          gl_f_sale_acc_id INTEGER,
+          sale_return_acc_id INTEGER,
+          w_i_p_id INTEGER,
+          delivery_term VARCHAR(100)
+        )
+      `);
+
+      let recordsInserted = 0;
+      let dataToProcess = [];
+
+      // Handle different data structures
+      if (Array.isArray(data)) {
+        dataToProcess = data;
+      } else if (data && typeof data === "object") {
+        if (data.items && Array.isArray(data.items)) {
+          dataToProcess = data.items;
+        } else if (data.data && Array.isArray(data.data)) {
+          dataToProcess = data.data;
+        } else if (data.results && Array.isArray(data.results)) {
+          dataToProcess = data.results;
+        } else {
+          dataToProcess = [data];
+        }
+      }
+
+      console.log(`📊 Found ${dataToProcess.length} records to process`);
+
+      if (dataToProcess.length === 0) {
+        throw new Error("No valid data found in API response");
+      }
+
+      // Clear existing data and insert new data
+      await pool.query("DELETE FROM inv_items");
+      console.log("🗑️ Cleared existing inv_items data");
+
+      for (let i = 0; i < dataToProcess.length; i++) {
+        const item = dataToProcess[i];
+
+        try {
+          // Enhanced item_id extraction with multiple fallback options
+          let itemId = null;
+          
+          // Try different possible field names for item_id
+          const idFields = ['item_id', 'id', 'ID', 'ITEM_ID', 'itemId', 'ItemId', 'pk', 'primary_key'];
+          for (const field of idFields) {
+            if (item[field] !== undefined && item[field] !== null && item[field] !== '') {
+              const parsedId = parseInt(String(item[field]));
+              if (!isNaN(parsedId) && parsedId > 0) {
+                itemId = parsedId;
+                console.log(`✅ Found item_id=${itemId} using field: ${field}`);
+                break;
+              }
+            }
+          }
+
+          // If no valid item_id found, generate one
+          if (!itemId) {
+            itemId = 1000 + i;
+            console.log(`⚠️ Generated fallback item_id=${itemId} for record ${i + 1}`);
+          }
+
+          // Extract other fields with multiple fallback options
+          const itemCode = item.item_code || item.code || item.ITEM_CODE || item.CODE || item.sku || item.SKU || `ITEM_${itemId}`;
+          const itemDesc = item.item_desc || item.description || item.desc || item.ITEM_DESC || item.DESCRIPTION || item.name || item.title || null;
+          const uom = item.uom || item.unit || item.UOM || item.UNIT || null;
+          const weightInKg = item.weight_in_kg || item.weight || item.kg || item.WEIGHT_IN_KG || item.WEIGHT || null;
+          const payableAccId = item.payable_acc_id || item.payableAccId || null;
+          const glAssetId = item.gl_asset_id || item.glAssetId || null;
+          const glCostAccId = item.gl_cost_acc_id || item.glCostAccId || null;
+          const glSaleAccId = item.gl_sale_acc_id || item.glSaleAccId || null;
+          const glFSaleAccId = item.gl_f_sale_acc_id || item.glFSaleAccId || null;
+          const saleReturnAccId = item.sale_return_acc_id || item.saleReturnAccId || null;
+          const wIPId = item.w_i_p_id || item.wIPId || null;
+          const deliveryTerm = item.delivery_term || item.deliveryTerm || null;
+
+          console.log(`🔄 Processing record ${i + 1}:`, {
+            itemId,
+            itemCode,
+            itemDesc: itemDesc ? itemDesc.substring(0, 50) + '...' : null,
+            uom,
+            weightInKg,
+            originalData: Object.keys(item)
+          });
+
+          // Insert into database with conflict resolution
+          const insertQuery = `
+            INSERT INTO inv_items (
+              item_id, item_code, item_desc, uom, weight_in_kg,
+              payable_acc_id, gl_asset_id, gl_cost_acc_id, gl_sale_acc_id,
+              gl_f_sale_acc_id, sale_return_acc_id, w_i_p_id, delivery_term
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+            ON CONFLICT (item_id) DO UPDATE SET
+              item_code = EXCLUDED.item_code,
+              item_desc = EXCLUDED.item_desc,
+              uom = EXCLUDED.uom,
+              weight_in_kg = EXCLUDED.weight_in_kg,
+              payable_acc_id = EXCLUDED.payable_acc_id,
+              gl_asset_id = EXCLUDED.gl_asset_id,
+              gl_cost_acc_id = EXCLUDED.gl_cost_acc_id,
+              gl_sale_acc_id = EXCLUDED.gl_sale_acc_id,
+              gl_f_sale_acc_id = EXCLUDED.gl_f_sale_acc_id,
+              sale_return_acc_id = EXCLUDED.sale_return_acc_id,
+              w_i_p_id = EXCLUDED.w_i_p_id,
+              delivery_term = EXCLUDED.delivery_term
+          `;
+
+          const values = [
+            itemId,
+            itemCode,
+            itemDesc,
+            uom,
+            weightInKg ? parseFloat(String(weightInKg)) : null,
+            payableAccId ? parseInt(String(payableAccId)) : null,
+            glAssetId ? parseInt(String(glAssetId)) : null,
+            glCostAccId ? parseInt(String(glCostAccId)) : null,
+            glSaleAccId ? parseInt(String(glSaleAccId)) : null,
+            glFSaleAccId ? parseInt(String(glFSaleAccId)) : null,
+            saleReturnAccId ? parseInt(String(saleReturnAccId)) : null,
+            wIPId ? parseInt(String(wIPId)) : null,
+            deliveryTerm
+          ];
+
+          await pool.query(insertQuery, values);
+          recordsInserted++;
+
+          console.log(`✅ Successfully inserted record ${i + 1}: item_id=${itemId}, code='${itemCode}'`);
+
+          // Verify the insert worked
+          const verifyQuery = `SELECT item_id, item_code, item_desc FROM inv_items WHERE item_id = $1`;
+          const verifyResult = await pool.query(verifyQuery, [itemId]);
+          if (verifyResult.rows.length > 0) {
+            console.log(`✅ Verification successful: item_id=${verifyResult.rows[0].item_id} exists in database`);
+          }
+
+        } catch (insertError: any) {
+          console.error(`❌ Error inserting record ${i + 1}:`, insertError.message);
+          console.error("❌ Failed item data:", JSON.stringify(item, null, 2));
+        }
+      }
+
+      console.log(`🎉 Successfully inserted ${recordsInserted} records into inv_items table`);
+
+      // Final verification - count records with non-null item_id
+      const finalCountQuery = `SELECT COUNT(*) as total, COUNT(item_id) as with_item_id FROM inv_items`;
+      const finalCount = await pool.query(finalCountQuery);
+      console.log(`📊 Final verification: ${finalCount.rows[0].with_item_id}/${finalCount.rows[0].total} records have non-null item_id`);
+
+      res.json({
+        success: true,
+        message: `Enhanced data fetch completed - ${recordsInserted} records inserted with proper item_id handling`,
+        recordsInserted,
+        verificationData: finalCount.rows[0],
+        sampleData: dataToProcess.slice(0, 3)
+      });
+
+    } catch (error: any) {
+      console.error("❌ Error in enhanced fetch-and-save:", error);
+      res.status(500).json({
+        success: false,
+        error: "Failed to fetch and save data with item_id",
+        details: error.message
+      });
+    }
+  });
+
   // Fetch and save data to chart_of_accounts table
   app.post(
     "/api/fetch-and-save-chart-accounts",
