@@ -49,9 +49,12 @@ const FreightVoucher = () => {
       if (response.ok) {
         const data = await response.json();
         console.log("Freight items data received:", data);
-        setFreightItems(data);
+        console.log("Number of freight items:", data.length);
+        setFreightItems(data || []);
       } else {
         console.error("Failed to fetch freight items, status:", response.status);
+        const errorText = await response.text();
+        console.error("Error response:", errorText);
         setFreightItems([]);
       }
     } catch (error) {
@@ -382,99 +385,103 @@ const FreightVoucher = () => {
             </tr>
           </thead>
           <tbody>
-            {freightItems.length > 0
-              ? freightItems.map((item, index) => (
-                  <tr key={item.freight_item_id || index}>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={item.vendor_name || ""}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={item.item_code || ""}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={item.full_item_desc || item.item_desc || ""}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={`Vehicle: ${item.vehicale_no || "N/A"}, WB ID: ${item.wb_id || "N/A"}`}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={item.delivery_terms || ""}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value=""
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value=""
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={item.debit || ""}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value={item.credit || item.freight_amount || ""}
-                        readOnly
-                      />
-                    </td>
+            {freightItems && freightItems.length > 0 ? (
+              freightItems.map((item, index) => (
+                <tr key={item.freight_item_id || `freight-item-${index}`}>
+                  <td>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={item.vendor_name || ""}
+                      readOnly
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={item.item_code || ""}
+                      readOnly
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={item.full_item_desc || item.item_desc || ""}
+                      readOnly
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={`Vehicle: ${item.vehicale_no || "N/A"}, WB ID: ${item.wb_id || "N/A"}`}
+                      readOnly
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={item.delivery_terms || ""}
+                      readOnly
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value=""
+                      readOnly
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value=""
+                      readOnly
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={item.debit || "0.00"}
+                      readOnly
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      className="form-control form-control-sm"
+                      value={item.credit || item.freight_amount || "0.00"}
+                      readOnly
+                    />
+                  </td>
+                </tr>
+              ))
+            ) : (
+              Array(10)
+                .fill(null)
+                .map((_, rowIdx) => (
+                  <tr key={`empty-row-${rowIdx}`}>
+                    {Array(9)
+                      .fill(null)
+                      .map((_, colIdx) => (
+                        <td key={`empty-cell-${rowIdx}-${colIdx}`}>
+                          <input
+                            type="text"
+                            className="form-control form-control-sm"
+                            value=""
+                            readOnly
+                          />
+                        </td>
+                      ))}
                   </tr>
                 ))
-              : Array(10)
-                  .fill(null)
-                  .map((_, rowIdx) => (
-                    <tr key={rowIdx}>
-                      {Array(9)
-                        .fill(null)
-                        .map((_, colIdx) => (
-                          <td key={colIdx}>
-                            <input
-                              type="text"
-                              className="form-control form-control-sm"
-                            />
-                          </td>
-                        ))}
-                    </tr>
-                  ))}
+            )}
           </tbody>
         </table>
       </div>

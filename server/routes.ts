@@ -3333,40 +3333,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: Request, res: Response) => {
       try {
         const { freightId } = req.params;
+        
+        console.log(`Fetching freight items for freight ID: ${freightId}`);
 
         const query = `
-        SELECT 
-          gfi.freight_item_id,
-          gfi.freight_id,
-          gfi.vendor_id,
-          gfi.item_id,
-          gfi.freight_amount,
-          gfi.vehicale_no,
-          gfi.delivery_terms,
-          gfi.wb_id,
-          gfi.remarks as item_desc,
-          gfi.debit,
-          gfi.credit,
-          COALESCE(iv.vendor_name, 'Unknown Vendor') as vendor_name,
-          COALESCE(ii.item_code, 'Unknown Code') as item_code,
-          COALESCE(ii.item_desc, gfi.remarks, 'Unknown Item') as full_item_desc
-        FROM gl_freight_items gfi
-        LEFT JOIN inv_vendors iv ON gfi.vendor_id = iv.vendor_id
-        LEFT JOIN inv_items ii ON gfi.item_id = ii.item_id
-        WHERE gfi.freight_id = $1
-        ORDER BY gfi.freight_item_id
-      `;
+          SELECT 
+            gfi.freight_item_id,
+            gfi.freight_id,
+            gfi.vendor_id,
+            gfi.customer_id,
+            gfi.igp_id,
+            gfi.ogp_id,
+            gfi.item_id,
+            gfi.freight_amount,
+            gfi.debit,
+            gfi.credit,
+            gfi.remarks as item_desc,
+            gfi.company_id,
+            gfi.branch_id,
+            gfi.dept_id,
+            gfi.last_update_by,
+            gfi.last_update_date,
+            gfi.freight_charged_to,
+            gfi.actual_frt_amount,
+            gfi.creation_date,
+            gfi.created_by,
+            gfi.voucher_id,
+            gfi.vehicale_no,
+            gfi.delivery_terms,
+            gfi.wb_id,
+            COALESCE(iv.vendor_name, 'Unknown Vendor') as vendor_name,
+            COALESCE(ii.item_code, 'Unknown Code') as item_code,
+            COALESCE(ii.item_desc, gfi.remarks, 'Unknown Item') as full_item_desc
+          FROM gl_freight_items gfi
+          LEFT JOIN inv_vendors iv ON gfi.vendor_id = iv.vendor_id
+          LEFT JOIN inv_items ii ON gfi.item_id = ii.item_id
+          WHERE gfi.freight_id = $1
+          ORDER BY gfi.freight_item_id
+        `;
 
         const result = await pool.query(query, [parseInt(freightId)]);
 
-        console.log(
-          `Fetched ${result.rows.length} freight items for freight ID: ${freightId}`,
-        );
-        console.log("Sample freight item:", result.rows[0]);
+        console.log(`✅ Found ${result.rows.length} freight items for freight ID: ${freightId}`);
+        
+        if (result.rows.length > 0) {
+          console.log("Sample freight item data:", JSON.stringify(result.rows[0], null, 2));
+        } else {
+          console.log("⚠️ No freight items found for this freight ID");
+          
+          // Check if freight_id exists in gl_freight table
+          const freightCheck = await pool.query("SELECT freight_id FROM gl_freight WHERE freight_id = $1", [parseInt(freightId)]);
+          console.log(`Freight master record exists: ${freightCheck.rows.length > 0}`);
+          
+          // Check total records in gl_freight_items
+          const totalItems = await pool.query("SELECT COUNT(*) as count FROM gl_freight_items");
+          console.log(`Total freight items in database: ${totalItems.rows[0]?.count || 0}`);
+        }
+        
         res.json(result.rows);
       } catch (error: any) {
-        console.error("Error fetching freight items:", error);
-        res.status(500).json({ error: "Failed to fetch freight items" });
+        console.error("❌ Error fetching freight items:", error);
+        console.error("Error details:", error.message);
+        res.status(500).json({ 
+          error: "Failed to fetch freight items", 
+          details: error.message 
+        });
       }
     },
   );
