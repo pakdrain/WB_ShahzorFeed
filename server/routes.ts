@@ -3088,10 +3088,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
         CACHE 1
       `);
 
-      res.json({ success: true, message: "gl_freight table created successfully" });
+      // Create gl_freight_items table if it doesn't exist
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS gl_freight_items (
+          freight_item_id     BIGSERIAL PRIMARY KEY,
+          freight_id          BIGINT,
+          vendor_id           BIGINT,
+          customer_id         BIGINT,
+          igp_id              BIGINT,
+          ogp_id              BIGINT,
+          item_id             BIGINT,
+          freight_amount      NUMERIC(26,6),
+          debit               BIGINT,
+          credit              BIGINT,
+          remarks             VARCHAR(500),
+          company_id          BIGINT,
+          branch_id           VARCHAR(500),
+          dept_id             BIGINT,
+          last_update_by      BIGINT,
+          last_update_date    TIMESTAMP,
+          freight_charged_to  VARCHAR(500),
+          actual_frt_amount   NUMERIC(20,2),
+          creation_date       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          created_by          BIGINT,
+          voucher_id          BIGINT,
+          vehicale_no         VARCHAR(500),
+          delivery_terms      VARCHAR(200),
+          wb_id               BIGINT
+        )
+      `);
+
+      res.json({ success: true, message: "gl_freight and gl_freight_items tables created successfully" });
     } catch (error: any) {
-      console.error("Error creating gl_freight table:", error);
-      res.status(500).json({ error: "Failed to create gl_freight table" });
+      console.error("Error creating gl_freight tables:", error);
+      res.status(500).json({ error: "Failed to create gl_freight tables" });
     }
   });
 
@@ -3131,10 +3161,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Freight master data saved with ID: ${freightId}`);
 
-      // If there's slip data, you can process it here as needed
+      // Save slip data to gl_freight_items table
       if (slipData && Array.isArray(slipData) && slipData.length > 0) {
         console.log(`Processing ${slipData.length} slip records`);
-        // Additional slip data processing can be added here if needed
+        
+        for (const slip of slipData) {
+          const itemQuery = `
+            INSERT INTO gl_freight_items (
+              freight_id, vendor_id, item_id, freight_amount, 
+              vehicale_no, delivery_terms, wb_id, remarks,
+              company_id, branch_id, created_by, creation_date
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          `;
+
+          const itemValues = [
+            freightId,
+            slip.vendor_id || null,
+            slip.item_id || null,
+            slip.freight_amount ? parseFloat(slip.freight_amount) : null,
+            slip.vehicle_no || null,
+            slip.delivery_term || null,
+            slip.wb_id || null,
+            slip.item_desc || null,
+            1, // company_id
+            masterData.branch === "Shahzor" ? "2" : "1", // branch_id
+            masterData.createdBy,
+            masterData.creationDate
+          ];
+
+          await pool.query(itemQuery, itemValues);
+          console.log(`Saved freight item for slip: ${slip.slip_no}`);
+        }
       }
 
       res.json({
@@ -3215,6 +3273,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error: any) {
       console.error("Error fetching freight voucher details:", error);
       res.status(500).json({ error: "Failed to fetch freight voucher details" });
+    }
+  });
+
+  // Get freight items by freight_id for details table
+  app.get("/api/freight-vouchers/:freightId/items", async (req: Request, res: Response) => {
+    try {
+      const { freightId } = req.params;
+
+      const query = `
+        SELECT 
+          gfi.freight_item_id,
+          gfi.freight_id,
+          gfi.vendor_id,
+          gfi.item_id,
+          gfi.freight_amount,
+          gfi.vehicale_no,
+          gfi.delivery_terms,
+          gfi.wb_id,
+          gfi.remarks as item_desc,
+          gfi.debit,
+          gfi.credit,
+          iv.vendor_name,
+          ii.item_code,
+          ii.item_desc as full_item_desc
+        FROM gl_freight_items gfi
+        LEFT JOIN inv_vendors iv ON gfi.vendor_id = iv.vendor_id
+        LEFT JOIN inv_items ii ON gfi.item_id = ii.item_id
+        WHERE gfi.freight_id = $1
+        ORDER BY gfi.freight_item_id
+      `;
+
+      const result = await pool.query(query, [parseInt(freightId)]);
+
+      console.log(`Fetched ${result.rows.length} freight items for freight ID: ${freightId}`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching freight items:", error);
+      res.status(500).json({ error: "Failed to fetch freight items" });
     }
   });
 

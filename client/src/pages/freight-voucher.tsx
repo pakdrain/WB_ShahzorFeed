@@ -10,6 +10,7 @@ const FreightVoucher = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedBranch, setSelectedBranch] = useState("1");
   const [selectedVoucherType, setSelectedVoucherType] = useState("cpv");
+    const [freightItems, setFreightItems] = useState([]);
 
   useEffect(() => {
     fetchFreightVouchers();
@@ -39,9 +40,26 @@ const FreightVoucher = () => {
     }
   };
 
+    const fetchFreightItems = async (freightId) => {
+        try {
+            const response = await fetch(`/api/freight-items?freightId=${freightId}`);
+            if (response.ok) {
+                const data = await response.json();
+                setFreightItems(data);
+            } else {
+                console.error("Failed to fetch freight items");
+                setFreightItems([]);
+            }
+        } catch (error) {
+            console.error("Error fetching freight items:", error);
+        }
+    };
+
+
   const handleFreightVoucherClick = (freightId) => {
     setSelectedFreightId(freightId);
     fetchFreightDetails(freightId);
+        fetchFreightItems(freightId);
   };
 
   const handleNewEntry = () => {
@@ -345,14 +363,14 @@ const FreightVoucher = () => {
             </tr>
           </thead>
           <tbody>
-            {freightDetails.length > 0
-              ? freightDetails.map((detail, index) => (
-                  <tr key={detail.detail_id}>
+            {freightItems.length > 0
+              ? freightItems.map((item, index) => (
+                  <tr key={item.freight_item_id}>
                     <td>
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={detail.vendor_name || ""}
+                        value={item.vendor_name || ""}
                         readOnly
                       />
                     </td>
@@ -360,7 +378,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={detail.item_code || ""}
+                        value={item.item_code || ""}
                         readOnly
                       />
                     </td>
@@ -368,7 +386,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={detail.item_desc || ""}
+                        value={item.full_item_desc || item.item_desc || ""}
                         readOnly
                       />
                     </td>
@@ -376,7 +394,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={`Slip: ${detail.slip_no || ""}, Vehicle: ${detail.vehicle_no || ""}`}
+                        value={`Vehicle: ${item.vehicale_no || ""}, WB ID: ${item.wb_id || ""}`}
                         readOnly
                       />
                     </td>
@@ -384,15 +402,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={detail.delivery_term || ""}
-                        readOnly
-                      />
-                    </td>
-                    <td>
-                      <input
-                        type="text"
-                        className="form-control form-control-sm"
-                        value=""
+                        value={item.delivery_terms || ""}
                         readOnly
                       />
                     </td>
@@ -408,7 +418,7 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={detail.debit_amount || ""}
+                        value=""
                         readOnly
                       />
                     </td>
@@ -416,7 +426,15 @@ const FreightVoucher = () => {
                       <input
                         type="text"
                         className="form-control form-control-sm"
-                        value={detail.credit_amount || ""}
+                        value={item.debit || ""}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={item.credit || item.freight_amount || ""}
                         readOnly
                       />
                     </td>
