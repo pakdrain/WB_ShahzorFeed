@@ -339,10 +339,12 @@ function PurchaseForm() {
     try {
       setLoading(true);
       console.log("Searching for slip:", formData.slipNo);
-      
+
       // Search with entry type filtering to only find purchase-related entries
-      const response = await fetch(`/api/purchase/by-slip/${formData.slipNo.trim()}?entry_type=PURCHASE`);
-      
+      const response = await fetch(
+        `/api/purchase/by-slip/${formData.slipNo.trim()}?entry_type=PURCHASE`,
+      );
+
       if (!response.ok) {
         alert(`No PURCHASE record found for slip number ${formData.slipNo}`);
         setLoading(false);
@@ -354,36 +356,46 @@ function PurchaseForm() {
         const master = data.master;
         const entryType = master.entry_type;
         const isOffline = master.offline_entry === "Yes";
-        
-        console.log("Found record - Entry Type:", entryType, "Offline:", isOffline);
-        
+
+        console.log(
+          "Found record - Entry Type:",
+          entryType,
+          "Offline:",
+          isOffline,
+        );
+
         // Check if this is a purchase-related entry that can be edited in purchase form
         if (entryType === "PURCHASE" || entryType === "PURCHASE_RETURN") {
           // Update online/offline status based on the found record
           setOnlineMode(!isOffline);
-          
+
           // Determine the correct URL based on entry type and online/offline status
           const modeParam = isOffline ? "offline" : "online";
-          
+
           if (entryType === "PURCHASE_RETURN") {
             const targetUrl = `/purchase-return?type=${modeParam}&edit=${master.wb_id}`;
-            console.log(`Found ${entryType} entry (${isOffline ? 'Offline' : 'Online'}), redirecting to:`, targetUrl);
+            console.log(
+              `Found ${entryType} entry (${isOffline ? "Offline" : "Online"}), redirecting to:`,
+              targetUrl,
+            );
             setLocation(targetUrl);
           } else {
             // For PURCHASE entries, stay on current page and load the data
             await loadDataByWbId(master.wb_id);
-            
+
             // Update URL to show edit mode with correct type
             const newUrl = `/purchase-form?type=${modeParam}&edit=${master.wb_id}`;
             window.history.replaceState({}, "", newUrl);
-            
+
             // Exit search mode
             setIsSearchMode(false);
             setLoading(false);
             return;
           }
         } else {
-          alert(`Found ${entryType} entry for slip ${formData.slipNo}, but this is the Purchase form. Please use the appropriate form for ${entryType} entries.`);
+          alert(
+            `Found ${entryType} entry for slip ${formData.slipNo}, but this is the Purchase form. Please use the appropriate form for ${entryType} entries.`,
+          );
         }
       } else {
         alert("Invalid record data found");
@@ -1658,10 +1670,11 @@ function PurchaseForm() {
     });
 
     // Check if this is a page reload by checking if we have edit mode in sessionStorage
-    const wasInEditMode = sessionStorage.getItem('purchaseFormEditMode') === 'true';
-    
+    const wasInEditMode =
+      sessionStorage.getItem("purchaseFormEditMode") === "true";
+
     // Clear any previous edit mode state from sessionStorage on every page load
-    sessionStorage.removeItem('purchaseFormEditMode');
+    sessionStorage.removeItem("purchaseFormEditMode");
 
     // Set selected form robustly
     if (["sales", "purchase", "offline"].includes(formType)) {
@@ -1682,20 +1695,22 @@ function PurchaseForm() {
       setIsSearchMode(true);
       setIsEditMode(false);
       setEditingWbId(null);
-      setFormData(prev => ({ ...prev, slipNo: "" }));
+      setFormData((prev) => ({ ...prev, slipNo: "" }));
       return;
     }
 
     // If we were in edit mode and page was reloaded, clear edit parameter and reset to new form
     if (wasInEditMode && editWbId) {
-      console.log("Page reload detected while in edit mode, clearing edit parameter and resetting to new form");
+      console.log(
+        "Page reload detected while in edit mode, clearing edit parameter and resetting to new form",
+      );
       // Clear edit parameter from URL
       urlParams.delete("edit");
       const newUrl = urlParams.toString()
         ? `${window.location.pathname}?${urlParams.toString()}`
         : window.location.pathname;
       window.history.replaceState({}, "", newUrl);
-      
+
       // Reset to new form
       setIsEditMode(false);
       setEditingWbId(null);
@@ -1709,14 +1724,14 @@ function PurchaseForm() {
     if (editWbId && !wasInEditMode) {
       // Load record for editing by wb_id
       console.log("Edit mode detected from URL parameter, loading data");
-      sessionStorage.setItem('purchaseFormEditMode', 'true');
+      sessionStorage.setItem("purchaseFormEditMode", "true");
       loadDataByWbId(parseInt(editWbId));
       return; // Exit early to prevent any other initialization
     } else if (offlineEditSlip && !wasInEditMode) {
       console.log(
         "Offline edit mode detected from URL parameter, loading data",
       );
-      sessionStorage.setItem('purchaseFormEditMode', 'true');
+      sessionStorage.setItem("purchaseFormEditMode", "true");
       loadDataBySlipNo(offlineEditSlip);
       setOnlineMode(false);
       return; // Exit early to prevent any other initialization
@@ -1737,31 +1752,34 @@ function PurchaseForm() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const editWbId = urlParams.get("edit");
-    
+
     // Set a flag when page loads to detect reloads
     const pageLoadTime = Date.now();
-    const lastPageLoad = sessionStorage.getItem('purchaseFormPageLoad');
-    const wasInEditMode = sessionStorage.getItem('purchaseFormEditMode') === 'true';
-    
+    const lastPageLoad = sessionStorage.getItem("purchaseFormPageLoad");
+    const wasInEditMode =
+      sessionStorage.getItem("purchaseFormEditMode") === "true";
+
     // Store current page load time
-    sessionStorage.setItem('purchaseFormPageLoad', pageLoadTime.toString());
+    sessionStorage.setItem("purchaseFormPageLoad", pageLoadTime.toString());
 
     // If we were in edit mode and this appears to be a page reload (edit param still in URL)
     if (wasInEditMode && editWbId) {
-      const timeDiff = lastPageLoad ? (pageLoadTime - parseInt(lastPageLoad)) : 0;
+      const timeDiff = lastPageLoad ? pageLoadTime - parseInt(lastPageLoad) : 0;
       // If less than 5 seconds since last page load, likely a reload
       if (timeDiff < 5000) {
-        console.log("Page reload detected while in edit mode, clearing edit parameter and resetting to new form");
+        console.log(
+          "Page reload detected while in edit mode, clearing edit parameter and resetting to new form",
+        );
         // Clear edit parameter from URL
         urlParams.delete("edit");
         const newUrl = urlParams.toString()
           ? `${window.location.pathname}?${urlParams.toString()}`
           : window.location.pathname;
         window.history.replaceState({}, "", newUrl);
-        
+
         // Clear session storage and reset to new form
-        sessionStorage.removeItem('purchaseFormEditMode');
-        sessionStorage.removeItem('purchaseFormPageLoad');
+        sessionStorage.removeItem("purchaseFormEditMode");
+        sessionStorage.removeItem("purchaseFormPageLoad");
         setIsEditMode(false);
         setEditingWbId(null);
         setTimeout(() => {
@@ -1773,9 +1791,11 @@ function PurchaseForm() {
 
     // Check if user navigated to purchase form while in edit mode
     if (!editWbId && wasInEditMode) {
-      console.log("Navigation to purchase form detected while in edit mode, clearing edit state");
-      sessionStorage.removeItem('purchaseFormEditMode');
-      sessionStorage.removeItem('purchaseFormPageLoad');
+      console.log(
+        "Navigation to purchase form detected while in edit mode, clearing edit state",
+      );
+      sessionStorage.removeItem("purchaseFormEditMode");
+      sessionStorage.removeItem("purchaseFormPageLoad");
       setIsEditMode(false);
       setEditingWbId(null);
       resetFormToInitial();
@@ -2606,15 +2626,15 @@ function PurchaseForm() {
             dc_qty: firstIgpItem?.dc_qty
               ? parseFloat(firstIgpItem.dc_qty)
               : null,
-            igp_id: firstIgpItem?.igp_id 
-              ? parseInt(firstIgpItem.igp_id) 
-              : formData.igpId 
-                ? parseInt(formData.igpId) 
+            igp_id: firstIgpItem?.igp_id
+              ? parseInt(firstIgpItem.igp_id)
+              : formData.igpId
+                ? parseInt(formData.igpId)
                 : null,
-            item_id: firstIgpItem?.item_id 
-              ? parseInt(firstIgpItem.item_id) 
-              : formData.itemId 
-                ? parseInt(formData.itemId) 
+            item_id: firstIgpItem?.item_id
+              ? parseInt(firstIgpItem.item_id)
+              : formData.itemId
+                ? parseInt(formData.itemId)
                 : null,
           };
 
@@ -3985,7 +4005,7 @@ function PurchaseForm() {
                 const typeMode = urlParams.get("type") || "online";
                 const targetUrl = `/purchase-form?type=${typeMode}`;
                 // Clear any edit state and force navigation
-                sessionStorage.removeItem('purchaseFormEditMode');
+                sessionStorage.removeItem("purchaseFormEditMode");
                 window.location.href = targetUrl;
               } else {
                 setSelectedForm("purchase");
@@ -4004,7 +4024,7 @@ function PurchaseForm() {
                 const typeMode = urlParams.get("type") || "online";
                 const targetUrl = `/sales-form?type=${typeMode}`;
                 // Clear any edit state and force navigation
-                sessionStorage.removeItem('purchaseFormEditMode');
+                sessionStorage.removeItem("purchaseFormEditMode");
                 window.location.href = targetUrl;
               } else {
                 setSelectedForm("sales");
@@ -4061,7 +4081,7 @@ function PurchaseForm() {
               Cancel
             </Button>
           )}
-          <Button 
+          <Button
             className="h-8 px-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-medium"
             onClick={() => {
               if (isSearchMode || isEditMode) {
@@ -4070,9 +4090,12 @@ function PurchaseForm() {
                 setIsSearchMode(false);
                 setIsEditMode(false);
                 setEditingWbId(null);
-                
+
                 // Clear URL parameters and set to new form mode
-                const newUrl = window.location.pathname + "?type=" + (onlineMode ? "online" : "offline");
+                const newUrl =
+                  window.location.pathname +
+                  "?type=" +
+                  (onlineMode ? "online" : "offline");
                 window.history.replaceState({}, "", newUrl);
               } else {
                 // Enter search mode
@@ -4081,11 +4104,11 @@ function PurchaseForm() {
                 const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
                 window.history.replaceState({}, "", newUrl);
                 setIsSearchMode(true);
-                setFormData(prev => ({ ...prev, slipNo: "" }));
+                setFormData((prev) => ({ ...prev, slipNo: "" }));
               }
             }}
           >
-            {(isSearchMode || isEditMode) ? "New" : "Edit"}
+            {isSearchMode || isEditMode ? "New" : "Edit"}
           </Button>
           <Button
             className="h-8 px-2 text-sm bg-purple-600 hover:bg-purple-700 text-white font-medium"
@@ -4786,9 +4809,7 @@ function PurchaseForm() {
 
                       {/* IGP ID */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-28">
-                          IGP ID
-                        </span>
+                        <span className="text-xs text-black w-28">IGP ID</span>
                         <Input
                           name="igpId"
                           value={formData.igpId}
@@ -4799,9 +4820,7 @@ function PurchaseForm() {
 
                       {/* Item ID */}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-black w-28">
-                          Item ID
-                        </span>
+                        <span className="text-xs text-black w-28">Item ID</span>
                         <Input
                           name="itemId"
                           value={formData.itemId}
@@ -4870,6 +4889,9 @@ function PurchaseForm() {
                                 </td>
                                 <td className="border p-1 h-4 text-xs text-black">
                                   {item.item_desc || ""}
+                                </td>
+                                <td className="border p-1 h-4 text-xs text-black">
+                                  {item.item_id || formData.itemId || ""}
                                 </td>
                                 <td className="border p-1 h-4 text-xs text-black">
                                   {poQty.toFixed(2)}
@@ -5477,7 +5499,10 @@ function PurchaseForm() {
                                         record,
                                       );
                                       console.log("wb_id:", record.wb_id);
-                                      console.log("entry_type:", record.entry_type);
+                                      console.log(
+                                        "entry_type:",
+                                        record.entry_type,
+                                      );
                                       console.log(
                                         "offline_entry:",
                                         record.offline_entry,
@@ -5485,26 +5510,46 @@ function PurchaseForm() {
 
                                       if (record.wb_id) {
                                         // Check if this is an offline entry
-                                        const isOfflineEntry = record.offline_entry === "Yes";
-                                        const modeParam = isOfflineEntry ? "offline" : "online";
+                                        const isOfflineEntry =
+                                          record.offline_entry === "Yes";
+                                        const modeParam = isOfflineEntry
+                                          ? "offline"
+                                          : "online";
 
                                         // Navigate based on entry type
                                         if (record.entry_type === "SALE") {
                                           const targetUrl = `/sales-form?type=${modeParam}&edit=${record.wb_id}`;
-                                          console.log("Navigating to sales form:", targetUrl);
+                                          console.log(
+                                            "Navigating to sales form:",
+                                            targetUrl,
+                                          );
                                           window.location.href = targetUrl;
-                                        } else if (record.entry_type === "SALE_RETURN") {
+                                        } else if (
+                                          record.entry_type === "SALE_RETURN"
+                                        ) {
                                           const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
-                                          console.log("Navigating to sales return form:", targetUrl);
+                                          console.log(
+                                            "Navigating to sales return form:",
+                                            targetUrl,
+                                          );
                                           window.location.href = targetUrl;
-                                        } else if (record.entry_type === "PURCHASE_RETURN") {
+                                        } else if (
+                                          record.entry_type ===
+                                          "PURCHASE_RETURN"
+                                        ) {
                                           const targetUrl = `/purchase-return?type=${modeParam}&edit=${record.wb_id}`;
-                                          console.log("Navigating to purchase return form:", targetUrl);
+                                          console.log(
+                                            "Navigating to purchase return form:",
+                                            targetUrl,
+                                          );
                                           window.location.href = targetUrl;
                                         } else {
                                           // For purchase entries, stay on purchase form
                                           const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
-                                          console.log("Navigating to purchase form:", targetUrl);
+                                          console.log(
+                                            "Navigating to purchase form:",
+                                            targetUrl,
+                                          );
                                           window.location.href = targetUrl;
                                         }
                                       }
