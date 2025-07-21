@@ -4492,26 +4492,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Enhanced item_id extraction with multiple fallback options
           let itemId = null;
           
+          console.log(`🔍 Raw item data for record ${i + 1}:`, JSON.stringify(item, null, 2));
+          
           // Try different possible field names for item_id with exact case matching first
           const idFields = ['item_id', 'ITEM_ID', 'ItemId', 'itemId', 'id', 'ID', 'pk', 'primary_key'];
           for (const field of idFields) {
-            if (item[field] !== undefined && item[field] !== null && item[field] !== '') {
-              const parsedId = parseInt(String(item[field]));
+            if (item.hasOwnProperty(field) && item[field] !== undefined && item[field] !== null && item[field] !== '') {
+              const rawValue = item[field];
+              console.log(`🔍 Checking field '${field}' with raw value:`, rawValue, typeof rawValue);
+              
+              const parsedId = parseInt(String(rawValue));
               if (!isNaN(parsedId) && parsedId > 0) {
                 itemId = parsedId;
-                console.log(`✅ Found item_id=${itemId} using field: ${field} from value: ${item[field]}`);
+                console.log(`✅ Found item_id=${itemId} using field: ${field} from raw value: ${rawValue}`);
                 break;
               }
             }
           }
 
-          // If no valid item_id found, generate one
-          if (!itemId) {
-            itemId = 1000 + i;
-            console.log(`⚠️ Generated fallback item_id=${itemId} for record ${i + 1}`);
+          // If no valid item_id found from API data, generate a sequential one starting from a high number
+          if (!itemId || itemId <= 0) {
+            // Use a high starting number to avoid conflicts, add the array index for uniqueness
+            itemId = 6000 + i + 1;
+            console.log(`⚠️ Generated fallback item_id=${itemId} for record ${i + 1} because no valid item_id found in API data`);
           }
 
-          console.log(`🔍 Processing item ${i + 1}: Raw item_id field = ${item.item_id}, Parsed itemId = ${itemId}`);
+          console.log(`🔍 Final item_id for record ${i + 1}: ${itemId}`);
 
           // Extract other fields with multiple fallback options
           const itemCode = item.item_code || item.code || item.ITEM_CODE || item.CODE || item.sku || item.SKU || `ITEM_${itemId}`;
@@ -4536,7 +4542,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             originalData: Object.keys(item)
           });
 
-          // Insert into database with conflict resolution
+          // Insert into database with proper conflict resolution on item_code
           const insertQuery = `
             INSERT INTO inv_items (
               item_id, item_code, item_desc, uom, weight_in_kg,
@@ -4544,8 +4550,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               gl_f_sale_acc_id, sale_return_acc_id, w_i_p_id, delivery_term
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-            ON CONFLICT (item_id) DO UPDATE SET
-              item_code = EXCLUDED.item_code,
+            ON CONFLICT (item_code) DO UPDATE SET
+              item_id = EXCLUDED.item_id,
               item_desc = EXCLUDED.item_desc,
               uom = EXCLUDED.uom,
               weight_in_kg = EXCLUDED.weight_in_kg,
@@ -4557,6 +4563,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               sale_return_acc_id = EXCLUDED.sale_return_acc_id,
               w_i_p_id = EXCLUDED.w_i_p_id,
               delivery_term = EXCLUDED.delivery_term
+            RETURNING item_id, item_code
           `;
 
           const values = [
@@ -4580,21 +4587,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
             itemCode,
             itemDesc: itemDesc ? itemDesc.substring(0, 30) + '...' : null,
             uom,
-            weightInKg
+            weightInKg,
+            allValues: values
           });
 
           const insertResult = await pool.query(insertQuery, values);
           recordsInserted++;
 
+          console.log(`✅ Insert result:`, insertResult.rows[0]);
           console.log(`✅ Successfully inserted record ${i + 1}: item_id=${itemId}, code='${itemCode}'`);
 
-          // Verify the insert worked
-          const verifyQuery = `SELECT item_id, item_code, item_desc FROM inv_items WHERE item_id = $1`;
-          const verifyResult = await pool.query(verifyQuery, [itemId]);
+          // Verify the insert worked by checking item_code since that's the unique constraint
+          const verifyQuery = `SELECT item_id, item_code, item_desc FROM inv_items WHERE item_code = $1`;
+          const verifyResult = await pool.query(verifyQuery, [itemCode]);
           if (verifyResult.rows.length > 0) {
-            console.log(`✅ Verification successful: item_id=${verifyResult.rows[0].item_id} exists in database`);
+            const actualItemId = verifyResult.rows[0].item_id;
+            console.log(`✅ Verification successful: item_code='${itemCode}' exists with item_id=${actualItemId}`);
+            if (actualItemId === null) {
+              console.log(`❌ WARNING: item_id is NULL in database for item_code='${itemCode}'`);
+            }
           } else {
-            console.log(`❌ Verification failed: item_id=${itemId} not found in database after insert`);
+            console.log(`❌ Verification failed: item_code='${itemCode}' not found in database after insert`);
           }
 
         } catch (insertError: any) {
