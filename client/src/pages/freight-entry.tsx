@@ -113,6 +113,13 @@ const FreightEntry = () => {
     const newSelectedRows = new Set(selectedRows);
     if (checked) {
       newSelectedRows.add(index);
+      // Auto-focus the slip dropdown to open it
+      setTimeout(() => {
+        const slipDropdown = document.querySelector(`#slip-dropdown-${index}`);
+        if (slipDropdown) {
+          slipDropdown.click();
+        }
+      }, 100);
     } else {
       newSelectedRows.delete(index);
       // Clear dropdown data for this row
@@ -327,6 +334,7 @@ const FreightEntry = () => {
                     <td>
                       {selectedRows.has(i) ? (
                         <select
+                          id={`slip-dropdown-${i}`}
                           className="form-control form-control-sm"
                           value={row.slip_no || ""}
                           onChange={(e) =>
@@ -336,7 +344,7 @@ const FreightEntry = () => {
                           <option value="">Select Slip No</option>
                           {slipData.map((slip, index) => (
                             <option key={index} value={slip.slip_no}>
-                              {slip.slip_no}
+                              {slip.slip_no} - {slip.vehicle_no} - {slip.item_desc}
                             </option>
                           ))}
                         </select>
@@ -441,6 +449,7 @@ const FreightEntry = () => {
                     <td>
                       {selectedRows.has(i) ? (
                         <select
+                          id={`slip-dropdown-${i}`}
                           className="form-control form-control-sm"
                           onChange={(e) =>
                             handleSlipSelection(i, e.target.value)
@@ -449,7 +458,7 @@ const FreightEntry = () => {
                           <option value="">Select Slip No</option>
                           {slipData.map((slip, index) => (
                             <option key={index} value={slip.slip_no}>
-                              {slip.slip_no}
+                              {slip.slip_no} - {slip.vehicle_no} - {slip.item_desc}
                             </option>
                           ))}
                         </select>
