@@ -124,6 +124,16 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
 - **Database URLs**: Flexible PostgreSQL connection string support
 
 ## Changelog
+- July 22, 2025. COMPREHENSIVE FIX: Resolved critical NULL item_id database insertion issue:
+  - Fixed `/api/save-enhanced-inv-item` endpoint - added missing item_id field to INSERT query with automatic generation logic
+  - Fixed `/api/fetch-and-save-data` endpoint - enhanced item_id generation using multiple fallback methods (from item_code, timestamp-based)
+  - Added comprehensive new API endpoint `/api/inv-items/insert-with-guaranteed-id` for robust inv_items handling with guaranteed non-null item_id
+  - Added diagnostic endpoint `/api/inv-items/health-check` for table monitoring and issue detection
+  - Added fix endpoint `/api/inv-items/fix-null-item-ids` to repair existing NULL item_id records
+  - Implemented multiple item_id generation strategies: extract from item_code patterns, timestamp-based IDs, hash-based fallbacks
+  - Enhanced all inv_items insertion points with comprehensive item_id validation and automatic generation
+  - Added conflict resolution with COALESCE functions to preserve existing data during updates
+  - All inventory item insertions now guarantee non-null item_id values with comprehensive error handling and logging
 - July 16, 2025. Fixed three critical issues in purchase form and optimized application performance:
   - Fixed IGP number persistence issue: IGP fields now clear automatically when switching between online/offline modes (only when not in edit mode)
   - Fixed weight and bags fields not loading in edit mode: Enhanced loadDeductionData function to populate form fields from deduction table
