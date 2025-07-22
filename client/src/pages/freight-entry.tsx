@@ -182,7 +182,14 @@ const FreightEntry = () => {
 
   const handleSave = async () => {
     try {
+      // Ensure freight tables exist
       await fetch("/api/create-freight-table", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      // Ensure voucher tables exist
+      await fetch("/api/create-gl-voucher-table", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -215,7 +222,7 @@ const FreightEntry = () => {
       if (response.ok) {
         const result = await response.json();
         console.log("Freight voucher saved successfully:", result);
-        alert("Freight voucher saved successfully!");
+        alert(`Freight voucher saved successfully! Freight ID: ${result.freight_id}, Voucher ID: ${result.voucher_id}`);
         setLocation("/voucher-view");
       } else {
         const errorData = await response.json();
