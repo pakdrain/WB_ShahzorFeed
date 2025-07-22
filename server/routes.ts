@@ -1444,21 +1444,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           wb.entry_type,
           wb.first_weight,
           wb.second_weight,
-          COALESCE(wbi.vehicle_no, '') as vehicle_no
+          wb.slip_in_time,
+          COALESCE(wbi.vehicle_no, '') as vehicle_no,
+          COALESCE(wbi.vendor_name, '') as vendor_name,
+          COALESCE(wbi.item_desc, '') as item_desc
         FROM wb_weighbridge wb 
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
         WHERE wb.first_weight IS NOT NULL 
           AND wb.first_weight > 0
-          AND (wb.second_weight IS NULL OR wb.second_weight = 0)
+          AND (wb.second_weight IS NULL OR wb.second_weight = 0 OR wb.second_weight::text = '')
         ORDER BY wb.wb_id DESC 
         LIMIT 20
       `;
 
         const result = await pool.query(query);
 
-        console.log(
-          `Fetched ${result.rows.length} first weight records (all entry types)`,
-        );
+        console.log(`Fetched ${result.rows.length} first weight records for display table`);
+        console.log("Sample records:", result.rows.slice(0, 3));
         res.json(result.rows);
       } catch (error: any) {
         console.error("Error fetching first weight records:", error);
