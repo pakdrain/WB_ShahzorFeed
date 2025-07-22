@@ -45,6 +45,39 @@ us(500).json({ error: "Failed to fetch slip data" });
     },
   );
 
+  // GET first weight records for display table
+  app.get("/api/purchase/first-weight-records", async (req: Request, res: Response) => {
+    try {
+      const query = `
+        SELECT 
+          wb.wb_id,
+          wb.slip_no,
+          wb.vehicle_no,
+          wb.entry_type,
+          wb.first_weight,
+          wb.second_weight,
+          wb.slip_in_time,
+          wbi.vendor_name,
+          wbi.item_desc
+        FROM wb_weighbridge wb 
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
+        WHERE wb.first_weight IS NOT NULL 
+          AND wb.first_weight > 0
+          AND (wb.second_weight IS NULL OR wb.second_weight = 0)
+        ORDER BY wb.wb_id DESC 
+        LIMIT 20
+      `;
+
+      const result = await pool.query(query);
+
+      console.log(`Fetched ${result.rows.length} first weight records for display table`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching first weight records:", error);
+      res.status(500).json({ error: "Failed to fetch first weight records" });
+    }
+  });
+
   // GET vendors from inv_vendors table for vendor LOV
   app.get("/api/vendors", async (req: Request, res: Response) => {
     try {
