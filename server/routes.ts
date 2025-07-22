@@ -3608,9 +3608,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let recordsInserted = 0;
 
       // ✅ Updated insertItemToDatabase function
-      const insertItemToDatabase = async (item: any, sourceUrl: string) => {
-        try {
-          const query = `
+     const insertItemToDatabase = async (item: any, sourceUrl: string) => {
+  try {
+    const query = `
       INSERT INTO inv_items (
         item_id, item_code, item_desc, uom, weight_in_kg,
         payable_acc_id, gl_asset_id, gl_cost_acc_id,
@@ -3638,42 +3638,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
         delivery_term = EXCLUDED.delivery_term
     `;
 
-          const values = [
-            item.item_id ?? item.id ?? null,
-            item.item_code ??
-              item.code ??
-              item.ITEM_CODE ??
-              `ITEM_${Date.now()}`,
-            item.item_desc ??
-              item.description ??
-              item.desc ??
-              item.ITEM_DESC ??
-              null,
-            item.uom ?? item.unit ?? item.UOM ?? null,
-            item.weight_in_kg ?? item.weight ?? item.kg ?? null,
-            item.payable_acc_id ?? null,
-            item.gl_asset_id ?? null,
-            item.gl_cost_acc_id ?? null,
-            item.gl_sale_acc_id ?? null,
-            item.gl_f_sale_acc_id ?? null,
-            item.sale_return_acc_id ?? null,
-            item.w_i_p_id ?? null,
-            item.delivery_term ?? null,
-          ];
+    const values = [
+      item.item_id ?? item.id ?? null,
+      item.item_code ?? item.code ?? item.ITEM_CODE ?? `ITEM_${Date.now()}`,
+      item.item_desc ?? item.description ?? item.desc ?? item.ITEM_DESC ?? null,
+      item.uom ?? item.unit ?? item.UOM ?? null,
+      item.weight_in_kg ?? item.weight ?? item.kg ?? null,
+      item.payable_acc_id ?? null,
+      item.gl_asset_id ?? null,
+      item.gl_cost_acc_id ?? null,
+      item.gl_sale_acc_id ?? null,
+      item.gl_f_sale_acc_id ?? null,
+      item.sale_return_acc_id ?? null,
+      item.w_i_p_id ?? null,
+      item.delivery_term ?? null,
+    ];
 
-          console.log("➡️ Saving item:", {
-            item_id: values[0],
-            item_code: values[1],
-          });
+    console.log("➡️ Saving item:", {
+      item_id: values[0],
+      item_code: values[1],
+    });
 
-          await pool.query(query, values);
+    await pool.query(query, values);
 
-          console.log("✅ Inserted/Updated item:", values[1]);
-        } catch (insertError: any) {
-          console.error("❌ Error inserting item:", insertError.message);
-          throw insertError;
-        }
-      };
+    console.log("✅ Inserted/Updated item:", values[1]);
+  } catch (insertError: any) {
+    console.error("❌ Error inserting item:", insertError.message);
+    throw insertError;
+  }
+};
 
       // Handle different data structures
       if (Array.isArray(data)) {
@@ -4430,7 +4423,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const data = await response.json();
       console.log("✅ Fetched raw API data:", {
         isArray: Array.isArray(data),
-        dataKeys: data && typeof data === "object" ? Object.keys(data) : [],
+        dataKeys: data && typeof data === 'object' ? Object.keys(data) : [],
         firstRecord: Array.isArray(data) ? data[0] : data?.items?.[0] || data,
       });
 
@@ -4484,59 +4477,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const item = dataToProcess[i];
 
         try {
-          console.log(
-            `🔄 Processing record ${i + 1}:`,
-            JSON.stringify(item, null, 2),
-          );
+          console.log(`🔄 Processing record ${i + 1}:`, JSON.stringify(item, null, 2));
 
           // ✅ ENHANCED ITEM_ID EXTRACTION - GUARANTEED NON-NULL
           let itemId = null;
 
           // Method 1: Direct field extraction with strict validation
           const itemIdFields = [
-            "item_id",
-            "ITEM_ID",
-            "ItemId",
-            "itemId",
-            "itemID",
-            "ITEMID",
-            "id",
-            "ID",
-            "Id",
-            "iD",
+            "item_id", "ITEM_ID", "ItemId", "itemId", "itemID", "ITEMID",
+            "id", "ID", "Id", "iD"
           ];
 
           for (const field of itemIdFields) {
-            if (
-              item.hasOwnProperty(field) &&
-              item[field] !== null &&
-              item[field] !== undefined &&
-              item[field] !== ""
-            ) {
+            if (item.hasOwnProperty(field) && item[field] !== null && item[field] !== undefined && item[field] !== "") {
               const rawValue = item[field];
-              console.log(
-                `🔍 Checking field '${field}' with value:`,
-                rawValue,
-                typeof rawValue,
-              );
+              console.log(`🔍 Checking field '${field}' with value:`, rawValue, typeof rawValue);
 
-              if (
-                typeof rawValue === "number" &&
-                rawValue > 0 &&
-                Number.isInteger(rawValue)
-              ) {
+              if (typeof rawValue === "number" && rawValue > 0 && Number.isInteger(rawValue)) {
                 itemId = rawValue;
-                console.log(
-                  `✅ Found numeric item_id=${itemId} from field: ${field}`,
-                );
+                console.log(`✅ Found numeric item_id=${itemId} from field: ${field}`);
                 break;
               } else if (typeof rawValue === "string" && rawValue.trim()) {
                 const parsed = parseInt(rawValue.trim());
                 if (!isNaN(parsed) && parsed > 0) {
                   itemId = parsed;
-                  console.log(
-                    `✅ Parsed item_id=${itemId} from string field: ${field}`,
-                  );
+                  console.log(`✅ Parsed item_id=${itemId} from string field: ${field}`);
                   break;
                 }
               }
@@ -4545,13 +4510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Method 2: Extract from item_code if item_id is still null
           if (!itemId || itemId <= 0) {
-            const itemCodeFields = [
-              "item_code",
-              "ITEM_CODE",
-              "code",
-              "CODE",
-              "itemCode",
-            ];
+            const itemCodeFields = ["item_code", "ITEM_CODE", "code", "CODE", "itemCode"];
             for (const field of itemCodeFields) {
               if (item.hasOwnProperty(field) && item[field]) {
                 const codeValue = String(item[field]).trim();
@@ -4561,9 +4520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   const extractedId = parseInt(numberMatch[1]);
                   if (extractedId > 0) {
                     itemId = extractedId;
-                    console.log(
-                      `✅ Extracted item_id=${itemId} from ${field}: ${codeValue}`,
-                    );
+                    console.log(`✅ Extracted item_id=${itemId} from ${field}: ${codeValue}`);
                     break;
                   }
                 }
@@ -4576,61 +4533,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Generate unique ID based on current timestamp + index to avoid conflicts
             const timestamp = Date.now();
             itemId = parseInt(String(timestamp).slice(-6)) + i + 1;
-            console.log(
-              `⚠️ Generated unique item_id=${itemId} for record ${i + 1}`,
-            );
+            console.log(`⚠️ Generated unique item_id=${itemId} for record ${i + 1}`);
           }
 
           // FINAL VALIDATION - ABSOLUTELY ENSURE ITEM_ID IS VALID
-          if (
-            !itemId ||
-            itemId <= 0 ||
-            isNaN(itemId) ||
-            !Number.isInteger(itemId)
-          ) {
+          if (!itemId || itemId <= 0 || isNaN(itemId) || !Number.isInteger(itemId)) {
             // Last resort - use a large base number + index
             itemId = 999000 + i + 1;
-            console.log(
-              `🚨 Emergency fallback item_id=${itemId} for record ${i + 1}`,
-            );
+            console.log(`🚨 Emergency fallback item_id=${itemId} for record ${i + 1}`);
           }
 
           // Double check item_id is not null before proceeding
           if (!itemId || itemId <= 0) {
-            console.error(
-              `❌ CRITICAL: Could not generate valid item_id for record ${i + 1}, skipping`,
-            );
+            console.error(`❌ CRITICAL: Could not generate valid item_id for record ${i + 1}, skipping`);
             recordsSkipped++;
             continue;
           }
 
           // Extract other required fields with fallbacks
-          const itemCode =
-            item.item_code ||
-            item.code ||
-            item.ITEM_CODE ||
-            item.CODE ||
-            item.itemCode ||
-            `ITEM_${itemId}`;
-          const itemDesc =
-            item.item_desc ||
-            item.description ||
-            item.desc ||
-            item.ITEM_DESC ||
-            item.name ||
-            item.title ||
-            null;
+          const itemCode = item.item_code || item.code || item.ITEM_CODE || item.CODE || item.itemCode || `ITEM_${itemId}`;
+          const itemDesc = item.item_desc || item.description || item.desc || item.ITEM_DESC || item.name || item.title || null;
           const uom = item.uom || item.unit || item.UOM || item.UNIT || null;
-          const weightInKg =
-            item.weight_in_kg || item.weight || item.WEIGHT_IN_KG || null;
+          const weightInKg = item.weight_in_kg || item.weight || item.WEIGHT_IN_KG || null;
           const payableAccId = item.payable_acc_id || item.payableAccId || null;
           const glAssetId = item.gl_asset_id || item.glAssetId || null;
           const glCostAccId = item.gl_cost_acc_id || item.glCostAccId || null;
           const glSaleAccId = item.gl_sale_acc_id || item.glSaleAccId || null;
-          const glFSaleAccId =
-            item.gl_f_sale_acc_id || item.glFSaleAccId || null;
-          const saleReturnAccId =
-            item.sale_return_acc_id || item.saleReturnAccId || null;
+          const glFSaleAccId = item.gl_f_sale_acc_id || item.glFSaleAccId || null;
+          const saleReturnAccId = item.sale_return_acc_id || item.saleReturnAccId || null;
           const wIPId = item.w_i_p_id || item.wIPId || null;
           const deliveryTerm = item.delivery_term || item.deliveryTerm || null;
 
@@ -4650,16 +4580,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // If ID exists, find next available ID
             let newItemId = itemId;
             let attempts = 0;
-            while (attempts < 1000) {
-              // Prevent infinite loop
+            while (attempts < 1000) { // Prevent infinite loop
               newItemId = itemId + attempts + 1;
               const checkNewQuery = `SELECT item_id FROM inv_items WHERE item_id = $1`;
               const newResult = await pool.query(checkNewQuery, [newItemId]);
               if (newResult.rows.length === 0) {
                 itemId = newItemId;
-                console.log(
-                  `🔄 Adjusted item_id to ${itemId} to avoid conflict`,
-                );
+                console.log(`🔄 Adjusted item_id to ${itemId} to avoid conflict`);
                 break;
               }
               attempts++;
@@ -4692,33 +4619,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             deliveryTerm ? String(deliveryTerm) : null,
           ];
 
-          console.log(
-            `💾 Inserting record ${i + 1} with GUARANTEED item_id=${values[0]} (${typeof values[0]})`,
-          );
+          console.log(`💾 Inserting record ${i + 1} with GUARANTEED item_id=${values[0]} (${typeof values[0]})`);
 
           await pool.query(insertQuery, values);
           recordsInserted++;
 
-          console.log(
-            `✅ Successfully inserted record ${i + 1}: item_id=${values[0]}, code='${values[1]}'`,
-          );
+          console.log(`✅ Successfully inserted record ${i + 1}: item_id=${values[0]}, code='${values[1]}'`);
 
           // Verify the insertion
           const verifyQuery = `SELECT item_id, item_code FROM inv_items WHERE item_id = $1`;
           const verifyResult = await pool.query(verifyQuery, [values[0]]);
           if (verifyResult.rows.length > 0) {
             const saved = verifyResult.rows[0];
-            console.log(
-              `✅ Verified: item_id=${saved.item_id}, code='${saved.item_code}' saved correctly`,
-            );
+            console.log(`✅ Verified: item_id=${saved.item_id}, code='${saved.item_code}' saved correctly`);
           } else {
             console.error(`❌ Verification failed for item_id=${values[0]}`);
           }
         } catch (insertError: any) {
-          console.error(
-            `❌ Error inserting record ${i + 1}:`,
-            insertError.message,
-          );
+          console.error(`❌ Error inserting record ${i + 1}:`, insertError.message);
           console.error("❌ Failed item data:", JSON.stringify(item, null, 2));
           recordsSkipped++;
         }
@@ -5156,27 +5074,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Save enhanced item data to inv_items table
-  app.post(
-    "/api/save-enhanced-inv-item",
-    async (req: Request, res: Response) => {
-      try {
-        const {
-          item_id, // 👈 included
-          item_code,
-          item_desc,
-          uom,
-          weight_in_kg,
-          payable_acc_id,
-          gl_asset_id,
-          gl_cost_acc_id,
-          gl_sale_acc_id,
-          gl_f_sale_acc_id,
-          sale_return_acc_id,
-          w_i_p_id,
-          delivery_term,
-        } = req.body;
+ app.post(
+  "/api/save-enhanced-inv-item",
+  async (req: Request, res: Response) => {
+    try {
+      const {
+        item_id, // 👈 included
+        item_code,
+        item_desc,
+        uom,
+        weight_in_kg,
+        payable_acc_id,
+        gl_asset_id,
+        gl_cost_acc_id,
+        gl_sale_acc_id,
+        gl_f_sale_acc_id,
+        sale_return_acc_id,
+        w_i_p_id,
+        delivery_term,
+      } = req.body;
 
-        const query = `
+      const query = `
       INSERT INTO inv_items (
         item_id, -- 👈 included
         item_code, item_desc, uom, weight_in_kg,
@@ -5200,39 +5118,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       RETURNING *
     `;
 
-        const values = [
-          item_id ? parseInt(item_id) : null, // 👈 included
-          item_code,
-          item_desc,
-          uom,
-          weight_in_kg ? parseFloat(weight_in_kg) : null,
-          payable_acc_id ? parseInt(payable_acc_id) : null,
-          gl_asset_id ? parseInt(gl_asset_id) : null,
-          gl_cost_acc_id ? parseInt(gl_cost_acc_id) : null,
-          gl_sale_acc_id ? parseInt(gl_sale_acc_id) : null,
-          gl_f_sale_acc_id ? parseInt(gl_f_sale_acc_id) : null,
-          sale_return_acc_id ? parseInt(sale_return_acc_id) : null,
-          w_i_p_id ? parseInt(w_i_p_id) : null,
-          delivery_term,
-        ];
+      const values = [
+        item_id ? parseInt(item_id) : null, // 👈 included
+        item_code,
+        item_desc,
+        uom,
+        weight_in_kg ? parseFloat(weight_in_kg) : null,
+        payable_acc_id ? parseInt(payable_acc_id) : null,
+        gl_asset_id ? parseInt(gl_asset_id) : null,
+        gl_cost_acc_id ? parseInt(gl_cost_acc_id) : null,
+        gl_sale_acc_id ? parseInt(gl_sale_acc_id) : null,
+        gl_f_sale_acc_id ? parseInt(gl_f_sale_acc_id) : null,
+        sale_return_acc_id ? parseInt(sale_return_acc_id) : null,
+        w_i_p_id ? parseInt(w_i_p_id) : null,
+        delivery_term,
+      ];
 
-        const result = await pool.query(query, values);
+      const result = await pool.query(query, values);
 
-        console.log(`✅ Saved enhanced item data: ${item_code}`);
-        res.json({
-          success: true,
-          message: "Enhanced item data saved successfully",
-          item: result.rows[0],
-        });
-      } catch (error: any) {
-        console.error("❌ Error saving enhanced item data:", error);
-        res.status(500).json({
-          error: "Failed to save enhanced item data",
-          details: error.message,
-        });
-      }
-    },
-  );
+      console.log(`✅ Saved enhanced item data: ${item_code}`);
+      res.json({
+        success: true,
+        message: "Enhanced item data saved successfully",
+        item: result.rows[0],
+      });
+    } catch (error: any) {
+      console.error("❌ Error saving enhanced item data:", error);
+      res.status(500).json({
+        error: "Failed to save enhanced item data",
+        details: error.message,
+      });
+    }
+  },
+);
 
   // GET maximum Doc No from gl_freight table for voucher entry
   app.get("/api/vouchers/max-doc-no", async (req: Request, res: Response) => {
