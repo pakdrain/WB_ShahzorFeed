@@ -3624,6 +3624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         $12, $13
       )
       ON CONFLICT (item_code) DO UPDATE SET
+        item_id = COALESCE(EXCLUDED.item_id, inv_items.item_id), -- ✅ comma fixed
         item_desc = EXCLUDED.item_desc,
         uom = EXCLUDED.uom,
         weight_in_kg = EXCLUDED.weight_in_kg,
@@ -3637,26 +3638,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         delivery_term = EXCLUDED.delivery_term
     `;
 
-          // ✅ CRITICAL FIX: Generate guaranteed non-null item_id
-          let itemId = item.item_id ?? item.id ?? null;
-          
-          // Generate item_id if null
-          if (!itemId || itemId <= 0) {
-            const itemCode = item.item_code ?? item.code ?? item.ITEM_CODE ?? `ITEM_${Date.now()}`;
-            // Try to extract from item_code
-            const codeMatch = itemCode.match(/(\d+)/);
-            if (codeMatch) {
-              itemId = parseInt(codeMatch[1]);
-            } else {
-              // Fallback to timestamp-based unique ID
-              itemId = Date.now() % 1000000;
-            }
-          }
-
-          console.log(`✅ FIXED: Guaranteed non-null item_id: ${itemId} for item_code: ${item.item_code ?? item.code}`);
-
           const values = [
-            parseInt(String(itemId)), // ✅ GUARANTEED NON-NULL ITEM_ID
+            item.item_id ?? item.id ?? item.ITEM_ID ?? null, // ✅ Added ITEM_ID (uppercase)
             item.item_code ??
               item.code ??
               item.ITEM_CODE ??
@@ -3677,13 +3660,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             item.w_i_p_id ?? null,
             item.delivery_term ?? null,
           ];
+
+          console.log("➡️ Saving item:", {
+            item_id: values[0],
+            item_code: values[1],
+          });
+
           await pool.query(query, values);
-          console.log(
-            "Inserted item:",
-            item.item_code || item.code || item.id || "unknown",
-          );
+
+          console.log("✅ Inserted/Updated item:", values[1]);
         } catch (insertError: any) {
-          console.error("Error inserting item:", insertError.message);
+          console.error("❌ Error inserting item:", insertError.message);
           throw insertError;
         }
       };
@@ -4412,12 +4399,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // FINAL FIX: Enhanced fetch-and-save endpoint with GUARANTEED non-null item_id
+  // Enhanced fetch-and-save endpoint with proper item_id handling
   app.post("/api/fetch-and-save", async (req: Request, res: Response) => {
     try {
       const { url } = req.body;
 
-      console.log("🔍 FINAL FIX: Received fetch request for URL:", url);
+      console.log("🔍 Received enhanced fetch request for URL:", url);
 
       if (!url) {
         return res.status(400).json({
@@ -4441,14 +4428,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const data = await response.json();
-      console.log("✅ Raw API response received, sample:", JSON.stringify(Array.isArray(data) ? data[0] : data, null, 2));
+      console.log("✅ Fetched raw API data:", {
+        isArray: Array.isArray(data),
+        dataKeys: data && typeof data === "object" ? Object.keys(data) : [],
+        firstRecord: Array.isArray(data) ? data[0] : data?.items?.[0] || data,
+      });
 
-      // CRITICAL: Ensure inv_items table exists with proper constraints
-      console.log("🔧 Ensuring inv_items table structure...");
+      // Drop and recreate inv_items table with correct structure and NOT NULL constraint for item_id
+      console.log("🔧 Recreating inv_items table...");
+      await pool.query(`DROP TABLE IF EXISTS inv_items CASCADE`);
       await pool.query(`
-        CREATE TABLE IF NOT EXISTS inv_items (
-          item_id INTEGER NOT NULL,
-          item_code VARCHAR(50) NOT NULL,
+        CREATE TABLE inv_items (
+          item_id INTEGER NOT NULL PRIMARY KEY,
+          item_code VARCHAR(50) NOT NULL UNIQUE,
           item_desc TEXT,
           uom VARCHAR(10),
           weight_in_kg DECIMAL(10, 2),
@@ -4461,18 +4453,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           w_i_p_id INTEGER,
           delivery_term VARCHAR(100)
         )
-      `);
-
-      // Add unique constraint if not exists
-      await pool.query(`
-        DO $$
-        BEGIN
-          IF NOT EXISTS (
-            SELECT 1 FROM pg_constraint WHERE conname = 'inv_items_item_code_key'
-          ) THEN
-            ALTER TABLE inv_items ADD CONSTRAINT inv_items_item_code_key UNIQUE (item_code);
-          END IF;
-        END $$;
       `);
 
       let recordsInserted = 0;
@@ -4494,53 +4474,199 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      console.log(`📊 Processing ${dataToProcess.length} records...`);
+      console.log(`📊 Found ${dataToProcess.length} records to process`);
 
       if (dataToProcess.length === 0) {
         throw new Error("No valid data found in API response");
       }
 
-      // Process each item with guaranteed item_id generation
       for (let i = 0; i < dataToProcess.length; i++) {
         const item = dataToProcess[i];
 
         try {
-          // 🔥 CRITICAL FIX: Multiple methods to ensure non-null item_id
-          let finalItemId = null;
+          console.log(
+            `🔄 Processing record ${i + 1}:`,
+            JSON.stringify(item, null, 2),
+          );
 
-          // Method 1: Extract from API response
-          if (item.item_id && !isNaN(parseInt(item.item_id))) {
-            finalItemId = parseInt(item.item_id);
-          } 
-          // Method 2: Extract from item_code numbers
-          else if (item.item_code) {
-            const match = String(item.item_code).match(/(\d+)/);
-            if (match) {
-              finalItemId = parseInt(match[1]);
+          // ✅ ENHANCED ITEM_ID EXTRACTION - GUARANTEED NON-NULL
+          let itemId = null;
+
+          // Method 1: Direct field extraction with strict validation
+          const itemIdFields = [
+            "item_id",
+            "ITEM_ID",
+            "ItemId",
+            "itemId",
+            "itemID",
+            "ITEMID",
+            "id",
+            "ID",
+            "Id",
+            "iD",
+          ];
+
+          for (const field of itemIdFields) {
+            if (
+              item.hasOwnProperty(field) &&
+              item[field] !== null &&
+              item[field] !== undefined &&
+              item[field] !== ""
+            ) {
+              const rawValue = item[field];
+              console.log(
+                `🔍 Checking field '${field}' with value:`,
+                rawValue,
+                typeof rawValue,
+              );
+
+              if (
+                typeof rawValue === "number" &&
+                rawValue > 0 &&
+                Number.isInteger(rawValue)
+              ) {
+                itemId = rawValue;
+                console.log(
+                  `✅ Found numeric item_id=${itemId} from field: ${field}`,
+                );
+                break;
+              } else if (typeof rawValue === "string" && rawValue.trim()) {
+                const parsed = parseInt(rawValue.trim());
+                if (!isNaN(parsed) && parsed > 0) {
+                  itemId = parsed;
+                  console.log(
+                    `✅ Parsed item_id=${itemId} from string field: ${field}`,
+                  );
+                  break;
+                }
+              }
             }
           }
-          // Method 3: Extract from any ID field
-          else if (item.id && !isNaN(parseInt(item.id))) {
-            finalItemId = parseInt(item.id);
+
+          // Method 2: Extract from item_code if item_id is still null
+          if (!itemId || itemId <= 0) {
+            const itemCodeFields = [
+              "item_code",
+              "ITEM_CODE",
+              "code",
+              "CODE",
+              "itemCode",
+            ];
+            for (const field of itemCodeFields) {
+              if (item.hasOwnProperty(field) && item[field]) {
+                const codeValue = String(item[field]).trim();
+                // Try to extract numeric part from code
+                const numberMatch = codeValue.match(/(\d+)/);
+                if (numberMatch) {
+                  const extractedId = parseInt(numberMatch[1]);
+                  if (extractedId > 0) {
+                    itemId = extractedId;
+                    console.log(
+                      `✅ Extracted item_id=${itemId} from ${field}: ${codeValue}`,
+                    );
+                    break;
+                  }
+                }
+              }
+            }
           }
 
-          // Method 4: Generate unique ID if still null
-          if (!finalItemId || finalItemId <= 0) {
-            finalItemId = 1000000 + i + Math.floor(Math.random() * 10000);
+          // Method 3: Generate guaranteed unique ID if still null
+          if (!itemId || itemId <= 0) {
+            // Generate unique ID based on current timestamp + index to avoid conflicts
+            const timestamp = Date.now();
+            itemId = parseInt(String(timestamp).slice(-6)) + i + 1;
+            console.log(
+              `⚠️ Generated unique item_id=${itemId} for record ${i + 1}`,
+            );
           }
 
-          // Ensure we have a positive integer
-          finalItemId = Math.abs(parseInt(finalItemId));
+          // FINAL VALIDATION - ABSOLUTELY ENSURE ITEM_ID IS VALID
+          if (
+            !itemId ||
+            itemId <= 0 ||
+            isNaN(itemId) ||
+            !Number.isInteger(itemId)
+          ) {
+            // Last resort - use a large base number + index
+            itemId = 999000 + i + 1;
+            console.log(
+              `🚨 Emergency fallback item_id=${itemId} for record ${i + 1}`,
+            );
+          }
 
-          // Extract other fields
-          const itemCode = item.item_code || item.code || item.ITEM_CODE || `ITEM_${finalItemId}`;
-          const itemDesc = item.item_desc || item.description || item.desc || item.ITEM_DESC || null;
-          const uom = item.uom || item.unit || item.UOM || null;
-          const weightInKg = item.weight_in_kg || item.weight || null;
+          // Double check item_id is not null before proceeding
+          if (!itemId || itemId <= 0) {
+            console.error(
+              `❌ CRITICAL: Could not generate valid item_id for record ${i + 1}, skipping`,
+            );
+            recordsSkipped++;
+            continue;
+          }
 
-          console.log(`💾 Inserting record ${i + 1}: item_id=${finalItemId}, code=${itemCode}`);
+          // Extract other required fields with fallbacks
+          const itemCode =
+            item.item_code ||
+            item.code ||
+            item.ITEM_CODE ||
+            item.CODE ||
+            item.itemCode ||
+            `ITEM_${itemId}`;
+          const itemDesc =
+            item.item_desc ||
+            item.description ||
+            item.desc ||
+            item.ITEM_DESC ||
+            item.name ||
+            item.title ||
+            null;
+          const uom = item.uom || item.unit || item.UOM || item.UNIT || null;
+          const weightInKg =
+            item.weight_in_kg || item.weight || item.WEIGHT_IN_KG || null;
+          const payableAccId = item.payable_acc_id || item.payableAccId || null;
+          const glAssetId = item.gl_asset_id || item.glAssetId || null;
+          const glCostAccId = item.gl_cost_acc_id || item.glCostAccId || null;
+          const glSaleAccId = item.gl_sale_acc_id || item.glSaleAccId || null;
+          const glFSaleAccId =
+            item.gl_f_sale_acc_id || item.glFSaleAccId || null;
+          const saleReturnAccId =
+            item.sale_return_acc_id || item.saleReturnAccId || null;
+          const wIPId = item.w_i_p_id || item.wIPId || null;
+          const deliveryTerm = item.delivery_term || item.deliveryTerm || null;
 
-          // 🔥 CRITICAL: Use INSERT with ON CONFLICT and explicit item_id
+          console.log(`📝 Final values for insertion:`, {
+            itemId: itemId,
+            itemCode: itemCode,
+            itemDesc: itemDesc?.substring(0, 50),
+            uom: uom,
+            weightInKg: weightInKg,
+          });
+
+          // Check if item_id already exists and increment if needed
+          const checkExistsQuery = `SELECT item_id FROM inv_items WHERE item_id = $1`;
+          const existsResult = await pool.query(checkExistsQuery, [itemId]);
+
+          if (existsResult.rows.length > 0) {
+            // If ID exists, find next available ID
+            let newItemId = itemId;
+            let attempts = 0;
+            while (attempts < 1000) {
+              // Prevent infinite loop
+              newItemId = itemId + attempts + 1;
+              const checkNewQuery = `SELECT item_id FROM inv_items WHERE item_id = $1`;
+              const newResult = await pool.query(checkNewQuery, [newItemId]);
+              if (newResult.rows.length === 0) {
+                itemId = newItemId;
+                console.log(
+                  `🔄 Adjusted item_id to ${itemId} to avoid conflict`,
+                );
+                break;
+              }
+              attempts++;
+            }
+          }
+
+          // Insert record with guaranteed non-null item_id
           const insertQuery = `
             INSERT INTO inv_items (
               item_id, item_code, item_desc, uom, weight_in_kg,
@@ -4548,85 +4674,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
               gl_f_sale_acc_id, sale_return_acc_id, w_i_p_id, delivery_term
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-            ON CONFLICT (item_code) DO UPDATE SET
-              item_id = CASE WHEN inv_items.item_id IS NULL THEN EXCLUDED.item_id ELSE inv_items.item_id END,
-              item_desc = COALESCE(EXCLUDED.item_desc, inv_items.item_desc),
-              uom = COALESCE(EXCLUDED.uom, inv_items.uom),
-              weight_in_kg = COALESCE(EXCLUDED.weight_in_kg, inv_items.weight_in_kg)
           `;
 
           const values = [
-            finalItemId, // 🔥 GUARANTEED NON-NULL item_id
-            itemCode,
-            itemDesc,
-            uom,
+            itemId, // GUARANTEED TO BE NON-NULL INTEGER
+            String(itemCode),
+            itemDesc ? String(itemDesc) : null,
+            uom ? String(uom) : null,
             weightInKg ? parseFloat(String(weightInKg)) : null,
-            item.payable_acc_id ? parseInt(String(item.payable_acc_id)) : null,
-            item.gl_asset_id ? parseInt(String(item.gl_asset_id)) : null,
-            item.gl_cost_acc_id ? parseInt(String(item.gl_cost_acc_id)) : null,
-            item.gl_sale_acc_id ? parseInt(String(item.gl_sale_acc_id)) : null,
-            item.gl_f_sale_acc_id ? parseInt(String(item.gl_f_sale_acc_id)) : null,
-            item.sale_return_acc_id ? parseInt(String(item.sale_return_acc_id)) : null,
-            item.w_i_p_id ? parseInt(String(item.w_i_p_id)) : null,
-            item.delivery_term || null,
+            payableAccId ? parseInt(String(payableAccId)) : null,
+            glAssetId ? parseInt(String(glAssetId)) : null,
+            glCostAccId ? parseInt(String(glCostAccId)) : null,
+            glSaleAccId ? parseInt(String(glSaleAccId)) : null,
+            glFSaleAccId ? parseInt(String(glFSaleAccId)) : null,
+            saleReturnAccId ? parseInt(String(saleReturnAccId)) : null,
+            wIPId ? parseInt(String(wIPId)) : null,
+            deliveryTerm ? String(deliveryTerm) : null,
           ];
 
-          // Validate item_id before insertion
-          if (!values[0] || values[0] <= 0 || isNaN(values[0])) {
-            console.error(`❌ Invalid item_id for record ${i + 1}, skipping`);
-            recordsSkipped++;
-            continue;
-          }
+          console.log(
+            `💾 Inserting record ${i + 1} with GUARANTEED item_id=${values[0]} (${typeof values[0]})`,
+          );
 
           await pool.query(insertQuery, values);
           recordsInserted++;
 
-          console.log(`✅ Record ${i + 1} saved: item_id=${values[0]}, code=${values[1]}`);
+          console.log(
+            `✅ Successfully inserted record ${i + 1}: item_id=${values[0]}, code='${values[1]}'`,
+          );
 
+          // Verify the insertion
+          const verifyQuery = `SELECT item_id, item_code FROM inv_items WHERE item_id = $1`;
+          const verifyResult = await pool.query(verifyQuery, [values[0]]);
+          if (verifyResult.rows.length > 0) {
+            const saved = verifyResult.rows[0];
+            console.log(
+              `✅ Verified: item_id=${saved.item_id}, code='${saved.item_code}' saved correctly`,
+            );
+          } else {
+            console.error(`❌ Verification failed for item_id=${values[0]}`);
+          }
         } catch (insertError: any) {
-          console.error(`❌ Error inserting record ${i + 1}:`, insertError.message);
+          console.error(
+            `❌ Error inserting record ${i + 1}:`,
+            insertError.message,
+          );
+          console.error("❌ Failed item data:", JSON.stringify(item, null, 2));
           recordsSkipped++;
         }
       }
 
-      // Final verification
-      const verificationQuery = `
+      // Final verification - CHECK FOR ANY NULL ITEM_IDS
+      const nullCheckQuery = `SELECT COUNT(*) as null_count FROM inv_items WHERE item_id IS NULL`;
+      const nullCheckResult = await pool.query(nullCheckQuery);
+      const nullCount = nullCheckResult.rows[0].null_count;
+
+      const finalCountQuery = `
         SELECT 
-          COUNT(*) as total_records,
-          COUNT(CASE WHEN item_id IS NOT NULL THEN 1 END) as records_with_item_id,
-          COUNT(CASE WHEN item_id IS NULL THEN 1 END) as records_with_null_item_id
+          COUNT(*) as total, 
+          COUNT(CASE WHEN item_id IS NOT NULL THEN 1 END) as with_item_id,
+          MIN(item_id) as min_item_id,
+          MAX(item_id) as max_item_id
         FROM inv_items
       `;
-      const verification = await pool.query(verificationQuery);
-      const stats = verification.rows[0];
+      const finalCount = await pool.query(finalCountQuery);
+      console.log(`📊 Final verification:`, finalCount.rows[0]);
+      console.log(`🔍 NULL item_id count: ${nullCount}`);
 
-      console.log(`🔍 Final verification: ${stats.records_with_item_id} records with item_id, ${stats.records_with_null_item_id} with NULL item_id`);
-
-      // If there are still NULL item_ids, fix them immediately
-      if (parseInt(stats.records_with_null_item_id) > 0) {
-        console.log("🔧 Fixing remaining NULL item_ids...");
-        const fixQuery = `
-          UPDATE inv_items 
-          SET item_id = (EXTRACT(EPOCH FROM NOW()) * 1000000)::INTEGER % 999999 + ROW_NUMBER() OVER()
-          WHERE item_id IS NULL
-        `;
-        await pool.query(fixQuery);
-        console.log("✅ Fixed all NULL item_ids");
-      }
+      const sampleQuery = `SELECT item_id, item_code, item_desc FROM inv_items ORDER BY item_id LIMIT 5`;
+      const sampleResult = await pool.query(sampleQuery);
+      console.log("📋 Sample saved records:", sampleResult.rows);
 
       res.json({
         success: true,
-        message: `Successfully processed ${recordsInserted} records with guaranteed non-null item_id`,
+        message: `Data processing completed - ${recordsInserted} records inserted, ${recordsSkipped} skipped, ${nullCount} NULL item_ids`,
         recordsInserted: recordsInserted,
         recordsSkipped: recordsSkipped,
-        verificationStats: stats,
+        nullItemIds: nullCount,
+        verificationData: finalCount.rows[0],
+        sampleData: sampleResult.rows,
+        totalProcessed: dataToProcess.length,
       });
-
     } catch (error: any) {
-      console.error("❌ FINAL FIX Error:", error);
+      console.error("❌ Error in fetch-and-save:", error);
       res.status(500).json({
         success: false,
-        error: "Failed to fetch and save data with guaranteed item_id",
+        error: "Failed to fetch and save data",
         details: error.message,
       });
     }
@@ -5028,7 +5161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: Request, res: Response) => {
       try {
         const {
-          item_id,
+          item_id, // 👈 included
           item_code,
           item_desc,
           uom,
@@ -5043,51 +5176,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           delivery_term,
         } = req.body;
 
-        // Generate item_id if not provided - CRITICAL FIX FOR NULL ITEM_ID ISSUE
-        let finalItemId = item_id;
-        if (!finalItemId || finalItemId <= 0) {
-          // Extract from item_code if possible
-          if (item_code) {
-            const codeMatch = item_code.match(/(\d+)/);
-            if (codeMatch) {
-              finalItemId = parseInt(codeMatch[1]);
-              console.log(`Generated item_id ${finalItemId} from item_code: ${item_code}`);
-            }
-          }
-          // Fallback to timestamp-based ID
-          if (!finalItemId || finalItemId <= 0) {
-            finalItemId = Date.now() % 1000000;
-            console.log(`Generated timestamp-based item_id: ${finalItemId}`);
-          }
-        }
-
-        console.log(`✅ FIXED: Saving enhanced item with guaranteed item_id: ${finalItemId}, item_code: ${item_code}`);
-
         const query = `
-        INSERT INTO inv_items (
-          item_id, item_code, item_desc, uom, weight_in_kg,
-          payable_acc_id, gl_asset_id, gl_cost_acc_id, gl_sale_acc_id,
-          gl_f_sale_acc_id, sale_return_acc_id, w_i_p_id, delivery_term
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-        ON CONFLICT (item_code) DO UPDATE SET
-          item_id = EXCLUDED.item_id,
-          item_desc = EXCLUDED.item_desc,
-          uom = EXCLUDED.uom,
-          weight_in_kg = EXCLUDED.weight_in_kg,
-          payable_acc_id = EXCLUDED.payable_acc_id,
-          gl_asset_id = EXCLUDED.gl_asset_id,
-          gl_cost_acc_id = EXCLUDED.gl_cost_acc_id,
-          gl_sale_acc_id = EXCLUDED.gl_sale_acc_id,
-          gl_f_sale_acc_id = EXCLUDED.gl_f_sale_acc_id,
-          sale_return_acc_id = EXCLUDED.sale_return_acc_id,
-          w_i_p_id = EXCLUDED.w_i_p_id,
-          delivery_term = EXCLUDED.delivery_term
-        RETURNING *
-      `;
+      INSERT INTO inv_items (
+        item_id, -- 👈 included
+        item_code, item_desc, uom, weight_in_kg,
+        payable_acc_id, gl_asset_id, gl_cost_acc_id, gl_sale_acc_id,
+        gl_f_sale_acc_id, sale_return_acc_id, w_i_p_id, delivery_term
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      ON CONFLICT (item_code) DO UPDATE SET
+        item_id = EXCLUDED.item_id, -- 👈 added
+        item_desc = EXCLUDED.item_desc,
+        uom = EXCLUDED.uom,
+        weight_in_kg = EXCLUDED.weight_in_kg,
+        payable_acc_id = EXCLUDED.payable_acc_id,
+        gl_asset_id = EXCLUDED.gl_asset_id,
+        gl_cost_acc_id = EXCLUDED.gl_cost_acc_id,
+        gl_sale_acc_id = EXCLUDED.gl_sale_acc_id,
+        gl_f_sale_acc_id = EXCLUDED.gl_f_sale_acc_id,
+        sale_return_acc_id = EXCLUDED.sale_return_acc_id,
+        w_i_p_id = EXCLUDED.w_i_p_id,
+        delivery_term = EXCLUDED.delivery_term
+      RETURNING *
+    `;
 
         const values = [
-          parseInt(String(finalItemId)), // ✅ CRITICAL FIX: item_id is now included as first parameter
+          item_id ? parseInt(item_id) : null, // 👈 included
           item_code,
           item_desc,
           uom,
@@ -5483,349 +5597,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Static file serving for captured images is already handled above
-
-  // ✅ COMPREHENSIVE FIX: New endpoint for proper inv_items insertion with guaranteed item_id
-  app.post(
-    "/api/inv-items/insert-with-guaranteed-id",
-    async (req: Request, res: Response) => {
-      try {
-        const {
-          items = [], // Array of items to insert
-          source_url = null, // Optional source URL for logging
-          auto_generate_id = true, // Flag to enable auto item_id generation
-        } = req.body;
-
-        console.log(`🔧 COMPREHENSIVE FIX: Starting inv_items insertion with guaranteed item_id for ${items.length} items`);
-
-        if (!Array.isArray(items) || items.length === 0) {
-          return res.status(400).json({
-            success: false,
-            error: "Items array is required and must not be empty",
-          });
-        }
-
-        // Ensure inv_items table exists with all required columns
-        await pool.query(`
-          CREATE TABLE IF NOT EXISTS inv_items (
-            item_id INTEGER NOT NULL,
-            item_code VARCHAR(50) NOT NULL UNIQUE,
-            item_desc TEXT,
-            uom VARCHAR(10),
-            weight_in_kg DECIMAL(10, 2),
-            payable_acc_id INTEGER,
-            gl_asset_id INTEGER,
-            gl_cost_acc_id INTEGER,
-            gl_sale_acc_id INTEGER,
-            gl_f_sale_acc_id INTEGER,
-            sale_return_acc_id INTEGER,
-            w_i_p_id INTEGER,
-            delivery_term VARCHAR(100),
-            CONSTRAINT inv_items_item_code_key UNIQUE (item_code)
-          )
-        `);
-
-        let insertedCount = 0;
-        let updatedCount = 0;
-        let skippedCount = 0;
-        const usedItemIds = new Set();
-
-        for (let i = 0; i < items.length; i++) {
-          const item = items[i];
-          
-          try {
-            // ✅ COMPREHENSIVE ITEM_ID GENERATION - MULTIPLE FALLBACK METHODS
-            let finalItemId = null;
-
-            // Method 1: Use provided item_id
-            if (item.item_id && parseInt(item.item_id) > 0) {
-              finalItemId = parseInt(item.item_id);
-            }
-            // Method 2: Extract from item_code
-            else if (item.item_code || item.code) {
-              const codeValue = item.item_code || item.code;
-              const codeMatch = String(codeValue).match(/(\d+)/);
-              if (codeMatch) {
-                finalItemId = parseInt(codeMatch[1]);
-              }
-            }
-            // Method 3: Timestamp + index based generation
-            if (!finalItemId || finalItemId <= 0 || usedItemIds.has(finalItemId)) {
-              finalItemId = Date.now() % 1000000 + i + 1;
-              
-              // Ensure uniqueness
-              while (usedItemIds.has(finalItemId)) {
-                finalItemId += 1;
-              }
-            }
-            
-            // Final validation
-            if (!finalItemId || finalItemId <= 0) {
-              console.error(`❌ Could not generate valid item_id for item ${i + 1}:`, item);
-              skippedCount++;
-              continue;
-            }
-
-            usedItemIds.add(finalItemId);
-
-            // Extract other fields with comprehensive fallbacks
-            const itemCode = item.item_code || item.code || item.ITEM_CODE || item.CODE || `ITEM_${finalItemId}`;
-            const itemDesc = item.item_desc || item.description || item.desc || item.ITEM_DESC || item.name || null;
-            const uom = item.uom || item.unit || item.UOM || null;
-            const weightInKg = item.weight_in_kg || item.weight || item.WEIGHT_IN_KG || null;
-
-            console.log(`💾 Inserting item ${i + 1}: item_id=${finalItemId}, code=${itemCode}`);
-
-            // Insert with comprehensive conflict resolution
-            const insertQuery = `
-              INSERT INTO inv_items (
-                item_id, item_code, item_desc, uom, weight_in_kg,
-                payable_acc_id, gl_asset_id, gl_cost_acc_id, gl_sale_acc_id,
-                gl_f_sale_acc_id, sale_return_acc_id, w_i_p_id, delivery_term
-              )
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-              ON CONFLICT (item_code) DO UPDATE SET
-                item_id = CASE 
-                  WHEN inv_items.item_id IS NULL THEN EXCLUDED.item_id 
-                  ELSE inv_items.item_id 
-                END,
-                item_desc = COALESCE(EXCLUDED.item_desc, inv_items.item_desc),
-                uom = COALESCE(EXCLUDED.uom, inv_items.uom),
-                weight_in_kg = COALESCE(EXCLUDED.weight_in_kg, inv_items.weight_in_kg),
-                payable_acc_id = COALESCE(EXCLUDED.payable_acc_id, inv_items.payable_acc_id),
-                gl_asset_id = COALESCE(EXCLUDED.gl_asset_id, inv_items.gl_asset_id),
-                gl_cost_acc_id = COALESCE(EXCLUDED.gl_cost_acc_id, inv_items.gl_cost_acc_id),
-                gl_sale_acc_id = COALESCE(EXCLUDED.gl_sale_acc_id, inv_items.gl_sale_acc_id),
-                gl_f_sale_acc_id = COALESCE(EXCLUDED.gl_f_sale_acc_id, inv_items.gl_f_sale_acc_id),
-                sale_return_acc_id = COALESCE(EXCLUDED.sale_return_acc_id, inv_items.sale_return_acc_id),
-                w_i_p_id = COALESCE(EXCLUDED.w_i_p_id, inv_items.w_i_p_id),
-                delivery_term = COALESCE(EXCLUDED.delivery_term, inv_items.delivery_term)
-              RETURNING *, (xmax = 0) AS inserted
-            `;
-
-            const values = [
-              finalItemId,
-              itemCode,
-              itemDesc,
-              uom,
-              weightInKg ? parseFloat(String(weightInKg)) : null,
-              item.payable_acc_id ? parseInt(String(item.payable_acc_id)) : null,
-              item.gl_asset_id ? parseInt(String(item.gl_asset_id)) : null,
-              item.gl_cost_acc_id ? parseInt(String(item.gl_cost_acc_id)) : null,
-              item.gl_sale_acc_id ? parseInt(String(item.gl_sale_acc_id)) : null,
-              item.gl_f_sale_acc_id ? parseInt(String(item.gl_f_sale_acc_id)) : null,
-              item.sale_return_acc_id ? parseInt(String(item.sale_return_acc_id)) : null,
-              item.w_i_p_id ? parseInt(String(item.w_i_p_id)) : null,
-              item.delivery_term || null,
-            ];
-
-            const result = await pool.query(insertQuery, values);
-            
-            if (result.rows.length > 0) {
-              const savedRow = result.rows[0];
-              if (savedRow.inserted) {
-                insertedCount++;
-                console.log(`✅ Inserted: item_id=${savedRow.item_id}, code=${savedRow.item_code}`);
-              } else {
-                updatedCount++;
-                console.log(`🔄 Updated: item_id=${savedRow.item_id}, code=${savedRow.item_code}`);
-              }
-
-              // Verify item_id is not null after save
-              if (savedRow.item_id === null) {
-                console.error(`❌ CRITICAL: item_id is NULL after save for ${savedRow.item_code}`);
-              }
-            }
-
-          } catch (itemError: any) {
-            console.error(`❌ Error processing item ${i + 1}:`, itemError.message);
-            console.error("Failed item data:", JSON.stringify(item, null, 2));
-            skippedCount++;
-          }
-        }
-
-        // Final verification - check for any NULL item_ids
-        const nullCheckQuery = `SELECT COUNT(*) as null_count FROM inv_items WHERE item_id IS NULL`;
-        const nullResult = await pool.query(nullCheckQuery);
-        const nullCount = parseInt(nullResult.rows[0].null_count);
-
-        if (nullCount > 0) {
-          console.error(`🚨 CRITICAL: Found ${nullCount} records with NULL item_id after insertion!`);
-          
-          // Try to fix NULL item_ids
-          const fixNullQuery = `
-            UPDATE inv_items 
-            SET item_id = (EXTRACT(EPOCH FROM NOW()) * 1000000)::INTEGER % 1000000 + ROW_NUMBER() OVER()
-            WHERE item_id IS NULL
-            RETURNING item_id, item_code
-          `;
-          const fixResult = await pool.query(fixNullQuery);
-          console.log(`🔧 Fixed ${fixResult.rows.length} NULL item_ids:`, fixResult.rows);
-        }
-
-        // Get summary statistics
-        const statsQuery = `
-          SELECT 
-            COUNT(*) as total_records,
-            COUNT(CASE WHEN item_id IS NOT NULL THEN 1 END) as records_with_item_id,
-            COUNT(CASE WHEN item_id IS NULL THEN 1 END) as records_with_null_item_id,
-            MIN(item_id) as min_item_id,
-            MAX(item_id) as max_item_id
-          FROM inv_items
-        `;
-        const stats = await pool.query(statsQuery);
-
-        console.log(`📊 Final inventory statistics:`, stats.rows[0]);
-
-        res.json({
-          success: true,
-          message: "Items processed with guaranteed item_id generation",
-          statistics: {
-            total_processed: items.length,
-            inserted: insertedCount,
-            updated: updatedCount,
-            skipped: skippedCount,
-            database_stats: stats.rows[0],
-            null_item_ids_found: nullCount,
-          },
-          source_url: source_url || "Not provided",
-        });
-
-      } catch (error: any) {
-        console.error("❌ Comprehensive inv_items insertion error:", error);
-        res.status(500).json({
-          success: false,
-          error: "Failed to process inv_items with guaranteed item_id",
-          details: error.message,
-        });
-      }
-    }
-  );
-
-  // ✅ ENHANCED ENDPOINT: Fix existing NULL item_ids in inv_items table
-  app.post("/api/inv-items/fix-null-item-ids", async (req: Request, res: Response) => {
-    try {
-      console.log("🔧 Starting NULL item_id fix operation...");
-      
-      // Count current NULL item_ids
-      const nullCountQuery = `SELECT COUNT(*) as null_count FROM inv_items WHERE item_id IS NULL`;
-      const beforeCount = await pool.query(nullCountQuery);
-      const nullsBefore = parseInt(beforeCount.rows[0].null_count);
-      
-      console.log(`Found ${nullsBefore} records with NULL item_id`);
-      
-      if (nullsBefore === 0) {
-        return res.json({
-          success: true,
-          message: "No NULL item_ids found - table is clean",
-          fixed_count: 0,
-        });
-      }
-
-      // Get records with NULL item_id for processing
-      const getNullsQuery = `SELECT item_code, item_desc FROM inv_items WHERE item_id IS NULL`;
-      const nullRecords = await pool.query(getNullsQuery);
-      
-      console.log("Records with NULL item_id:", nullRecords.rows);
-
-      // Fix NULL item_ids using multiple strategies
-      const fixQuery = `
-        UPDATE inv_items 
-        SET item_id = CASE
-          -- Strategy 1: Extract from item_code if it contains numbers
-          WHEN item_code ~ '^[0-9]+' THEN (REGEXP_REPLACE(item_code, '[^0-9]', '', 'g'))::INTEGER
-          -- Strategy 2: Use hash of item_code if no numbers found
-          ELSE (ABS(HASHTEXT(item_code)) % 999999 + 1)
-        END
-        WHERE item_id IS NULL
-        RETURNING item_id, item_code
-      `;
-      
-      const fixResult = await pool.query(fixQuery);
-      
-      // Verify fix worked
-      const afterCount = await pool.query(nullCountQuery);
-      const nullsAfter = parseInt(afterCount.rows[0].null_count);
-      
-      console.log(`✅ Fixed ${fixResult.rows.length} NULL item_ids`);
-      console.log("Fixed records:", fixResult.rows);
-      
-      res.json({
-        success: true,
-        message: `Successfully fixed ${fixResult.rows.length} NULL item_ids`,
-        nulls_before: nullsBefore,
-        nulls_after: nullsAfter,
-        fixed_count: fixResult.rows.length,
-        fixed_records: fixResult.rows,
-      });
-
-    } catch (error: any) {
-      console.error("❌ Error fixing NULL item_ids:", error);
-      res.status(500).json({
-        success: false,
-        error: "Failed to fix NULL item_ids",
-        details: error.message,
-      });
-    }
-  });
-
-  // ✅ DIAGNOSTIC ENDPOINT: Check inv_items table health
-  app.get("/api/inv-items/health-check", async (req: Request, res: Response) => {
-    try {
-      // Comprehensive health check queries
-      const healthQueries = [
-        {
-          name: "table_exists",
-          query: `SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'inv_items')`,
-        },
-        {
-          name: "total_records",
-          query: `SELECT COUNT(*) as count FROM inv_items`,
-        },
-        {
-          name: "null_item_ids",
-          query: `SELECT COUNT(*) as count FROM inv_items WHERE item_id IS NULL`,
-        },
-        {
-          name: "duplicate_item_codes",
-          query: `SELECT item_code, COUNT(*) as count FROM inv_items GROUP BY item_code HAVING COUNT(*) > 1`,
-        },
-        {
-          name: "item_id_range",
-          query: `SELECT MIN(item_id) as min_id, MAX(item_id) as max_id FROM inv_items WHERE item_id IS NOT NULL`,
-        },
-        {
-          name: "sample_records",
-          query: `SELECT item_id, item_code, item_desc FROM inv_items ORDER BY item_id LIMIT 5`,
-        },
-      ];
-
-      const results = {};
-      
-      for (const healthQuery of healthQueries) {
-        try {
-          const result = await pool.query(healthQuery.query);
-          results[healthQuery.name] = result.rows;
-        } catch (queryError: any) {
-          results[healthQuery.name] = { error: queryError.message };
-        }
-      }
-
-      res.json({
-        success: true,
-        message: "inv_items table health check completed",
-        health_check_results: results,
-        timestamp: new Date().toISOString(),
-      });
-
-    } catch (error: any) {
-      console.error("❌ Health check error:", error);
-      res.status(500).json({
-        success: false,
-        error: "Failed to perform health check",
-        details: error.message,
-      });
-    }
-  });
 
   return httpServer;
 }
