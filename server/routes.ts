@@ -3249,9 +3249,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { masterData, slipData } = req.body;
 
+      console.log("Received freight save request:", { masterData, slipData });
+
       if (!masterData) {
         return res.status(400).json({ error: "Master data is required" });
       }
+
+      // Ensure gl_freight table exists first
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS gl_freight (
+          freight_id BIGSERIAL PRIMARY KEY,
+          doc_no VARCHAR(500),
+          doc_date DATE,
+          remarks VARCHAR(500),
+          company_id BIGINT DEFAULT 1,
+          branch_id VARCHAR(500),
+          dept_id BIGINT,
+          freight_type VARCHAR(500),
+          status VARCHAR(500) DEFAULT 'Create',
+          last_update_by BIGINT,
+          last_update_date DATE,
+          voucher_id BIGINT,
+          approved_by BIGINT,
+          approval_date DATE,
+          checked_by BIGINT,
+          checked_date DATE,
+          cancelled_by BIGINT,
+          cancel_date DATE,
+          creation_date DATE DEFAULT CURRENT_DATE,
+          created_by BIGINT,
+          wb_doc_no VARCHAR(20)
+        )
+      `);
+
+      // Ensure gl_freight_items table exists
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS gl_freight_items (
+          freight_item_id BIGSERIAL PRIMARY KEY,
+          freight_id BIGINT,
+          vendor_id BIGINT,
+          customer_id BIGINT,
+          igp_id BIGINT,
+          ogp_id BIGINT,
+          item_id BIGINT,
+          freight_amount NUMERIC(26,6),
+          debit BIGINT,
+          credit BIGINT,
+          remarks VARCHAR(500),
+          company_id BIGINT DEFAULT 1,
+          branch_id VARCHAR(500),
+          dept_id BIGINT,
+          last_update_by BIGINT,
+          last_update_date TIMESTAMP,
+          freight_charged_to VARCHAR(500),
+          actual_frt_amount NUMERIC(20,2),
+          creation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          created_by BIGINT,
+          voucher_id BIGINT,
+          vehicale_no VARCHAR(500),
+          delivery_terms VARCHAR(200),
+          wb_id BIGINT
+        )
+      `);
 
       // Ensure gl_voucher tables exist
       await pool.query(`
@@ -3263,10 +3322,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           description VARCHAR(1000),
           batch_id INTEGER,
           created_by INTEGER,
-          creation_date DATE,
+          creation_date DATE DEFAULT CURRENT_DATE,
           last_updated_by INTEGER,
           last_update_date DATE,
-          status VARCHAR(50),
+          status VARCHAR(50) DEFAULT 'Create',
           approved_by INTEGER,
           approval_date DATE,
           posted_by INTEGER,
@@ -3293,7 +3352,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bank_id INTEGER,
           wh_tax_id INTEGER,
           wh_tax_amt NUMERIC(16),
-          company_id BIGINT,
+          company_id BIGINT DEFAULT 1,
           cpv_type VARCHAR(30),
           company_type VARCHAR(500),
           cheque_no VARCHAR(50),
@@ -3335,16 +3394,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await pool.query(`
         CREATE TABLE IF NOT EXISTS gl_voucher_accounts (
           voucher_acc_id SERIAL PRIMARY KEY,
-          voucher_id INTEGER REFERENCES gl_voucher(voucher_id),
+          voucher_id INTEGER,
           chart_of_account_id INTEGER,
-          debit NUMERIC(20,4),
-          credit NUMERIC(20,4),
+          debit NUMERIC(20,4) DEFAULT 0,
+          credit NUMERIC(20,4) DEFAULT 0,
           description VARCHAR(1000),
           cost_center_id INTEGER,
           department_id INTEGER,
           project_id INTEGER,
           created_by INTEGER,
-          creation_date DATE,
+          creation_date DATE DEFAULT CURRENT_DATE,
           last_updated_by INTEGER,
           last_update_date DATE,
           reference_no VARCHAR(50),
@@ -3366,21 +3425,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `;
 
       const freightValues = [
-        masterData.docNo,
-        masterData.docDate,
-        masterData.remarks,
+        masterData.docNo || "1",
+        masterData.docDate || new Date(),
+        masterData.remarks || "",
         1, // company_id - default to 1
         masterData.branch === "Shahzor" ? "2" : "1", // branch_id
-        masterData.voucherType,
+        masterData.voucherType || "CPV",
         "Create",
-        masterData.createdBy,
-        masterData.creationDate,
+        masterData.createdBy || 1,
+        masterData.creationDate || new Date(),
       ];
+
+      console.log("Inserting freight master data with values:", freightValues);
 
       const freightResult = await pool.query(freightQuery, freightValues);
       const freightId = freightResult.rows[0].freight_id;
 
-      console.log(`Freight master data saved with ID: ${freightId}`);
+      console.log(`✅ Freight master data saved with ID: ${freightId}`);
 
       // Insert master data into gl_voucher table
       const voucherQuery = `
@@ -3394,32 +3455,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       `;
 
       const voucherValues = [
-        masterData.voucherType,
-        masterData.docDate,
-        masterData.remarks,
-        masterData.createdBy,
-        masterData.creationDate,
+        masterData.voucherType || "CPV",
+        masterData.docDate || new Date(),
+        masterData.remarks || "",
+        masterData.createdBy || 1,
+        masterData.creationDate || new Date(),
         "Create",
         masterData.branch === "Shahzor" ? "2" : "1", // branch_id
-        masterData.docNo,
-        masterData.remarks,
+        masterData.docNo || "1",
+        masterData.remarks || "",
         "Sabirs' Poultry (Pvt.) Ltd",
         "FREIGHT", // module
         freightId, // module_doc_id - reference to freight_id
       ];
 
+      console.log("Inserting voucher master data with values:", voucherValues);
+
       const voucherResult = await pool.query(voucherQuery, voucherValues);
       const voucherId = voucherResult.rows[0].voucher_id;
 
-      console.log(`Voucher master data saved with ID: ${voucherId}`);
+      console.log(`✅ Voucher master data saved with ID: ${voucherId}`);
 
       // Save slip data to gl_freight_items table
       if (slipData && Array.isArray(slipData) && slipData.length > 0) {
-        console.log(`Processing ${slipData.length} slip records`);
+        console.log(`📋 Processing ${slipData.length} slip records`);
 
         for (let i = 0; i < slipData.length; i++) {
           const slip = slipData[i];
           
+          console.log(`Processing slip ${i + 1}:`, slip);
+
           const itemQuery = `
             INSERT INTO gl_freight_items (
               freight_id, vendor_id, item_id, freight_amount, 
@@ -3431,18 +3496,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const itemValues = [
             freightId,
-            slip.vendor_id || null,
-            slip.item_id || null,
-            slip.freight_amount ? parseFloat(slip.freight_amount) : null,
+            slip.vendor_id ? parseInt(slip.vendor_id) : null,
+            slip.item_id ? parseInt(slip.item_id) : null,
+            slip.freight_amount ? parseFloat(slip.freight_amount) : 0,
             slip.vehicle_no || null,
             slip.delivery_term || null,
-            slip.wb_id || null,
+            slip.wb_id ? parseInt(slip.wb_id) : null,
             slip.item_desc || null,
             1, // company_id
             masterData.branch === "Shahzor" ? "2" : "1", // branch_id
-            masterData.createdBy,
-            masterData.creationDate,
+            masterData.createdBy || 1,
+            masterData.creationDate || new Date(),
           ];
+
+          console.log(`Inserting freight item ${i + 1} with values:`, itemValues);
 
           await pool.query(itemQuery, itemValues);
 
@@ -3458,24 +3525,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           const voucherAccountValues = [
             voucherId,
-            slip.chart_of_account_id || 1000, // Default chart of account ID
+            slip.chart_of_account_id ? parseInt(slip.chart_of_account_id) : 1000, // Default chart of account ID
             slip.debit_amount ? parseFloat(slip.debit_amount) : 0,
             slip.credit_amount ? parseFloat(slip.credit_amount) : (slip.freight_amount ? parseFloat(slip.freight_amount) : 0),
             slip.item_desc || "Freight charges",
-            masterData.createdBy,
-            masterData.creationDate,
-            slip.slip_no || masterData.docNo,
+            masterData.createdBy || 1,
+            masterData.creationDate || new Date(),
+            slip.slip_no || masterData.docNo || "1",
             i + 1, // line_no
             slip.item_code || "FREIGHT",
             slip.vendor_name || "Freight Account",
             slip.item_desc || null,
           ];
 
+          console.log(`Inserting voucher account ${i + 1} with values:`, voucherAccountValues);
+
           await pool.query(voucherAccountQuery, voucherAccountValues);
 
-          console.log(`Saved freight item and voucher account for slip: ${slip.slip_no}`);
+          console.log(`✅ Saved freight item and voucher account for slip: ${slip.slip_no}`);
         }
       }
+
+      console.log("✅ All freight data saved successfully");
 
       res.json({
         success: true,
@@ -3484,10 +3555,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Freight data saved successfully to both gl_freight and gl_voucher tables",
       });
     } catch (error: any) {
-      console.error("Error saving freight data:", error);
+      console.error("❌ Error saving freight data:", error);
+      console.error("❌ Error stack:", error.stack);
       res.status(500).json({
         error: "Failed to save freight data",
         details: error.message,
+        stack: error.stack,
       });
     }
   });

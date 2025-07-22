@@ -182,36 +182,66 @@ const FreightEntry = () => {
 
   const handleSave = async () => {
     try {
+      console.log("🔄 Starting freight voucher save process...");
+
       // Ensure freight tables exist
+      console.log("📋 Creating freight tables...");
       await fetch("/api/create-freight-table", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
 
       // Ensure voucher tables exist
+      console.log("📋 Creating voucher tables...");
       await fetch("/api/create-gl-voucher-table", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
 
+      const docDateElement = document.querySelector('input[type="date"]');
+      const remarksElement = document.querySelector("textarea");
+
       const masterData = {
-        docNo: maxDocNo,
-        voucherType: voucherType,
-        docDate: document.querySelector('input[type="date"]')?.value,
-        remarks: document.querySelector("textarea")?.value,
+        docNo: maxDocNo || "1",
+        voucherType: voucherType || "CPV",
+        docDate: docDateElement?.value || currentDate,
+        remarks: remarksElement?.value || "",
         createdBy: 1,
         creationDate: currentDate,
-        branch: selectedBranch,
-        selectedDoNo: selectedDoNo,
+        branch: selectedBranch || "Main Branch",
+        selectedDoNo: selectedDoNo || "",
       };
+
+      console.log("📝 Master data prepared:", masterData);
 
       // Collect slip data from selected rows
       const slipData = [];
       selectedRows.forEach((index) => {
         if (tableData[index]) {
-          slipData.push(tableData[index]);
+          const slipItem = {
+            ...tableData[index],
+            slip_no: tableData[index].slip_no || `SLIP_${index}`,
+            freight_amount: tableData[index].freight_amount || 0,
+            vehicle_no: tableData[index].vehicle_no || "",
+            item_desc: tableData[index].item_desc || "",
+            vendor_name: tableData[index].vendor_name || "",
+            wb_id: tableData[index].wb_id || null,
+            item_code: tableData[index].item_code || "",
+            item_id: tableData[index].item_id || null,
+            vendor_id: tableData[index].vendor_id || null,
+          };
+          slipData.push(slipItem);
         }
       });
+
+      console.log("📋 Slip data prepared:", slipData);
+
+      if (slipData.length === 0) {
+        alert("Please select at least one slip to save.");
+        return;
+      }
+
+      console.log("🚀 Sending save request...");
 
       const response = await fetch("/api/freight/save", {
         method: "POST",
@@ -219,18 +249,28 @@ const FreightEntry = () => {
         body: JSON.stringify({ masterData, slipData }),
       });
 
+      console.log("📡 Response status:", response.status);
+
       if (response.ok) {
         const result = await response.json();
-        console.log("Freight voucher saved successfully:", result);
+        console.log("✅ Freight voucher saved successfully:", result);
         alert(`Freight voucher saved successfully! Freight ID: ${result.freight_id}, Voucher ID: ${result.voucher_id}`);
         setLocation("/voucher-view");
       } else {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to save freight voucher");
+        const errorText = await response.text();
+        console.error("❌ Save failed with status:", response.status);
+        console.error("❌ Error response:", errorText);
+        
+        try {
+          const errorData = JSON.parse(errorText);
+          throw new Error(errorData.error || errorData.details || "Failed to save freight voucher");
+        } catch (parseError) {
+          throw new Error(`Failed to save freight voucher. Server returned: ${errorText}`);
+        }
       }
     } catch (error) {
-      console.error("Error saving freight voucher:", error);
-      alert("Failed to save freight voucher. Please try again.");
+      console.error("❌ Error saving freight voucher:", error);
+      alert(`Failed to save freight voucher: ${error.message}`);
     }
   };
 
