@@ -3210,26 +3210,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         )
       `);
 
-      // Create gl_voucher_accounts table
+      // Create gl_voucher_accounts table with correct structure
       await pool.query(`
         CREATE TABLE IF NOT EXISTS gl_voucher_accounts (
-          voucher_acc_id SERIAL PRIMARY KEY,
-          voucher_id INTEGER,
-          debit NUMERIC(20,4),
-          credit NUMERIC(20,4),
-          description VARCHAR(1000),
-          cost_center_id INTEGER,
-          department_id INTEGER,
-          project_id INTEGER,
-          created_by INTEGER,
+          voucher_account_id BIGSERIAL PRIMARY KEY,
+          voucher_id BIGINT,
+          account_id BIGINT,
+          debit NUMERIC(26,6),
+          credit NUMERIC(26,6),
+          naration VARCHAR(4000),
+          created_by BIGINT,
           creation_date DATE,
-          last_updated_by INTEGER,
+          last_updated_by BIGINT,
           last_update_date DATE,
-          reference_no VARCHAR(50),
-          line_no INTEGER,
-          account_code VARCHAR(50),
-          account_name VARCHAR(200),
-          remarks VARCHAR(500)
+          sub_account_code VARCHAR(10),
+          reference_id BIGINT,
+          dispatch_date DATE,
+          realization_date DATE,
+          cost_center_id BIGINT,
+          fe_debit NUMERIC(16,4),
+          fe_credit NUMERIC(16,4),
+          segment1 VARCHAR(20),
+          work_type VARCHAR(30),
+          hide VARCHAR(2),
+          file_source BYTEA,
+          att_id BIGINT,
+          file_ext VARCHAR(20),
+          file_name VARCHAR(100),
+          flock_id BIGINT,
+          doc_date DATE,
+          payment_mode VARCHAR(100),
+          doc_no VARCHAR(50),
+          paid_account VARCHAR(50),
+          company_type VARCHAR(500),
+          branch_id VARCHAR(500) NOT NULL,
+          vendor_id BIGINT,
+          customer_id BIGINT,
+          rate NUMERIC(25,6),
+          item_id BIGINT,
+          qty NUMERIC(20,6),
+          weight NUMERIC(20,6),
+          branch_id_original VARCHAR(200),
+          flock_branch_id VARCHAR(200),
+          bank_reconcile_status VARCHAR(20),
+          reconcile VARCHAR(20),
+          un_credited VARCHAR(20),
+          un_presented VARCHAR(20),
+          sabroso_bank_id VARCHAR(20),
+          ftn_type VARCHAR(200),
+          sales_invoice_id BIGINT,
+          wb_voucher_account_id BIGINT,
+          chk_tax VARCHAR(10),
+          flock_branch_id_new VARCHAR(100),
+          ntn_no VARCHAR(255),
+          invoice_no VARCHAR(255),
+          invoice_date DATE,
+          tax_type VARCHAR(20),
+          consignment_id BIGINT,
+          vend_bal NUMERIC(20,0),
+          dc_id BIGINT,
+          mrr_no BIGINT,
+          payment_term VARCHAR(100),
+          tax_amount NUMERIC(20,6)
         )
       `);
 
@@ -3340,9 +3382,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`✅ Freight master data saved with ID: ${freightId}`);
 
-      // Insert master data into gl_vouchers table (using existing table)
+      // Insert master data into gl_voucher table
       const voucherQuery = `
-        INSERT INTO gl_vouchers (
+        INSERT INTO gl_voucher (
           voucher_type, voucher_date, description, created_by, creation_date,
           status, branch_id, reference_no, entry_remarks, company_name,
           module, module_doc_id
@@ -3411,28 +3453,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           await pool.query(itemQuery, itemValues);
 
-          // Insert into gl_voucher_accounts table (using existing table)
+          // Insert into gl_voucher_accounts table with correct structure
           const voucherAccountQuery = `
             INSERT INTO gl_voucher_accounts (
-              voucher_id, debit, credit, description,
-              created_by, creation_date, reference_no, line_no, account_code,
-              account_name, remarks
+              voucher_id, account_id, debit, credit, naration,
+              created_by, creation_date, doc_no, branch_id,
+              vendor_id, item_id, qty, weight, doc_date
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
           `;
 
           const voucherAccountValues = [
             voucherId,
+            1, // default account_id - you may need to adjust this based on your chart of accounts
             slip.debit_amount ? parseFloat(slip.debit_amount) : 0,
             slip.credit_amount ? parseFloat(slip.credit_amount) : (slip.freight_amount ? parseFloat(slip.freight_amount) : 0),
             slip.item_desc || "Freight charges",
             masterData.createdBy || 1,
             masterData.creationDate || new Date(),
             slip.slip_no || masterData.docNo || "1",
-            i + 1, // line_no
-            slip.item_code || "FREIGHT",
-            slip.vendor_name || "Freight Account",
-            slip.item_desc || null,
+            masterData.branch === "Shahzor" ? "2" : "1", // branch_id (required field)
+            slip.vendor_id ? parseInt(slip.vendor_id) : null,
+            slip.item_id ? parseInt(slip.item_id) : null,
+            1, // default qty
+            slip.freight_amount ? parseFloat(slip.freight_amount) : 0, // weight
+            masterData.docDate || new Date(), // doc_date
           ];
 
           console.log(`Inserting voucher account ${i + 1} with values:`, voucherAccountValues);
