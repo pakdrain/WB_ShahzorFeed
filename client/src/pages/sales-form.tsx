@@ -635,7 +635,7 @@ export default function SalesForm() {
           slipNo: master.slip_no || "",
           vehicleNo: details.vehicle_no || "",
           firstWeight: master.first_weight ? String(master.first_weight) : "",
-          secondWeight: master.second_weight
+          secondWeight: master.second_weight && master.second_weight > 0
             ? String(master.second_weight)
             : "",
           netWeight: master.net_weight ? String(master.net_weight) : "",
