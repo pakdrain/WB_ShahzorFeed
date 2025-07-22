@@ -124,6 +124,12 @@ This is a comprehensive weighbridge monitoring system that combines CCTV camera 
 - **Database URLs**: Flexible PostgreSQL connection string support
 
 ## Changelog
+- July 22, 2025. CRITICAL DISPLAY TABLE ISSUE FIXED: Consistent entry removal behavior across all forms:
+  - Fixed sales form display table issue - entries now automatically removed after second weight is saved (same as purchase form)
+  - Applied consistent refresh logic to sales-return and purchase-return forms for complete uniformity
+  - All four forms (Purchase, Sales, Purchase Return, Sales Return) now behave identically when second weight is entered and saved
+  - Entries are automatically removed from display table after 1-second delay using window.location.reload()
+  - Eliminated inconsistent behavior where sales entries remained visible after completion while purchase entries were properly removed
 - July 22, 2025. COMPREHENSIVE FIX: Resolved critical NULL item_id database insertion issue:
   - Fixed `/api/save-enhanced-inv-item` endpoint - added missing item_id field to INSERT query with automatic generation logic
   - Fixed `/api/fetch-and-save-data` endpoint - enhanced item_id generation using multiple fallback methods (from item_code, timestamp-based)

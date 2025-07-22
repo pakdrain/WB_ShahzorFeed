@@ -2197,14 +2197,12 @@ export default function SalesForm() {
         }
       }, 500);
 
-      // If second weight was entered, just refresh the first weight records query
-      // This will remove only the entry with second weight from the display table
+      // If second weight was entered, refresh to remove from display table
       if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
-        // The query will automatically filter out entries with second weights
-        // No need to reload the entire page
-        console.log(
-          "Second weight added, display table will auto-refresh to remove this entry",
-        );
+        console.log("Second weight added for sales entry, refreshing to remove from display table");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
 
       // Reset form to clean state and increment slip number for next entry

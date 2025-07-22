@@ -1226,9 +1226,25 @@ export default function SalesReturnForm() {
 
         // Reset form to clean state
         await resetFormToInitial();
+        
+        // If second weight was entered, refresh to remove from display table
+        if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
+          console.log("Second weight added for sales return entry, refreshing to remove from display table");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
       } else {
         // For new entries, reset form to clean state
         await resetFormToInitial();
+        
+        // If second weight was entered, refresh to remove from display table
+        if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
+          console.log("Second weight added for sales return entry, refreshing to remove from display table");
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
       }
     } catch (error: any) {
       console.error(
