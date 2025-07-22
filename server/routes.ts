@@ -3312,108 +3312,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         )
       `);
 
-      // Ensure gl_voucher tables exist
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS gl_voucher (
-          voucher_id SERIAL PRIMARY KEY,
-          voucher_type VARCHAR(20),
-          voucher_no INTEGER,
-          voucher_date DATE NOT NULL,
-          description VARCHAR(1000),
-          batch_id INTEGER,
-          created_by INTEGER,
-          creation_date DATE DEFAULT CURRENT_DATE,
-          last_updated_by INTEGER,
-          last_update_date DATE,
-          status VARCHAR(50) DEFAULT 'Create',
-          approved_by INTEGER,
-          approval_date DATE,
-          posted_by INTEGER,
-          posting_date DATE,
-          branch_id VARCHAR(30),
-          module VARCHAR(20),
-          module_doc VARCHAR(50),
-          module_doc_id INTEGER,
-          reference_no VARCHAR(30),
-          checked_by INTEGER,
-          checked_date DATE,
-          currency VARCHAR(20),
-          exchange_rate NUMERIC(16,4),
-          fe_voucher CHAR(1),
-          ref_date DATE,
-          paid_amount NUMERIC(20,4),
-          acc_id BIGINT,
-          canceled_by BIGINT,
-          canceled_date DATE,
-          closed CHAR(1),
-          voucher_site CHAR(1),
-          sale_purchase VARCHAR(30),
-          dc_igp_id BIGINT,
-          bank_id INTEGER,
-          wh_tax_id INTEGER,
-          wh_tax_amt NUMERIC(16),
-          company_id BIGINT DEFAULT 1,
-          cpv_type VARCHAR(30),
-          company_type VARCHAR(500),
-          cheque_no VARCHAR(50),
-          hatch_no VARCHAR(200),
-          old_status VARCHAR(500),
-          paid_to VARCHAR(50),
-          slip_no NUMERIC(20,6),
-          asset VARCHAR(200),
-          audit_status VARCHAR(200),
-          audit_by BIGINT,
-          audit_date DATE,
-          delete_date DATE,
-          entry_remarks VARCHAR(2000),
-          restore_date DATE,
-          deleted_date DATE,
-          un_approve_by BIGINT,
-          un_approve_date DATE,
-          mr_no VARCHAR(50),
-          wb_voucher_id BIGINT,
-          cash_plant VARCHAR(20),
-          bank_plant VARCHAR(20),
-          cpv VARCHAR(20),
-          br_code INTEGER,
-          modify_by BIGINT,
-          modify_date DATE,
-          v_id_apex BIGINT,
-          advance_pay VARCHAR(20),
-          dc_id BIGINT,
-          unaudit_by BIGINT,
-          unaudit_date DATE,
-          vehicle_id VARCHAR(20),
-          company_name VARCHAR(200),
-          vehicle_type VARCHAR(30),
-          vehicle_name VARCHAR(50),
-          vehicle_no VARCHAR(50)
-        )
-      `);
-
-      await pool.query(`
-        CREATE TABLE IF NOT EXISTS gl_voucher_accounts (
-          voucher_acc_id SERIAL PRIMARY KEY,
-          voucher_id INTEGER,
-          chart_of_account_id INTEGER,
-          debit NUMERIC(20,4) DEFAULT 0,
-          credit NUMERIC(20,4) DEFAULT 0,
-          description VARCHAR(1000),
-          cost_center_id INTEGER,
-          department_id INTEGER,
-          project_id INTEGER,
-          created_by INTEGER,
-          creation_date DATE DEFAULT CURRENT_DATE,
-          last_updated_by INTEGER,
-          last_update_date DATE,
-          reference_no VARCHAR(50),
-          line_no INTEGER,
-          account_code VARCHAR(50),
-          account_name VARCHAR(200),
-          remarks VARCHAR(500)
-        )
-      `);
-
       // Insert master data into gl_freight table
       const freightQuery = `
         INSERT INTO gl_freight (
@@ -3443,9 +3341,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`✅ Freight master data saved with ID: ${freightId}`);
 
-      // Insert master data into gl_voucher table
+      // Insert master data into gl_vouchers table (using existing table)
       const voucherQuery = `
-        INSERT INTO gl_voucher (
+        INSERT INTO gl_vouchers (
           voucher_type, voucher_date, description, created_by, creation_date,
           status, branch_id, reference_no, entry_remarks, company_name,
           module, module_doc_id
@@ -3476,7 +3374,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`✅ Voucher master data saved with ID: ${voucherId}`);
 
-      // Save slip data to gl_freight_items table
+      // Save slip data to both gl_freight_items and gl_voucher_accounts tables
       if (slipData && Array.isArray(slipData) && slipData.length > 0) {
         console.log(`📋 Processing ${slipData.length} slip records`);
 
@@ -3485,6 +3383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           console.log(`Processing slip ${i + 1}:`, slip);
 
+          // Insert into gl_freight_items table
           const itemQuery = `
             INSERT INTO gl_freight_items (
               freight_id, vendor_id, item_id, freight_amount, 
@@ -3513,7 +3412,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           await pool.query(itemQuery, itemValues);
 
-          // Also save to gl_voucher_accounts table
+          // Insert into gl_voucher_accounts table (using existing table)
           const voucherAccountQuery = `
             INSERT INTO gl_voucher_accounts (
               voucher_id, chart_of_account_id, debit, credit, description,
@@ -3552,7 +3451,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         freight_id: freightId,
         voucher_id: voucherId,
-        message: "Freight data saved successfully to both gl_freight and gl_voucher tables",
+        message: "Freight data saved successfully to both gl_freight/gl_freight_items and gl_vouchers/gl_voucher_accounts tables",
       });
     } catch (error: any) {
       console.error("❌ Error saving freight data:", error);
