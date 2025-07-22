@@ -1449,7 +1449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
         WHERE wb.first_weight IS NOT NULL 
           AND wb.first_weight > 0
-           AND wb.second_weight IS NULL 
+          AND (wb.second_weight IS NULL)
         ORDER BY wb.wb_id DESC 
         LIMIT 20
       `;
