@@ -3214,8 +3214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await pool.query(`
         CREATE TABLE IF NOT EXISTS gl_voucher_accounts (
           voucher_acc_id SERIAL PRIMARY KEY,
-          voucher_id INTEGER REFERENCES gl_voucher(voucher_id),
-          chart_of_account_id INTEGER,
+          voucher_id INTEGER,
           debit NUMERIC(20,4),
           credit NUMERIC(20,4),
           description VARCHAR(1000),
@@ -3415,16 +3414,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Insert into gl_voucher_accounts table (using existing table)
           const voucherAccountQuery = `
             INSERT INTO gl_voucher_accounts (
-              voucher_id, chart_of_account_id, debit, credit, description,
+              voucher_id, debit, credit, description,
               created_by, creation_date, reference_no, line_no, account_code,
               account_name, remarks
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
           `;
 
           const voucherAccountValues = [
             voucherId,
-            slip.chart_of_account_id ? parseInt(slip.chart_of_account_id) : 1000, // Default chart of account ID
             slip.debit_amount ? parseFloat(slip.debit_amount) : 0,
             slip.credit_amount ? parseFloat(slip.credit_amount) : (slip.freight_amount ? parseFloat(slip.freight_amount) : 0),
             slip.item_desc || "Freight charges",
