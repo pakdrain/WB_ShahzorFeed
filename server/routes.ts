@@ -1449,7 +1449,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
         WHERE wb.first_weight IS NOT NULL 
           AND wb.first_weight > 0
-          AND (wb.second_weight IS NULL OR wb.second_weight = 0)
         ORDER BY wb.wb_id DESC 
         LIMIT 20
       `;
@@ -3625,7 +3624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         $12, $13
       )
       ON CONFLICT (item_code) DO UPDATE SET
-        item_id = COALESCE(EXCLUDED.item_id, inv_items.item_id), -- ✅ comma fixed
+        item_id = EXCLUDED.item_id
         item_desc = EXCLUDED.item_desc,
         uom = EXCLUDED.uom,
         weight_in_kg = EXCLUDED.weight_in_kg,
@@ -3640,7 +3639,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     `;
 
           const values = [
-            item.item_id ?? item.id ?? item.ITEM_ID ?? null, // ✅ Added ITEM_ID (uppercase)
+            item.item_id ?? item.id ?? null,
             item.item_code ??
               item.code ??
               item.ITEM_CODE ??
