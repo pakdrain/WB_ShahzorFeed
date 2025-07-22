@@ -1445,26 +1445,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
           wb.first_weight,
           wb.second_weight,
           wb.slip_in_time,
-          COALESCE(wbi.vehicle_no, '') as vehicle_no,
+          wb.slip_out_time,
+          wb.net_weight,
+          wb.gross_weight,
+          wb.bardana_weight,
+          wb.remarks,
+          wb.driver_name,
+          wb.freight,
+          wb.online_entry,
+          wb.offline_entry,
+          wb.branch_id,
+          wb.status,
+          COALESCE(wbi.vehicle_no, wb.vehicle_no, '') as vehicle_no,
           COALESCE(wbi.vendor_name, '') as vendor_name,
-          COALESCE(wbi.item_desc, '') as item_desc
+          COALESCE(wbi.item_desc, '') as item_desc,
+          COALESCE(wbi.customer_name, '') as customer_name,
+          COALESCE(wbi.igp_no, '') as igp_no,
+          COALESCE(wbi.po_no, '') as po_no,
+          COALESCE(wbi.do_no, '') as do_no,
+          COALESCE(wbi.no_of_bags, 0) as no_of_bags,
+          COALESCE(wbi.weight_per_bags, 0) as weight_per_bags,
+          COALESCE(wbi.bardana_type, '') as bardana_type,
+          COALESCE(wbi.bag_condition, '') as bag_condition
         FROM wb_weighbridge wb 
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id 
         WHERE wb.first_weight IS NOT NULL 
-          AND wb.first_weight > 0
-          AND (wb.second_weight IS NULL OR wb.second_weight = 0 OR wb.second_weight::text = '')
+          AND CAST(wb.first_weight AS NUMERIC) > 0
+          AND (wb.second_weight IS NULL 
+               OR CAST(wb.second_weight AS NUMERIC) = 0 
+               OR wb.second_weight = ''
+               OR TRIM(wb.second_weight::text) = ''
+               OR TRIM(wb.second_weight::text) = '0')
         ORDER BY wb.wb_id DESC 
-        LIMIT 20
+        LIMIT 50
       `;
 
         const result = await pool.query(query);
 
         console.log(`Fetched ${result.rows.length} first weight records for display table`);
-        console.log("Sample records:", result.rows.slice(0, 3));
+        console.log("Query executed successfully");
+        if (result.rows.length > 0) {
+          console.log("Sample first record:", {
+            wb_id: result.rows[0].wb_id,
+            slip_no: result.rows[0].slip_no,
+            first_weight: result.rows[0].first_weight,
+            second_weight: result.rows[0].second_weight,
+            vehicle_no: result.rows[0].vehicle_no,
+            entry_type: result.rows[0].entry_type
+          });
+        } else {
+          console.log("No records found. Checking total records in wb_weighbridge...");
+          const countResult = await pool.query("SELECT COUNT(*) as total FROM wb_weighbridge WHERE first_weight IS NOT NULL AND CAST(first_weight AS NUMERIC) > 0");
+          console.log(`Total records with first weight: ${countResult.rows[0].total}`);
+        }
         res.json(result.rows);
       } catch (error: any) {
         console.error("Error fetching first weight records:", error);
-        res.status(500).json({ error: "Failed to fetch first weight records" });
+        console.error("Error details:", error.message);
+        console.error("Error stack:", error.stack);
+        res.status(500).json({ error: "Failed to fetch first weight records", details: error.message });
       }
     },
   );
