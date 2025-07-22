@@ -2194,6 +2194,13 @@ export default function SalesForm() {
         }
       }, 500);
 
+      // If second weight was entered, refresh to remove from display table
+      if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+      }
+
       // Reset form to clean state and increment slip number for next entry
       resetFormToInitial();
     } catch (err: any) {
