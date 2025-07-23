@@ -2203,6 +2203,7 @@ export default function SalesForm() {
         setTimeout(() => {
           window.location.reload();
         }, 1000);
+        return; // Exit here to prevent form reset before refresh
       }
 
       // Reset form to clean state and increment slip number for next entry
