@@ -1554,153 +1554,249 @@ export default function SalesForm() {
     }
 
     try {
-      // Generate WB_ID for the sales record
-      const wbIdResponse = await fetch("/api/purchases", {
-        method: "GET",
-      });
-      const existingRecords = await wbIdResponse.json();
-      const maxWbId =
-        existingRecords.length > 0
-          ? Math.max(...existingRecords.map((r: any) => r.wb_id || 0))
-          : 0;
-      const newWbId = maxWbId + 1;
+      let savedWbId: number;
 
-      // Prepare master data payload with proper null handling for numeric fields
-      const masterPayload = {
-        slip_no: formData.slipNo || null,
-        slip_in_time: formatISODate(formData.slipInTime),
-        first_weight:
-          formData.firstWeight && formData.firstWeight.trim() !== ""
-            ? parseFloat(formData.firstWeight)
-            : null,
-        second_weight:
-          formData.secondWeight && formData.secondWeight.trim() !== ""
-            ? parseFloat(formData.secondWeight)
-            : null,
-        net_weight:
-          formData.netWeight && formData.netWeight.trim() !== ""
-            ? parseFloat(formData.netWeight)
-            : null,
-        bardana_weight:
-          formData.bardanaWeight && formData.bardanaWeight.trim() !== ""
-            ? parseFloat(formData.bardanaWeight)
-            : null,
-        gross_weight:
-          formData.grossWeight && formData.grossWeight.trim() !== ""
-            ? parseFloat(formData.grossWeight)
-            : null,
-        freight:
-          formData.freight && formData.freight.trim() !== ""
-            ? parseFloat(formData.freight)
-            : null,
-        remarks: formData.remarks || null,
-        driver_name: formData.driverName || null,
-        company_id:
-          formData.companyId &&
-          formData.companyId !== "undefined" &&
-          formData.companyId.trim() !== ""
-            ? parseInt(formData.companyId, 10)
-            : null,
-        branch_id:
-          formData.branchId &&
-          formData.branchId !== "undefined" &&
-          formData.branchId.trim() !== ""
-            ? parseInt(formData.branchId, 10)
-            : null,
-        online_entry:
-          formData.onlineEntry === "Yes" || formData.onlineEntry === true
-            ? "Yes"
-            : null,
-        offline_entry:
-          formData.offlineEntry === "Yes" || formData.offlineEntry === true
-            ? "Yes"
-            : null,
-        created_by: user?.userid || null,
-        creation_date: formData.creationDate || null,
-        last_updated_by:
-          formData.lastUpdatedBy &&
-          formData.lastUpdatedBy !== "undefined" &&
-          formData.lastUpdatedBy.trim() !== ""
-            ? parseInt(formData.lastUpdatedBy, 10)
-            : null,
-        last_updated_date: formData.lastUpdatedDate || null,
-        manual_dc_no: formData.manualDcNo || null,
-        entry_type: "SALE",
-        slip_out_time: formatISODate(formData.slipOutTime),
-        status: formData.status || null,
-        slip_date: formData.slipDate || null,
-      };
-
-      const masterResponse = await fetch("/api/purchases", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(masterPayload),
-      });
-
-      if (!masterResponse.ok) {
-        const errorText = await masterResponse.text();
-        throw new Error(`Failed to save master sales record: ${errorText}`);
-      }
-
-      // Save sales detail records for each non-empty row
-      const nonEmptyRows = salesData.filter(
-        (row) =>
-          row.dcNo ||
-          row.doNo ||
-          row.customerName ||
-          row.vehicleNo ||
-          row.itemDescription ||
-          row.dcQty ||
-          row.doQty,
-      );
-
-      for (const row of nonEmptyRows) {
-        const salesItemPayload = {
-          wb_id: newWbId,
-          bardana_type: null,
-          igp_no: row.dcNo || null,
-          vehicle_no: row.vehicleNo || null,
-          weight_per_bags: null,
-          igp_date: row.doDate || null,
-          supplier_weight: null,
-          quality_deduction: null,
-          bardana_weight: null,
-          no_of_bags: null,
-          vendor_name: row.customerName || null,
-          bag_condition: null,
-          po_no: row.doNo || null,
-          item_code: null,
-          item_desc: row.itemDescription || null,
-          po_qty:
-            row.doQty && row.doQty.trim() !== "" ? parseFloat(row.doQty) : null,
-          igp_qty:
-            row.dcQty && row.dcQty.trim() !== "" ? parseFloat(row.dcQty) : null,
-          balance_qty: null,
-          customer_name: row.customerName || null,
-          do_no: row.doNo || null,
-          do_qty:
-            row.doQty && row.doQty.trim() !== "" ? parseFloat(row.doQty) : null,
-          dc_qty:
-            row.dcQty && row.dcQty.trim() !== "" ? parseFloat(row.dcQty) : null,
+      if (isEditMode && editingWbId) {
+        // UPDATE MODE: Update existing record
+        console.log("Updating existing sales record with wb_id:", editingWbId);
+        
+        const updatePayload = {
+          slip_no: formData.slipNo || null,
+          slip_in_time: formatISODate(formData.slipInTime),
+          first_weight:
+            formData.firstWeight && formData.firstWeight.trim() !== ""
+              ? parseFloat(formData.firstWeight)
+              : null,
+          second_weight:
+            formData.secondWeight && formData.secondWeight.trim() !== ""
+              ? parseFloat(formData.secondWeight)
+              : null,
+          net_weight:
+            formData.netWeight && formData.netWeight.trim() !== ""
+              ? parseFloat(formData.netWeight)
+              : null,
+          bardana_weight:
+            formData.bardanaWeight && formData.bardanaWeight.trim() !== ""
+              ? parseFloat(formData.bardanaWeight)
+              : null,
+          gross_weight:
+            formData.grossWeight && formData.grossWeight.trim() !== ""
+              ? parseFloat(formData.grossWeight)
+              : null,
+          freight:
+            formData.freight && formData.freight.trim() !== ""
+              ? parseFloat(formData.freight)
+              : null,
+          remarks: formData.remarks || null,
+          driver_name: formData.driverName || null,
+          company_id:
+            formData.companyId &&
+            formData.companyId !== "undefined" &&
+            formData.companyId.trim() !== ""
+              ? parseInt(formData.companyId, 10)
+              : null,
+          branch_id:
+            formData.branchId &&
+            formData.branchId !== "undefined" &&
+            formData.branchId.trim() !== ""
+              ? parseInt(formData.branchId, 10)
+              : null,
+          online_entry:
+            formData.onlineEntry === "Yes" || formData.onlineEntry === true
+              ? "Yes"
+              : null,
+          offline_entry:
+            formData.offlineEntry === "Yes" || formData.offlineEntry === true
+              ? "Yes"
+              : null,
+          last_updated_by: user?.userid || null,
+          last_updated_date: new Date().toISOString(),
+          manual_dc_no: formData.manualDcNo || null,
+          slip_out_time: formatISODate(formData.slipOutTime),
+          status: formData.status || null,
+          slip_date: formData.slipDate || null,
+          // Include sales data fields in update
+          vendor_name: salesData.find(row => row.customerName)?.customerName || null,
+          vehicle_no: salesData.find(row => row.vehicleNo)?.vehicleNo || formData.vehicleNo || null,
+          po_no: salesData.find(row => row.doNo)?.doNo || null,
+          igp_no: salesData.find(row => row.dcNo)?.dcNo || null,
+          item_desc: salesData.find(row => row.itemDescription)?.itemDescription || null,
+          po_qty: salesData.find(row => row.doQty)?.doQty ? parseFloat(salesData.find(row => row.doQty)?.doQty!) : null,
+          igp_qty: salesData.find(row => row.dcQty)?.dcQty ? parseFloat(salesData.find(row => row.dcQty)?.dcQty!) : null,
+          igp_date: salesData.find(row => row.doDate)?.doDate || null,
         };
 
-        const salesItemResponse = await fetch("/api/purchase-items", {
+        const updateResponse = await fetch(`/api/purchase/update/${editingWbId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(updatePayload),
+        });
+
+        if (!updateResponse.ok) {
+          const errorText = await updateResponse.text();
+          throw new Error(`Failed to update sales record: ${errorText}`);
+        }
+
+        savedWbId = editingWbId;
+        console.log("Sales record updated successfully");
+      } else {
+        // CREATE MODE: Create new record
+        console.log("Creating new sales record");
+        
+        // Generate WB_ID for the sales record
+        const wbIdResponse = await fetch("/api/purchases", {
+          method: "GET",
+        });
+        const existingRecords = await wbIdResponse.json();
+        const maxWbId =
+          existingRecords.length > 0
+            ? Math.max(...existingRecords.map((r: any) => r.wb_id || 0))
+            : 0;
+        const newWbId = maxWbId + 1;
+
+        // Prepare master data payload with proper null handling for numeric fields
+        const masterPayload = {
+          slip_no: formData.slipNo || null,
+          slip_in_time: formatISODate(formData.slipInTime),
+          first_weight:
+            formData.firstWeight && formData.firstWeight.trim() !== ""
+              ? parseFloat(formData.firstWeight)
+              : null,
+          second_weight:
+            formData.secondWeight && formData.secondWeight.trim() !== ""
+              ? parseFloat(formData.secondWeight)
+              : null,
+          net_weight:
+            formData.netWeight && formData.netWeight.trim() !== ""
+              ? parseFloat(formData.netWeight)
+              : null,
+          bardana_weight:
+            formData.bardanaWeight && formData.bardanaWeight.trim() !== ""
+              ? parseFloat(formData.bardanaWeight)
+              : null,
+          gross_weight:
+            formData.grossWeight && formData.grossWeight.trim() !== ""
+              ? parseFloat(formData.grossWeight)
+              : null,
+          freight:
+            formData.freight && formData.freight.trim() !== ""
+              ? parseFloat(formData.freight)
+              : null,
+          remarks: formData.remarks || null,
+          driver_name: formData.driverName || null,
+          company_id:
+            formData.companyId &&
+            formData.companyId !== "undefined" &&
+            formData.companyId.trim() !== ""
+              ? parseInt(formData.companyId, 10)
+              : null,
+          branch_id:
+            formData.branchId &&
+            formData.branchId !== "undefined" &&
+            formData.branchId.trim() !== ""
+              ? parseInt(formData.branchId, 10)
+              : null,
+          online_entry:
+            formData.onlineEntry === "Yes" || formData.onlineEntry === true
+              ? "Yes"
+              : null,
+          offline_entry:
+            formData.offlineEntry === "Yes" || formData.offlineEntry === true
+              ? "Yes"
+              : null,
+          created_by: user?.userid || null,
+          creation_date: formData.creationDate || null,
+          last_updated_by:
+            formData.lastUpdatedBy &&
+            formData.lastUpdatedBy !== "undefined" &&
+            formData.lastUpdatedBy.trim() !== ""
+              ? parseInt(formData.lastUpdatedBy, 10)
+              : null,
+          last_updated_date: formData.lastUpdatedDate || null,
+          manual_dc_no: formData.manualDcNo || null,
+          entry_type: "SALE",
+          slip_out_time: formatISODate(formData.slipOutTime),
+          status: formData.status || null,
+          slip_date: formData.slipDate || null,
+        };
+
+        const masterResponse = await fetch("/api/purchases", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(salesItemPayload),
+          body: JSON.stringify(masterPayload),
         });
 
-        if (!salesItemResponse.ok) {
-          console.error("Failed to save sales item:", row);
+        if (!masterResponse.ok) {
+          const errorText = await masterResponse.text();
+          throw new Error(`Failed to save master sales record: ${errorText}`);
+        }
+
+        savedWbId = newWbId;
+      }
+
+      // Save sales detail records for each non-empty row (for both create and update)
+      if (!isEditMode) {
+        const nonEmptyRows = salesData.filter(
+          (row) =>
+            row.dcNo ||
+            row.doNo ||
+            row.customerName ||
+            row.vehicleNo ||
+            row.itemDescription ||
+            row.dcQty ||
+            row.doQty,
+        );
+
+        for (const row of nonEmptyRows) {
+          const salesItemPayload = {
+            wb_id: savedWbId,
+            bardana_type: null,
+            igp_no: row.dcNo || null,
+            vehicle_no: row.vehicleNo || null,
+            weight_per_bags: null,
+            igp_date: row.doDate || null,
+            supplier_weight: null,
+            quality_deduction: null,
+            bardana_weight: null,
+            no_of_bags: null,
+            vendor_name: row.customerName || null,
+            bag_condition: null,
+            po_no: row.doNo || null,
+            item_code: null,
+            item_desc: row.itemDescription || null,
+            po_qty:
+              row.doQty && row.doQty.trim() !== "" ? parseFloat(row.doQty) : null,
+            igp_qty:
+              row.dcQty && row.dcQty.trim() !== "" ? parseFloat(row.dcQty) : null,
+            balance_qty: null,
+            customer_name: row.customerName || null,
+            do_no: row.doNo || null,
+            do_qty:
+              row.doQty && row.doQty.trim() !== "" ? parseFloat(row.doQty) : null,
+            dc_qty:
+              row.dcQty && row.dcQty.trim() !== "" ? parseFloat(row.dcQty) : null,
+          };
+
+          const salesItemResponse = await fetch("/api/purchase-items", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(salesItemPayload),
+          });
+
+          if (!salesItemResponse.ok) {
+            console.error("Failed to save sales item:", row);
+          }
         }
       }
 
       console.log("Sales data saved successfully");
-      alert("Sales data saved successfully!");
+      alert(isEditMode ? "Sales data updated successfully!" : "Sales data saved successfully!");
 
       // Reset sales data table after successful save
       setSalesData(
@@ -2206,6 +2302,21 @@ export default function SalesForm() {
           window.location.reload();
         }, 1000);
         return; // Exit here to prevent form reset before refresh
+      }
+
+      // Exit edit mode after successful save/update
+      if (isEditMode) {
+        setIsEditMode(false);
+        setEditingWbId(null);
+        sessionStorage.removeItem("salesFormEditMode");
+        
+        // Clear URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.delete("edit");
+        const newUrl = urlParams.toString()
+          ? `${window.location.pathname}?${urlParams.toString()}`
+          : window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
       }
 
       // Reset form to clean state and increment slip number for next entry
