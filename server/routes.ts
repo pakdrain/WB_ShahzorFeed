@@ -3416,6 +3416,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`✅ Voucher master data saved with ID: ${voucherId}`);
 
+      // Update gl_freight table with voucher_id
+      const updateFreightQuery = `
+        UPDATE gl_freight 
+        SET voucher_id = $1 
+        WHERE freight_id = $2
+      `;
+      await pool.query(updateFreightQuery, [voucherId, freightId]);
+      console.log(`✅ Updated gl_freight with voucher_id: ${voucherId}`);
+
       // Save slip data to both gl_freight_items and gl_voucher_accounts tables
       if (slipData && Array.isArray(slipData) && slipData.length > 0) {
         console.log(`📋 Processing ${slipData.length} slip records`);
