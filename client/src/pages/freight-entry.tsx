@@ -2,285 +2,107 @@ import React, { useState, useEffect } from "react";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { useLocation } from "wouter";
 
-const FreightEntry = () => {
+const FreightVoucher = () => {
   const [, setLocation] = useLocation();
-  const [doNumbers, setDoNumbers] = useState([]);
-  const [selectedDoNo, setSelectedDoNo] = useState("");
-  const [tableData, setTableData] = useState([]);
-  const [selectedBranch, setSelectedBranch] = useState("");
-  const [voucherType, setVoucherType] = useState("CPV");
-  const [currentDate, setCurrentDate] = useState("");
-  const [maxDocNo, setMaxDocNo] = useState("");
-  const [slipData, setSlipData] = useState([]);
-  const [selectedRows, setSelectedRows] = useState(new Set());
-  const [slipDropdownData, setSlipDropdownData] = useState({});
+  const [freightVouchers, setFreightVouchers] = useState([]);
+  const [freightDetails, setFreightDetails] = useState([]);
+  const [selectedFreightId, setSelectedFreightId] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedBranch, setSelectedBranch] = useState("1");
+  const [selectedVoucherType, setSelectedVoucherType] = useState("cpv");
+  const [freightItems, setFreightItems] = useState([]);
 
   useEffect(() => {
-    fetchDoNumbers();
-    fetchMaxDocNo();
-    fetchSlipData();
-
-    // Set current date
-    const today = new Date().toISOString().split("T")[0];
-    setCurrentDate(today);
-
-    // Get URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const branchParam = urlParams.get("branch");
-    const typeParam = urlParams.get("type");
-
-    if (branchParam) {
-      // Map branch ID to branch name
-      const branchMapping = {
-        "1": "Main Branch",
-        "2": "Shahzor",
-        "3": "Secondary Branch",
-      };
-      setSelectedBranch(branchMapping[branchParam] || "");
-    }
-
-    if (typeParam) {
-      setVoucherType(typeParam.toUpperCase());
-    }
+    fetchFreightVouchers();
   }, []);
 
-  const fetchDoNumbers = async () => {
+  const fetchFreightVouchers = async () => {
     try {
-      const response = await fetch("/api/do-numbers");
+      const response = await fetch("/api/freight-vouchers");
       if (response.ok) {
         const data = await response.json();
-        setDoNumbers(data);
+        setFreightVouchers(data);
       }
     } catch (error) {
-      console.error("Error fetching DO numbers:", error);
+      console.error("Error fetching freight vouchers:", error);
     }
   };
 
-  const fetchMaxDocNo = async () => {
+  const fetchFreightDetails = async (freightId) => {
     try {
-      const response = await fetch("/api/vouchers/max-doc-no");
+      const response = await fetch(
+        `/api/freight-vouchers/${freightId}/details`,
+      );
       if (response.ok) {
         const data = await response.json();
-        setMaxDocNo(data.maxDocNo.toString());
+        setFreightDetails(data);
       }
     } catch (error) {
-      console.error("Error fetching max Doc No:", error);
-      setMaxDocNo("1"); // Fallback value
+      console.error("Error fetching freight details:", error);
     }
   };
 
-  const fetchSlipData = async () => {
+  const fetchFreightItems = async (freightId) => {
     try {
-      const response = await fetch("/api/vouchers/slip-data");
+      console.log("🔍 Fetching freight items for freight ID:", freightId);
+
+      const response = await fetch(`/api/freight-vouchers/${freightId}/items`);
+
       if (response.ok) {
         const data = await response.json();
-        setSlipData(data);
-      }
-    } catch (error) {
-      console.error("Error fetching slip data:", error);
-    }
-  };
+        console.log("✅ Freight items response received:", data);
+        console.log("✅ Number of freight items:", data?.length || 0);
 
-  const fetchDoData = async (doNo) => {
-    try {
-      const response = await fetch(`/api/do-data/${doNo}`);
-      if (response.ok) {
-        const data = await response.json();
-        setTableData(data);
-      }
-    } catch (error) {
-      console.error("Error fetching DO data:", error);
-    }
-  };
+        if (data && Array.isArray(data)) {
+          console.log("✅ Setting freight items:", data);
+          setFreightItems(data);
 
-  const handleDoNoChange = (e) => {
-    const doNo = e.target.value;
-    setSelectedDoNo(doNo);
-    if (doNo) {
-      fetchDoData(doNo);
-    } else {
-      setTableData([]);
-    }
-  };
-
-  const handleTableDataChange = (index, field, value) => {
-    const updatedData = [...tableData];
-    updatedData[index] = { ...updatedData[index], [field]: value };
-    setTableData(updatedData);
-  };
-
-  const handleItemCheckboxChange = (index, checked) => {
-    const newSelectedRows = new Set(selectedRows);
-    if (checked) {
-      newSelectedRows.add(index);
-      // Auto-focus the slip dropdown to open it
-      setTimeout(() => {
-        const slipDropdown = document.querySelector(`#slip-dropdown-${index}`);
-        if (slipDropdown) {
-          slipDropdown.click();
+          // Log each item for debugging
+          data.forEach((item, index) => {
+            console.log(`📋 Item ${index + 1}:`, {
+              id: item.freight_item_id,
+              vendor: item.vendor_name,
+              amount: item.freight_amount,
+              vehicle: item.vehicale_no
+            });
+          });
+        } else {
+          console.log("⚠️ Invalid data format received");
+          setFreightItems([]);
         }
-      }, 100);
-    } else {
-      newSelectedRows.delete(index);
-      // Clear dropdown data for this row
-      const newSlipDropdownData = { ...slipDropdownData };
-      delete newSlipDropdownData[index];
-      setSlipDropdownData(newSlipDropdownData);
-
-      // Clear the loaded data from this row
-      const updatedData = [...tableData];
-      updatedData[index] = {
-        ...updatedData[index],
-        slip_no: "",
-        vehicle_no: "",
-        item_desc: "",
-        vendor_name: "",
-        freight_amount: "",
-        wb_id: "",
-        item_code: "",
-        item_id: "",
-        vendor_id: "",
-      };
-      setTableData(updatedData);
-    }
-    setSelectedRows(newSelectedRows);
-  };
-
-  const handleSlipSelection = async (index, slipNo) => {
-    if (!slipNo) return;
-
-    try {
-      const response = await fetch(`/api/vouchers/slip-data/${slipNo}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.length > 0) {
-          const slipRecord = data[0];
-
-          // Update table data with selected slip information
-          const updatedData = [...tableData];
-          updatedData[index] = {
-            ...updatedData[index],
-            slip_no: slipRecord.slip_no,
-            vehicle_no: slipRecord.vehicle_no,
-            item_desc: slipRecord.item_desc,
-            vendor_name: slipRecord.vendor_name,
-            freight_amount: slipRecord.freight,
-            wb_id: slipRecord.wb_id,
-            item_code: slipRecord.item_code,
-            item_id: slipRecord.item_id,
-            vendor_id: slipRecord.vendor_id,
-          };
-          setTableData(updatedData);
-
-          console.log(`Loaded data for slip ${slipNo}:`, slipRecord);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching slip data:", error);
-    }
-  };
-
-  const handleSave = async () => {
-    try {
-      console.log("🔄 Starting freight voucher save process...");
-
-      // Ensure freight tables exist
-      console.log("📋 Creating freight tables...");
-      await fetch("/api/create-freight-table", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      // Ensure voucher tables exist
-      console.log("📋 Creating voucher tables...");
-      await fetch("/api/create-gl-voucher-table", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-
-      const docDateElement = document.querySelector('input[type="date"]');
-      const remarksElement = document.querySelector("textarea");
-
-      const masterData = {
-        docNo: maxDocNo || "1",
-        voucherType: voucherType || "CPV",
-        docDate: docDateElement?.value || currentDate,
-        remarks: remarksElement?.value || "",
-        createdBy: 1,
-        creationDate: currentDate,
-        branch: selectedBranch || "Main Branch",
-        selectedDoNo: selectedDoNo || "",
-      };
-
-      console.log("📝 Master data prepared:", masterData);
-
-      // Collect slip data from selected rows
-      const slipData = [];
-      selectedRows.forEach((index) => {
-        if (tableData[index]) {
-          const slipItem = {
-            ...tableData[index],
-            slip_no: tableData[index].slip_no || `SLIP_${index}`,
-            freight_amount: tableData[index].freight_amount || 0,
-            vehicle_no: tableData[index].vehicle_no || "",
-            item_desc: tableData[index].item_desc || "",
-            vendor_name: tableData[index].vendor_name || "",
-            wb_id: tableData[index].wb_id || null,
-            item_code: tableData[index].item_code || "",
-            item_id: tableData[index].item_id || null,
-            vendor_id: tableData[index].vendor_id || null,
-          };
-          slipData.push(slipItem);
-        }
-      });
-
-      console.log("📋 Slip data prepared:", slipData);
-
-      if (slipData.length === 0) {
-        alert("Please select at least one slip to save.");
-        return;
-      }
-
-      console.log("🚀 Sending save request...");
-
-      const response = await fetch("/api/freight/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ masterData, slipData }),
-      });
-
-      console.log("📡 Response status:", response.status);
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log("✅ Freight voucher saved successfully:", result);
-        alert(`Freight voucher saved successfully! Freight ID: ${result.freight_id}, Voucher ID: ${result.voucher_id}`);
-        setLocation("/voucher-view");
       } else {
+        console.error("❌ Failed to fetch freight items, status:", response.status);
         const errorText = await response.text();
-        console.error("❌ Save failed with status:", response.status);
         console.error("❌ Error response:", errorText);
-        
-        try {
-          const errorData = JSON.parse(errorText);
-          throw new Error(errorData.error || errorData.details || "Failed to save freight voucher");
-        } catch (parseError) {
-          throw new Error(`Failed to save freight voucher. Server returned: ${errorText}`);
-        }
+        setFreightItems([]);
       }
     } catch (error) {
-      console.error("❌ Error saving freight voucher:", error);
-      alert(`Failed to save freight voucher: ${error.message}`);
+      console.error("❌ Error fetching freight items:", error);
+      setFreightItems([]);
     }
+  };
+
+  const handleFreightVoucherClick = (freightId) => {
+    setSelectedFreightId(freightId);
+    fetchFreightDetails(freightId);
+    fetchFreightItems(freightId);
+  };
+
+  const handleNewEntry = () => {
+    const params = new URLSearchParams();
+    params.set("branch", selectedBranch);
+    params.set("type", selectedVoucherType);
+    setLocation(`/voucher-entry?${params.toString()}`);
   };
 
   return (
     <div
-      className="container-fluid p-2"
+      className="container-fluid border p-2"
       style={{
-        backgroundColor: "#e6ffee",
-        minHeight: "100vh",
-        overflowY: "hidden", // 🚨 Block vertical scroll only
+        backgroundColor: "#eaf6ec",
+        fontSize: "12px",
+        height: "100vh",
+        overflow: "hidden",
       }}
     >
       {/* Header */}
@@ -288,306 +110,358 @@ const FreightEntry = () => {
         className="d-flex justify-content-between align-items-center px-2 py-1 rounded"
         style={{ backgroundColor: "#336699", color: "#fff" }}
       >
-        <strong>Voucher Entry</strong>
+        <strong>Voucher View</strong>
       </div>
 
-      {/* Row 1 */}
+      {/* Form Filters */}
       <div className="row mt-3 mb-2">
-        <div className="col-md-4">
-          <strong className="text-black">Company</strong>
-          <input
-            className="form-control"
-            value="Sabirs' Poultry (Pvt.) Ltd"
-            readOnly
-          />
-        </div>
-        <div className="col-md-4">
-          <strong className="text-black">Branch</strong>
+        <div className="col-md-2">
+          <label className="form-label fw-bold text-dark">Status</label>
           <select
-            className="form-control"
-            value={selectedBranch}
-            onChange={(e) => setSelectedBranch(e.target.value)}
+            className="form-select form-select-sm"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
           >
-            <option value="">Select Branch</option>
-            <option value="Shahzor">Shahzor</option>
-            <option value="Head Office">Head Office</option>
+            <option value="">Select Status</option>
+            <option value="create">Create</option>
+            <option value="checked">Checked</option>
+            <option value="approved">Approved</option>
+            <option value="prepared">Prepared</option>
           </select>
         </div>
         <div className="col-md-4">
-          <strong className="text-black">Type</strong>
-          <input className="form-control" value={voucherType} readOnly />
+          <label className="form-label fw-bold text-dark">Branch</label>
+          <select
+            className="form-select form-select-sm"
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+          >
+            <option value="1">Main Branch</option>
+            <option value="2">Shahzor</option>
+            <option value="3">Secondary Branch</option>
+          </select>
+        </div>
+        <div className="col-md-2">
+          <label className="form-label fw-bold text-dark">Voucher Type</label>
+          <select
+            className="form-select form-select-sm"
+            value={selectedVoucherType}
+            onChange={(e) => setSelectedVoucherType(e.target.value)}
+          >
+            <option value="cpv">CPV</option>
+            <option value="cv">CV</option>
+          </select>
+        </div>
+
+        {/* New Entry button */}
+        <div className="col-md-4 d-flex align-items-end justify-content-end">
+          <button className="btn btn-success btn-sm" onClick={handleNewEntry}>
+            New Entry
+          </button>
         </div>
       </div>
 
-      {/* Row 2 */}
-      <div className="row mb-3">
-        <div className="col-md-4">
-          <strong className="text-black">Doc No</strong>
-          <input
-            className="form-control"
-            value={maxDocNo}
-            readOnly
-            placeholder="Loading..."
-          />
-        </div>
-
-        <div className="col-md-4">
-          <strong className="text-black">Doc Date</strong>
-          <input className="form-control" type="date" />
-        </div>
-        <div className="col-md-4">
-          <strong className="text-black">Creation Date</strong>
-          <input
-            className="form-control"
-            type="date"
-            value={currentDate}
-            onChange={(e) => setCurrentDate(e.target.value)}
-          />
+      {/* Voucher Table with Buttons */}
+      <div className="d-flex mt-3" style={{ height: "50%" }}>
+        <div
+          className="table-responsive flex-grow-1"
+          style={{
+            height: "100%",
+            overflowY: "auto",
+          }}
+        >
+          <table
+            className="table table-bordered table-sm text-center mb-0"
+            style={{ borderSpacing: "0 4px" }}
+          >
+            <thead
+              style={{
+                backgroundColor: "#f0f0f0",
+                position: "sticky",
+                top: 0,
+                zIndex: 1,
+              }}
+            >
+              <tr>
+                <th></th>
+                <th>Date</th>
+                <th>Reference #</th>
+                <th>Type</th>
+                <th>No.</th>
+                <th>Debit</th>
+                <th>Credit</th>
+                <th>Account</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {freightVouchers.length > 0
+                ? freightVouchers.map((voucher, index) => (
+                    <tr
+                      key={voucher.freight_id}
+                      onClick={() =>
+                        handleFreightVoucherClick(voucher.freight_id)
+                      }
+                      style={{ cursor: "pointer" }}
+                      className={
+                        selectedFreightId === voucher.freight_id
+                          ? "table-active"
+                          : ""
+                      }
+                    >
+                      <td>
+                        <input type="checkbox" />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={
+                            voucher.doc_date
+                              ? new Date(voucher.doc_date)
+                                  .toISOString()
+                                  .split("T")[0]
+                              : ""
+                          }
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={voucher.wb_doc_no || voucher.doc_no || ""}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={
+                            voucher.freight_type ||
+                            selectedVoucherType.toUpperCase()
+                          }
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={voucher.freight_id || ""}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value=""
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value=""
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value={voucher.remarks || ""}
+                          readOnly
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          className="form-control form-control-sm"
+                          value=""
+                          readOnly
+                        />
+                      </td>
+                    </tr>
+                  ))
+                : Array.from({ length: 15 }).map((_, index) => (
+                    <tr key={index}>
+                      <td>
+                        <input type="checkbox" />
+                      </td>
+                      {[...Array(8)].map((_, i) => (
+                        <td key={i}>
+                          <input
+                            type="text"
+                            className="form-control form-control-sm"
+                          />
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      {/* Remarks */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <strong className="text-black">Remarks</strong>
-          <textarea
-            className="form-control"
-            rows={1}
-            placeholder="Enter remarks here..."
-          ></textarea>
-        </div>
-      </div>
+      {/* 👇 Added margin between master and details table */}
+      <div style={{ height: "100px" }}></div>
 
-      {/* Table */}
-      <div className="table-responsive" style={{ marginTop: "20px" }}>
-        {/* 👆 Added marginTop to move table down */}
-        <table className="table table-bordered table-sm">
-          <thead>
-            <tr className="text-center">
-              <th>Item</th>
-              <th>Part</th>
-              <th>Slip No</th>
-              <th>Vehicle No</th>
-              <th>Delivery Term</th>
-              <th>Item Desc</th>
-              <th>Party Name</th>
+      {/* Detail Table */}
+     <div
+  className="table-responsive"
+  style={{
+    height: "30%",
+    overflowY: "auto",
+    marginTop: "-50px", // 👈 Add this line
+  }}
+>
+
+        <table
+          className="table table-bordered table-sm text-center mb-0"
+          style={{ borderSpacing: "0 4px" }}
+        >
+          <thead
+            style={{
+              backgroundColor: "#f0f0f0",
+              position: "sticky",
+              top: 0,
+              zIndex: 1,
+            }}
+          >
+            <tr>
+              <th>Party</th>
+              <th>Account Code</th>
+              <th>Description</th>
+              <th>Narration</th>
+              <th>Division</th>
+              <th>Cost Center</th>
+              <th>Cycle</th>
               <th>Debit</th>
               <th>Credit</th>
-              <th>Freight Amount</th>
-              <th></th>
             </tr>
           </thead>
           <tbody>
-            {tableData.length > 0
-              ? tableData.map((row, i) => (
-                  <tr key={i}>
-                    <td className="text-center">
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        checked={selectedRows.has(i)}
-                        onChange={(e) =>
-                          handleItemCheckboxChange(i, e.target.checked)
-                        }
-                      />
-                    </td>
-                    <td className="text-center">
-                      <input type="checkbox" className="form-check-input" />
-                    </td>
-                    <td>
-                      {selectedRows.has(i) ? (
-                        <select
-                          id={`slip-dropdown-${i}`}
-                          className="form-control form-control-sm"
-                          value={row.slip_no || ""}
-                          onChange={(e) =>
-                            handleSlipSelection(i, e.target.value)
-                          }
-                        >
-                          <option value="">Select Slip No</option>
-                          {slipData.map((slip, index) => (
-                            <option key={index} value={slip.slip_no}>
-                              {slip.slip_no} - {slip.vehicle_no} - {slip.item_desc}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          className="form-control form-control-sm"
-                          value={row.slip_no || ""}
-                          readOnly
-                          placeholder="Check item box to select slip"
-                        />
-                      )}
-                    </td>
+            {freightItems && Array.isArray(freightItems) && freightItems.length > 0 ? (
+              freightItems.map((item, index) => {
+                console.log(`🔄 Rendering freight item ${index + 1}:`, item);
+                return (
+                  <tr key={item.freight_item_id || `freight-item-${index}`}>
                     <td>
                       <input
+                        type="text"
                         className="form-control form-control-sm"
-                        value={row.vehicle_no || ""}
+                        value={item.vendor_name || "Unknown Vendor"}
                         readOnly
                       />
                     </td>
                     <td>
                       <input
+                        type="text"
                         className="form-control form-control-sm"
-                        value={row.do_date || row.delivery_term || ""}
+                        value={item.item_code || "Unknown Code"}
                         readOnly
                       />
                     </td>
                     <td>
                       <input
+                        type="text"
                         className="form-control form-control-sm"
-                        value={row.item_desc || ""}
+                        value={item.full_item_desc || item.item_desc || item.remarks || "Unknown Item"}
                         readOnly
                       />
                     </td>
                     <td>
                       <input
+                        type="text"
                         className="form-control form-control-sm"
-                        value={row.vendor_name || row.customer_name || ""}
+                        value={`Vehicle: ${item.vehicale_no || "N/A"}, WB ID: ${item.wb_id || "N/A"}`}
                         readOnly
                       />
                     </td>
                     <td>
                       <input
+                        type="text"
                         className="form-control form-control-sm"
-                        value={row.debit_amount || ""}
-                        onChange={(e) =>
-                          handleTableDataChange(
-                            i,
-                            "debit_amount",
-                            e.target.value,
-                          )
-                        }
+                        value={item.delivery_terms || "N/A"}
+                        readOnly
                       />
                     </td>
                     <td>
                       <input
+                        type="text"
                         className="form-control form-control-sm"
-                        value={row.credit_amount || ""}
-                        onChange={(e) =>
-                          handleTableDataChange(
-                            i,
-                            "credit_amount",
-                            e.target.value,
-                          )
-                        }
+                        value={item.branch_id || "N/A"}
+                        readOnly
                       />
                     </td>
                     <td>
                       <input
+                        type="text"
                         className="form-control form-control-sm"
-                        value={row.freight_amount || ""}
-                        onChange={(e) =>
-                          handleTableDataChange(
-                            i,
-                            "freight_amount",
-                            e.target.value,
-                          )
-                        }
+                        value={item.freight_item_id || "N/A"}
+                        readOnly
                       />
                     </td>
                     <td>
-                      <button className="btn btn-sm btn-outline-danger">
-                        X
-                      </button>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={item.debit || "0.00"}
+                        readOnly
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="text"
+                        className="form-control form-control-sm"
+                        value={item.credit || item.freight_amount || "0.00"}
+                        readOnly
+                      />
                     </td>
                   </tr>
-                ))
-              : [...Array(10)].map((_, i) => (
-                  <tr key={i}>
-                    <td className="text-center">
-                      <input
-                        type="checkbox"
-                        className="form-check-input"
-                        checked={selectedRows.has(i)}
-                        onChange={(e) =>
-                          handleItemCheckboxChange(i, e.target.checked)
-                        }
-                      />
-                    </td>
-                    <td className="text-center">
-                      <input type="checkbox" className="form-check-input" />
-                    </td>
-                    <td>
-                      {selectedRows.has(i) ? (
-                        <select
-                          id={`slip-dropdown-${i}`}
-                          className="form-control form-control-sm"
-                          onChange={(e) =>
-                            handleSlipSelection(i, e.target.value)
-                          }
-                        >
-                          <option value="">Select Slip No</option>
-                          {slipData.map((slip, index) => (
-                            <option key={index} value={slip.slip_no}>
-                              {slip.slip_no} - {slip.vehicle_no} - {slip.item_desc}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          className="form-control form-control-sm"
-                          placeholder="Check item box to select slip"
-                          readOnly
-                        />
-                      )}
-                    </td>
-                    <td>
-                      <input className="form-control form-control-sm" />
-                    </td>
-                    <td>
-                      <input className="form-control form-control-sm" />
-                    </td>
-                    <td>
-                      <input className="form-control form-control-sm" />
-                    </td>
-                    <td>
-                      <input className="form-control form-control-sm" />
-                    </td>
-                    <td>
-                      <input className="form-control form-control-sm" />
-                    </td>
-                    <td>
-                      <input className="form-control form-control-sm" />
-                    </td>
-                    <td>
-                      <input className="form-control form-control-sm" />
-                    </td>
-                    <td>
-                      <button className="btn btn-sm btn-outline-danger">
-                        X
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                );
+              })
+            ) : (
+              <>
+                <tr>
+                  <td colSpan="9" style={{ textAlign: "center", padding: "20px" }}>
+                    <strong>
+                      {selectedFreightId ? 
+                        "No freight items found for selected freight voucher" : 
+                        "Select a freight voucher to view details"
+                      }
+                    </strong>
+                  </td>
+                </tr>
+                {Array(9)
+                  .fill(null)
+                  .map((_, rowIdx) => (
+                    <tr key={`empty-row-${rowIdx}`}>
+                      {Array(9)
+                        .fill(null)
+                        .map((_, colIdx) => (
+                          <td key={`empty-cell-${rowIdx}-${colIdx}`}>
+                            <input
+                              type="text"
+                              className="form-control form-control-sm"
+                              value=""
+                              readOnly
+                            />
+                          </td>
+                        ))}
+                    </tr>
+                  ))}
+              </>
+            )}
           </tbody>
         </table>
-      </div>
-
-      {/* Footer Buttons */}
-      <div className="row mt-4">
-        {/* 👆 Increased marginTop to move buttons further down */}
-        <div className="col-md-6 text-start">
-          <button
-            className="btn btn-success px-4"
-            style={{ fontWeight: "bold" }}
-            onClick={handleSave}
-          >
-            [Save]
-          </button>
-        </div>
-        <div className="col-md-6 text-end">
-          <button
-            className="btn btn-danger px-4"
-            style={{ fontWeight: "bold" }}
-          >
-            [Exit]
-          </button>
-        </div>
       </div>
     </div>
   );
 };
 
-export default FreightEntry;
+export default FreightVoucher;
