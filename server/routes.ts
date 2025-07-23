@@ -125,7 +125,7 @@ tus(500).json({ error: "Failed to fetch slip data" });
           cpv_type           VARCHAR(30),
           company_type       VARCHAR(500),
           cheque_no          VARCHAR(50),
-          hatch_no           VARCHAR(200),
+          hatch_no          VARCHAR(200),
           old_status         VARCHAR(500),
           paid_to            VARCHAR(50),
           slip_no            NUMERIC(20,6),
