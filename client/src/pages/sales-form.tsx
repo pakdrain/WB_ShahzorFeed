@@ -2393,36 +2393,36 @@ export default function SalesForm() {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
                       console.log("entry_type:", record.entry_type);
-                      console.log("offline_entry:", record.offline_entry);
 
                       if (record.wb_id) {
-                        // Check if this is an offline entry
-                        const isOfflineEntry = record.offline_entry === "Yes";
-                        
-                        // Determine the correct mode parameter
-                        const modeParam = isOfflineEntry ? "offline" : "online";
-
                         // Navigate based on entry type
                         if (record.entry_type === "PURCHASE") {
                           // Navigate to purchase form
-                          const targetUrl = `/purchase-form?type=${modeParam}&edit=${record.wb_id}`;
-                          console.log("Navigating to purchase form:", targetUrl);
-                          window.location.href = targetUrl;
+                          const urlParams = new URLSearchParams(
+                            window.location.search,
+                          );
+                          const typeMode = urlParams.get("type") || "online";
+                          const targetUrl = `/purchase-form?type=${typeMode}&edit=${record.wb_id}`;
+                          setLocation(targetUrl);
                         } else if (record.entry_type === "PURCHASE_RETURN") {
                           // Navigate to purchase return form
-                          const targetUrl = `/purchase-return?type=${modeParam}&edit=${record.wb_id}`;
-                          console.log("Navigating to purchase return form:", targetUrl);
-                          window.location.href = targetUrl;
+                          const urlParams = new URLSearchParams(
+                            window.location.search,
+                          );
+                          const typeMode = urlParams.get("type") || "online";
+                          const targetUrl = `/purchase-return?type=${typeMode}&edit=${record.wb_id}`;
+                          setLocation(targetUrl);
                         } else if (record.entry_type === "SALE_RETURN") {
                           // Navigate to sales return form
-                          const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
-                          console.log("Navigating to sales return form:", targetUrl);
-                          window.location.href = targetUrl;
+                          const urlParams = new URLSearchParams(
+                            window.location.search,
+                          );
+                          const typeMode = urlParams.get("type") || "online";
+                          const targetUrl = `/sales-return?type=${typeMode}&edit=${record.wb_id}`;
+                          setLocation(targetUrl);
                         } else {
-                          // For SALE entries, navigate to sales form in edit mode with proper URL
-                          const targetUrl = `/sales-form?type=${modeParam}&edit=${record.wb_id}`;
-                          console.log("Navigating to sales form in edit mode:", targetUrl);
-                          window.location.href = targetUrl;
+                          // Load the data for editing (sales entries)
+                          loadDataByWbId(record.wb_id);
                         }
                       }
                     }}
