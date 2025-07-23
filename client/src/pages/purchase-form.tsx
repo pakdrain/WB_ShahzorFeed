@@ -3787,7 +3787,8 @@ function PurchaseForm() {
                         if (record.entry_type === "SALE") {
                           const targetUrl = `/sales-form?type=${modeParam}&edit=${record.wb_id}`;
                           console.log("Navigating to sales form in edit mode:", targetUrl);
-                          setLocation(targetUrl);
+                          // Force page navigation to ensure proper loading
+                          window.location.href = targetUrl;</old_str>
                         } else if (record.entry_type === "SALE_RETURN") {
                           const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
                           console.log(

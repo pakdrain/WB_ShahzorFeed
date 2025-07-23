@@ -627,7 +627,7 @@ export default function SalesForm() {
         // Enable edit mode
         setIsEditMode(true);
         setEditingWbId(master.wb_id);
-        sessionStorage.setItem("salesFormEditMode", "true");
+        console.log("✅ Edit mode enabled for wb_id:", master.wb_id);
 
         // Load all the form data including detail table data
         setFormData((prev) => ({
@@ -1316,15 +1316,6 @@ export default function SalesForm() {
 
     console.log("URL parameters:", { editWbId, searchMode, typeMode });
 
-    // Set a flag when page loads to detect reloads
-    const pageLoadTime = Date.now();
-    const lastPageLoad = sessionStorage.getItem("salesFormPageLoad");
-    const wasInEditMode =
-      sessionStorage.getItem("salesFormEditMode") === "true";
-
-    // Store current page load time
-    sessionStorage.setItem("salesFormPageLoad", pageLoadTime.toString());
-
     // Set online/offline mode based on type parameter - IMMEDIATE UPDATE
     if (typeMode === "offline") {
       console.log("Setting OFFLINE mode from URL parameter");
@@ -1336,8 +1327,6 @@ export default function SalesForm() {
 
     // Check if we should be in search mode
     if (searchMode === "true") {
-      sessionStorage.removeItem("salesFormEditMode");
-      sessionStorage.removeItem("salesFormPageLoad");
       setIsSearchMode(true);
       setIsEditMode(false);
       setEditingWbId(null);
@@ -1345,49 +1334,28 @@ export default function SalesForm() {
       return;
     }
 
-    // If we were in edit mode and this appears to be a page reload (edit param still in URL)
-    if (wasInEditMode && editWbId) {
-      const timeDiff = lastPageLoad ? pageLoadTime - parseInt(lastPageLoad) : 0;
-      // If less than 5 seconds since last page load, likely a reload
-      if (timeDiff < 5000) {
-        console.log(
-          "Page reload detected while in edit mode, clearing edit parameter and resetting to new form",
-        );
-        // Clear edit parameter from URL
-        urlParams.delete("edit");
-        const newUrl = urlParams.toString()
-          ? `${window.location.pathname}?${urlParams.toString()}`
-          : window.location.pathname;
-        window.history.replaceState({}, "", newUrl);
-
-        // Clear session storage and reset to new form
-        sessionStorage.removeItem("salesFormEditMode");
-        sessionStorage.removeItem("salesFormPageLoad");
+    // Check if we should be in edit mode based on URL parameter
+    if (editWbId) {
+      // Load record for editing by wb_id
+      console.log("Edit mode detected from URL parameter, loading data for wb_id:", editWbId);
+      loadDataByWbId(parseInt(editWbId));
+      return; // Exit early to prevent any other initialization
+    } else {
+      // No edit parameter in URL, reset to new form only if not already in edit mode
+      if (isEditMode) {
+        console.log("No edit parameter in URL but currently in edit mode, resetting to new form");
         setIsEditMode(false);
         setEditingWbId(null);
         setTimeout(() => {
           resetFormToInitial();
         }, 100);
-        return;
+      } else if (!formData.slipNo || formData.slipNo === "") {
+        // Only reset if we don't have form data already
+        console.log("No edit parameter and no form data, initializing new form");
+        setTimeout(() => {
+          resetFormToInitial();
+        }, 100);
       }
-    }
-
-    // Check if we should be in edit mode based on URL parameter (fresh navigation)
-    if (editWbId && !wasInEditMode) {
-      // Load record for editing by wb_id
-      console.log("Edit mode detected from URL parameter, loading data");
-      sessionStorage.setItem("salesFormEditMode", "true");
-      loadDataByWbId(parseInt(editWbId));
-    } else if (!editWbId) {
-      // No edit parameter in URL, always reset to new form
-      console.log("No edit parameter in URL, resetting to new form");
-      sessionStorage.removeItem("salesFormEditMode");
-      sessionStorage.removeItem("salesFormPageLoad");
-      setIsEditMode(false);
-      setEditingWbId(null);
-      setTimeout(() => {
-        resetFormToInitial();
-      }, 100);
     }
   }, [location]);
 
