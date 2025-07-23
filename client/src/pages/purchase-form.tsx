@@ -3802,6 +3802,14 @@ function PurchaseForm() {
                             targetUrl,
                           );
                           window.location.href = targetUrl;
+                        } else if (record.entry_type === "SALE") {
+                          // For SALE entries, navigate to sales form in edit mode
+                          const targetUrl = `/sales-form?type=${modeParam}&edit=${record.wb_id}`;
+                          console.log(
+                            "Navigating to sales form in edit mode:",
+                            targetUrl,
+                          );
+                          window.location.href = targetUrl;
                         } else {
                           // For purchase entries, redirect with proper mode
                           const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
