@@ -3810,6 +3810,14 @@ function PurchaseForm() {
                             targetUrl,
                           );
                           window.location.href = targetUrl;
+                        } else if (record.entry_type === "SALE_RETURN") {
+                          // For SALE_RETURN entries, navigate to sales return form
+                          const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
+                          console.log(
+                            "Navigating to sales return form:",
+                            targetUrl,
+                          );
+                          window.location.href = targetUrl;
                         } else {
                           // For purchase entries, redirect with proper mode
                           const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
