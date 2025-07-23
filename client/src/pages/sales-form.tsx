@@ -1086,53 +1086,65 @@ export default function SalesForm() {
       setOnlineMode(true);
     }
 
-    // Fetch next slip number for SALE entry type
-    try {
-      const response = await fetch("/api/purchases/next-slip?entry_type=SALE");
-      const data = await response.json();
+    // Only fetch next slip number if not in edit mode
+    if (!isEditMode && !editingWbId) {
+      // Fetch next slip number for SALE entry type
+      try {
+        const response = await fetch("/api/purchases/next-slip?entry_type=SALE");
+        const data = await response.json();
 
-      setFormData({
-        ...initialFormData,
-        slipNo: data.nextSlipNo,
-        slipInTime: new Date().toISOString().slice(0, 16),
+        setFormData({
+          ...initialFormData,
+          slipNo: data.nextSlipNo,
+          slipInTime: new Date().toISOString().slice(0, 16),
+          onlineEntry: isOfflineMode ? "No" : "Yes",
+          offlineEntry: isOfflineMode ? "Yes" : "No",
+          entryType: "SALE",
+          creationDate: new Date().toISOString(),
+          lastUpdatedDate: new Date().toISOString(),
+          slipDate: new Date().toISOString(),
+        });
+      } catch (error) {
+        console.error("Error fetching next slip number:", error);
+        // Fallback - fetch next SALE slip number
+        setFormData({
+          ...initialFormData,
+          slipNo: "1",
+          slipInTime: new Date().toISOString().slice(0, 16),
+          onlineEntry: isOfflineMode ? "No" : "Yes",
+          offlineEntry: isOfflineMode ? "Yes" : "No",
+          entryType: "SALE",
+          creationDate: new Date().toISOString(),
+          lastUpdatedDate: new Date().toISOString(),
+          slipDate: new Date().toISOString(),
+        });
+      }
+    } else {
+      // In edit mode, just update the online/offline status without changing slip number
+      setFormData((prev) => ({
+        ...prev,
         onlineEntry: isOfflineMode ? "No" : "Yes",
         offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "SALE",
-        creationDate: new Date().toISOString(),
-        lastUpdatedDate: new Date().toISOString(),
-        slipDate: new Date().toISOString(),
-      });
-    } catch (error) {
-      console.error("Error fetching next slip number:", error);
-      // Fallback - fetch next SALE slip number
-      setFormData({
-        ...initialFormData,
-        slipNo: "1",
-        slipInTime: new Date().toISOString().slice(0, 16),
-        onlineEntry: isOfflineMode ? "No" : "Yes",
-        offlineEntry: isOfflineMode ? "Yes" : "No",
-        entryType: "SALE",
-        creationDate: new Date().toISOString(),
-        lastUpdatedDate: new Date().toISOString(),
-        slipDate: new Date().toISOString(),
-      });
+      }));
     }
 
-    // Reset sales data table
-    setSalesData(
-      Array.from({ length: 8 }, (_, index) => ({
-        doId: "",
-        dcNo: "",
-        doNo: "",
-        customerName: "",
-        vehicleNo: "",
-        doDate: "",
-        itemDescription: "",
-        dcQty: "",
-        doQty: "",
-        branch: "",
-      })),
-    );
+    // Reset sales data table only if not in edit mode
+    if (!isEditMode && !editingWbId) {
+      setSalesData(
+        Array.from({ length: 8 }, (_, index) => ({
+          doId: "",
+          dcNo: "",
+          doNo: "",
+          customerName: "",
+          vehicleNo: "",
+          doDate: "",
+          itemDescription: "",
+          dcQty: "",
+          doQty: "",
+          branch: "",
+        })),
+      );
+    }
 
     setIsEditMode(false);
     setEditingWbId(null);
@@ -1414,16 +1426,23 @@ export default function SalesForm() {
   }, [location, onlineMode]);
 
   useEffect(() => {
-    // Fetch next slip number specific to SALE entry type
-    fetch("/api/purchases/next-slip?entry_type=SALE")
-      .then((res) => res.json())
-      .then((data: any) => {
-        setFormData((prev) => ({ ...prev, slipNo: data.nextSlipNo }));
-      })
-      .catch((err: any) => {
-        console.error("Error fetching next slip number:", err);
-        setFormData((prev) => ({ ...prev, slipNo: "1" }));
-      });
+    // Check if we're in edit mode before fetching next slip number
+    const urlParams = new URLSearchParams(window.location.search);
+    const editWbId = urlParams.get("edit");
+    
+    // Only fetch next slip number if not in edit mode
+    if (!editWbId && !isEditMode && !editingWbId) {
+      // Fetch next slip number specific to SALE entry type
+      fetch("/api/purchases/next-slip?entry_type=SALE")
+        .then((res) => res.json())
+        .then((data: any) => {
+          setFormData((prev) => ({ ...prev, slipNo: data.nextSlipNo }));
+        })
+        .catch((err: any) => {
+          console.error("Error fetching next slip number:", err);
+          setFormData((prev) => ({ ...prev, slipNo: "1" }));
+        });
+    }
 
     // Fetch branches for dropdown
     fetch("/api/branches")
