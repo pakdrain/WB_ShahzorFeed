@@ -3786,9 +3786,11 @@ function PurchaseForm() {
 
                         if (record.entry_type === "SALE") {
                           const targetUrl = `/sales-form?type=${modeParam}&edit=${record.wb_id}`;
-                          console.log("Navigating to sales form in edit mode:", targetUrl);
-                          // Force page navigation to ensure proper loading
-                          window.location.href = targetUrl;</old_str>
+                          console.log(
+                            "Navigating to sales form in edit mode:",
+                            targetUrl,
+                          );
+                          setLocation(targetUrl);
                         } else if (record.entry_type === "SALE_RETURN") {
                           const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
                           console.log(
@@ -4806,7 +4808,10 @@ function PurchaseForm() {
                       </div>
 
                       {/* IGP ID - Hidden but keeping functionality */}
-                      <div className="flex items-center gap-2" style={{ display: 'none' }}>
+                      <div
+                        className="flex items-center gap-2"
+                        style={{ display: "none" }}
+                      >
                         <span className="text-xs text-black w-28">IGP ID</span>
                         <Input
                           name="igpId"
@@ -4817,7 +4822,10 @@ function PurchaseForm() {
                       </div>
 
                       {/* Item ID - Hidden but keeping functionality */}
-                      <div className="flex items-center gap-2" style={{ display: 'none' }}>
+                      <div
+                        className="flex items-center gap-2"
+                        style={{ display: "none" }}
+                      >
                         <span className="text-xs text-black w-28">Item ID</span>
                         <Input
                           name="itemId"
