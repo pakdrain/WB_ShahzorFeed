@@ -3819,27 +3819,8 @@ function PurchaseForm() {
                           );
                           window.location.href = targetUrl;
                         } else {
-                          // For purchase entries, redirect with proper mode
-                          const targetUrl = `/purchase-form?form=purchase&type=${modeParam}&edit=${record.wb_id}`;
-                          console.log(
-                            "Navigating to purchase form:",
-                            targetUrl,
-                            "isOfflineEntry:",
-                            isOfflineEntry,
-                          );
-
-                          // Force a hard reload to ensure proper state initialization
-                          if (isOfflineEntry && onlineMode) {
-                            console.log(
-                              "Forcing hard reload for offline entry",
-                            );
-                            window.location.href = targetUrl;
-                          } else if (!isOfflineEntry && !onlineMode) {
-                            console.log("Forcing hard reload for online entry");
-                            window.location.href = targetUrl;
-                          } else {
-                            window.location.href = targetUrl;
-                          }
+                          // For PURCHASE entries, load data in current form
+                          loadDataByWbId(record.wb_id);
                         }
                       }
                     }}
