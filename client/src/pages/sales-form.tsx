@@ -1,4 +1,4 @@
-                      "itemDescription",
+"itemDescription",
                                 e.target.value,
                               )
                             }
@@ -216,3 +216,18 @@
     </div>
   );
 }
+// If we're in edit mode and this entry has both weights, refresh to remove from table
+      if (isEditing && editingEntry && formData.firstWeight && formData.secondWeight) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        return; // Exit here to prevent form reset before refresh
+      }
+
+      // Also check if we just added a second weight to an existing entry
+      if (formData.firstWeight && formData.secondWeight && formData.slipNo) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        return; // Exit here to prevent form reset before refresh
+      }
