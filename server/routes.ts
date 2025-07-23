@@ -3382,14 +3382,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`✅ Freight master data saved with ID: ${freightId}`);
 
-      // Insert master data into gl_voucher table
+      // Insert master data into gl_vouchers table (note: gl_vouchers not gl_voucher)
       const voucherQuery = `
-        INSERT INTO gl_voucher (
+        INSERT INTO gl_vouchers (
           voucher_type, voucher_date, description, created_by, creation_date,
           status, branch_id, reference_no, entry_remarks, company_name,
-          module, module_doc_id
+          module, module_doc, module_doc_id
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING voucher_id
       `;
 
@@ -3405,6 +3405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         masterData.remarks || "",
         "Sabirs' Poultry (Pvt.) Ltd",
         "FREIGHT", // module
+        "gl_freight", // module_doc - indicates this is from freight module
         freightId, // module_doc_id - reference to freight_id
       ];
 
