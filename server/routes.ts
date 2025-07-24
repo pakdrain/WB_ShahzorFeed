@@ -1681,13 +1681,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentEntryType = currentRecord.rows[0].entry_type;
       console.log(`Updating record with wb_id: ${wbId}, entry_type: ${currentEntryType}`);
 
-      // Determine expected entry type based on the calling form
-      const expectedEntryType = updateData.entry_type || currentEntryType;
-      
-      // Validate that we're updating the correct entry type
-      if (currentEntryType !== expectedEntryType) {
+      // Validate that we're updating the correct entry type - only allow PURCHASE related entries
+      const allowedEntryTypes = ['PURCHASE', 'PURCHASE_RETURN'];
+      if (!allowedEntryTypes.includes(currentEntryType)) {
         return res.status(400).json({ 
-          error: `Cannot update ${currentEntryType} record from ${expectedEntryType} form. Please use the correct form.` 
+          error: `Cannot update ${currentEntryType} record from PURCHASE form. Please use the correct form.` 
         });
       }
 
@@ -1857,6 +1855,175 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error stack:", error.stack);
       res.status(500).json({
         error: "Failed to update purchase record",
+        details: error.message,
+      });
+    }
+  });
+
+  // PUT update sales record
+  app.put("/api/sales/update/:wbId", async (req: Request, res: Response) => {
+    try {
+      const { wbId } = req.params;
+      const updateData = req.body;
+
+      // First, get the current record to determine its entry type
+      const currentRecordQuery = `SELECT entry_type FROM wb_weighbridge WHERE wb_id = $1`;
+      const currentRecord = await pool.query(currentRecordQuery, [wbId]);
+      
+      if (currentRecord.rows.length === 0) {
+        return res.status(404).json({ error: "Record not found" });
+      }
+
+      const currentEntryType = currentRecord.rows[0].entry_type;
+      console.log(`Updating sales record with wb_id: ${wbId}, entry_type: ${currentEntryType}`);
+
+      // Validate that we're updating the correct entry type - only allow SALE related entries
+      const allowedEntryTypes = ['SALE', 'SALE_RETURN'];
+      if (!allowedEntryTypes.includes(currentEntryType)) {
+        return res.status(400).json({ 
+          error: `Cannot update ${currentEntryType} record from SALES form. Please use the correct form.` 
+        });
+      }
+
+      const {
+        slip_no = null,
+        slip_in_time = null,
+        first_weight = null,
+        second_weight = null,
+        net_weight = null,
+        bardana_weight = null,
+        gross_weight = null,
+        freight = null,
+        remarks = null,
+        driver_name = null,
+        slip_out_time = null,
+        online_entry = null,
+        offline_entry = null,
+      } = updateData;
+
+      const query = `
+        UPDATE wb_weighbridge 
+        SET 
+          slip_no = $2,
+          slip_in_time = $3,
+          first_weight = $4,
+          second_weight = $5,
+          net_weight = $6,
+          bardana_weight = $7,
+          gross_weight = $8,
+          freight = $9,
+          remarks = $10,
+          driver_name = $11,
+          slip_out_time = $12,
+          online_entry = $13,
+          offline_entry = $14,
+          last_updated_date = CURRENT_TIMESTAMP
+        WHERE wb_id = $1 AND entry_type = ANY($15)
+        RETURNING *;
+      `;
+
+      const values = [
+        wbId,
+        slip_no,
+        slip_in_time,
+        first_weight ? parseFloat(first_weight) : null,
+        second_weight ? parseFloat(second_weight) : null,
+        net_weight ? parseFloat(net_weight) : null,
+        bardana_weight ? parseFloat(bardana_weight) : null,
+        gross_weight ? parseFloat(gross_weight) : null,
+        freight ? parseFloat(freight) : null,
+        remarks,
+        driver_name,
+        slip_out_time,
+        online_entry,
+        offline_entry,
+        allowedEntryTypes, // Use array of allowed entry types
+      ];
+
+      const result = await pool.query(query, values);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: `${currentEntryType} record not found or entry type mismatch` });
+      }
+
+      // Also update the details table for sales
+      const {
+        vehicle_no = null,
+        vendor_name = null,
+        po_no = null,
+        igp_no = null,
+        item_code = null,
+        item_desc = null,
+        po_qty = null,
+        igp_qty = null,
+        balance_qty = null,
+        igp_date = null,
+        weight_per_bags = null,
+        no_of_bags = null,
+        bardana_type = null,
+      } = updateData;
+
+      // Check if details record exists for this specific wb_id, then update or insert accordingly
+      const checkQuery = `
+        SELECT wbip.wb_item_p_id 
+        FROM wb_weighbridge_items_purchase wbip
+        INNER JOIN wb_weighbridge wb ON wbip.wb_id = wb.wb_id
+        WHERE wbip.wb_id = $1 AND wb.entry_type = ANY($2)
+      `;
+      const checkResult = await pool.query(checkQuery, [wbId, allowedEntryTypes]);
+
+      if (checkResult.rows.length > 0) {
+        // Update existing record
+        const detailsQuery = `
+          UPDATE wb_weighbridge_items_purchase 
+          SET 
+            vehicle_no = $2,
+            vendor_name = $3,
+            po_no = $4,
+            igp_no = $5,
+            item_code = $6,
+            item_desc = $7,
+            po_qty = $8,
+            igp_qty = $9,
+            balance_qty = $10,
+            igp_date = $11,
+            weight_per_bags = $12,
+            no_of_bags = $13,
+            bardana_type = $14
+          WHERE wb_id = $1 
+          AND EXISTS (SELECT 1 FROM wb_weighbridge WHERE wb_id = $1 AND entry_type = ANY($15))
+          RETURNING *;
+        `;
+
+        const detailsValues = [
+          wbId,
+          vehicle_no,
+          vendor_name,
+          po_no,
+          igp_no,
+          item_code,
+          item_desc,
+          po_qty ? parseFloat(po_qty) : null,
+          igp_qty ? parseFloat(igp_qty) : null,
+          balance_qty ? parseFloat(balance_qty) : null,
+          igp_date,
+          weight_per_bags ? parseFloat(weight_per_bags) : null,
+          no_of_bags ? parseInt(no_of_bags) : null,
+          bardana_type,
+          allowedEntryTypes,
+        ];
+
+        await pool.query(detailsQuery, detailsValues);
+      }
+
+      console.log(`Updated ${currentEntryType} record: WB_ID ${wbId}`);
+      res.json(result.rows[0]);
+    } catch (error: any) {
+      console.error("Error updating sales record:", error);
+      console.error("Error details:", error.message);
+      console.error("Error stack:", error.stack);
+      res.status(500).json({
+        error: "Failed to update sales record",
         details: error.message,
       });
     }

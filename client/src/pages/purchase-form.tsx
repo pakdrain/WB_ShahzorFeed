@@ -2834,6 +2834,18 @@ function PurchaseForm() {
       if (isEditMode) {
         alert("Record updated successfully!");
         
+        // Clear edit mode and URL parameters
+        setIsEditMode(false);
+        setEditingWbId(null);
+        
+        // Clear edit parameter from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.delete("edit");
+        const newUrl = urlParams.toString() 
+          ? `${window.location.pathname}?${urlParams.toString()}`
+          : window.location.pathname;
+        window.history.replaceState({}, "", newUrl);
+        
         // Fetch the next available slip number for this entry type after successful edit
         try {
           const nextSlipResponse = await fetch(`/api/purchases/next-slip?entry_type=${currentEntryType}`);
@@ -2842,14 +2854,38 @@ function PurchaseForm() {
             const nextSlipNo = nextSlipData.nextSlipNo || "1";
             console.log(`Next slip number after edit: ${nextSlipNo} for ${currentEntryType}`);
             
-            // Reset form with the correct next slip number
-            setTimeout(() => {
-              resetFormToInitial();
-              setFormData(prev => ({
-                ...prev,
-                slipNo: nextSlipNo
-              }));
-            }, 100);
+            // Reset form completely with the correct next slip number
+            resetFormToInitial();
+            setFormData(prev => ({
+              ...prev,
+              slipNo: nextSlipNo,
+              slipInTime: new Date().toISOString().slice(0, 16),
+              onlineEntry: onlineMode ? "Yes" : "No",
+              offlineEntry: onlineMode ? "No" : "Yes",
+              entryType: "PURCHASE",
+              creationDate: new Date().toISOString(),
+              lastUpdatedDate: new Date().toISOString(),
+              slipDate: new Date().toISOString(),
+            }));
+            
+            // Clear IGP items and sales data
+            setIgpItems([]);
+            setSalesData(Array.from({ length: 8 }, () => ({
+              doId: "",
+              dcNo: "",
+              doNo: "",
+              customerName: "",
+              vehicleNo: "",
+              doDate: "",
+              itemDescription: "",
+              dcQty: "",
+              doQty: "",
+              branch: "",
+            })));
+            
+            // Clear bag table data
+            setBagTableData([]);
+            setNextBagId(1);
           }
         } catch (slipError) {
           console.error("Error fetching next slip number after edit:", slipError);
