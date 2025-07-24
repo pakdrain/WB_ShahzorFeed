@@ -1681,6 +1681,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const currentEntryType = currentRecord.rows[0].entry_type;
       console.log(`Updating record with wb_id: ${wbId}, entry_type: ${currentEntryType}`);
 
+      // Determine expected entry type based on the calling form
+      const expectedEntryType = updateData.entry_type || currentEntryType;
+      
+      // Validate that we're updating the correct entry type
+      if (currentEntryType !== expectedEntryType) {
+        return res.status(400).json({ 
+          error: `Cannot update ${currentEntryType} record from ${expectedEntryType} form. Please use the correct form.` 
+        });
+      }
+
       const {
         slip_no = null,
         slip_in_time = null,
@@ -1739,7 +1749,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await pool.query(query, values);
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: "Purchase record not found" });
+        return res.status(404).json({ error: `${currentEntryType} record not found or entry type mismatch` });
       }
 
       // Also update the details table
@@ -1811,7 +1821,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         await pool.query(detailsQuery, detailsValues);
       } else {
-        // Insert new record
+        // Insert new record only if it doesn't exist
         const insertQuery = `
           INSERT INTO wb_weighbridge_items_purchase (
             wb_id, vehicle_no, vendor_name, po_no, igp_no, item_code, item_desc, po_qty, igp_qty, balance_qty, igp_date, weight_per_bags, no_of_bags, bardana_type
@@ -1839,7 +1849,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await pool.query(insertQuery, insertValues);
       }
 
-      console.log(`Updated purchase record: WB_ID ${wbId}`);
+      console.log(`Updated ${currentEntryType} record: WB_ID ${wbId}`);
       res.json(result.rows[0]);
     } catch (error: any) {
       console.error("Error updating purchase record:", error);

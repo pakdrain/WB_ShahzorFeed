@@ -1550,6 +1550,7 @@ export default function SalesForm() {
         const updatePayload = {
           slip_no: formData.slipNo || null,
           slip_in_time: formatISODate(formData.slipInTime),
+          entry_type: "SALE", // Include entry type for validation
           first_weight:
             formData.firstWeight && formData.firstWeight.trim() !== ""
               ? parseFloat(formData.firstWeight)
