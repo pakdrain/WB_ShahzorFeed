@@ -1670,25 +1670,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { wbId } = req.params;
       const updateData = req.body;
 
-      // First, get the current record to determine its entry type
-      const currentRecordQuery = `SELECT entry_type FROM wb_weighbridge WHERE wb_id = $1`;
-      const currentRecord = await pool.query(currentRecordQuery, [wbId]);
-      
-      if (currentRecord.rows.length === 0) {
-        return res.status(404).json({ error: "Record not found" });
-      }
-
-      const currentEntryType = currentRecord.rows[0].entry_type;
-      console.log(`Updating record with wb_id: ${wbId}, entry_type: ${currentEntryType}`);
-
-      // Validate that we're updating the correct entry type - only allow PURCHASE related entries
-      const allowedEntryTypes = ['PURCHASE', 'PURCHASE_RETURN'];
-      if (!allowedEntryTypes.includes(currentEntryType)) {
-        return res.status(400).json({ 
-          error: `Cannot update ${currentEntryType} record from PURCHASE form. Please use the correct form.` 
-        });
-      }
-
       const {
         slip_no = null,
         slip_in_time = null,
@@ -1722,7 +1703,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           online_entry = $13,
           offline_entry = $14,
           last_updated_date = CURRENT_TIMESTAMP
-        WHERE wb_id = $1 AND entry_type = $15
+        WHERE wb_id = $1
         RETURNING *;
       `;
 
@@ -1741,13 +1722,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slip_out_time,
         online_entry,
         offline_entry,
-        currentEntryType, // Add entry type to ensure we only update the correct record type
       ];
 
       const result = await pool.query(query, values);
 
       if (result.rows.length === 0) {
-        return res.status(404).json({ error: `${currentEntryType} record not found or entry type mismatch` });
+        return res.status(404).json({ error: "Purchase record not found" });
       }
 
       // Also update the details table
@@ -1767,17 +1747,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bardana_type = null,
       } = updateData;
 
-      // Check if details record exists for this specific wb_id, then update or insert accordingly
-      const checkQuery = `
-        SELECT wbip.wb_item_p_id 
-        FROM wb_weighbridge_items_purchase wbip
-        INNER JOIN wb_weighbridge wb ON wbip.wb_id = wb.wb_id
-        WHERE wbip.wb_id = $1 AND wb.entry_type = $2
-      `;
-      const checkResult = await pool.query(checkQuery, [wbId, currentEntryType]);
+      // Check if details record exists, then update or insert accordingly
+      const checkQuery = `SELECT wb_item_p_id FROM wb_weighbridge_items_purchase WHERE wb_id = $1`;
+      const checkResult = await pool.query(checkQuery, [wbId]);
 
       if (checkResult.rows.length > 0) {
-        // Update existing record - make sure we're updating the right entry type
+        // Update existing record
         const detailsQuery = `
           UPDATE wb_weighbridge_items_purchase 
           SET 
@@ -1794,8 +1769,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             weight_per_bags = $12,
             no_of_bags = $13,
             bardana_type = $14
-          WHERE wb_id = $1 
-          AND EXISTS (SELECT 1 FROM wb_weighbridge WHERE wb_id = $1 AND entry_type = $15)
+          WHERE wb_id = $1
           RETURNING *;
         `;
 
@@ -1814,12 +1788,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           weight_per_bags ? parseFloat(weight_per_bags) : null,
           no_of_bags ? parseInt(no_of_bags) : null,
           bardana_type,
-          currentEntryType, // Add entry type validation
         ];
 
         await pool.query(detailsQuery, detailsValues);
       } else {
-        // Insert new record only if it doesn't exist
+        // Insert new record
         const insertQuery = `
           INSERT INTO wb_weighbridge_items_purchase (
             wb_id, vehicle_no, vendor_name, po_no, igp_no, item_code, item_desc, po_qty, igp_qty, balance_qty, igp_date, weight_per_bags, no_of_bags, bardana_type
@@ -1847,7 +1820,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await pool.query(insertQuery, insertValues);
       }
 
-      console.log(`Updated ${currentEntryType} record: WB_ID ${wbId}`);
+      console.log(`Updated purchase record: WB_ID ${wbId}`);
       res.json(result.rows[0]);
     } catch (error: any) {
       console.error("Error updating purchase record:", error);
@@ -1855,175 +1828,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error stack:", error.stack);
       res.status(500).json({
         error: "Failed to update purchase record",
-        details: error.message,
-      });
-    }
-  });
-
-  // PUT update sales record
-  app.put("/api/sales/update/:wbId", async (req: Request, res: Response) => {
-    try {
-      const { wbId } = req.params;
-      const updateData = req.body;
-
-      // First, get the current record to determine its entry type
-      const currentRecordQuery = `SELECT entry_type FROM wb_weighbridge WHERE wb_id = $1`;
-      const currentRecord = await pool.query(currentRecordQuery, [wbId]);
-      
-      if (currentRecord.rows.length === 0) {
-        return res.status(404).json({ error: "Record not found" });
-      }
-
-      const currentEntryType = currentRecord.rows[0].entry_type;
-      console.log(`Updating sales record with wb_id: ${wbId}, entry_type: ${currentEntryType}`);
-
-      // Validate that we're updating the correct entry type - only allow SALE related entries
-      const allowedEntryTypes = ['SALE', 'SALE_RETURN'];
-      if (!allowedEntryTypes.includes(currentEntryType)) {
-        return res.status(400).json({ 
-          error: `Cannot update ${currentEntryType} record from SALES form. Please use the correct form.` 
-        });
-      }
-
-      const {
-        slip_no = null,
-        slip_in_time = null,
-        first_weight = null,
-        second_weight = null,
-        net_weight = null,
-        bardana_weight = null,
-        gross_weight = null,
-        freight = null,
-        remarks = null,
-        driver_name = null,
-        slip_out_time = null,
-        online_entry = null,
-        offline_entry = null,
-      } = updateData;
-
-      const query = `
-        UPDATE wb_weighbridge 
-        SET 
-          slip_no = $2,
-          slip_in_time = $3,
-          first_weight = $4,
-          second_weight = $5,
-          net_weight = $6,
-          bardana_weight = $7,
-          gross_weight = $8,
-          freight = $9,
-          remarks = $10,
-          driver_name = $11,
-          slip_out_time = $12,
-          online_entry = $13,
-          offline_entry = $14,
-          last_updated_date = CURRENT_TIMESTAMP
-        WHERE wb_id = $1 AND entry_type = ANY($15)
-        RETURNING *;
-      `;
-
-      const values = [
-        wbId,
-        slip_no,
-        slip_in_time,
-        first_weight ? parseFloat(first_weight) : null,
-        second_weight ? parseFloat(second_weight) : null,
-        net_weight ? parseFloat(net_weight) : null,
-        bardana_weight ? parseFloat(bardana_weight) : null,
-        gross_weight ? parseFloat(gross_weight) : null,
-        freight ? parseFloat(freight) : null,
-        remarks,
-        driver_name,
-        slip_out_time,
-        online_entry,
-        offline_entry,
-        allowedEntryTypes, // Use array of allowed entry types
-      ];
-
-      const result = await pool.query(query, values);
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({ error: `${currentEntryType} record not found or entry type mismatch` });
-      }
-
-      // Also update the details table for sales
-      const {
-        vehicle_no = null,
-        vendor_name = null,
-        po_no = null,
-        igp_no = null,
-        item_code = null,
-        item_desc = null,
-        po_qty = null,
-        igp_qty = null,
-        balance_qty = null,
-        igp_date = null,
-        weight_per_bags = null,
-        no_of_bags = null,
-        bardana_type = null,
-      } = updateData;
-
-      // Check if details record exists for this specific wb_id, then update or insert accordingly
-      const checkQuery = `
-        SELECT wbip.wb_item_p_id 
-        FROM wb_weighbridge_items_purchase wbip
-        INNER JOIN wb_weighbridge wb ON wbip.wb_id = wb.wb_id
-        WHERE wbip.wb_id = $1 AND wb.entry_type = ANY($2)
-      `;
-      const checkResult = await pool.query(checkQuery, [wbId, allowedEntryTypes]);
-
-      if (checkResult.rows.length > 0) {
-        // Update existing record
-        const detailsQuery = `
-          UPDATE wb_weighbridge_items_purchase 
-          SET 
-            vehicle_no = $2,
-            vendor_name = $3,
-            po_no = $4,
-            igp_no = $5,
-            item_code = $6,
-            item_desc = $7,
-            po_qty = $8,
-            igp_qty = $9,
-            balance_qty = $10,
-            igp_date = $11,
-            weight_per_bags = $12,
-            no_of_bags = $13,
-            bardana_type = $14
-          WHERE wb_id = $1 
-          AND EXISTS (SELECT 1 FROM wb_weighbridge WHERE wb_id = $1 AND entry_type = ANY($15))
-          RETURNING *;
-        `;
-
-        const detailsValues = [
-          wbId,
-          vehicle_no,
-          vendor_name,
-          po_no,
-          igp_no,
-          item_code,
-          item_desc,
-          po_qty ? parseFloat(po_qty) : null,
-          igp_qty ? parseFloat(igp_qty) : null,
-          balance_qty ? parseFloat(balance_qty) : null,
-          igp_date,
-          weight_per_bags ? parseFloat(weight_per_bags) : null,
-          no_of_bags ? parseInt(no_of_bags) : null,
-          bardana_type,
-          allowedEntryTypes,
-        ];
-
-        await pool.query(detailsQuery, detailsValues);
-      }
-
-      console.log(`Updated ${currentEntryType} record: WB_ID ${wbId}`);
-      res.json(result.rows[0]);
-    } catch (error: any) {
-      console.error("Error updating sales record:", error);
-      console.error("Error details:", error.message);
-      console.error("Error stack:", error.stack);
-      res.status(500).json({
-        error: "Failed to update sales record",
         details: error.message,
       });
     }
@@ -2303,7 +2107,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Try database first - enhanced query to handle separate sequences
+        // Try database first
         const query = `
           SELECT slip_no FROM wb_weighbridge 
           WHERE entry_type = $1 AND slip_no ~ '^[0-9]+$'
@@ -2317,53 +2121,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (result.rows.length > 0 && result.rows[0].slip_no) {
           const currentNumber = parseInt(result.rows[0].slip_no, 10);
           if (!isNaN(currentNumber)) {
-            // Find the next available slip number for this entry type
-            let candidateSlipNo = currentNumber + 1;
-            
-            // Check if this slip number already exists for this entry type
-            let conflictCheckQuery = `
-              SELECT COUNT(*) as count FROM wb_weighbridge 
-              WHERE entry_type = $1 AND slip_no = $2
-            `;
-            
-            let conflictExists = true;
-            while (conflictExists) {
-              const conflictResult = await pool.query(conflictCheckQuery, [
-                entry_type.toUpperCase(), 
-                candidateSlipNo.toString()
-              ]);
-              
-              if (parseInt(conflictResult.rows[0].count) === 0) {
-                conflictExists = false;
-                nextSlipNo = candidateSlipNo.toString();
-              } else {
-                candidateSlipNo++;
-              }
-            }
+            nextSlipNo = (currentNumber + 1).toString();
           }
         }
 
         console.log(
-          `Generated next available slip number for ${entry_type}: ${nextSlipNo}`,
+          `Generated next slip number for ${entry_type}: ${nextSlipNo}`,
         );
         res.json({ nextSlipNo });
       } catch (dbError) {
-        // Database fallback - use in-memory storage with entry type separation
+        // Database fallback - use in-memory storage
         console.log(
           "Database not available, using in-memory storage for slip numbers",
         );
 
         const entryTypeKey = entry_type.toUpperCase();
-        let currentSlipNo = inMemorySlipNumbers.get(entryTypeKey) || 1;
-        
-        // Ensure we don't conflict with existing in-memory entries
-        while (inMemorySlipNumbers.has(`${entryTypeKey}_${currentSlipNo}`)) {
-          currentSlipNo++;
-        }
-        
-        const nextSlipNo = currentSlipNo.toString();
+        const currentSlipNo =
+          inMemorySlipNumbers.get(entryTypeKey) || nextSlipNumber;
+        const nextSlipNo = (currentSlipNo + 1).toString();
+
         inMemorySlipNumbers.set(entryTypeKey, currentSlipNo + 1);
-        inMemorySlipNumbers.set(`${entryTypeKey}_${currentSlipNo}`, true);
 
         console.log(
           `Generated next slip number for ${entry_type}: ${nextSlipNo}`,
@@ -3353,9 +3130,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create gl_voucher table if it doesn't exist
-  app.post("/api/create-gl-voucher-table", async (req: Request, res: Response) => {
-    try {
-      await pool.query(`
+  app.post(
+    "/api/create-gl-voucher-table",
+    async (req: Request, res: Response) => {
+      try {
+        await pool.query(`
         CREATE TABLE IF NOT EXISTS gl_voucher (
           voucher_id SERIAL PRIMARY KEY,
           voucher_type VARCHAR(20),
@@ -3433,8 +3212,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         )
       `);
 
-      // Create gl_voucher_accounts table with correct structure
-      await pool.query(`
+        // Create gl_voucher_accounts table with correct structure
+        await pool.query(`
         CREATE TABLE IF NOT EXISTS gl_voucher_accounts (
           voucher_account_id BIGSERIAL PRIMARY KEY,
           voucher_id BIGINT,
@@ -3498,15 +3277,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         )
       `);
 
-      res.json({
-        success: true,
-        message: "gl_voucher and gl_voucher_accounts tables created successfully",
-      });
-    } catch (error: any) {
-      console.error("Error creating gl_voucher tables:", error);
-      res.status(500).json({ error: "Failed to create gl_voucher tables" });
-    }
-  });
+        res.json({
+          success: true,
+          message:
+            "gl_voucher and gl_voucher_accounts tables created successfully",
+        });
+      } catch (error: any) {
+        console.error("Error creating gl_voucher tables:", error);
+        res.status(500).json({ error: "Failed to create gl_voucher tables" });
+      }
+    },
+  );
 
   // Save freight data to gl_freight table
   app.post("/api/freight/save", async (req: Request, res: Response) => {
@@ -3682,7 +3463,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             masterData.creationDate || new Date(),
           ];
 
-          console.log(`Inserting freight item ${i + 1} with values:`, itemValues);
+          console.log(
+            `Inserting freight item ${i + 1} with values:`,
+            itemValues,
+          );
 
           await pool.query(itemQuery, itemValues);
 
@@ -3700,7 +3484,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             voucherId,
             1, // default account_id - you may need to adjust this based on your chart of accounts
             slip.debit_amount ? parseFloat(slip.debit_amount) : 0,
-            slip.credit_amount ? parseFloat(slip.credit_amount) : (slip.freight_amount ? parseFloat(slip.freight_amount) : 0),
+            slip.credit_amount
+              ? parseFloat(slip.credit_amount)
+              : slip.freight_amount
+                ? parseFloat(slip.freight_amount)
+                : 0,
             slip.item_desc || "Freight charges",
             masterData.createdBy || 1,
             masterData.creationDate || new Date(),
@@ -3713,11 +3501,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             masterData.docDate || new Date(), // doc_date
           ];
 
-          console.log(`Inserting voucher account ${i + 1} with values:`, voucherAccountValues);
+          console.log(
+            `Inserting voucher account ${i + 1} with values:`,
+            voucherAccountValues,
+          );
 
           await pool.query(voucherAccountQuery, voucherAccountValues);
 
-          console.log(`✅ Saved freight item and voucher account for slip: ${slip.slip_no}`);
+          console.log(
+            `✅ Saved freight item and voucher account for slip: ${slip.slip_no}`,
+          );
         }
       }
 
@@ -3727,7 +3520,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         freight_id: freightId,
         voucher_id: voucherId,
-        message: "Freight data saved successfully to both gl_freight/gl_freight_items and gl_vouchers/gl_voucher_accounts tables",
+        message:
+          "Freight data saved successfully to both gl_freight/gl_freight_items and gl_vouchers/gl_voucher_accounts tables",
       });
     } catch (error: any) {
       console.error("❌ Error saving freight data:", error);

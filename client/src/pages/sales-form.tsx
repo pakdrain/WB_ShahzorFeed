@@ -1090,7 +1090,9 @@ export default function SalesForm() {
     if (!isEditMode && !editingWbId) {
       // Fetch next slip number for SALE entry type
       try {
-        const response = await fetch("/api/purchases/next-slip?entry_type=SALE");
+        const response = await fetch(
+          "/api/purchases/next-slip?entry_type=SALE",
+        );
         const data = await response.json();
 
         setFormData({
@@ -1349,13 +1351,18 @@ export default function SalesForm() {
     // Check if we should be in edit mode based on URL parameter
     if (editWbId) {
       // Load record for editing by wb_id
-      console.log("Edit mode detected from URL parameter, loading data for wb_id:", editWbId);
+      console.log(
+        "Edit mode detected from URL parameter, loading data for wb_id:",
+        editWbId,
+      );
       loadDataByWbId(parseInt(editWbId));
       return; // Exit early to prevent any other initialization
     } else {
       // No edit parameter in URL, reset to new form only if not already in edit mode
       if (isEditMode) {
-        console.log("No edit parameter in URL but currently in edit mode, resetting to new form");
+        console.log(
+          "No edit parameter in URL but currently in edit mode, resetting to new form",
+        );
         setIsEditMode(false);
         setEditingWbId(null);
         setTimeout(() => {
@@ -1363,7 +1370,9 @@ export default function SalesForm() {
         }, 100);
       } else if (!formData.slipNo || formData.slipNo === "") {
         // Only reset if we don't have form data already
-        console.log("No edit parameter and no form data, initializing new form");
+        console.log(
+          "No edit parameter and no form data, initializing new form",
+        );
         setTimeout(() => {
           resetFormToInitial();
         }, 100);
@@ -1429,7 +1438,7 @@ export default function SalesForm() {
     // Check if we're in edit mode before fetching next slip number
     const urlParams = new URLSearchParams(window.location.search);
     const editWbId = urlParams.get("edit");
-    
+
     // Only fetch next slip number if not in edit mode
     if (!editWbId && !isEditMode && !editingWbId) {
       // Fetch next slip number specific to SALE entry type
@@ -1546,11 +1555,10 @@ export default function SalesForm() {
       if (isEditMode && editingWbId) {
         // UPDATE MODE: Update existing record
         console.log("Updating existing sales record with wb_id:", editingWbId);
-        
+
         const updatePayload = {
           slip_no: formData.slipNo || null,
           slip_in_time: formatISODate(formData.slipInTime),
-          entry_type: "SALE", // Include entry type for validation
           first_weight:
             formData.firstWeight && formData.firstWeight.trim() !== ""
               ? parseFloat(formData.firstWeight)
@@ -1604,23 +1612,36 @@ export default function SalesForm() {
           status: formData.status || null,
           slip_date: formData.slipDate || null,
           // Include sales data fields in update
-          vendor_name: salesData.find(row => row.customerName)?.customerName || null,
-          vehicle_no: salesData.find(row => row.vehicleNo)?.vehicleNo || formData.vehicleNo || null,
-          po_no: salesData.find(row => row.doNo)?.doNo || null,
-          igp_no: salesData.find(row => row.dcNo)?.dcNo || null,
-          item_desc: salesData.find(row => row.itemDescription)?.itemDescription || null,
-          po_qty: salesData.find(row => row.doQty)?.doQty ? parseFloat(salesData.find(row => row.doQty)?.doQty!) : null,
-          igp_qty: salesData.find(row => row.dcQty)?.dcQty ? parseFloat(salesData.find(row => row.dcQty)?.dcQty!) : null,
-          igp_date: salesData.find(row => row.doDate)?.doDate || null,
+          vendor_name:
+            salesData.find((row) => row.customerName)?.customerName || null,
+          vehicle_no:
+            salesData.find((row) => row.vehicleNo)?.vehicleNo ||
+            formData.vehicleNo ||
+            null,
+          po_no: salesData.find((row) => row.doNo)?.doNo || null,
+          igp_no: salesData.find((row) => row.dcNo)?.dcNo || null,
+          item_desc:
+            salesData.find((row) => row.itemDescription)?.itemDescription ||
+            null,
+          po_qty: salesData.find((row) => row.doQty)?.doQty
+            ? parseFloat(salesData.find((row) => row.doQty)?.doQty!)
+            : null,
+          igp_qty: salesData.find((row) => row.dcQty)?.dcQty
+            ? parseFloat(salesData.find((row) => row.dcQty)?.dcQty!)
+            : null,
+          igp_date: salesData.find((row) => row.doDate)?.doDate || null,
         };
 
-        const updateResponse = await fetch(`/api/purchase/update/${editingWbId}`, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
+        const updateResponse = await fetch(
+          `/api/purchase/update/${editingWbId}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatePayload),
           },
-          body: JSON.stringify(updatePayload),
-        });
+        );
 
         if (!updateResponse.ok) {
           const errorText = await updateResponse.text();
@@ -1632,7 +1653,7 @@ export default function SalesForm() {
       } else {
         // CREATE MODE: Create new record
         console.log("Creating new sales record");
-        
+
         // Generate WB_ID for the sales record
         const wbIdResponse = await fetch("/api/purchases", {
           method: "GET",
@@ -1757,16 +1778,24 @@ export default function SalesForm() {
             item_code: null,
             item_desc: row.itemDescription || null,
             po_qty:
-              row.doQty && row.doQty.trim() !== "" ? parseFloat(row.doQty) : null,
+              row.doQty && row.doQty.trim() !== ""
+                ? parseFloat(row.doQty)
+                : null,
             igp_qty:
-              row.dcQty && row.dcQty.trim() !== "" ? parseFloat(row.dcQty) : null,
+              row.dcQty && row.dcQty.trim() !== ""
+                ? parseFloat(row.dcQty)
+                : null,
             balance_qty: null,
             customer_name: row.customerName || null,
             do_no: row.doNo || null,
             do_qty:
-              row.doQty && row.doQty.trim() !== "" ? parseFloat(row.doQty) : null,
+              row.doQty && row.doQty.trim() !== ""
+                ? parseFloat(row.doQty)
+                : null,
             dc_qty:
-              row.dcQty && row.dcQty.trim() !== "" ? parseFloat(row.dcQty) : null,
+              row.dcQty && row.dcQty.trim() !== ""
+                ? parseFloat(row.dcQty)
+                : null,
           };
 
           const salesItemResponse = await fetch("/api/purchase-items", {
@@ -1784,7 +1813,11 @@ export default function SalesForm() {
       }
 
       console.log("Sales data saved successfully");
-      alert(isEditMode ? "Sales data updated successfully!" : "Sales data saved successfully!");
+      alert(
+        isEditMode
+          ? "Sales data updated successfully!"
+          : "Sales data saved successfully!",
+      );
 
       // Reset sales data table after successful save
       setSalesData(
@@ -2297,7 +2330,7 @@ export default function SalesForm() {
         setIsEditMode(false);
         setEditingWbId(null);
         sessionStorage.removeItem("salesFormEditMode");
-        
+
         // Clear URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         urlParams.delete("edit");
@@ -2321,17 +2354,17 @@ export default function SalesForm() {
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
-      <div className="absolute top-20 right-4 z-50">
-        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72 mb-4">
+      <div className="absolute top-20 right-14 z-50">
+        <div className="bg-white border-2 border-gray-400 rounded-md shadow-lg w-96 mb-6">
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
-            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+            <div className="bg-gray-200 border-r border-gray-400 p-3 text-center text-sm font-semibold text-black">
               Slip No
             </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+            <div className="bg-gray-200 border-r border-gray-400 p-3 text-center text-sm font-semibold text-black">
               Vehicle No
             </div>
-            <div className="bg-gray-200 p-1 text-center text-xs font-semibold text-black">
+            <div className="bg-gray-200 p-3 text-center text-sm font-semibold text-black">
               Entry Type
             </div>
           </div>
@@ -2477,7 +2510,7 @@ export default function SalesForm() {
             Purchase
           </Button>
           <Button
-            className={`h-6 text-xs px-3 ${!showOfflineEntries ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+            className={`h-8 text-xs px-3 ${!showOfflineEntries ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
             onClick={() => {
               // Always navigate to new sales form
               const urlParams = new URLSearchParams(window.location.search);
