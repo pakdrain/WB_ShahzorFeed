@@ -1292,7 +1292,7 @@ function PurchaseForm() {
   // Function to check if vehicle number already exists for today
   const checkVehicleNumberExists = async (vehicleNo: string) => {
     if (!vehicleNo || vehicleNo.trim() === "") return false;
-    
+
     try {
       const today = new Date().toISOString().split('T')[0];
       const response = await fetch(`/api/purchases/check-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&date=${today}`);
@@ -1440,7 +1440,7 @@ function PurchaseForm() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
-    
+
     // Prevent editing IGP-fetched fields in online mode when IGP data has been fetched
     if (onlineMode && igpDataFetched && !isEditMode) {
       const igpFetchedFields = ['driverName', 'vendor', 'vehicleNo', 'noOfBags', 'bardanaType', 'wtPerBag', 'igpDate'];
@@ -4373,10 +4373,7 @@ function PurchaseForm() {
                         name="driverName"
                         value={formData.driverName}
                         onChange={handleChange}
-                        className={`h-8 text-xs text-black placeholder:text-gray-500 w-52 ${
-                          onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
-                        }`}
-                        readOnly={onlineMode && igpDataFetched && !isEditMode}
+
                       />
                     </div>
                   </div>
@@ -4401,6 +4398,7 @@ function PurchaseForm() {
                       <Button
                         className="h-8 bg-gray-500 text-xs"
                         onClick={captureSecondWeight}
+                         disabled={formData.secondWeight && formData.secondWeight.trim() !== ""}
                       >
                         2nd WHT
                       </Button>
@@ -4620,7 +4618,10 @@ function PurchaseForm() {
                           name="bardanaWeight"
                           value={formData.bardanaWeight}
                           onChange={handleChange}
-                          className="h-8 text-xs text-black w-60"
+                          className={`h-8 text-xs text-black w-60 ${
+                            onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                          }`}
+                          readOnly={onlineMode && igpDataFetched && !isEditMode}
                         />
                       </div>
 
