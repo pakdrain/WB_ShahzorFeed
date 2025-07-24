@@ -4932,19 +4932,19 @@ function PurchaseForm() {
                                 name="itemCode"
                                 value={formData.itemCode}
                                 onValueChange={(value) => {
-                                  const selectedItem = invItems.find(
-                                    (item) => item.item_code === value,
-                                  );
-                                  setFormData((prev) => ({
-                                    ...prev,
-                                    itemCode: value,
-                                    itemDesc: selectedItem
-                                      ? selectedItem.item_desc
-                                      : "",
-                                    itemId: selectedItem
-                                      ? selectedItem.item_id.toString()
-                                      : "",
-                                  }));
+                                  try {
+                                    const selectedItem = invItems.find(
+                                      (item) => item.item_code === value,
+                                    );
+                                    setFormData((prev) => ({
+                                      ...prev,
+                                      itemCode: value || "",
+                                      itemDesc: selectedItem?.item_desc || "",
+                                      itemId: selectedItem?.item_id ? String(selectedItem.item_id) : "",
+                                    }));
+                                  } catch (error) {
+                                    console.error("Error selecting item:", error);
+                                  }
                                 }}
                               >
                                 <SelectTrigger className="h-4 text-xs text-black w-full border-none bg-transparent">
