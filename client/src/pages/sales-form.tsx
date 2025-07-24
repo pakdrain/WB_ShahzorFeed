@@ -2338,10 +2338,57 @@ export default function SalesForm() {
           ? `${window.location.pathname}?${urlParams.toString()}`
           : window.location.pathname;
         window.history.replaceState({}, "", newUrl);
-      }
 
-      // Reset form to clean state and increment slip number for next entry
-      resetFormToInitial();
+        // Fetch next slip number for new entry after edit
+        try {
+          const response = await fetch("/api/purchases/next-slip?entry_type=SALE");
+          const data = await response.json();
+          
+          setFormData({
+            ...initialFormData,
+            slipNo: data.nextSlipNo,
+            slipInTime: new Date().toISOString().slice(0, 16),
+            onlineEntry: onlineMode ? "Yes" : "No",
+            offlineEntry: onlineMode ? "No" : "Yes",
+            entryType: "SALE",
+            creationDate: new Date().toISOString(),
+            lastUpdatedDate: new Date().toISOString(),
+            slipDate: new Date().toISOString(),
+            branchId: user?.branchId ? String(user.branchId) : "1",
+            branch: user?.branchId ? String(user.branchId) : "1",
+            createdBy: user?.userid || "",
+          });
+
+          // Reset sales data table
+          setSalesData(
+            Array.from({ length: 8 }, (_, index) => ({
+              doId: "",
+              dcNo: "",
+              doNo: "",
+              customerName: "",
+              vehicleNo: "",
+              doDate: "",
+              itemDescription: "",
+              dcQty: "",
+              doQty: "",
+              branch: "",
+              dcId: "",
+              customerId: "",
+              itemId: "",
+              itemCode: "",
+            })),
+          );
+
+          console.log("✅ Form reset to new entry with slip number:", data.nextSlipNo);
+        } catch (error) {
+          console.error("Error fetching next slip number:", error);
+          // Fallback reset
+          resetFormToInitial();
+        }
+      } else {
+        // Reset form to clean state and increment slip number for next entry
+        resetFormToInitial();
+      }
     } catch (err: any) {
       const errorMessage = err.message || "Failed to save sales data.";
       alert(errorMessage);

@@ -64,17 +64,22 @@ export default function Reports() {
       const url = (selectedBranch && selectedBranch !== 'all') 
         ? `/api/purchases?branch_id=${selectedBranch}` 
         : '/api/purchases';
+      console.log("Fetching purchase data from:", url);
       const response = await fetch(url);
       const data = await response.json();
+      console.log("Purchase API Response:", data);
       if (!response.ok) {
+        console.error("Purchase API error:", data);
         throw new Error(data.error || 'Failed to fetch purchase data');
       }
       return data;
     },
   });
 
-  // Ensure purchaseRecords is always an array
-  const purchaseRecords = Array.isArray(purchaseData) ? purchaseData : [];
+  // Ensure purchaseRecords is always an array and filter for purchase-related entries
+  const purchaseRecords = Array.isArray(purchaseData) ? purchaseData.filter(
+    (r) => r.entry_type?.toUpperCase() === "PURCHASE" || r.entry_type?.toUpperCase() === "PURCHASE_RETURN"
+  ) : [];
 
   // Fetch sales records
   const { data: salesData, refetch: refetchSales, error: salesError } = useQuery({
@@ -623,7 +628,7 @@ const generateDetailedReportHTML = (data: any) => {
                 </thead>
                 <tbody>
                  {purchaseRecords
-  .filter((record) => record.entry_type?.toUpperCase() === "PURCHASE")
+  .filter((record) => record.entry_type?.toUpperCase() === "PURCHASE" || record.entry_type?.toUpperCase() === "PURCHASE_RETURN")
   .map((record: PurchaseRecord) => (
 
                     <tr key={record.wb_id} className="hover:bg-gray-50">
