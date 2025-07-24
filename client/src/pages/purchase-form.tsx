@@ -1351,10 +1351,11 @@ function PurchaseForm() {
 
   // Function to handle Deduction+ button click - populate bag table with form data
   const handleDeduction = () => {
-    const bags = parseInt(formData.noOfBags) || 0;
+    const bags = parseInt(formData.bags) || 0; // Use formData.bags instead of formData.noOfBags
     const pb = parseFloat(formData.wtPerBag) || 0;
     const percentage = parseFloat(formData.qualityDed) || 0;
-    const weight = parseFloat(formData.weight) || 0;
+    const weightValue = parseFloat(formData.weight) || 0;
+    const calculatedWeight = weightValue * bags; // Weight field value multiplied by Bags field value
 
     if (bags > 0 && pb > 0) {
       const newBagEntry = {
@@ -1362,7 +1363,7 @@ function PurchaseForm() {
         bags: bags,
         pb: pb,
         percentage: percentage,
-        weight: weight,
+        weight: calculatedWeight, // Use calculated weight
         total: bags * pb,
       };
 
@@ -3955,31 +3956,9 @@ function PurchaseForm() {
                     </div>
 
                     <div className="border-r border-gray-300 p-1">
-                      {percentageMode[item.bagId] ? (
-                        <select
-                          value={item.weight}
-                          onChange={(e) =>
-                            updateBagEntry(item.bagId, "weight", e.target.value)
-                          }
-                          className="w-full text-center text-xs text-black bg-transparent border-none focus:outline-none"
-                        >
-                          <option value="">Select %</option>
-                          {percentageData.map((item, index) => (
-                            <option key={index} value={item.data_config_desc}>
-                              {item.data_config_desc}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <input
-                          type="text"
-                          value={item.weight}
-                          onChange={(e) =>
-                            updateBagEntry(item.bagId, "weight", e.target.value)
-                          }
-                          className="w-full text-center text-xs text-black bg-transparent border-none focus:outline-none"
-                        />
-                      )}
+                      <div className="w-full text-center text-xs text-black">
+                        {Number(item.weight || 0).toFixed(2)}
+                      </div>
                     </div>
                     <div className="p-1 text-center flex flex-col items-center gap-1">
                       <input
