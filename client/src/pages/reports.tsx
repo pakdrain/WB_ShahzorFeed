@@ -346,8 +346,8 @@ const generateDetailedReportHTML = (data: any) => {
           </div>
           <div class="right-section">
             <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${record.vendor_name || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
           </div>
         </div>
 
@@ -427,8 +427,8 @@ const generateDetailedReportHTML = (data: any) => {
           </div>
           <div class="right-section">
             <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${record.vendor_name || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
           </div>
         </div>
 
@@ -506,8 +506,8 @@ const generateDetailedReportHTML = (data: any) => {
           </div>
           <div class="right-section">
             <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${record.vendor_name || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : ''}</div>
+            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
           </div>
         </div>
 
