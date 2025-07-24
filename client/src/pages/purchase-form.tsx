@@ -1151,6 +1151,9 @@ function PurchaseForm() {
 
   // Remove auto-fetch IGP data in edit mode - use saved table data only
 
+  // State to track if IGP data has been fetched
+  const [igpDataFetched, setIgpDataFetched] = useState(false);
+
   // IGP Data Fetching Function
   const fetchIgpData = async () => {
     // Don't fetch IGP data in edit mode for offline entries that were switched to online
@@ -1192,6 +1195,7 @@ function PurchaseForm() {
           onlineEntry: "No",
         }));
         setIgpItems(items);
+        setIgpDataFetched(true); // Mark IGP data as fetched
         console.log("IGP data fetched successfully:", items);
       } else {
         alert("No data found for this IGP No.");
@@ -1285,6 +1289,21 @@ function PurchaseForm() {
     }
   };
 
+  // Function to check if vehicle number already exists for today
+  const checkVehicleNumberExists = async (vehicleNo: string) => {
+    if (!vehicleNo || vehicleNo.trim() === "") return false;
+    
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const response = await fetch(`/api/purchases/check-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&date=${today}`);
+      const data = await response.json();
+      return data.exists;
+    } catch (error) {
+      console.error("Error checking vehicle number:", error);
+      return false;
+    }
+  };
+
   // Function to reset form to clean state
   const resetFormToInitial = () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -1309,6 +1328,7 @@ function PurchaseForm() {
       slipDate: new Date().toISOString(),
     });
     setIgpItems([]);
+    setIgpDataFetched(false); // Reset IGP data fetched state
     setIsEditMode(false);
     setEditingWbId(null);
   };
@@ -1416,10 +1436,29 @@ function PurchaseForm() {
     }
   };
 
-  const handleChange = (
+  const handleChange = async (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
+    
+    // Prevent editing IGP-fetched fields in online mode when IGP data has been fetched
+    if (onlineMode && igpDataFetched && !isEditMode) {
+      const igpFetchedFields = ['driverName', 'vendor', 'vehicleNo', 'noOfBags', 'bardanaType', 'wtPerBag', 'igpDate'];
+      if (igpFetchedFields.includes(name)) {
+        alert("This field cannot be edited after IGP data has been fetched.");
+        return;
+      }
+    }
+
+    // Vehicle number validation for new entries (not in edit mode)
+    if (name === "vehicleNo" && !isEditMode && value.trim() !== "") {
+      const vehicleExists = await checkVehicleNumberExists(value);
+      if (vehicleExists) {
+        alert(`Vehicle number ${value} already has an entry for today. Please use a different vehicle number.`);
+        return;
+      }
+    }
+
     const numericFields = [
       "firstWeight",
       "secondWeight",
@@ -4334,7 +4373,10 @@ function PurchaseForm() {
                         name="driverName"
                         value={formData.driverName}
                         onChange={handleChange}
-                        className="h-8 text-xs text-black placeholder:text-gray-500 w-52"
+                        className={`h-8 text-xs text-black placeholder:text-gray-500 w-52 ${
+                          onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                        }`}
+                        readOnly={onlineMode && igpDataFetched && !isEditMode}
                       />
                     </div>
                   </div>
@@ -4346,8 +4388,13 @@ function PurchaseForm() {
                       {" "}
                       {/* Slight space below */}
                       <Button
-                        className="h-8 bg-green-600 text-xs"
+                        className={`h-8 text-xs ${
+                          formData.firstWeight && formData.firstWeight.trim() !== ""
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-green-600 hover:bg-green-700"
+                        }`}
                         onClick={captureFirstWeight}
+                        disabled={formData.firstWeight && formData.firstWeight.trim() !== ""}
                       >
                         1st WHT
                       </Button>
@@ -4469,8 +4516,11 @@ function PurchaseForm() {
                             name="bardanaType"
                             value={formData.bardanaType}
                             onChange={handleChange}
-                            className="h-8 text-xs text-black w-60"
+                            className={`h-8 text-xs text-black w-60 ${
+                              igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                            }`}
                             placeholder="Enter bardana type"
+                            readOnly={igpDataFetched && !isEditMode}
                           />
                         ) : (
                           <Select
@@ -4538,7 +4588,10 @@ function PurchaseForm() {
                           name="wtPerBag"
                           value={formData.wtPerBag}
                           onChange={handleChange}
-                          className="h-8 text-xs text-black w-60"
+                          className={`h-8 text-xs text-black w-60 ${
+                            onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                          }`}
+                          readOnly={onlineMode && igpDataFetched && !isEditMode}
                         />
                       </div>
 
@@ -4551,7 +4604,10 @@ function PurchaseForm() {
                           name="noOfBags"
                           value={formData.noOfBags}
                           onChange={handleChange}
-                          className="h-8 text-xs text-black w-60"
+                          className={`h-8 text-xs text-black w-60 ${
+                            onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                          }`}
+                          readOnly={onlineMode && igpDataFetched && !isEditMode}
                         />
                       </div>
 
@@ -4613,12 +4669,15 @@ function PurchaseForm() {
                           name="igpDate"
                           value={formData.igpDate}
                           onChange={handleChange}
-                          className="h-8 text-xs text-black w-60"
+                          className={`h-8 text-xs text-black w-60 ${
+                            onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                          }`}
                           placeholder={
                             onlineMode
                               ? "Press Enter to fetch"
                               : "Enter IGP Date"
                           }
+                          readOnly={onlineMode && igpDataFetched && !isEditMode}
                         />
                       </div>
 
@@ -4630,7 +4689,10 @@ function PurchaseForm() {
                             name="vendor"
                             value={formData.vendor}
                             onChange={handleChange}
-                            className="h-8 text-xs text-black w-60"
+                            className={`h-8 text-xs text-black w-60 ${
+                              igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                            }`}
+                            readOnly={igpDataFetched && !isEditMode}
                           />
                         ) : (
                           <Select
@@ -4679,7 +4741,10 @@ function PurchaseForm() {
                             name="vehicleNo"
                             value={formData.vehicleNo}
                             onChange={handleChange}
-                            className="h-8 text-xs text-black flex-1"
+                            className={`h-8 text-xs text-black flex-1 ${
+                              onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                            }`}
+                            readOnly={onlineMode && igpDataFetched && !isEditMode}
                           />
                         </div>
                       </div>
