@@ -1043,6 +1043,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if vehicle number exists for a specific date
+  app.get("/api/purchases/check-vehicle", async (req, res) => {
+    try {
+      const { vehicle_no, date, exclude_wb_id } = req.query;
+
+      if (!vehicle_no || !date) {
+        return res.status(400).json({ error: "vehicle_no and date are required" });
+      }
+
+      let query = `
+        SELECT COUNT(*) as count
+        FROM wb_weighbridge wb
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
+        WHERE (wbi.vehicle_no = $1 OR wb.vehicle_no = $1)
+        AND DATE(wb.creation_date) = $2
+        AND wb.entry_type IN ('PURCHASE', 'PURCHASE_RETURN')
+      `;
+
+      const params = [vehicle_no, date];
+
+      // Exclude current record when editing
+      if (exclude_wb_id) {
+        query += ` AND wb.wb_id != $3`;
+        params.push(exclude_wb_id);
+      }
+
+      const result = await pool.query(query, params);
+      const exists = parseInt(result.rows[0].count) > 0;
+
+      console.log(`Vehicle check: ${vehicle_no} on ${date} - exists: ${exists}`);
+      res.json({ exists });
+    } catch (error) {
+      console.error("Error checking vehicle number:", error);
+      res.status(500).json({ error: "Failed to check vehicle number" });
+    }
+  });
+
   // GET all purchases - show only one record per slip number
   app.get("/api/purchases", async (req, res) => {
     try {
