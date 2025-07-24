@@ -908,7 +908,7 @@ export default function SalesForm() {
     const bardanaWeight = wtPerBag * noOfBags;
 
     // Gross Weight = First Weight - Second Weight
-    const grossWeight = firstWeight - secondWeight;
+    const grossWeight = secondWeight -firstWeight  ;
 
     // Net Weight = First Weight - Second Weight - Bardana Weight
     const netWeight = grossWeight - bardanaWeight;
@@ -2557,7 +2557,7 @@ export default function SalesForm() {
             Purchase
           </Button>
           <Button
-            className={`h-8 text-xs px-3 ${!showOfflineEntries ? "bg-blue-600 text-white" : "bg-gray-300 text-black"}`}
+            className={`h-8 text-xs px-3 ${!showOfflineEntries ? "bg-rose-700 text-white" : "bg-gray-300 text-black"}`}
             onClick={() => {
               // Always navigate to new sales form
               const urlParams = new URLSearchParams(window.location.search);
@@ -2589,7 +2589,7 @@ export default function SalesForm() {
             Last
           </Button>
           <Button
-            className="bg-green-600 hover:bg-green-700 h-8 px-3 text-sm text-white font-medium"
+            className="bg-green-600 hover:bg-green-700 h-10 px-4 text-sm text-white font-medium"
             onClick={handleSave}
             disabled={loading}
           >
@@ -2668,226 +2668,229 @@ export default function SalesForm() {
         <div className="grid grid-cols-12 gap-1 h-full">
           {/* Left Side - Main Form (Columns 1-8) */}
           <div className="col-span-8">
-            {/* Master Table Section */}
-            <div className="bg-blue-50 p-2 rounded border mb-3">
-              <div className="grid grid-cols-9 gap-1">
-                {/* Column 1 - Left Form Fields */}
-                <div className="col-span-3 space-y-1">
-                  <div>
-                    <Label className="text-xs text-black">Slip No</Label>
-                    {isSearchMode ? (
-                      <div className="flex gap-1 w-52">
-                        <Input
-                          name="slipNo"
-                          value={formData.slipNo}
-                          onChange={handleChange}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              searchAndLoadBySlipNo();
-                            }
-                          }}
-                          placeholder="Enter slip number to search"
-                          className="h-5 text-xs text-black flex-1"
-                        />
-                        <Button
-                          onClick={searchAndLoadBySlipNo}
-                          className="h-5 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
-                          disabled={loading}
-                        >
-                          {loading ? "..." : "Search"}
-                        </Button>
-                      </div>
-                    ) : (
-                      <Input
-                        name="slipNo"
-                        value={formData.slipNo}
-                        readOnly
-                        className="h-5 text-xs text-black w-20"
-                      />
-                    )}
-                  </div>
-                  <div>
-                    <Label className="text-xs text-black">Net Weight</Label>
-                    <Input
-                      name="netWeight"
-                      value={formData.netWeight}
-                      onChange={handleChange}
-                      className="h-5 text-xs bg-yellow-200 text-black w-20"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-black">Freight</Label>
-                    <Input
-                      name="freight"
-                      value={formData.freight}
-                      onChange={handleChange}
-                      className="h-5 text-xs text-black w-28"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-black">Remarks</Label>
-                    <Textarea
-                      placeholder="Add remarks"
-                      name="remarks"
-                      value={formData.remarks}
-                      onChange={handleChange}
-                      className="h-8 text-xs resize-none text-black placeholder:text-gray-500"
-                    />
-                  </div>
-                </div>
+           {/* Master Table Section */}
+<div className="bg-blue-50 p-2 rounded border mb-4 w-full">
+  <div className="grid grid-cols-9 gap-4">
+    {/* Column 1 - Left Form Fields */}
+    <div className="col-span-3 flex flex-col gap-2 items-start">
+      {/* Slip No */}
+      <div className="flex items-center gap-1">
+        <Label className="text-xs text-black w-20">Slip No</Label>
+        {isSearchMode ? (
+          <div className="flex gap-1 w-52">
+            <Input
+              name="slipNo"
+              value={formData.slipNo}
+              onChange={handleChange}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  searchAndLoadBySlipNo();
+                }
+              }}
+              placeholder="Enter slip number to search"
+              className="h-8 text-xs text-black flex-1"
+            />
+            <Button
+              onClick={searchAndLoadBySlipNo}
+              className="h-8 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
+              disabled={loading}
+            >
+              {loading ? "..." : "Search"}
+            </Button>
+          </div>
+        ) : (
+          <Input
+            name="slipNo"
+            value={formData.slipNo}
+            readOnly
+            className="h-8 text-xs text-black w-52"
+          />
+        )}
+      </div>
 
-                {/* Column 2 - Weight Fields */}
-                <div className="col-span-3 space-y-1">
-                  <div>
-                    <Label className="text-xs text-black">First Weight</Label>
-                    <Input
-                      name="firstWeight"
-                      value={formData.firstWeight}
-                      onChange={handleChange}
-                      className="h-5 text-xs text-black"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-black">Second Weight</Label>
-                    <Input
-                      name="secondWeight"
-                      value={formData.secondWeight}
-                      onChange={handleChange}
-                      className="h-5 text-xs text-green-600"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-black">Bardana Weight</Label>
-                    <Input
-                      name="bardanaWeight"
-                      value={formData.bardanaWeight}
-                      onChange={handleChange}
-                      className="h-5 text-xs text-black"
-                    />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-black">Gross Weight</Label>
-                    <Input
-                      name="grossWeight"
-                      value={formData.grossWeight}
-                      readOnly
-                      className="h-5 text-xs text-black"
-                    />
-                  </div>
-                </div>
+      {/* Net Weight */}
+      <div className="flex items-center gap-1">
+        <Label className="text-xs text-black w-20">Net Weight</Label>
+        <Input
+          name="netWeight"
+          value={formData.netWeight}
+          onChange={handleChange}
+          className="h-8 text-xs bg-yellow-200 text-black w-52"
+        />
+      </div>
 
-                {/* Column 3 - Driver & Branch */}
-                <div className="col-span-3 space-y-1">
-                  <div>
-                    <Label className="text-xs text-black">Branch</Label>
-                    {isEditMode ? (
-                      <Input
-                        value={
-                          branches.find(
-                            (b) =>
-                              b.branch_id.toString() ===
-                              formData.branchId?.toString(),
-                          )?.branch_name ||
-                          formData.branch ||
-                          ""
-                        }
-                        readOnly
-                        className="h-5 text-xs text-black bg-gray-100"
-                      />
-                    ) : (
-                      <Select
-                        name="branch"
-                        value={formData.branchId || formData.branch}
-                        onValueChange={(value) =>
-                          setFormData((prev) => ({
-                            ...prev,
-                            branch: value,
-                            branchId: value,
-                          }))
-                        }
-                      >
-                        <SelectTrigger className="h-5 text-xs text-black">
-                          <SelectValue
-                            placeholder={
-                              branches.find(
-                                (b) =>
-                                  b.branch_id.toString() ===
-                                  (formData.branchId || formData.branch),
-                              )?.branch_name || "Select branch"
-                            }
-                            className="text-black"
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {branches.map((branch) => (
-                            <SelectItem
-                              key={branch.branch_id}
-                              value={branch.branch_id.toString()}
-                            >
-                              {branch.branch_name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                  </div>
-                  <div>
-                    <Label className="text-xs text-black">Driver Name</Label>
-                    <Input
-                      placeholder="Enter driver name"
-                      name="driverName"
-                      value={formData.driverName}
-                      onChange={handleChange}
-                      className="h-5 text-xs text-black placeholder:text-gray-500"
-                    />
-                  </div>
-                  <div className="mt-6">
-                    <div className="grid grid-cols-2 gap-1 mb-1">
-                      <Button
-                        className="h-5 bg-green-600 text-xs"
-                        onClick={captureFirstWeight}
-                      >
-                        1st WHT
-                      </Button>
-                      <Button
-                        className="h-5 bg-gray-500 text-xs"
-                        onClick={captureSecondWeight}
-                      >
-                        2nd WHT
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-2 gap-1">
-                      <Button
-                        className="h-5 bg-yellow-500 text-xs"
-                        onClick={resetForm}
-                      >
-                        Clear
-                      </Button>
-                      <Button className="h-5 bg-red-500 text-xs">Exit</Button>
-                    </div>
-                  </div>
+      {/* Freight */}
+      <div className="flex items-center gap-1">
+        <Label className="text-xs text-black w-20">Freight</Label>
+        <Input
+          name="freight"
+          value={formData.freight}
+          onChange={handleChange}
+          className="h-8 text-xs text-black w-52"
+        />
+      </div>
 
-                  {/* Clean Camera Feed - just the video content */}
-                  <div className="mt-2 h-24 w-full overflow-hidden">
-                    <VideoStreamFullscreen
-                      camera={{
-                        id: 1,
-                        name: "Camera 01",
-                        ip: "10.10.10.146",
-                        port: 554,
-                      }}
-                      isConnected={true}
-                      isStreaming={true}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+      {/* Remarks */}
+      <div className="flex items-start gap-1">
+        <Label className="text-xs text-black w-20 mt-1">Remarks</Label>
+        <Textarea
+          placeholder="Add remarks"
+          name="remarks"
+          value={formData.remarks}
+          onChange={handleChange}
+          className="h-20 text-xs resize-none text-black placeholder:text-gray-500 w-60"
+        />
+      </div>
+    </div>
+
+    {/* Column 2 - Weight Fields */}
+    <div className="col-span-3 flex flex-col gap-2 items-start">
+      <div className="flex items-center gap-1">
+        <Label className="text-xs text-black w-24">First Weight</Label>
+        <Input
+          name="firstWeight"
+          value={formData.firstWeight}
+          onChange={handleChange}
+          className="h-8 text-xs text-black w-52"
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <Label className="text-xs text-black w-24">Second Weight</Label>
+        <Input
+          name="secondWeight"
+          value={formData.secondWeight}
+          onChange={handleChange}
+          className="h-8 text-xs text-green-600 w-52"
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <Label className="text-xs text-black w-24">Bardana Weight</Label>
+        <Input
+          name="bardanaWeight"
+          value={formData.bardanaWeight}
+          onChange={handleChange}
+          className="h-8 text-xs text-black w-52"
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <Label className="text-xs text-black w-24">Gross Weight</Label>
+        <Input
+          name="grossWeight"
+          value={formData.grossWeight}
+          readOnly
+          className="h-8 text-xs text-black w-52"
+        />
+      </div>
+      <div className="flex items-center gap-1">
+        <Label className="text-xs text-black w-24">Branch</Label>
+        {isEditMode ? (
+          <Input
+            value={
+              branches.find(
+                (b) =>
+                  b.branch_id.toString() === formData.branchId?.toString()
+              )?.branch_name || formData.branch || ""
+            }
+            readOnly
+            className="h-8 text-xs text-black bg-gray-100 w-52"
+          />
+        ) : (
+          <Select
+            name="branch"
+            value={formData.branchId || formData.branch}
+            onValueChange={(value) =>
+              setFormData((prev) => ({
+                ...prev,
+                branch: value,
+                branchId: value,
+              }))
+            }
+          >
+            <SelectTrigger className="h-8 text-xs text-black w-52">
+              <SelectValue
+                placeholder="Select branch"
+                className="text-black"
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {branches.map((branch) => (
+                <SelectItem
+                  key={branch.branch_id}
+                  value={branch.branch_id.toString()}
+                >
+                  {branch.branch_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+    </div>
+
+    {/* Column 3 - Driver & Camera */}
+    <div className="col-span-3 flex flex-col justify-between">
+      <div className="flex flex-col gap-2">
+        {/* Driver Name */}
+        <div className="flex items-center gap-1">
+          <Label className="text-xs text-black w-20">Driver Name</Label>
+          <Input
+            placeholder="Enter driver name"
+            name="driverName"
+            value={formData.driverName}
+            onChange={handleChange}
+            className="h-8 text-xs text-black placeholder:text-gray-500 w-52"
+          />
+        </div>
+      </div>
+
+      {/* Buttons & Camera Feed */}
+      <div className="flex flex-col gap-2 mt-2">
+        <div className="grid grid-cols-2 gap-1 mb-2">
+          <Button
+            className="h-8 bg-green-600 text-xs"
+            onClick={captureFirstWeight}
+          >
+            1st WHT
+          </Button>
+          <Button
+            className="h-8 bg-gray-500 text-xs"
+            onClick={captureSecondWeight}
+          >
+            2nd WHT
+          </Button>
+        </div>
+
+        <div className="h-40 w-full overflow-hidden mb-1 rounded border">
+          <VideoStreamFullscreen
+            camera={{
+              id: 1,
+              name: "Camera 01",
+              ip: "10.10.10.146",
+              port: 554,
+            }}
+            isConnected={true}
+            isStreaming={true}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-1">
+          <Button
+            className="h-8 bg-yellow-500 text-xs"
+            onClick={resetForm}
+          >
+            Clear
+          </Button>
+          <Button className="h-8 bg-red-500 text-xs">Exit</Button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
             {/* Large Label Between Sections */}
-            <div className="text-center py-4 mb-3">
+            <div className="text-center py-1 mb-3">
               <div
-                className={`inline-block px-8 py-3 rounded-lg shadow-md ${
+                className={`inline-block px-4 py-1 rounded-lg shadow-md ${
                   onlineMode === true
                     ? "bg-gradient-to-r from-green-500 to-green-600 text-white"
                     : "bg-gradient-to-r from-red-500 to-red-600 text-white"
@@ -3094,11 +3097,11 @@ export default function SalesForm() {
                   {/* Sales Table Header - with delete action column */}
                   <div
                     className="grid gap-px bg-gray-300 text-xs font-semibold mb-1"
-                    style={{
-                      gridTemplateColumns:
-                        "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px",
-                      width: "1250px",
-                    }}
+                  style={{
+  gridTemplateColumns:
+    "100px 100px 200px 120px 120px 150px 100px 100px 100px 40px",
+  width: "1120px",
+}}
                   >
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
                       DC #
@@ -3134,16 +3137,15 @@ export default function SalesForm() {
 
                   {/* Sales Table Body - Fixed height with 8 rows */}
                   <div className="bg-gray-200 mb-4" style={{ height: "240px" }}>
-                    {[...Array(8)].map((_, index) => (
+                    {[...Array(6)].map((_, index) => (
                       <div
                         key={index}
                         className="grid gap-px text-xs"
                         style={{
-                          gridTemplateColumns:
-                            "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px",
-                          width: "1250px",
-                          height: "30px",
-                        }}
+  gridTemplateColumns:
+    "100px 100px 200px 120px 120px 150px 100px 100px 100px 40px",
+  width: "1120px",
+}}
                       >
                         <div className="bg-white border border-gray-300 p-1">
                           <input
@@ -3342,9 +3344,9 @@ export default function SalesForm() {
                     className="grid gap-px text-xs font-semibold mb-4"
                     style={{
                       gridTemplateColumns:
-                        "100px 100px 240px 140px 120px 180px 100px 100px 140px",
-                      width: "1220px",
-                      height: "30px",
+                        "100px 100px 200px 120px 120px 150px 100px 100px 100px 60px",
+  width: "1140px",
+                      height: "40px",
                     }}
                   >
                     <div className="bg-gray-200 border border-gray-400 p-1"></div>
@@ -3355,6 +3357,7 @@ export default function SalesForm() {
                     <div className="bg-gray-200 border border-gray-400 p-1 flex items-center justify-end">
                       <span className="text-black">Total:</span>
                     </div>
+                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
                     <div className="bg-white border border-gray-400 p-1">
                       <input
                         type="text"
@@ -3383,7 +3386,7 @@ export default function SalesForm() {
                   {/* Bottom section with Weight Per Bags, Total Weight Out, and Total Feed Bags - matching image layout */}
                   <div
                     className="bg-gray-100 p-2 flex justify-between items-center border border-gray-300 mt-2"
-                    style={{ width: "1220px" }}
+                    style={{ width: "1160px" }}
                   >
                     <div className="flex items-center space-x-4">
                       <div className="flex items-center space-x-2">

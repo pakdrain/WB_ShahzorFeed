@@ -2152,7 +2152,7 @@ function PurchaseForm() {
     const netWeight = firstWeight - secondWeight - bardanaWeight;
 
     // Gross Weight = First Weight - Second Weight - Bardana Weight
-    const grossWeight = firstWeight - secondWeight - bardanaWeight;
+    const grossWeight = firstWeight - secondWeight ;
 
     // Supplier Weight - Bardana
     const supplierWeightMinusBardana = supplierWeight - bardanaWeight;
@@ -3714,21 +3714,20 @@ function PurchaseForm() {
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
-      <div className="absolute top-20 right-14 z-50">
-        <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-72 mb-4">
+     <div className="absolute top-20 right-14 z-50">
+        <div className="bg-white border-2 border-gray-400 rounded-md shadow-lg w-96 mb-6">
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
-            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+            <div className="bg-gray-200 border-r border-gray-400 p-3 text-center text-sm font-semibold text-black">
               Slip No
             </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
+            <div className="bg-gray-200 border-r border-gray-400 p-3 text-center text-sm font-semibold text-black">
               Vehicle No
             </div>
-            <div className="bg-gray-200 p-1 text-center text-xs font-semibold text-black">
+            <div className="bg-gray-200 p-3 text-center text-sm font-semibold text-black">
               Entry Type
             </div>
           </div>
-
           {/* Search Row - positioned under headers */}
           <div className="grid grid-cols-3 border-b border-gray-400 bg-blue-50">
             <div className="border-r border-gray-400 p-1">
@@ -3867,8 +3866,8 @@ function PurchaseForm() {
 
       {/* Bag Details Table - Below Weight Display Table (hide when Sales form is active) */}
       {selectedForm === "purchase" && (
-        <div className="absolute top-96 right-4 z-50">
-          <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-80">
+        <div className="absolute top-50 right-14 z-50">
+          <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-96">
             {/* Header Row */}
             <div className="grid grid-cols-6 border-b border-gray-400">
               <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
@@ -4067,7 +4066,7 @@ function PurchaseForm() {
             Last
           </Button>
           <Button
-            className="bg-green-600 hover:bg-green-700 h-8 px-3 text-sm text-white font-medium"
+            className="bg-green-600 hover:bg-green-700 h-10 px-4 text-sm text-white font-medium"
             onClick={handleSave}
             disabled={loading}
           >
@@ -4849,32 +4848,20 @@ function PurchaseForm() {
 
                   {/* Compact Table with IGP Data - aligned with master form */}
                   <div
-                    className="border rounded text-xs h-[calc(100%-200px)] overflow-auto mt-4 -ml-4 mr-0"
-                    style={{ width: "calc(100% + 1rem)" }}
-                  >
-                    <table className="w-full text-center">
-                      <thead className="bg-gray-100 sticky top-0">
-                        <tr>
-                          <th className="border p-1 text-xs text-black">
-                            Po No
-                          </th>
-                          <th className="border p-1 text-xs text-black">
-                            Item Code
-                          </th>
-                          <th className="border p-1 text-xs text-black">
-                            Item Description
-                          </th>
-                          <th className="border p-1 text-xs text-black">
-                            PO Quantity
-                          </th>
-                          <th className="border p-1 text-xs text-black">
-                            IGP Quantity
-                          </th>
-                          <th className="border p-1 text-xs text-black">
-                            Balance Quantity
-                          </th>
-                        </tr>
-                      </thead>
+  className="border rounded text-xs h-[calc(100%-200px)] overflow-auto mt-4 ml-4"
+  style={{ width: "calc(100% - 1.8rem)" }}
+>
+  <table className="w-full text-center font-bold text-sm">
+    <thead className="bg-gray-100 sticky top-0">
+      <tr>
+        <th className="border p-1 text-xs text-black">Po No</th>
+        <th className="border p-1 text-xs text-black">Item Code</th>
+        <th className="border p-1 text-xs text-black">Item Description</th>
+        <th className="border p-1 text-xs text-black">PO Quantity</th>
+        <th className="border p-1 text-xs text-black">IGP Quantity</th>
+        <th className="border p-1 text-xs text-black">Balance Quantity</th>
+      </tr>
+    </thead>
                       <tbody>
                         {igpItems.length > 0 ? (
                           igpItems.map((item: any, index: number) => {
