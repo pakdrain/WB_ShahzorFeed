@@ -1570,10 +1570,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           `;
           queryParams = [slipNo, entry_type];
         } else {
-          // If no entry_type provided, search for any record with that slip number
+          // If no entry_type provided, prioritize PURCHASE entries for purchase form
           masterQuery = `
             SELECT * FROM wb_weighbridge 
-            WHERE slip_no = $1
+            WHERE slip_no = $1 AND (entry_type = 'PURCHASE' OR entry_type = 'PURCHASE_RETURN')
             ORDER BY wb_id DESC
             LIMIT 1
           `;
@@ -1584,7 +1584,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         if (masterResult.rows.length === 0) {
           return res.status(404).json({
-            message: `No record found for slip number ${slipNo}`,
+            message: `No PURCHASE record found for slip number ${slipNo}`,
           });
         }
 
