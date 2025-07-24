@@ -2815,9 +2815,8 @@ function PurchaseForm() {
         }
       }
 
-      // Increment slip number for next entry
-      const currentSlipNo = parseInt(formData.slipNo);
-      const nextSlipNo = (currentSlipNo + 1).toString();
+      // After successful save/update, don't automatically increment slip number
+      // Let the system generate the correct next slip number based on entry type
 
       const currentDate = new Date()
         .toLocaleDateString("en-GB", {
@@ -2834,6 +2833,30 @@ function PurchaseForm() {
 
       if (isEditMode) {
         alert("Record updated successfully!");
+        
+        // Fetch the next available slip number for this entry type after successful edit
+        try {
+          const nextSlipResponse = await fetch(`/api/purchases/next-slip?entry_type=${currentEntryType}`);
+          if (nextSlipResponse.ok) {
+            const nextSlipData = await nextSlipResponse.json();
+            const nextSlipNo = nextSlipData.nextSlipNo || "1";
+            console.log(`Next slip number after edit: ${nextSlipNo} for ${currentEntryType}`);
+            
+            // Reset form with the correct next slip number
+            setTimeout(() => {
+              resetFormToInitial();
+              setFormData(prev => ({
+                ...prev,
+                slipNo: nextSlipNo
+              }));
+            }, 100);
+          }
+        } catch (slipError) {
+          console.error("Error fetching next slip number after edit:", slipError);
+          // Fallback to regular reset
+          resetFormToInitial();
+        }
+        
         // Auto-print after successful update
         setTimeout(() => {
           try {
@@ -3219,6 +3242,34 @@ function PurchaseForm() {
         resetFormToInitial();
       } else {
         alert("Purchase data saved successfully!");
+        
+        // Fetch the next available slip number for this entry type after successful save
+        try {
+          const nextSlipResponse = await fetch(`/api/purchases/next-slip?entry_type=${currentEntryType}`);
+          if (nextSlipResponse.ok) {
+            const nextSlipData = await nextSlipResponse.json();
+            const nextSlipNo = nextSlipData.nextSlipNo || "1";
+            console.log(`Next slip number after save: ${nextSlipNo} for ${currentEntryType}`);
+            
+            // Reset form with the correct next slip number
+            resetFormToInitial();
+            setFormData(prev => ({
+              ...prev,
+              slipNo: nextSlipNo
+            }));
+          }
+        } catch (slipError) {
+          console.error("Error fetching next slip number after save:", slipError);
+          // Fallback to regular reset with incremented slip
+          const currentSlipNo = parseInt(formData.slipNo);
+          const fallbackNextSlip = (currentSlipNo + 1).toString();
+          resetFormToInitial();
+          setFormData(prev => ({
+            ...prev,
+            slipNo: fallbackNextSlip
+          }));
+        }
+        
         // Auto-print after successful save
         setTimeout(() => {
           try {

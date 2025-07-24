@@ -1670,6 +1670,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { wbId } = req.params;
       const updateData = req.body;
 
+      // First, get the current record to determine its entry type
+      const currentRecordQuery = `SELECT entry_type FROM wb_weighbridge WHERE wb_id = $1`;
+      const currentRecord = await pool.query(currentRecordQuery, [wbId]);
+      
+      if (currentRecord.rows.length === 0) {
+        return res.status(404).json({ error: "Record not found" });
+      }
+
+      const currentEntryType = currentRecord.rows[0].entry_type;
+      console.log(`Updating record with wb_id: ${wbId}, entry_type: ${currentEntryType}`);
+
       const {
         slip_no = null,
         slip_in_time = null,
@@ -1703,7 +1714,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           online_entry = $13,
           offline_entry = $14,
           last_updated_date = CURRENT_TIMESTAMP
-        WHERE wb_id = $1
+        WHERE wb_id = $1 AND entry_type = $15
         RETURNING *;
       `;
 
@@ -1722,6 +1733,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         slip_out_time,
         online_entry,
         offline_entry,
+        currentEntryType, // Add entry type to ensure we only update the correct record type
       ];
 
       const result = await pool.query(query, values);
@@ -1747,12 +1759,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bardana_type = null,
       } = updateData;
 
-      // Check if details record exists, then update or insert accordingly
-      const checkQuery = `SELECT wb_item_p_id FROM wb_weighbridge_items_purchase WHERE wb_id = $1`;
-      const checkResult = await pool.query(checkQuery, [wbId]);
+      // Check if details record exists for this specific wb_id, then update or insert accordingly
+      const checkQuery = `
+        SELECT wbip.wb_item_p_id 
+        FROM wb_weighbridge_items_purchase wbip
+        INNER JOIN wb_weighbridge wb ON wbip.wb_id = wb.wb_id
+        WHERE wbip.wb_id = $1 AND wb.entry_type = $2
+      `;
+      const checkResult = await pool.query(checkQuery, [wbId, currentEntryType]);
 
       if (checkResult.rows.length > 0) {
-        // Update existing record
+        // Update existing record - make sure we're updating the right entry type
         const detailsQuery = `
           UPDATE wb_weighbridge_items_purchase 
           SET 
@@ -1769,7 +1786,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             weight_per_bags = $12,
             no_of_bags = $13,
             bardana_type = $14
-          WHERE wb_id = $1
+          WHERE wb_id = $1 
+          AND EXISTS (SELECT 1 FROM wb_weighbridge WHERE wb_id = $1 AND entry_type = $15)
           RETURNING *;
         `;
 
@@ -1788,6 +1806,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           weight_per_bags ? parseFloat(weight_per_bags) : null,
           no_of_bags ? parseInt(no_of_bags) : null,
           bardana_type,
+          currentEntryType, // Add entry type validation
         ];
 
         await pool.query(detailsQuery, detailsValues);
@@ -2107,7 +2126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       try {
-        // Try database first
+        // Try database first - enhanced query to handle separate sequences
         const query = `
           SELECT slip_no FROM wb_weighbridge 
           WHERE entry_type = $1 AND slip_no ~ '^[0-9]+$'
@@ -2121,26 +2140,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (result.rows.length > 0 && result.rows[0].slip_no) {
           const currentNumber = parseInt(result.rows[0].slip_no, 10);
           if (!isNaN(currentNumber)) {
-            nextSlipNo = (currentNumber + 1).toString();
+            // Find the next available slip number for this entry type
+            let candidateSlipNo = currentNumber + 1;
+            
+            // Check if this slip number already exists for this entry type
+            let conflictCheckQuery = `
+              SELECT COUNT(*) as count FROM wb_weighbridge 
+              WHERE entry_type = $1 AND slip_no = $2
+            `;
+            
+            let conflictExists = true;
+            while (conflictExists) {
+              const conflictResult = await pool.query(conflictCheckQuery, [
+                entry_type.toUpperCase(), 
+                candidateSlipNo.toString()
+              ]);
+              
+              if (parseInt(conflictResult.rows[0].count) === 0) {
+                conflictExists = false;
+                nextSlipNo = candidateSlipNo.toString();
+              } else {
+                candidateSlipNo++;
+              }
+            }
           }
         }
 
         console.log(
-          `Generated next slip number for ${entry_type}: ${nextSlipNo}`,
+          `Generated next available slip number for ${entry_type}: ${nextSlipNo}`,
         );
         res.json({ nextSlipNo });
       } catch (dbError) {
-        // Database fallback - use in-memory storage
+        // Database fallback - use in-memory storage with entry type separation
         console.log(
           "Database not available, using in-memory storage for slip numbers",
         );
 
         const entryTypeKey = entry_type.toUpperCase();
-        const currentSlipNo =
-          inMemorySlipNumbers.get(entryTypeKey) || nextSlipNumber;
-        const nextSlipNo = (currentSlipNo + 1).toString();
-
+        let currentSlipNo = inMemorySlipNumbers.get(entryTypeKey) || 1;
+        
+        // Ensure we don't conflict with existing in-memory entries
+        while (inMemorySlipNumbers.has(`${entryTypeKey}_${currentSlipNo}`)) {
+          currentSlipNo++;
+        }
+        
+        const nextSlipNo = currentSlipNo.toString();
         inMemorySlipNumbers.set(entryTypeKey, currentSlipNo + 1);
+        inMemorySlipNumbers.set(`${entryTypeKey}_${currentSlipNo}`, true);
 
         console.log(
           `Generated next slip number for ${entry_type}: ${nextSlipNo}`,
