@@ -10,6 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
 
 import WeightIndicator from "@/components/weight-indicator";
 import WeightDisplayTable from "@/components/weight-display-table";
@@ -896,6 +900,8 @@ export default function SalesForm() {
   const [plateReading, setPlateReading] = useState(false);
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<any[]>([]);
+  const [items, setItems] = useState<any[]>([]);
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
@@ -1291,7 +1297,7 @@ export default function SalesForm() {
     setPlateReading(false);
   };
 
-  // Fetch entry types and branches
+  // Fetch entry types, branches, customers, and items
   useEffect(() => {
     const fetchEntryTypes = async () => {
       try {
@@ -1317,8 +1323,34 @@ export default function SalesForm() {
       }
     };
 
+    const fetchCustomers = async () => {
+      try {
+        const response = await fetch("/api/customers");
+        if (response.ok) {
+          const customerData = await response.json();
+          setCustomers(customerData);
+        }
+      } catch (error) {
+        console.error("Error fetching customers:", error);
+      }
+    };
+
+    const fetchItems = async () => {
+      try {
+        const response = await fetch("/api/items");
+        if (response.ok) {
+          const itemData = await response.json();
+          setItems(itemData);
+        }
+      } catch (error) {
+        console.error("Error fetching items:", error);
+      }
+    };
+
     fetchEntryTypes();
     fetchBranches();
+    fetchCustomers();
+    fetchItems();
   }, []);
 
   // Handle URL parameters for edit mode and form type
@@ -3195,23 +3227,27 @@ export default function SalesForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                          <Select
                             value={salesData[index]?.customerName || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "customerName",
-                                e.target.value,
-                              )
+                            onValueChange={(value) =>
+                              handleSalesDataChange(index, "customerName", value)
                             }
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
+                          >
+                            <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0">
+                              <SelectValue placeholder="Select customer" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {customers.map((customer) => (
+                                <SelectItem
+                                  key={customer.id}
+                                  value={customer.name}
+                                  className="text-xs"
+                                >
+                                  {customer.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
                           <input
@@ -3233,43 +3269,61 @@ export default function SalesForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.doDate || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "doDate",
-                                e.target.value,
-                              )
-                            }
-                            placeholder="DD.MM.YYYY"
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="w-full h-6 text-xs text-left px-2 border-none bg-transparent focus:outline-none flex items-center justify-between">
+                                <span>
+                                  {salesData[index]?.doDate
+                                    ? format(new Date(salesData[index].doDate), "dd.MM.yyyy")
+                                    : "Select date"}
+                                </span>
+                                <CalendarIcon className="h-3 w-3" />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={
+                                  salesData[index]?.doDate
+                                    ? new Date(salesData[index].doDate)
+                                    : undefined
+                                }
+                                onSelect={(date) => {
+                                  if (date) {
+                                    handleSalesDataChange(
+                                      index,
+                                      "doDate",
+                                      format(date, "yyyy-MM-dd")
+                                    );
+                                  }
+                                }}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                          <Select
                             value={salesData[index]?.itemDescription || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "itemDescription",
-                                e.target.value,
-                              )
+                            onValueChange={(value) =>
+                              handleSalesDataChange(index, "itemDescription", value)
                             }
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
+                          >
+                            <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0">
+                              <SelectValue placeholder="Select item" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {items.map((item) => (
+                                <SelectItem
+                                  key={item.id}
+                                  value={item.description}
+                                  className="text-xs"
+                                >
+                                  {item.description}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
                           <input
