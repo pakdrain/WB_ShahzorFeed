@@ -1359,12 +1359,24 @@ function PurchaseForm() {
     const weightValue = parseFloat(formData.weight) || 0;
     const calculatedWeight = weightValue * bags; // Weight field value multiplied by Bags field value
 
+    // Get percentage from weight field if percentage mode is enabled
+    let percentageValue = percentage;
+    if (formData.isPercentageMode && formData.weight) {
+      // Extract percentage value from weight field (e.g., "0.50%" -> 0.50)
+      const weightStr = formData.weight.toString();
+      if (weightStr.includes('%')) {
+        percentageValue = parseFloat(weightStr.replace('%', '')) || 0;
+      } else {
+        percentageValue = parseFloat(weightStr) || 0;
+      }
+    }
+
     if (bags > 0 && pb > 0) {
       const newBagEntry = {
         bagId: nextBagId,
         bags: bags,
         pb: pb,
-        percentage: percentage,
+        percentage: percentageValue, // Use the correct percentage value
         weight: calculatedWeight, // Use calculated weight
         total: bags * pb,
       };
@@ -1439,6 +1451,32 @@ function PurchaseForm() {
     }
   };
 
+  // Function to format numbers with commas (Pakistani style)
+  const formatWithCommas = (value: string) => {
+    // Remove all non-digit characters except decimal point
+    const cleanValue = value.replace(/[^\d.]/g, '');
+    
+    // Split into integer and decimal parts
+    const parts = cleanValue.split('.');
+    let integerPart = parts[0];
+    const decimalPart = parts[1];
+    
+    // Add commas to integer part (Pakistani style: 12,34,567)
+    if (integerPart.length > 3) {
+      // First, handle the rightmost 3 digits
+      const rightPart = integerPart.slice(-3);
+      let leftPart = integerPart.slice(0, -3);
+      
+      // Add commas every 2 digits from right to left for the remaining part
+      const leftPartFormatted = leftPart.replace(/\B(?=(\d{2})+(?!\d))/g, ',');
+      
+      integerPart = leftPartFormatted + ',' + rightPart;
+    }
+    
+    // Combine integer and decimal parts
+    return decimalPart !== undefined ? integerPart + '.' + decimalPart : integerPart;
+  };
+
   const handleChange = async (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
@@ -1478,7 +1516,6 @@ function PurchaseForm() {
       "netWeight",
       "bardanaWeight",
       "grossWeight",
-      "freight",
       "companyId",
       "branchId",
       "createdBy",
@@ -1488,7 +1525,11 @@ function PurchaseForm() {
     ];
 
     if (numericFields.includes(name)) {
-      if (value === "" || /^\d*\.?\d*$/.test(value)) {
+      // Special handling for freight field to add comma formatting
+      if (name === "freight") {
+        const formattedValue = formatWithCommas(value);
+        setFormData((prev) => ({ ...prev, [name]: formattedValue }));
+      } else if (value === "" || /^\d*\.?\d*$/.test(value)) {
         setFormData((prev) => {
           const newData = { ...prev, [name]: value };
 
