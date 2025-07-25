@@ -53,6 +53,8 @@ export default function Reports() {
   const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [activeTab, setActiveTab] = useState('purchase');
   const [location, setLocation] = useLocation();
+  const [searchSlipNo, setSearchSlipNo] = useState('');
+  const [searchVehicleNo, setSearchVehicleNo] = useState('');
 
   // Fetch branches
   const { data: branches = [] } = useQuery({
@@ -80,7 +82,12 @@ export default function Reports() {
 
   // Ensure purchaseRecords is always an array and filter for purchase-related entries
   const purchaseRecords = Array.isArray(purchaseData) ? purchaseData.filter(
-    (r) => r.entry_type?.toUpperCase() === "PURCHASE" || r.entry_type?.toUpperCase() === "PURCHASE_RETURN"
+    (r) => {
+      const matchesEntryType = r.entry_type?.toUpperCase() === "PURCHASE" || r.entry_type?.toUpperCase() === "PURCHASE_RETURN";
+      const matchesSlipNo = !searchSlipNo || (r.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
+      const matchesVehicleNo = !searchVehicleNo || (r.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
+      return matchesEntryType && matchesSlipNo && matchesVehicleNo;
+    }
   ) : [];
 
   // Fetch sales records
@@ -103,7 +110,12 @@ export default function Reports() {
 });
 
 const salesRecords = Array.isArray(salesData) ? salesData.filter(
-  (r) => r.entry_type?.toUpperCase() === "SALE"
+  (r) => {
+    const matchesEntryType = r.entry_type?.toUpperCase() === "SALE";
+    const matchesSlipNo = !searchSlipNo || (r.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
+    const matchesVehicleNo = !searchVehicleNo || (r.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
+    return matchesEntryType && matchesSlipNo && matchesVehicleNo;
+  }
 ) : [];
 
 
@@ -126,8 +138,14 @@ const salesRecords = Array.isArray(salesData) ? salesData.filter(
     refetchOnMount: true, // Always fetch fresh data
   });
 
-  // Ensure offlineRecords is always an array
-  const offlineRecords = Array.isArray(offlineData) ? offlineData : [];
+  // Ensure offlineRecords is always an array and apply search filters
+  const offlineRecords = Array.isArray(offlineData) ? offlineData.filter(
+    (r) => {
+      const matchesSlipNo = !searchSlipNo || (r.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
+      const matchesVehicleNo = !searchVehicleNo || (r.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
+      return matchesSlipNo && matchesVehicleNo;
+    }
+  ) : [];
 
   // Refetch data when branch selection changes
   useEffect(() => {
@@ -655,6 +673,32 @@ const generateDetailedReportHTML = (data: any) => {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Search Bar */}
+        <div className="mb-4 flex items-center gap-4">
+          <label className="text-sm font-medium text-black">Search:</label>
+          <Input
+            placeholder="Search by Slip No."
+            value={searchSlipNo}
+            onChange={(e) => setSearchSlipNo(e.target.value)}
+            className="w-48 border-black"
+          />
+          <Input
+            placeholder="Search by Vehicle No."
+            value={searchVehicleNo}
+            onChange={(e) => setSearchVehicleNo(e.target.value)}
+            className="w-48 border-black"
+          />
+          <Button
+            onClick={() => {
+              setSearchSlipNo('');
+              setSearchVehicleNo('');
+            }}
+            className="bg-gray-500 hover:bg-gray-600 text-white"
+          >
+            Clear Search
+          </Button>
         </div>
       </div>
 

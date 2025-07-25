@@ -1046,7 +1046,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Check if vehicle number exists for a specific date
   app.get("/api/purchases/check-vehicle", async (req, res) => {
     try {
-      const { vehicle_no, date, exclude_wb_id } = req.query;
+      const { vehicle_no, date, exclude_wb_id, entry_type } = req.query;
 
       if (!vehicle_no || !date) {
         return res.status(400).json({ error: "vehicle_no and date are required" });
@@ -1058,14 +1058,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
         WHERE (wbi.vehicle_no = $1 OR wb.vehicle_no = $1)
         AND DATE(wb.creation_date) = $2
-        AND wb.entry_type IN ('PURCHASE', 'PURCHASE_RETURN')
       `;
 
       const params = [vehicle_no, date];
 
+      // If entry_type is provided, filter by it, otherwise check all entry types
+      if (entry_type) {
+        query += ` AND wb.entry_type = $${params.length + 1}`;
+        params.push(entry_type);
+      }
+
       // Exclude current record when editing
       if (exclude_wb_id) {
-        query += ` AND wb.wb_id != $3`;
+        query += ` AND wb.wb_id != $${params.length + 1}`;
         params.push(exclude_wb_id);
       }
 
