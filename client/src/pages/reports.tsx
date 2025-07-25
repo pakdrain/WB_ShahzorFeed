@@ -33,6 +33,8 @@ interface PurchaseRecord {
   bardana_weight: string;
   quality_deduction: string;
   net_weight: string;
+  item_code: string;
+  weight_per_bags: string;
 
 }
 
@@ -378,9 +380,11 @@ const generateDetailedReportHTML = (data: any) => {
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 3px;">W.B # ${record.slip_no || ''}</div>
-            <div style="margin-top: 3px;">Truck # ${record.vehicle_no || ''}</div>
-            <div style="margin-top: 3px;">Freight Payment ${formatFreightWithCommas(record.freight || '')}</div>
+            <div class="fields">
+              <div><span class="label">W.B #</span><span class="value">${record.slip_no || ''}</span></div>
+              <div><span class="label">Truck #</span><span class="value">${record.vehicle_no || ''}</span></div>
+              <div><span class="label">Freight Payment</span><span class="value">${formatFreightWithCommas(record.freight || '')}</span></div>
+            </div>
           </div>
           <div class="right-section">
             <div>Party: <b>${record.vendor_name || ''}</b></div>
@@ -394,9 +398,9 @@ const generateDetailedReportHTML = (data: any) => {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${record.item_desc || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${record.item_code ? record.item_code + " - " + (record.item_desc || '') : (record.item_desc || '')}</span></div>
               <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${record.wt_per_bag || ''}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.weight_per_bags || ''}</span></div>
               <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
               <div><span class="label">AVG. WEIGHT</span><span class="value">${calculateAvgWeight()}</span></div>
               <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
@@ -459,9 +463,11 @@ const generateDetailedReportHTML = (data: any) => {
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 3px;">W.B # ${record.slip_no || ''}</div>
-            <div style="margin-top: 3px;">Truck # ${record.vehicle_no || ''}</div>
-            <div style="margin-top: 3px;">Freight Payment ${formatFreightWithCommas(record.freight || '')}</div>
+            <div class="fields">
+              <div><span class="label">W.B #</span><span class="value">${record.slip_no || ''}</span></div>
+              <div><span class="label">Truck #</span><span class="value">${record.vehicle_no || ''}</span></div>
+              <div><span class="label">Freight Payment</span><span class="value">${formatFreightWithCommas(record.freight || '')}</span></div>
+            </div>
           </div>
           <div class="right-section">
             <div>Party: <b>${record.vendor_name || ''}</b></div>
@@ -475,9 +481,9 @@ const generateDetailedReportHTML = (data: any) => {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${record.item_desc || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${record.item_code ? record.item_code + " - " + (record.item_desc || '') : (record.item_desc || '')}</span></div>
               <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${record.wt_per_bag || ''}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.weight_per_bags || ''}</span></div>
               <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
               <div><span class="label">AVG. WEIGHT</span><span class="value">${calculateAvgWeight()}</span></div>
               <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
@@ -538,9 +544,11 @@ const generateDetailedReportHTML = (data: any) => {
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 3px;">W.B # ${record.slip_no || ''}</div>
-            <div style="margin-top: 3px;">Truck # ${record.vehicle_no || ''}</div>
-            <div style="margin-top: 3px;">Freight Payment ${formatFreightWithCommas(record.freight || '')}</div>
+            <div class="fields">
+              <div><span class="label">W.B #</span><span class="value">${record.slip_no || ''}</span></div>
+              <div><span class="label">Truck #</span><span class="value">${record.vehicle_no || ''}</span></div>
+              <div><span class="label">Freight Payment</span><span class="value">${formatFreightWithCommas(record.freight || '')}</span></div>
+            </div>
           </div>
           <div class="right-section">
             <div>Party: <b>${record.vendor_name || ''}</b></div>
@@ -554,9 +562,9 @@ const generateDetailedReportHTML = (data: any) => {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${record.item_desc || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${record.item_code ? record.item_code + " - " + (record.item_desc || '') : (record.item_desc || '')}</span></div>
               <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${record.wt_per_bag || ''}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.weight_per_bags || ''}</span></div>
               <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
               <div><span class="label">AVG. WEIGHT</span><span class="value">${calculateAvgWeight()}</span></div>
               <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
@@ -655,7 +663,7 @@ const generateDetailedReportHTML = (data: any) => {
                   <tr>
                     <th className="px-4 py-2 text-left border border-black text-black">Slip No</th>
                     <th className="px-4 py-2 text-left border border-black text-black">Vehicle In Time</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle Out Time</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">VehicleOut Time</th>
                     <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
                     <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
                     <th className="px-4 py-2 text-left border border-black text-black">Vendor</th>
