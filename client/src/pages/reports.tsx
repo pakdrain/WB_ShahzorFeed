@@ -266,7 +266,7 @@ const generateDetailedReportHTML = (data: any) => {
 
   // Assuming you have access to the current logged-in user information
   // Replace this with your actual user data retrieval mechanism
-  const user = {
+  const currentUser = {
     userName: 'JohnDoe', // Replace with the actual username or name
   };
 
@@ -461,7 +461,7 @@ const generateDetailedReportHTML = (data: any) => {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
-            <div style="font-size: 10px; margin-bottom: 2px;">${user?.userName || 'System User'}</div>
+            <div style="font-size: 10px; margin-bottom: 2px;">${currentUser?.userName || 'System User'}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -547,7 +547,7 @@ const generateDetailedReportHTML = (data: any) => {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
-            <div style="font-size: 10px; margin-bottom: 2px;">${user?.userName || 'System User'}</div>
+            <div style="font-size: 10px; margin-bottom: 2px;">${currentUser?.userName || 'System User'}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -631,7 +631,7 @@ const generateDetailedReportHTML = (data: any) => {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
-            <div style="font-size: 10px; margin-bottom: 2px;">${user?.userName || 'System User'}</div>
+            <div style="font-size: 10px; margin-bottom: 2px;">${currentUser?.userName || 'System User'}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -746,8 +746,8 @@ const generateDetailedReportHTML = (data: any) => {
                       <td className="px-4 py-2 border border-black text-black">
                         {record.entry_type || 'PURCHASE'}
                       </td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || record.vehicleNo || '---'}</td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || record.vendor || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
                       <td className="px-4 py-2 border border-black text-center">
                         <img 
                           src={`/captured_images/first_weight/slip_${record.slip_no}.jpg`}
@@ -852,7 +852,7 @@ const generateDetailedReportHTML = (data: any) => {
                       <td className="px-4 py-2 border border-black text-black">
                         {record.entry_type || 'SALE'}
                       </td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || record.vehicleNo || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
                       <td className="px-4 py-2 border border-black text-black">{record.customer_name || '---'}</td>
                       <td className="px-4 py-2 border border-black text-center">
                         <img 
@@ -961,8 +961,8 @@ const generateDetailedReportHTML = (data: any) => {
                       <td className="px-4 py-2 border border-black text-black">{record.entry_type || 'PURCHASE'}</td>
                       <td className="px-4 py-2 border border-black text-black">---</td>
                       <td className="px-4 py-2 border border-black text-black">---</td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || record.vehicleNo || '---'}</td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || record.vendor || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
                       <td className="px-4 py-2 border border-black text-black">---</td>
                     </tr>
                   ))}
