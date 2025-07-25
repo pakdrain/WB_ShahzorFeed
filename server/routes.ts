@@ -1648,6 +1648,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET customers from inv_customers table for dropdown
+  app.get("/api/customers", async (req: Request, res: Response) => {
+    try {
+      const query = "SELECT customer_id as id, customer_name as name FROM inv_customers WHERE customer_name IS NOT NULL ORDER BY customer_name";
+      const result = await pool.query(query);
+
+      console.log(`Fetched ${result.rows.length} customers from inv_customers table`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching customers from inv_customers:", error);
+      // Fallback data when database is not available
+      const fallbackCustomers = [
+        { id: 1, name: "Sample Customer 1" },
+        { id: 2, name: "Sample Customer 2" },
+        { id: 3, name: "Sample Customer 3" },
+      ];
+      console.log("Using fallback customers data");
+      res.json(fallbackCustomers);
+    }
+  });
+
+  // GET items from inv_items table for dropdown
+  app.get("/api/items", async (req: Request, res: Response) => {
+    try {
+      const query = "SELECT item_id as id, item_desc as description, item_code FROM inv_items WHERE item_desc IS NOT NULL ORDER BY item_desc";
+      const result = await pool.query(query);
+
+      console.log(`Fetched ${result.rows.length} items from inv_items table`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching items from inv_items:", error);
+      // Fallback data when database is not available
+      const fallbackItems = [
+        { id: 1, description: "Sample Item 1", item_code: "ITEM001" },
+        { id: 2, description: "Sample Item 2", item_code: "ITEM002" },
+        { id: 3, description: "Sample Item 3", item_code: "ITEM003" },
+      ];
+      console.log("Using fallback items data");
+      res.json(fallbackItems);
+    }
+  });
+
   // GET purchase by wb_id
   app.get(
     "/api/purchase/by-wbid/:wbId",
