@@ -3237,15 +3237,19 @@ export default function SalesForm() {
                               <SelectValue placeholder="Select customer" />
                             </SelectTrigger>
                             <SelectContent>
-                              {customers.map((customer) => (
-                                <SelectItem
-                                  key={customer.id}
-                                  value={customer.name}
-                                  className="text-xs"
-                                >
-                                  {customer.name}
-                                </SelectItem>
-                              ))}
+                              {customers && customers.length > 0 ? (
+                                customers.map((customer) => (
+                                  <SelectItem
+                                    key={customer.id}
+                                    value={customer.name}
+                                    className="text-xs"
+                                  >
+                                    {customer.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="" disabled>No customers found</SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                         </div>
@@ -3313,15 +3317,19 @@ export default function SalesForm() {
                               <SelectValue placeholder="Select item" />
                             </SelectTrigger>
                             <SelectContent>
-                              {items.map((item) => (
-                                <SelectItem
-                                  key={item.id}
-                                  value={item.description}
-                                  className="text-xs"
-                                >
-                                  {item.description}
-                                </SelectItem>
-                              ))}
+                              {items && items.length > 0 ? (
+                                items.map((item) => (
+                                  <SelectItem
+                                    key={item.id}
+                                    value={item.description}
+                                    className="text-xs"
+                                  >
+                                    {item.description}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="" disabled>No items found</SelectItem>
+                              )}
                             </SelectContent>
                           </Select>
                         </div>
