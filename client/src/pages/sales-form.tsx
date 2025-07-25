@@ -3248,7 +3248,7 @@ export default function SalesForm() {
                                   </SelectItem>
                                 ))
                               ) : (
-                                <SelectItem value="" disabled>No customers found</SelectItem>
+                                <SelectItem value="no-customers" disabled>No customers found</SelectItem>
                               )}
                             </SelectContent>
                           </Select>
@@ -3328,7 +3328,7 @@ export default function SalesForm() {
                                   </SelectItem>
                                 ))
                               ) : (
-                                <SelectItem value="" disabled>No items found</SelectItem>
+                                <SelectItem value="no-items" disabled>No items found</SelectItem>
                               )}
                             </SelectContent>
                           </Select>
