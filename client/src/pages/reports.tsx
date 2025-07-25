@@ -180,6 +180,35 @@ const salesRecords = Array.isArray(salesData) ? salesData.filter(
     }
   };
 
+// Function to format numbers with commas (Pakistani style)
+  const formatFreightWithCommas = (value: string | number) => {
+    if (!value) return '';
+
+    const stringValue = value.toString();
+    // Remove all non-digit characters except decimal point
+    const cleanValue = stringValue.replace(/[^\d.]/g, '');
+
+    // Split into integer and decimal parts
+    const parts = cleanValue.split('.');
+    let integerPart = parts[0];
+    const decimalPart = parts[1];
+
+    // Add commas to integer part (Pakistani style: 12,34,567)
+    if (integerPart.length > 3) {
+      // First, handle the rightmost 3 digits
+      const rightPart = integerPart.slice(-3);
+      let leftPart = integerPart.slice(0, -3);
+
+      // Add commas every 2 digits from right to left for the remaining part
+      const leftPartFormatted = leftPart.replace(/\B(?=(\d{2})+(?!\d))/g, ',');
+
+      integerPart = leftPartFormatted + ',' + rightPart;
+    }
+
+    // Combine integer and decimal parts
+    return decimalPart !== undefined ? integerPart + '.' + decimalPart : integerPart;
+  };
+
 const generateDetailedReportHTML = (data: any) => {
   // ✅ Merge master + details[0] into one object
   const record = {
@@ -206,6 +235,15 @@ const generateDetailedReportHTML = (data: any) => {
       day: '2-digit', month: 'short', year: '2-digit', 
       hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
     }).toUpperCase().replace(/,/, '') : '';
+
+   const calculateAvgWeight = () => {
+        const netWeight = parseFloat(record.net_weight || '0');
+        const quantity = parseInt(record.no_of_bags || '0');
+        if (quantity === 0) return '0';
+        return (netWeight / quantity).toFixed(2);
+    };
+
+
   return `
    <!DOCTYPE html>
   <html>
@@ -340,14 +378,14 @@ const generateDetailedReportHTML = (data: any) => {
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_no || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.vehicle_no || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${record.freight || ''}</div>
+            <div style="margin-top: 3px;">W.B # ${record.slip_no || ''}</div>
+            <div style="margin-top: 3px;">Truck # ${record.vehicle_no || ''}</div>
+            <div style="margin-top: 3px;">Freight Payment ${formatFreightWithCommas(record.freight || '')}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${record.vendor_name || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div>Party: <b>${record.vendor_name || ''}</b></div>
+            <div style="margin-top: 3px;">Time IN: ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div style="margin-top: 3px;">Time OUT: ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
           </div>
         </div>
 
@@ -358,9 +396,9 @@ const generateDetailedReportHTML = (data: any) => {
             <div class="fields">
               <div><span class="label">COMMODITY</span><span class="value">${record.item_desc || ''}</span></div>
               <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${record.bag_condition || ''}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.wt_per_bag || ''}</span></div>
               <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${record.wt_per_bag || ''}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${calculateAvgWeight()}</span></div>
               <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
             </div>
             <div class="image-box">
@@ -421,14 +459,14 @@ const generateDetailedReportHTML = (data: any) => {
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_no || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.vehicle_no || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${record.freight || ''}</div>
+            <div style="margin-top: 3px;">W.B # ${record.slip_no || ''}</div>
+            <div style="margin-top: 3px;">Truck # ${record.vehicle_no || ''}</div>
+            <div style="margin-top: 3px;">Freight Payment ${formatFreightWithCommas(record.freight || '')}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${record.vendor_name || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div>Party: <b>${record.vendor_name || ''}</b></div>
+            <div style="margin-top: 3px;">Time IN: ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div style="margin-top: 3px;">Time OUT: ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
           </div>
         </div>
 
@@ -439,9 +477,9 @@ const generateDetailedReportHTML = (data: any) => {
             <div class="fields">
               <div><span class="label">COMMODITY</span><span class="value">${record.item_desc || ''}</span></div>
               <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${record.bag_condition || ''}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.wt_per_bag || ''}</span></div>
               <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${record.wt_per_bag || ''}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${calculateAvgWeight()}</span></div>
               <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
             </div>
             <div class="image-box">
@@ -500,14 +538,14 @@ const generateDetailedReportHTML = (data: any) => {
 
         <div class="two-column">
           <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_no || ''}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.vehicle_no || ''}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${record.freight || ''}</div>
+            <div style="margin-top: 3px;">W.B # ${record.slip_no || ''}</div>
+            <div style="margin-top: 3px;">Truck # ${record.vehicle_no || ''}</div>
+            <div style="margin-top: 3px;">Freight Payment ${formatFreightWithCommas(record.freight || '')}</div>
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${record.vendor_name || ''}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div>Party: <b>${record.vendor_name || ''}</b></div>
+            <div style="margin-top: 3px;">Time IN: ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div style="margin-top: 3px;">Time OUT: ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
           </div>
         </div>
 
@@ -518,9 +556,9 @@ const generateDetailedReportHTML = (data: any) => {
             <div class="fields">
               <div><span class="label">COMMODITY</span><span class="value">${record.item_desc || ''}</span></div>
               <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${record.bag_condition || ''}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.wt_per_bag || ''}</span></div>
               <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${record.wt_per_bag || ''}</span></div>
+              <div><span class="label">AVG. WEIGHT</span><span class="value">${calculateAvgWeight()}</span></div>
               <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
             </div>
             <div class="image-box">
