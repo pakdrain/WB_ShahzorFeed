@@ -1294,8 +1294,10 @@ function PurchaseForm() {
     if (!vehicleNo || vehicleNo.trim() === "") return false;
 
     try {
-      const today = new Date().toISOString().split('T')[0];
-      const response = await fetch(`/api/purchases/check-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&date=${today}`);
+      const today = new Date().toISOString().split("T")[0];
+      const response = await fetch(
+        `/api/purchases/check-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&date=${today}`,
+      );
       const data = await response.json();
       return data.exists;
     } catch (error) {
@@ -1444,7 +1446,15 @@ function PurchaseForm() {
 
     // Prevent editing IGP-fetched fields in online mode when IGP data has been fetched
     if (onlineMode && igpDataFetched && !isEditMode) {
-      const igpFetchedFields = ['driverName', 'vendor', 'vehicleNo', 'noOfBags', 'bardanaType', 'wtPerBag', 'igpDate'];
+      const igpFetchedFields = [
+        "driverName",
+        "vendor",
+        "vehicleNo",
+        "noOfBags",
+        "bardanaType",
+        "wtPerBag",
+        "igpDate",
+      ];
       if (igpFetchedFields.includes(name)) {
         alert("This field cannot be edited after IGP data has been fetched.");
         return;
@@ -1455,7 +1465,9 @@ function PurchaseForm() {
     if (name === "vehicleNo" && !isEditMode && value.trim() !== "") {
       const vehicleExists = await checkVehicleNumberExists(value);
       if (vehicleExists) {
-        alert(`Vehicle number ${value} already has an entry for today. Please use a different vehicle number.`);
+        alert(
+          `Vehicle number ${value} already has an entry for today. Please use a different vehicle number.`,
+        );
         return;
       }
     }
@@ -2192,7 +2204,7 @@ function PurchaseForm() {
     const netWeight = firstWeight - secondWeight - bardanaWeight;
 
     // Gross Weight = First Weight - Second Weight - Bardana Weight
-    const grossWeight = firstWeight - secondWeight ;
+    const grossWeight = firstWeight - secondWeight;
 
     // Supplier Weight - Bardana
     const supplierWeightMinusBardana = supplierWeight - bardanaWeight;
@@ -3754,7 +3766,7 @@ function PurchaseForm() {
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
-     <div className="absolute top-20 right-14 z-50">
+      <div className="absolute top-20 right-14 z-50">
         <div className="bg-white border-2 border-gray-400 rounded-md shadow-lg w-96 mb-6">
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
@@ -4352,7 +4364,6 @@ function PurchaseForm() {
                         name="driverName"
                         value={formData.driverName}
                         onChange={handleChange}
-
                       />
                     </div>
                   </div>
@@ -4365,19 +4376,26 @@ function PurchaseForm() {
                       {/* Slight space below */}
                       <Button
                         className={`h-8 text-xs ${
-                          formData.firstWeight && formData.firstWeight.trim() !== ""
+                          formData.firstWeight &&
+                          formData.firstWeight.trim() !== ""
                             ? "bg-gray-400 cursor-not-allowed"
                             : "bg-green-600 hover:bg-green-700"
                         }`}
                         onClick={captureFirstWeight}
-                        disabled={formData.firstWeight && formData.firstWeight.trim() !== ""}
+                        disabled={
+                          formData.firstWeight &&
+                          formData.firstWeight.trim() !== ""
+                        }
                       >
                         1st WHT
                       </Button>
                       <Button
                         className="h-8 bg-gray-500 text-xs"
                         onClick={captureSecondWeight}
-                         disabled={formData.secondWeight && formData.secondWeight.trim() !== ""}
+                        disabled={
+                          formData.secondWeight &&
+                          formData.secondWeight.trim() !== ""
+                        }
                       >
                         2nd WHT
                       </Button>
@@ -4494,7 +4512,9 @@ function PurchaseForm() {
                             value={formData.bardanaType}
                             onChange={handleChange}
                             className={`h-8 text-xs text-black w-60 ${
-                              igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                              igpDataFetched && !isEditMode
+                                ? "bg-gray-100 cursor-not-allowed"
+                                : ""
                             }`}
                             placeholder="Enter bardana type"
                             readOnly={igpDataFetched && !isEditMode}
@@ -4566,7 +4586,9 @@ function PurchaseForm() {
                           value={formData.wtPerBag}
                           onChange={handleChange}
                           className={`h-8 text-xs text-black w-60 ${
-                            onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                            onlineMode && igpDataFetched && !isEditMode
+                              ? "bg-gray-100 cursor-not-allowed"
+                              : ""
                           }`}
                           readOnly={onlineMode && igpDataFetched && !isEditMode}
                         />
@@ -4582,7 +4604,9 @@ function PurchaseForm() {
                           value={formData.noOfBags}
                           onChange={handleChange}
                           className={`h-8 text-xs text-black w-60 ${
-                            onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                            onlineMode && igpDataFetched && !isEditMode
+                              ? "bg-gray-100 cursor-not-allowed"
+                              : ""
                           }`}
                           readOnly={onlineMode && igpDataFetched && !isEditMode}
                         />
@@ -4598,7 +4622,9 @@ function PurchaseForm() {
                           value={formData.bardanaWeight}
                           onChange={handleChange}
                           className={`h-8 text-xs text-black w-60 ${
-                            onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                            onlineMode && igpDataFetched && !isEditMode
+                              ? "bg-gray-100 cursor-not-allowed"
+                              : ""
                           }`}
                           readOnly={onlineMode && igpDataFetched && !isEditMode}
                         />
@@ -4650,7 +4676,9 @@ function PurchaseForm() {
                           value={formData.igpDate}
                           onChange={handleChange}
                           className={`h-8 text-xs text-black w-60 ${
-                            onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                            onlineMode && igpDataFetched && !isEditMode
+                              ? "bg-gray-100 cursor-not-allowed"
+                              : ""
                           }`}
                           placeholder={
                             onlineMode
@@ -4670,7 +4698,9 @@ function PurchaseForm() {
                             value={formData.vendor}
                             onChange={handleChange}
                             className={`h-8 text-xs text-black w-60 ${
-                              igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                              igpDataFetched && !isEditMode
+                                ? "bg-gray-100 cursor-not-allowed"
+                                : ""
                             }`}
                             readOnly={igpDataFetched && !isEditMode}
                           />
@@ -4722,9 +4752,13 @@ function PurchaseForm() {
                             value={formData.vehicleNo}
                             onChange={handleChange}
                             className={`h-8 text-xs text-black flex-1 ${
-                              onlineMode && igpDataFetched && !isEditMode ? "bg-gray-100 cursor-not-allowed" : ""
+                              onlineMode && igpDataFetched && !isEditMode
+                                ? "bg-gray-100 cursor-not-allowed"
+                                : ""
                             }`}
-                            readOnly={onlineMode && igpDataFetched && !isEditMode}
+                            readOnly={
+                              onlineMode && igpDataFetched && !isEditMode
+                            }
                           />
                         </div>
                       </div>
@@ -4893,20 +4927,32 @@ function PurchaseForm() {
 
                   {/* Compact Table with IGP Data - aligned with master form */}
                   <div
-  className="border rounded text-xs h-[calc(100%-200px)] overflow-auto mt-4 ml-4"
-  style={{ width: "calc(100% - 1.8rem)" }}
->
-  <table className="w-full text-center font-bold text-sm">
-    <thead className="bg-gray-100 sticky top-0">
-      <tr>
-        <th className="border p-1 text-xs text-black">Po No</th>
-        <th className="border p-1 text-xs text-black">Item Code</th>
-        <th className="border p-1 text-xs text-black">Item Description</th>
-        <th className="border p-1 text-xs text-black">PO Quantity</th>
-        <th className="border p-1 text-xs text-black">IGP Quantity</th>
-        <th className="border p-1 text-xs text-black">Balance Quantity</th>
-      </tr>
-    </thead>
+                    className="border rounded text-xs h-[calc(100%-200px)] overflow-auto mt-4 ml-4"
+                    style={{ width: "calc(100% - 1.8rem)" }}
+                  >
+                    <table className="w-full text-center font-bold text-sm">
+                      <thead className="bg-gray-100 sticky top-0">
+                        <tr>
+                          <th className="border p-1 text-xs text-black">
+                            Po No
+                          </th>
+                          <th className="border p-1 text-xs text-black">
+                            Item Code
+                          </th>
+                          <th className="border p-1 text-xs text-black">
+                            Item Description
+                          </th>
+                          <th className="border p-1 text-xs text-black">
+                            PO Quantity
+                          </th>
+                          <th className="border p-1 text-xs text-black">
+                            IGP Quantity
+                          </th>
+                          <th className="border p-1 text-xs text-black">
+                            Balance Quantity
+                          </th>
+                        </tr>
+                      </thead>
                       <tbody>
                         {igpItems.length > 0 ? (
                           igpItems.map((item: any, index: number) => {
@@ -4972,10 +5018,15 @@ function PurchaseForm() {
                                       ...prev,
                                       itemCode: value || "",
                                       itemDesc: selectedItem?.item_desc || "",
-                                      itemId: selectedItem?.item_id ? String(selectedItem.item_id) : "",
+                                      itemId: selectedItem?.item_id
+                                        ? String(selectedItem.item_id)
+                                        : "",
                                     }));
                                   } catch (error) {
-                                    console.error("Error selecting item:", error);
+                                    console.error(
+                                      "Error selecting item:",
+                                      error,
+                                    );
                                   }
                                 }}
                               >
