@@ -574,13 +574,15 @@ export default function SalesForm() {
   // Fetch all first weight records
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    refetchInterval: 10000, // Refresh every 10 seconds
+    refetchInterval: 30000, // Reduced frequency to improve performance
+    staleTime: 20000, // Cache data for 20 seconds
   });
 
   // Fetch offline records specifically
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    refetchInterval: 10000, // Refresh every 10 seconds
+    refetchInterval: 30000, // Reduced frequency to improve performance
+    staleTime: 20000, // Cache data for 20 seconds
   });
 
   // State for showing offline entries
@@ -1297,61 +1299,49 @@ export default function SalesForm() {
     setPlateReading(false);
   };
 
-  // Fetch entry types, branches, customers, and items
+  // Fetch entry types, branches, customers, and items - optimized with React Query
+  const { data: entryTypesData = [] } = useQuery({
+    queryKey: ["/api/entry-types"],
+    staleTime: 300000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: branchesData = [] } = useQuery({
+    queryKey: ["/api/branches"],
+    staleTime: 300000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  const { data: customersData = [] } = useQuery({
+    queryKey: ["/api/customers"],
+    staleTime: 300000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
+    enabled: !onlineMode, // Only fetch when in offline mode
+  });
+
+  const { data: itemsData = [] } = useQuery({
+    queryKey: ["/api/items"],
+    staleTime: 300000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
+    enabled: !onlineMode, // Only fetch when in offline mode
+  });
+
+  // Update state when data changes
   useEffect(() => {
-    const fetchEntryTypes = async () => {
-      try {
-        const response = await fetch("/api/entry-types");
-        if (response.ok) {
-          const entryTypeData = await response.json();
-          setEntryTypes(entryTypeData);
-        }
-      } catch (error) {
-        console.error("Error fetching entry types:", error);
-      }
-    };
+    if (entryTypesData) setEntryTypes(entryTypesData);
+  }, [entryTypesData]);
 
-    const fetchBranches = async () => {
-      try {
-        const response = await fetch("/api/branches");
-        if (response.ok) {
-          const branchData = await response.json();
-          setBranches(branchData);
-        }
-      } catch (error) {
-        console.error("Error fetching branches:", error);
-      }
-    };
+  useEffect(() => {
+    if (branchesData) setBranches(branchesData);
+  }, [branchesData]);
 
-    const fetchCustomers = async () => {
-      try {
-        const response = await fetch("/api/customers");
-        if (response.ok) {
-          const customerData = await response.json();
-          setCustomers(customerData);
-        }
-      } catch (error) {
-        console.error("Error fetching customers:", error);
-      }
-    };
+  useEffect(() => {
+    if (customersData) setCustomers(customersData);
+  }, [customersData]);
 
-    const fetchItems = async () => {
-      try {
-        const response = await fetch("/api/items");
-        if (response.ok) {
-          const itemData = await response.json();
-          setItems(itemData);
-        }
-      } catch (error) {
-        console.error("Error fetching items:", error);
-      }
-    };
-
-    fetchEntryTypes();
-    fetchBranches();
-    fetchCustomers();
-    fetchItems();
-  }, []);
+  useEffect(() => {
+    if (itemsData) setItems(itemsData);
+  }, [itemsData]);
 
   // Handle URL parameters for edit mode and form type
   useEffect(() => {
@@ -3227,31 +3217,51 @@ export default function SalesForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <Select
-                            value={salesData[index]?.customerName || ""}
-                            onValueChange={(value) =>
-                              handleSalesDataChange(index, "customerName", value)
-                            }
-                          >
-                            <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0">
-                              <SelectValue placeholder="Select customer" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {customers && customers.length > 0 ? (
-                                customers.map((customer) => (
-                                  <SelectItem
-                                    key={customer.id}
-                                    value={customer.name}
-                                    className="text-xs"
-                                  >
-                                    {customer.name}
-                                  </SelectItem>
-                                ))
-                              ) : (
-                                <SelectItem value="no-customers" disabled>No customers found</SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
+                          {!onlineMode && salesData[index]?.dcNo ? (
+                            <Select
+                              value={salesData[index]?.customerName || ""}
+                              onValueChange={(value) =>
+                                handleSalesDataChange(index, "customerName", value)
+                              }
+                            >
+                              <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0">
+                                <SelectValue placeholder="Select customer" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {customers && customers.length > 0 ? (
+                                  customers.map((customer) => (
+                                    <SelectItem
+                                      key={customer.id}
+                                      value={customer.name}
+                                      className="text-xs"
+                                    >
+                                      {customer.name}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="no-customers" disabled>No customers found</SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <input
+                              type="text"
+                              className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                              value={salesData[index]?.customerName || ""}
+                              onChange={(e) =>
+                                handleSalesDataChange(
+                                  index,
+                                  "customerName",
+                                  e.target.value,
+                                )
+                              }
+                              autoComplete="off"
+                              autoCorrect="off"
+                              autoCapitalize="off"
+                              spellCheck="false"
+                              data-form-type="other"
+                            />
+                          )}
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
                           <input
@@ -3307,31 +3317,51 @@ export default function SalesForm() {
                           </Popover>
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <Select
-                            value={salesData[index]?.itemDescription || ""}
-                            onValueChange={(value) =>
-                              handleSalesDataChange(index, "itemDescription", value)
-                            }
-                          >
-                            <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0">
-                              <SelectValue placeholder="Select item" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {items && items.length > 0 ? (
-                                items.map((item) => (
-                                  <SelectItem
-                                    key={item.id}
-                                    value={item.description}
-                                    className="text-xs"
-                                  >
-                                    {item.description}
-                                  </SelectItem>
-                                ))
-                              ) : (
-                                <SelectItem value="no-items" disabled>No items found</SelectItem>
-                              )}
-                            </SelectContent>
-                          </Select>
+                          {!onlineMode && salesData[index]?.dcNo ? (
+                            <Select
+                              value={salesData[index]?.itemDescription || ""}
+                              onValueChange={(value) =>
+                                handleSalesDataChange(index, "itemDescription", value)
+                              }
+                            >
+                              <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0">
+                                <SelectValue placeholder="Select item" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {items && items.length > 0 ? (
+                                  items.map((item) => (
+                                    <SelectItem
+                                      key={item.id}
+                                      value={item.description}
+                                      className="text-xs"
+                                    >
+                                      {item.description}
+                                    </SelectItem>
+                                  ))
+                                ) : (
+                                  <SelectItem value="no-items" disabled>No items found</SelectItem>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <input
+                              type="text"
+                              className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                              value={salesData[index]?.itemDescription || ""}
+                              onChange={(e) =>
+                                handleSalesDataChange(
+                                  index,
+                                  "itemDescription",
+                                  e.target.value,
+                                )
+                              }
+                              autoComplete="off"
+                              autoCorrect="off"
+                              autoCapitalize="off"
+                              spellCheck="false"
+                              data-form-type="other"
+                            />
+                          )}
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
                           <input
