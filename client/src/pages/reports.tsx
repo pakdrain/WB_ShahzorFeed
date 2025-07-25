@@ -1,3 +1,4 @@
+typescript
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
@@ -745,8 +746,8 @@ const generateDetailedReportHTML = (data: any) => {
                       <td className="px-4 py-2 border border-black text-black">
                         {record.entry_type || 'PURCHASE'}
                       </td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || record.vehicleNo || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || record.vendor || '---'}</td>
                       <td className="px-4 py-2 border border-black text-center">
                         <img 
                           src={`/captured_images/first_weight/slip_${record.slip_no}.jpg`}
@@ -851,7 +852,7 @@ const generateDetailedReportHTML = (data: any) => {
                       <td className="px-4 py-2 border border-black text-black">
                         {record.entry_type || 'SALE'}
                       </td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || record.vehicleNo || '---'}</td>
                       <td className="px-4 py-2 border border-black text-black">{record.customer_name || '---'}</td>
                       <td className="px-4 py-2 border border-black text-center">
                         <img 
@@ -960,8 +961,8 @@ const generateDetailedReportHTML = (data: any) => {
                       <td className="px-4 py-2 border border-black text-black">{record.entry_type || 'PURCHASE'}</td>
                       <td className="px-4 py-2 border border-black text-black">---</td>
                       <td className="px-4 py-2 border border-black text-black">---</td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || record.vehicleNo || '---'}</td>
+                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || record.vendor || '---'}</td>
                       <td className="px-4 py-2 border border-black text-black">---</td>
                     </tr>
                   ))}
