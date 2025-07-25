@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/lib/auth';
 
 interface PurchaseRecord {
   wb_id: number;
@@ -56,6 +57,7 @@ export default function Reports() {
   const [location, setLocation] = useLocation();
   const [searchSlipNo, setSearchSlipNo] = useState('');
   const [searchVehicleNo, setSearchVehicleNo] = useState('');
+  const { user } = useAuth();
 
   // Fetch branches
   const { data: branches = [] } = useQuery({
@@ -264,9 +266,8 @@ const generateDetailedReportHTML = (data: any) => {
         return (netWeight / quantity).toFixed(2);
     };
 
-  // Assuming you have access to the current logged-in user information
-  // Replace this with your actual user data retrieval mechanism
-  const currentUserName = 'JohnDoe'; // Replace with the actual username or name
+  // Get the actual logged-in user name from auth context
+  const currentUserName = user?.userName || 'System User';
 
   return `
    <!DOCTYPE html>
