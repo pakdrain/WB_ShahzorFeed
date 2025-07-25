@@ -1056,7 +1056,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         SELECT COUNT(*) as count
         FROM wb_weighbridge wb
         LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
-        WHERE (wbi.vehicle_no = $1 OR wb.vehicle_no = $1)
+        WHERE COALESCE(wbi.vehicle_no, wb.vehicle_no) = $1
         AND DATE(wb.creation_date) = $2
       `;
 
@@ -1085,6 +1085,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if vehicle number exists for IGP entries on the same date
+  app.get("/api/purchases/check-igp-vehicle", async (req, res) => {
+    try {
+      const { vehicle_no, igp_no, date, exclude_wb_id } = req.query;
+
+      if (!vehicle_no || !igp_no || !date) {
+        return res.status(400).json({ error: "vehicle_no, igp_no and date are required" });
+      }
+
+      let query = `
+        SELECT COUNT(*) as count
+        FROM wb_weighbridge wb
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
+        WHERE COALESCE(wbi.vehicle_no, wb.vehicle_no) = $1
+        AND wbi.igp_no = $2
+        AND DATE(wb.creation_date) = $3
+      `;
+
+      const params = [vehicle_no, igp_no, date];
+
+      // Exclude current record when editing
+      if (exclude_wb_id) {
+        query += ` AND wb.wb_id != $${params.length + 1}`;
+        params.push(exclude_wb_id);
+      }
+
+      const result = await pool.query(query, params);
+      const exists = parseInt(result.rows[0].count) > 0;
+
+      console.log(`IGP Vehicle check: ${vehicle_no} with IGP ${igp_no} on ${date} - exists: ${exists}`);
+      res.json({ exists });
+    } catch (error) {
+      console.error("Error checking IGP vehicle number:", error);
+      res.status(500).json({ error: "Failed to check IGP vehicle number" });
+    }
+  });
+
   // GET all purchases - show only one record per slip number
   app.get("/api/purchases", async (req, res) => {
     try {
@@ -1096,6 +1133,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result.rows);
     } catch (err) {
       console.error("Error fetching purchases:", err);
+      res.status(500).json({ error: "Database error" });
+    }
+  });
+
+  // GET complete purchase records with details for reports
+  app.get("/api/purchase/complete-records", async (req, res) => {
+    try {
+      const { branch_id } = req.query;
+      
+      let query = `
+        SELECT 
+          wb.wb_id,
+          wb.slip_no,
+          wb.slip_in_time,
+          wb.slip_out_time,
+          wb.entry_type,
+          wb.first_weight,
+          wb.second_weight,
+          wb.net_weight,
+          wb.bardana_weight,
+          wb.gross_weight,
+          wb.freight,
+          wb.remarks,
+          wb.branch_id,
+          wb.online_entry,
+          wb.offline_entry,
+          wbi.vehicle_no,
+          wbi.vendor_name,
+          wbi.igp_no,
+          wbi.item_desc,
+          wbi.item_code,
+          wbi.no_of_bags,
+          wbi.bag_condition,
+          wbi.bardana_type,
+          wbi.weight_per_bags,
+          wbi.quality_deduction
+        FROM wb_weighbridge wb
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
+        WHERE wb.entry_type IN ('PURCHASE', 'PURCHASE_RETURN')
+      `;
+      
+      const params = [];
+      
+      if (branch_id && branch_id !== 'all') {
+        query += ` AND wb.branch_id = $1`;
+        params.push(parseInt(branch_id));
+      }
+      
+      query += ` ORDER BY wb.wb_id DESC`;
+      
+      const result = await pool.query(query, params);
+      res.json(result.rows);
+    } catch (err) {
+      console.error("Error fetching complete purchase records:", err);
       res.status(500).json({ error: "Database error" });
     }
   });

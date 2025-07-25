@@ -1290,14 +1290,18 @@ function PurchaseForm() {
   };
 
   // Function to check if vehicle number already exists for today
-  const checkVehicleNumberExists = async (vehicleNo: string) => {
+  const checkVehicleNumberExists = async (vehicleNo: string, excludeWbId?: number) => {
     if (!vehicleNo || vehicleNo.trim() === "") return false;
 
     try {
       const today = new Date().toISOString().split("T")[0];
-      const response = await fetch(
-        `/api/purchases/check-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&date=${today}`,
-      );
+      let url = `/api/purchases/check-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&date=${today}`;
+      
+      if (excludeWbId) {
+        url += `&exclude_wb_id=${excludeWbId}`;
+      }
+      
+      const response = await fetch(url);
       const data = await response.json();
       return data.exists;
     } catch (error) {
@@ -1307,14 +1311,18 @@ function PurchaseForm() {
   };
 
   // Function to check if vehicle number exists for IGP entries on the same date
-  const checkIGPVehicleNumberExists = async (vehicleNo: string, igpNo: string) => {
+  const checkIGPVehicleNumberExists = async (vehicleNo: string, igpNo: string, excludeWbId?: number) => {
     if (!vehicleNo || vehicleNo.trim() === "" || !igpNo || igpNo.trim() === "") return false;
 
     try {
       const today = new Date().toISOString().split("T")[0];
-      const response = await fetch(
-        `/api/purchases/check-igp-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&igp_no=${encodeURIComponent(igpNo.trim())}&date=${today}`,
-      );
+      let url = `/api/purchases/check-igp-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&igp_no=${encodeURIComponent(igpNo.trim())}&date=${today}`;
+      
+      if (excludeWbId) {
+        url += `&exclude_wb_id=${excludeWbId}`;  
+      }
+      
+      const response = await fetch(url);
       const data = await response.json();
       return data.exists;
     } catch (error) {
@@ -1516,9 +1524,10 @@ function PurchaseForm() {
       }
     }
 
-    // Vehicle number validation for new entries (not in edit mode)
-    if (name === "vehicleNo" && !isEditMode && value.trim() !== "") {
-      const vehicleExists = await checkVehicleNumberExists(value);
+    // Vehicle number validation - allow editing existing records
+    if (name === "vehicleNo" && value.trim() !== "") {
+      const excludeWbId = isEditMode ? editingWbId : undefined;
+      const vehicleExists = await checkVehicleNumberExists(value, excludeWbId);
       if (vehicleExists) {
         alert(
           `Vehicle number ${value} already has an entry for today. Please use a different vehicle number.`,
@@ -2395,12 +2404,23 @@ function PurchaseForm() {
       return;
     }
 
-    // Check for duplicate vehicle number with IGP on same date (only for new entries)
-    if (!isEditMode && formData.igpNo && formData.igpNo.trim() !== "") {
-      const igpVehicleExists = await checkIGPVehicleNumberExists(formData.vehicleNo, formData.igpNo);
+    // Check for duplicate vehicle number (exclude current record if editing)
+    const excludeWbId = isEditMode ? editingWbId : undefined;
+    
+    if (formData.igpNo && formData.igpNo.trim() !== "") {
+      const igpVehicleExists = await checkIGPVehicleNumberExists(formData.vehicleNo, formData.igpNo, excludeWbId);
       if (igpVehicleExists) {
         alert(
           `Vehicle number ${formData.vehicleNo} with IGP ${formData.igpNo} already has an entry for today. Please use a different vehicle number or IGP number.`,
+        );
+        setLoading(false);
+        return;
+      }
+    } else {
+      const vehicleExists = await checkVehicleNumberExists(formData.vehicleNo, excludeWbId);
+      if (vehicleExists) {
+        alert(
+          `Vehicle number ${formData.vehicleNo} already has an entry for today. Please use a different vehicle number.`,
         );
         setLoading(false);
         return;
