@@ -266,9 +266,7 @@ const generateDetailedReportHTML = (data: any) => {
 
   // Assuming you have access to the current logged-in user information
   // Replace this with your actual user data retrieval mechanism
-  const currentUser = {
-    userName: 'JohnDoe', // Replace with the actual username or name
-  };
+  const currentUserName = 'JohnDoe'; // Replace with the actual username or name
 
   return `
    <!DOCTYPE html>
@@ -461,7 +459,7 @@ const generateDetailedReportHTML = (data: any) => {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
-            <div style="font-size: 10px; margin-bottom: 2px;">${currentUser?.userName || 'System User'}</div>
+            <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -547,7 +545,7 @@ const generateDetailedReportHTML = (data: any) => {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
-            <div style="font-size: 10px; margin-bottom: 2px;">${currentUser?.userName || 'System User'}</div>
+            <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -631,7 +629,7 @@ const generateDetailedReportHTML = (data: any) => {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
-            <div style="font-size: 10px; margin-bottom: 2px;">${currentUser?.userName || 'System User'}</div>
+            <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -654,6 +652,7 @@ const generateDetailedReportHTML = (data: any) => {
   };
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
+```
       <div className="mb-4">
         <h1 className="text-2xl font-bold mb-4 text-black">Reports</h1>
 
