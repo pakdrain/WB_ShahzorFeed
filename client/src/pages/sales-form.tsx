@@ -904,6 +904,8 @@ export default function SalesForm() {
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
   const [items, setItems] = useState<any[]>([]);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+  const [itemSearchQuery, setItemSearchQuery] = useState("");
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
@@ -3220,24 +3222,50 @@ export default function SalesForm() {
                           {!onlineMode && salesData[index]?.dcNo ? (
                             <Select
                               value={salesData[index]?.customerName || ""}
-                              onValueChange={(value) =>
-                                handleSalesDataChange(index, "customerName", value)
-                              }
+                              onValueChange={(value) => {
+                                handleSalesDataChange(index, "customerName", value);
+                                setCustomerSearchQuery("");
+                              }}
+                              onOpenChange={(open) => {
+                                if (!open) setCustomerSearchQuery("");
+                              }}
                             >
                               <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0">
                                 <SelectValue placeholder="Select customer" />
                               </SelectTrigger>
                               <SelectContent>
+                                {/* Search Box at top */}
+                                <div className="px-2 py-1 sticky top-0 bg-white z-10">
+                                  <input
+                                    type="text"
+                                    placeholder="Search customers..."
+                                    value={customerSearchQuery}
+                                    onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                                    className="h-6 w-full text-xs border border-gray-300 px-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    autoComplete="off"
+                                    autoCorrect="off"
+                                    autoCapitalize="off"
+                                    spellCheck="false"
+                                  />
+                                </div>
+                                
+                                {/* Filtered Customers */}
                                 {customers && customers.length > 0 ? (
-                                  customers.map((customer) => (
-                                    <SelectItem
-                                      key={customer.id}
-                                      value={customer.name}
-                                      className="text-xs"
-                                    >
-                                      {customer.name}
-                                    </SelectItem>
-                                  ))
+                                  customers
+                                    .filter((customer) =>
+                                      customer.name
+                                        .toLowerCase()
+                                        .includes(customerSearchQuery.toLowerCase())
+                                    )
+                                    .map((customer) => (
+                                      <SelectItem
+                                        key={customer.id}
+                                        value={customer.name}
+                                        className="text-xs"
+                                      >
+                                        {customer.name}
+                                      </SelectItem>
+                                    ))
                                 ) : (
                                   <SelectItem value="no-customers" disabled>No customers found</SelectItem>
                                 )}
@@ -3320,24 +3348,50 @@ export default function SalesForm() {
                           {!onlineMode && salesData[index]?.dcNo ? (
                             <Select
                               value={salesData[index]?.itemDescription || ""}
-                              onValueChange={(value) =>
-                                handleSalesDataChange(index, "itemDescription", value)
-                              }
+                              onValueChange={(value) => {
+                                handleSalesDataChange(index, "itemDescription", value);
+                                setItemSearchQuery("");
+                              }}
+                              onOpenChange={(open) => {
+                                if (!open) setItemSearchQuery("");
+                              }}
                             >
                               <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0">
                                 <SelectValue placeholder="Select item" />
                               </SelectTrigger>
                               <SelectContent>
+                                {/* Search Box at top */}
+                                <div className="px-2 py-1 sticky top-0 bg-white z-10">
+                                  <input
+                                    type="text"
+                                    placeholder="Search items..."
+                                    value={itemSearchQuery}
+                                    onChange={(e) => setItemSearchQuery(e.target.value)}
+                                    className="h-6 w-full text-xs border border-gray-300 px-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    autoComplete="off"
+                                    autoCorrect="off"
+                                    autoCapitalize="off"
+                                    spellCheck="false"
+                                  />
+                                </div>
+                                
+                                {/* Filtered Items */}
                                 {items && items.length > 0 ? (
-                                  items.map((item) => (
-                                    <SelectItem
-                                      key={item.id}
-                                      value={item.description}
-                                      className="text-xs"
-                                    >
-                                      {item.description}
-                                    </SelectItem>
-                                  ))
+                                  items
+                                    .filter((item) =>
+                                      item.description
+                                        .toLowerCase()
+                                        .includes(itemSearchQuery.toLowerCase())
+                                    )
+                                    .map((item) => (
+                                      <SelectItem
+                                        key={item.id}
+                                        value={item.description}
+                                        className="text-xs"
+                                      >
+                                        {item.description}
+                                      </SelectItem>
+                                    ))
                                 ) : (
                                   <SelectItem value="no-items" disabled>No items found</SelectItem>
                                 )}
