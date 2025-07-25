@@ -245,6 +245,11 @@ const generateDetailedReportHTML = (data: any) => {
         return (netWeight / quantity).toFixed(2);
     };
 
+  // Assuming you have access to the current logged-in user information
+  // Replace this with your actual user data retrieval mechanism
+  const user = {
+    username: 'JohnDoe', // Replace with the actual username or name
+  };
 
   return `
    <!DOCTYPE html>
@@ -387,9 +392,11 @@ const generateDetailedReportHTML = (data: any) => {
             </div>
           </div>
           <div class="right-section">
-            <div>Party: <b>${record.vendor_name || ''}</b></div>
-            <div style="margin-top: 3px;">Time IN: ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
-            <div style="margin-top: 3px;">Time OUT: ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div class="fields">
+              <div><span class="label">Party:</span><span class="value">${record.vendor_name || ''}</span></div>
+              <div><span class="label">Time IN:</span><span class="value">${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
+              <div><span class="label">Time OUT:</span><span class="value">${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
+            </div>
           </div>
         </div>
 
@@ -435,6 +442,7 @@ const generateDetailedReportHTML = (data: any) => {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
+            <div style="font-size: 10px; margin-bottom: 2px;">${user?.username || user?.name || 'System User'}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -470,9 +478,11 @@ const generateDetailedReportHTML = (data: any) => {
             </div>
           </div>
           <div class="right-section">
-            <div>Party: <b>${record.vendor_name || ''}</b></div>
-            <div style="margin-top: 3px;">Time IN: ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
-            <div style="margin-top: 3px;">Time OUT: ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div class="fields">
+              <div><span class="label">Party:</span><span class="value">${record.vendor_name || ''}</span></div>
+              <div><span class="label">Time IN:</span><span class="value">${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
+              <div><span class="label">Time OUT:</span><span class="value">${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
+            </div>
           </div>
         </div>
 
@@ -518,6 +528,7 @@ const generateDetailedReportHTML = (data: any) => {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
+            <div style="font-size: 10px; margin-bottom: 2px;">${user?.username || user?.name || 'System User'}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -551,9 +562,11 @@ const generateDetailedReportHTML = (data: any) => {
             </div>
           </div>
           <div class="right-section">
-            <div>Party: <b>${record.vendor_name || ''}</b></div>
-            <div style="margin-top: 3px;">Time IN: ${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
-            <div style="margin-top: 3px;">Time OUT: ${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</div>
+            <div class="fields">
+              <div><span class="label">Party:</span><span class="value">${record.vendor_name || ''}</span></div>
+              <div><span class="label">Time IN:</span><span class="value">${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
+              <div><span class="label">Time OUT:</span><span class="value">${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
+            </div>
           </div>
         </div>
 
@@ -580,12 +593,12 @@ const generateDetailedReportHTML = (data: any) => {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${record.first_weight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${record.second_weight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${record.gross_weight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${record.bardana_weight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${record.quality_deduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${record.net_weight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${record.first_weight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${record.second_weight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${record.gross_weight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${record.bardana_weight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${record.quality_deduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${record.net_weight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg"
@@ -599,6 +612,7 @@ const generateDetailedReportHTML = (data: any) => {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
+            <div style="font-size: 10px; margin-bottom: 2px;">${user?.username || user?.name || 'System User'}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -610,7 +624,7 @@ const generateDetailedReportHTML = (data: any) => {
             <div class="signature-line"></div>
             <div>Production Manager</div>
           </div>
-         </div>
+        </div>
 
 
       </div> <!-- .slip-section ends -->

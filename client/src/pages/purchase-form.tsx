@@ -1306,6 +1306,23 @@ function PurchaseForm() {
     }
   };
 
+  // Function to check if vehicle number exists for IGP entries on the same date
+  const checkIGPVehicleNumberExists = async (vehicleNo: string, igpNo: string) => {
+    if (!vehicleNo || vehicleNo.trim() === "" || !igpNo || igpNo.trim() === "") return false;
+
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const response = await fetch(
+        `/api/purchases/check-igp-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&igp_no=${encodeURIComponent(igpNo.trim())}&date=${today}`,
+      );
+      const data = await response.json();
+      return data.exists;
+    } catch (error) {
+      console.error("Error checking IGP vehicle number:", error);
+      return false;
+    }
+  };
+
   // Function to reset form to clean state
   const resetFormToInitial = () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -2376,6 +2393,18 @@ function PurchaseForm() {
       alert("Vehicle number is required");
       setLoading(false);
       return;
+    }
+
+    // Check for duplicate vehicle number with IGP on same date (only for new entries)
+    if (!isEditMode && formData.igpNo && formData.igpNo.trim() !== "") {
+      const igpVehicleExists = await checkIGPVehicleNumberExists(formData.vehicleNo, formData.igpNo);
+      if (igpVehicleExists) {
+        alert(
+          `Vehicle number ${formData.vehicleNo} with IGP ${formData.igpNo} already has an entry for today. Please use a different vehicle number or IGP number.`,
+        );
+        setLoading(false);
+        return;
+      }
     }
 
     // Determine entry type based on selected form and return mode
