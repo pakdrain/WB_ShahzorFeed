@@ -83,7 +83,7 @@ export default function Reports() {
       console.log("Fetching purchase data from:", url);
       const response = await fetch(url);
       const data = await response.json();
-      console.log("Purchase API Response:", data);
+      console.log("Purchase API Response with vehicle_no and vendor_name:", data);
       if (!response.ok) {
         console.error("Purchase API error:", data);
         throw new Error(data.error || "Failed to fetch purchase data");
@@ -342,7 +342,7 @@ export default function Reports() {
     };
 
     // Get the actual logged-in user name from auth context
-    const currentUserName = user?.userName || "System User";
+    const currentUserName = user?.userName || "admin";
 
     return `
    <!DOCTYPE html>
@@ -847,8 +847,7 @@ export default function Reports() {
                             : "---"}
                         </td>
                         <td className="px-4 py-2 border border-black text-black">
-                          {record.slip_out_time &&
-                          record.slip_out_time !== "---"
+                          {record.slip_out_time && record.slip_out_time !== null && record.slip_out_time !== ""
                             ? new Date(record.slip_out_time).toLocaleString()
                             : "---"}
                         </td>
@@ -856,12 +855,12 @@ export default function Reports() {
                           {record.entry_type || "PURCHASE"}
                         </td>
                         <td className="px-4 py-2 border border-black text-black">
-                          {record.vehicle_no && record.vehicle_no !== ""
+                          {record.vehicle_no && record.vehicle_no !== null && record.vehicle_no !== "" && record.vehicle_no !== "---"
                             ? record.vehicle_no
                             : "---"}
                         </td>
                         <td className="px-4 py-2 border border-black text-black">
-                          {record.vendor_name && record.vendor_name !== ""
+                          {record.vendor_name && record.vendor_name !== null && record.vendor_name !== "" && record.vendor_name !== "---"
                             ? record.vendor_name
                             : "---"}
                         </td>

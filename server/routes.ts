@@ -1122,14 +1122,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET all purchases - show only one record per slip number
+  // GET all purchases - show only one record per slip number with details
   app.get("/api/purchases", async (req, res) => {
     try {
-      const result = await pool.query(`
-        SELECT DISTINCT ON (slip_no) * 
-        FROM wb_weighbridge 
-        ORDER BY slip_no DESC, wb_id DESC
-      `);
+      const { branch_id } = req.query;
+      
+      let query = `
+        SELECT DISTINCT ON (wb.slip_no)
+          wb.wb_id,
+          wb.slip_no,
+          wb.slip_in_time,
+          wb.slip_out_time,
+          wb.entry_type,
+          wb.first_weight,
+          wb.second_weight,
+          wb.net_weight,
+          wb.bardana_weight,
+          wb.gross_weight,
+          wb.freight,
+          wb.remarks,
+          wb.branch_id,
+          wb.online_entry,
+          wb.offline_entry,
+          COALESCE(wbi.vehicle_no, '') as vehicle_no,
+          COALESCE(wbi.vendor_name, '') as vendor_name,
+          wbi.igp_no,
+          wbi.item_desc,
+          wbi.item_code,
+          wbi.no_of_bags,
+          wbi.bag_condition,
+          wbi.bardana_type,
+          wbi.weight_per_bags,
+          wbi.quality_deduction
+        FROM wb_weighbridge wb
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
+        WHERE (wb.entry_type = 'PURCHASE' OR wb.entry_type = 'PURCHASE_RETURN')
+      `;
+      
+      const params = [];
+      
+      if (branch_id && branch_id !== 'all') {
+        query += ` AND wb.branch_id = $1`;
+        params.push(parseInt(branch_id));
+      }
+      
+      query += ` ORDER BY wb.slip_no DESC, wb.wb_id DESC`;
+      
+      const result = await pool.query(query, params);
+      console.log(`Fetched ${result.rows.length} purchase records with details`);
       res.json(result.rows);
     } catch (err) {
       console.error("Error fetching purchases:", err);
