@@ -721,7 +721,7 @@ const generateDetailedReportHTML = (data: any) => {
                   <tr>
                     <th className="px-4 py-2 text-left border border-black text-black">Slip No</th>
                     <th className="px-4 py-2 text-left border border-black text-black">Vehicle In Time</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">VehicleOut Time</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle Out Time</th>
                     <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
                     <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
                     <th className="px-4 py-2 text-left border border-black text-black">Vendor</th>

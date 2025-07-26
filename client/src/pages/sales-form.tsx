@@ -3311,38 +3311,53 @@ export default function SalesForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <button className="w-full h-6 text-xs text-left px-2 border-none bg-transparent focus:outline-none flex items-center justify-between">
-                                <span>
-                                  {salesData[index]?.doDate
-                                    ? format(new Date(salesData[index].doDate), "dd.MM.yyyy")
-                                    : "Select date"}
-                                </span>
-                                <CalendarIcon className="h-3 w-3" />
-                              </button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={
-                                  salesData[index]?.doDate
-                                    ? new Date(salesData[index].doDate)
-                                    : undefined
-                                }
-                                onSelect={(date) => {
-                                  if (date) {
-                                    handleSalesDataChange(
-                                      index,
-                                      "doDate",
-                                      format(date, "yyyy-MM-dd")
-                                    );
+                          {salesData[index]?.dcNo ? (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button className="w-full h-6 text-xs text-left px-2 border-none bg-transparent focus:outline-none flex items-center justify-between">
+                                  <span>
+                                    {salesData[index]?.doDate
+                                      ? format(new Date(salesData[index].doDate), "dd.MM.yyyy")
+                                      : "Select date"}
+                                  </span>
+                                  <CalendarIcon className="h-3 w-3" />
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={
+                                    salesData[index]?.doDate
+                                      ? new Date(salesData[index].doDate)
+                                      : undefined
                                   }
-                                }}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      handleSalesDataChange(
+                                        index,
+                                        "doDate",
+                                        format(date, "yyyy-MM-dd")
+                                      );
+                                    }
+                                  }}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
+                          ) : (
+                            <input
+                              type="text"
+                              className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                              value=""
+                              readOnly
+                              placeholder=""
+                              autoComplete="off"
+                              autoCorrect="off"
+                              autoCapitalize="off"
+                              spellCheck="false"
+                              data-form-type="other"
+                            />
+                          )}
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
                           {!onlineMode && salesData[index]?.dcNo ? (
