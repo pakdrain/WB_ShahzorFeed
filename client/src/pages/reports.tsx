@@ -1,12 +1,18 @@
-typescript
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/lib/auth';
+typescript;
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useAuth } from "@/lib/auth";
 
 interface PurchaseRecord {
   wb_id: number;
@@ -23,7 +29,7 @@ interface PurchaseRecord {
   igp_no: string;
   freight: string;
   item_desc: string;
- no_of_bags: string;
+  no_of_bags: string;
   bag_condition: string;
   bardana_type: string;
   wt_per_bag: string;
@@ -37,7 +43,6 @@ interface PurchaseRecord {
   net_weight: string;
   item_code: string;
   weight_per_bags: string;
-
 }
 
 interface SaleRecord {
@@ -52,89 +57,125 @@ interface SaleRecord {
 }
 
 export default function Reports() {
-  const [selectedBranch, setSelectedBranch] = useState<string>('');
-  const [activeTab, setActiveTab] = useState('purchase');
+  const [selectedBranch, setSelectedBranch] = useState<string>("");
+  const [activeTab, setActiveTab] = useState("purchase");
   const [location, setLocation] = useLocation();
-  const [searchSlipNo, setSearchSlipNo] = useState('');
-  const [searchVehicleNo, setSearchVehicleNo] = useState('');
+  const [searchSlipNo, setSearchSlipNo] = useState("");
+  const [searchVehicleNo, setSearchVehicleNo] = useState("");
   const { user } = useAuth();
 
   // Fetch branches
   const { data: branches = [] } = useQuery({
-    queryKey: ['/api/branches'],
+    queryKey: ["/api/branches"],
   });
 
   // Fetch purchase records
-  const { data: purchaseData, refetch: refetchPurchase, error: purchaseError } = useQuery({
-    queryKey: ['/api/purchases', selectedBranch],
+  const {
+    data: purchaseData,
+    refetch: refetchPurchase,
+    error: purchaseError,
+  } = useQuery({
+    queryKey: ["/api/purchases", selectedBranch],
     queryFn: async () => {
-      const url = (selectedBranch && selectedBranch !== 'all') 
-        ? `/api/purchases?branch_id=${selectedBranch}` 
-        : '/api/purchases';
+      const url =
+        selectedBranch && selectedBranch !== "all"
+          ? `/api/purchases?branch_id=${selectedBranch}`
+          : "/api/purchases";
       console.log("Fetching purchase data from:", url);
       const response = await fetch(url);
       const data = await response.json();
       console.log("Purchase API Response:", data);
       if (!response.ok) {
         console.error("Purchase API error:", data);
-        throw new Error(data.error || 'Failed to fetch purchase data');
+        throw new Error(data.error || "Failed to fetch purchase data");
       }
       return data;
     },
   });
 
   // Ensure purchaseRecords is always an array and filter for purchase-related entries
-  const purchaseRecords = Array.isArray(purchaseData) ? purchaseData.filter(
-    (r) => {
-      const matchesEntryType = r.entry_type?.toUpperCase() === "PURCHASE" || r.entry_type?.toUpperCase() === "PURCHASE_RETURN";
-      const matchesSlipNo = !searchSlipNo || (r.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
-      const matchesVehicleNo = !searchVehicleNo || (r.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
-      return matchesEntryType && matchesSlipNo && matchesVehicleNo;
-    }
-  ) : [];
+  const purchaseRecords = Array.isArray(purchaseData)
+    ? purchaseData.filter((r) => {
+        const matchesEntryType =
+          r.entry_type?.toUpperCase() === "PURCHASE" ||
+          r.entry_type?.toUpperCase() === "PURCHASE_RETURN";
+        const matchesSlipNo =
+          !searchSlipNo ||
+          (r.slip_no || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchSlipNo.toLowerCase());
+        const matchesVehicleNo =
+          !searchVehicleNo ||
+          (r.vehicle_no || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchVehicleNo.toLowerCase());
+        return matchesEntryType && matchesSlipNo && matchesVehicleNo;
+      })
+    : [];
 
   // Fetch sales records
-  const { data: salesData, refetch: refetchSales, error: salesError } = useQuery({
-  queryKey: ['/api/sales', selectedBranch],
-  queryFn: async () => {
-    const url = (selectedBranch && selectedBranch !== 'all') 
-      ? `/api/sales?branch_id=${selectedBranch}` 
-      : '/api/sales';
-    console.log("Fetching sales from:", url);
-    const response = await fetch(url);
-    const data = await response.json();
-    console.log("Sales API Response:", data);
-    if (!response.ok) {
-      console.error("Sales API error:", data);
-      throw new Error(data.error || 'Failed to fetch sales data');
-    }
-    return data;
-  },
-});
-
-const salesRecords = Array.isArray(salesData) ? salesData.filter(
-  (r) => {
-    const matchesEntryType = r.entry_type?.toUpperCase() === "SALE";
-    const matchesSlipNo = !searchSlipNo || (r.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
-    const matchesVehicleNo = !searchVehicleNo || (r.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
-    return matchesEntryType && matchesSlipNo && matchesVehicleNo;
-  }
-) : [];
-
-
-  // Fetch offline entries
-  const { data: offlineData, refetch: refetchOffline, error: offlineError } = useQuery({
-    queryKey: ['/api/purchases/offline', selectedBranch],
+  const {
+    data: salesData,
+    refetch: refetchSales,
+    error: salesError,
+  } = useQuery({
+    queryKey: ["/api/sales", selectedBranch],
     queryFn: async () => {
-      const url = (selectedBranch && selectedBranch !== 'all') 
-        ? `/api/purchases/offline?branch_id=${selectedBranch}` 
-        : '/api/purchases/offline';
-      console.log('Fetching offline data from URL:', url);
+      const url =
+        selectedBranch && selectedBranch !== "all"
+          ? `/api/sales?branch_id=${selectedBranch}`
+          : "/api/sales";
+      console.log("Fetching sales from:", url);
       const response = await fetch(url);
       const data = await response.json();
-      console.log('Offline API response:', data);
+      console.log("Sales API Response:", data);
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to fetch offline data');
+        console.error("Sales API error:", data);
+        throw new Error(data.error || "Failed to fetch sales data");
+      }
+      return data;
+    },
+  });
+
+  const salesRecords = Array.isArray(salesData)
+    ? salesData.filter((r) => {
+        const matchesEntryType = r.entry_type?.toUpperCase() === "SALE";
+        const matchesSlipNo =
+          !searchSlipNo ||
+          (r.slip_no || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchSlipNo.toLowerCase());
+        const matchesVehicleNo =
+          !searchVehicleNo ||
+          (r.vehicle_no || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchVehicleNo.toLowerCase());
+        return matchesEntryType && matchesSlipNo && matchesVehicleNo;
+      })
+    : [];
+
+  // Fetch offline entries
+  const {
+    data: offlineData,
+    refetch: refetchOffline,
+    error: offlineError,
+  } = useQuery({
+    queryKey: ["/api/purchases/offline", selectedBranch],
+    queryFn: async () => {
+      const url =
+        selectedBranch && selectedBranch !== "all"
+          ? `/api/purchases/offline?branch_id=${selectedBranch}`
+          : "/api/purchases/offline";
+      console.log("Fetching offline data from URL:", url);
+      const response = await fetch(url);
+      const data = await response.json();
+      console.log("Offline API response:", data);
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to fetch offline data");
       }
       return data;
     },
@@ -142,13 +183,23 @@ const salesRecords = Array.isArray(salesData) ? salesData.filter(
   });
 
   // Ensure offlineRecords is always an array and apply search filters
-  const offlineRecords = Array.isArray(offlineData) ? offlineData.filter(
-    (r) => {
-      const matchesSlipNo = !searchSlipNo || (r.slip_no || '').toString().toLowerCase().includes(searchSlipNo.toLowerCase());
-      const matchesVehicleNo = !searchVehicleNo || (r.vehicle_no || '').toString().toLowerCase().includes(searchVehicleNo.toLowerCase());
-      return matchesSlipNo && matchesVehicleNo;
-    }
-  ) : [];
+  const offlineRecords = Array.isArray(offlineData)
+    ? offlineData.filter((r) => {
+        const matchesSlipNo =
+          !searchSlipNo ||
+          (r.slip_no || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchSlipNo.toLowerCase());
+        const matchesVehicleNo =
+          !searchVehicleNo ||
+          (r.vehicle_no || "")
+            .toString()
+            .toLowerCase()
+            .includes(searchVehicleNo.toLowerCase());
+        return matchesSlipNo && matchesVehicleNo;
+      })
+    : [];
 
   // Refetch data when branch selection changes
   useEffect(() => {
@@ -159,7 +210,7 @@ const salesRecords = Array.isArray(salesData) ? salesData.filter(
 
   const handleEdit = (wbId: number, entryType?: string) => {
     // Navigate to purchase form with edit mode and proper form type
-    if (entryType === 'SALE') {
+    if (entryType === "SALE") {
       setLocation(`/purchase-form?form=sales&edit=${wbId}`);
     } else {
       setLocation(`/purchase-form?form=purchase&edit=${wbId}`);
@@ -168,7 +219,7 @@ const salesRecords = Array.isArray(salesData) ? salesData.filter(
 
   const handleOfflineEdit = (record: any) => {
     // Navigate to purchase form with proper form type based on entry type
-    if (record.entry_type === 'SALE') {
+    if (record.entry_type === "SALE") {
       setLocation(`/purchase-form?form=sales&edit=${record.wb_id}`);
     } else {
       setLocation(`/purchase-form?form=purchase&edit=${record.wb_id}`);
@@ -180,16 +231,16 @@ const salesRecords = Array.isArray(salesData) ? salesData.filter(
       // Fetch complete record data including all fields
       const response = await fetch(`/api/purchase/by-wbid/${record.wb_id}`);
       if (!response.ok) {
-        throw new Error('Failed to fetch complete record data');
+        throw new Error("Failed to fetch complete record data");
       }
 
       const completeData = await response.json();
-      console.log('Complete record data for print:', completeData);
+      console.log("Complete record data for print:", completeData);
 
       // Generate print report with complete data
-      const printWindow = window.open('', '_blank');
+      const printWindow = window.open("", "_blank");
       if (!printWindow) {
-        alert('Please allow popups to print the report');
+        alert("Please allow popups to print the report");
         return;
       }
 
@@ -198,21 +249,21 @@ const salesRecords = Array.isArray(salesData) ? salesData.filter(
       printWindow.document.close();
       printWindow.print();
     } catch (error) {
-      console.error('Error printing record:', error);
-      alert('Failed to generate print report');
+      console.error("Error printing record:", error);
+      alert("Failed to generate print report");
     }
   };
 
-// Function to format numbers with commas (Pakistani style)
+  // Function to format numbers with commas (Pakistani style)
   const formatFreightWithCommas = (value: string | number) => {
-    if (!value) return '';
+    if (!value) return "";
 
     const stringValue = value.toString();
     // Remove all non-digit characters except decimal point
-    const cleanValue = stringValue.replace(/[^\d.]/g, '');
+    const cleanValue = stringValue.replace(/[^\d.]/g, "");
 
     // Split into integer and decimal parts
-    const parts = cleanValue.split('.');
+    const parts = cleanValue.split(".");
     let integerPart = parts[0];
     const decimalPart = parts[1];
 
@@ -223,53 +274,78 @@ const salesRecords = Array.isArray(salesData) ? salesData.filter(
       let leftPart = integerPart.slice(0, -3);
 
       // Add commas every 2 digits from right to left for the remaining part
-      const leftPartFormatted = leftPart.replace(/\B(?=(\d{2})+(?!\d))/g, ',');
+      const leftPartFormatted = leftPart.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
 
-      integerPart = leftPartFormatted + ',' + rightPart;
+      integerPart = leftPartFormatted + "," + rightPart;
     }
 
     // Combine integer and decimal parts
-    return decimalPart !== undefined ? integerPart + '.' + decimalPart : integerPart;
+    return decimalPart !== undefined
+      ? integerPart + "." + decimalPart
+      : integerPart;
   };
 
-const generateDetailedReportHTML = (data: any) => {
-  // ✅ Merge master + details[0] into one object
-  const record = {
-    ...(data.master || {}),
-    ...(data.details?.[0] || {})
-  };
-
-  const currentDate = new Date().toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: '2-digit'
-  }).toUpperCase().replace(/\s/g, '-');
-
-    const currentTime = new Date().toLocaleTimeString('en-GB', {
-      hour12: false
-    });
-
-    const inTime = record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {
-      day: '2-digit', month: 'short', year: '2-digit', 
-      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-    }).toUpperCase().replace(/,/, '') : '';
-
-    const outTime = record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {
-      day: '2-digit', month: 'short', year: '2-digit', 
-      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-    }).toUpperCase().replace(/,/, '') : '';
-
-   const calculateAvgWeight = () => {
-        const netWeight = parseFloat(record.net_weight || '0');
-        const quantity = parseInt(record.no_of_bags || '0');
-        if (quantity === 0) return '0';
-        return (netWeight / quantity).toFixed(2);
+  const generateDetailedReportHTML = (data: any) => {
+    // ✅ Merge master + details[0] into one object
+    const record = {
+      ...(data.master || {}),
+      ...(data.details?.[0] || {}),
     };
 
-  // Get the actual logged-in user name from auth context
-  const currentUserName = user?.userName || 'System User';
+    const currentDate = new Date()
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "2-digit",
+      })
+      .toUpperCase()
+      .replace(/\s/g, "-");
 
-  return `
+    const currentTime = new Date().toLocaleTimeString("en-GB", {
+      hour12: false,
+    });
+
+    const inTime = record.slip_in_time
+      ? new Date(record.slip_in_time)
+          .toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          })
+          .toUpperCase()
+          .replace(/,/, "")
+      : "";
+
+    const outTime = record.slip_out_time
+      ? new Date(record.slip_out_time)
+          .toLocaleString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+          })
+          .toUpperCase()
+          .replace(/,/, "")
+      : "";
+
+    const calculateAvgWeight = () => {
+      const netWeight = parseFloat(record.net_weight || "0");
+      const quantity = parseInt(record.no_of_bags || "0");
+      if (quantity === 0) return "0";
+      return (netWeight / quantity).toFixed(2);
+    };
+
+    // Get the actual logged-in user name from auth context
+    const currentUserName = user?.userName || "System User";
+
+    return `
    <!DOCTYPE html>
   <html>
   <head>
@@ -399,21 +475,21 @@ const generateDetailedReportHTML = (data: any) => {
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
 
-        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${record.igp_no || ''}</span></div>
+        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${record.igp_no || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
             <div class="fields">
-              <div><span class="label">W.B #</span><span class="value">${record.slip_no || ''}</span></div>
-              <div><span class="label">Truck #</span><span class="value">${record.vehicle_no || ''}</span></div>
-              <div><span class="label">Freight Payment</span><span class="value">${formatFreightWithCommas(record.freight || '')}</span></div>
+              <div><span class="label">W.B #</span><span class="value">${record.slip_no || ""}</span></div>
+              <div><span class="label">Truck #</span><span class="value">${record.vehicle_no || ""}</span></div>
+              <div><span class="label">Freight Payment</span><span class="value">${formatFreightWithCommas(record.freight || "")}</span></div>
             </div>
           </div>
           <div class="right-section">
             <div class="fields">
-              <div><span class="label">Party:</span><span class="value">${record.vendor_name || record.customer_name || ''}</span></div>
-              <div><span class="label">Time IN:</span><span class="value">${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
-              <div><span class="label">Time OUT:</span><span class="value">${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
+              <div><span class="label">Party:</span><span class="value">${record.vendor_name || record.customer_name || ""}</span></div>
+              <div><span class="label">Time IN:</span><span class="value">${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "")}</span></div>
+              <div><span class="label">Time OUT:</span><span class="value">${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "")}</span></div>
             </div>
           </div>
         </div>
@@ -423,12 +499,12 @@ const generateDetailedReportHTML = (data: any) => {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${record.item_code ? record.item_code + " - " + (record.item_desc || '') : (record.item_desc || '')}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${record.weight_per_bags || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${record.item_code ? record.item_code + " - " + (record.item_desc || "") : record.item_desc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.weight_per_bags || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ""}</span></div>
               <div><span class="label">AVG. WEIGHT</span><span class="value">${calculateAvgWeight()}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${record.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg"
@@ -441,12 +517,12 @@ const generateDetailedReportHTML = (data: any) => {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${record.first_weight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${record.second_weight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${record.gross_weight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${record.bardana_weight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${record.quality_deduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${record.net_weight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${record.first_weight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${record.second_weight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${record.gross_weight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${record.bardana_weight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${record.quality_deduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${record.net_weight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg"
@@ -485,21 +561,21 @@ const generateDetailedReportHTML = (data: any) => {
               </div>
               <div class="header-right"></div>
             </div>
-           <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${record.igp_no || ''}</span></div>
+           <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${record.igp_no || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
             <div class="fields">
-              <div><span class="label">W.B #</span><span class="value">${record.slip_no || ''}</span></div>
-              <div><span class="label">Truck #</span><span class="value">${record.vehicle_no || ''}</span></div>
-              <div><span class="label">Freight Payment</span><span class="value">${formatFreightWithCommas(record.freight || '')}</span></div>
+              <div><span class="label">W.B #</span><span class="value">${record.slip_no || ""}</span></div>
+              <div><span class="label">Truck #</span><span class="value">${record.vehicle_no || ""}</span></div>
+              <div><span class="label">Freight Payment</span><span class="value">${formatFreightWithCommas(record.freight || "")}</span></div>
             </div>
           </div>
           <div class="right-section">
             <div class="fields">
-              <div><span class="label">Party:</span><span class="value">${record.vendor_name || record.customer_name || ''}</span></div>
-              <div><span class="label">Time IN:</span><span class="value">${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
-              <div><span class="label">Time OUT:</span><span class="value">${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
+              <div><span class="label">Party:</span><span class="value">${record.vendor_name || record.customer_name || ""}</span></div>
+              <div><span class="label">Time IN:</span><span class="value">${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "")}</span></div>
+              <div><span class="label">Time OUT:</span><span class="value">${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "")}</span></div>
             </div>
           </div>
         </div>
@@ -509,12 +585,12 @@ const generateDetailedReportHTML = (data: any) => {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${record.item_code ? record.item_code + " - " + (record.item_desc || '') : (record.item_desc || '')}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${record.weight_per_bags || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${record.item_code ? record.item_code + " - " + (record.item_desc || "") : record.item_desc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.weight_per_bags || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ""}</span></div>
               <div><span class="label">AVG. WEIGHT</span><span class="value">${calculateAvgWeight()}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${record.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg"
@@ -527,12 +603,12 @@ const generateDetailedReportHTML = (data: any) => {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${record.first_weight || '0'}</div>
-              <div><span class="label">TARE WEIGHT</span> ${record.second_weight || '0'}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${record.gross_weight || '0'}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${record.bardana_weight || '0'}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${record.quality_deduction || '0'}</div>
-              <div><span class="label">NET WEIGHT</span> ${record.net_weight || '0'}</div>
+              <div><span class="label">GROSS WEIGHT</span> ${record.first_weight || "0"}</div>
+              <div><span class="label">TARE WEIGHT</span> ${record.second_weight || "0"}</div>
+              <div><span class="label">WITH BARDANA WEIGHT</span> ${record.gross_weight || "0"}</div>
+              <div><span class="label">BARDANA WEIGHT</span> ${record.bardana_weight || "0"}</div>
+              <div><span class="label">QUALITY DEDUCTION</span> ${record.quality_deduction || "0"}</div>
+              <div><span class="label">NET WEIGHT</span> ${record.net_weight || "0"}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg"
@@ -569,21 +645,21 @@ const generateDetailedReportHTML = (data: any) => {
         <div style="height: 10px;"></div>
         <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
               </div>
-        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${record.igp_no || ''}</span></div>
+        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${record.igp_no || ""}</span></div>
 
         <div class="two-column">
           <div class="left-section">
             <div class="fields">
-              <div><span class="label">W.B #</span><span class="value">${record.slip_no || ''}</span></div>
-              <div><span class="label">Truck #</span><span class="value">${record.vehicle_no || ''}</span></div>
-              <div><span class="label">Freight Payment</span><span class="value">${formatFreightWithCommas(record.freight || '')}</span></div>
+              <div><span class="label">W.B #</span><span class="value">${record.slip_no || ""}</span></div>
+              <div><span class="label">Truck #</span><span class="value">${record.vehicle_no || ""}</span></div>
+              <div><span class="label">Freight Payment</span><span class="value">${formatFreightWithCommas(record.freight || "")}</span></div>
             </div>
           </div>
           <div class="right-section">
             <div class="fields">
-              <div><span class="label">Party:</span><span class="value">${record.vendor_name || record.customer_name || ''}</span></div>
-              <div><span class="label">Time IN:</span><span class="value">${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
-              <div><span class="label">Time OUT:</span><span class="value">${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '') : new Date().toLocaleString('en-GB', {day: '2-digit', month: 'short', year: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false}).toUpperCase().replace(/,/, '')}</span></div>
+              <div><span class="label">Party:</span><span class="value">${record.vendor_name || record.customer_name || ""}</span></div>
+              <div><span class="label">Time IN:</span><span class="value">${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "")}</span></div>
+              <div><span class="label">Time OUT:</span><span class="value">${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "")}</span></div>
             </div>
           </div>
         </div>
@@ -593,12 +669,12 @@ const generateDetailedReportHTML = (data: any) => {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">COMMODITY</span><span class="value">${record.item_code ? record.item_code + " - " + (record.item_desc || '') : (record.item_desc || '')}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ''}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${record.weight_per_bags || ''}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ''}</span></div>
+              <div><span class="label">COMMODITY</span><span class="value">${record.item_code ? record.item_code + " - " + (record.item_desc || "") : record.item_desc || ""}</span></div>
+              <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ""}</span></div>
+              <div><span class="label">BAG CONDITION</span><span class="value">${record.weight_per_bags || ""}</span></div>
+              <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ""}</span></div>
               <div><span class="label">AVG. WEIGHT</span><span class="value">${calculateAvgWeight()}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${record.remarks || ''}</span></div>
+              <div><span class="label">REMARKS</span><span class="value">${record.remarks || ""}</span></div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg"
@@ -649,28 +725,33 @@ const generateDetailedReportHTML = (data: any) => {
     </div> <!-- .page-container ends -->
   </body>
   </html>`;
-
   };
   return (
     <div className="p-4 bg-gray-50 min-h-screen">
-```
+      ```
       <div className="mb-4">
         <h1 className="text-2xl font-bold mb-4 text-black">Reports</h1>
 
         {/* Branch Selection */}
         <div className="mb-4 flex items-center gap-4">
-          <label className="text-sm font-medium text-black">Filter by Branch:</label>
+          <label className="text-sm font-medium text-black">
+            Filter by Branch:
+          </label>
           <Select value={selectedBranch} onValueChange={setSelectedBranch}>
             <SelectTrigger className="w-48 border-black">
               <SelectValue placeholder="All Branches" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Branches</SelectItem>
-              {Array.isArray(branches) && branches.map((branch: any) => (
-                <SelectItem key={branch.branch_id} value={branch.branch_id.toString()}>
-                  {branch.branch_name}
-                </SelectItem>
-              ))}
+              {Array.isArray(branches) &&
+                branches.map((branch: any) => (
+                  <SelectItem
+                    key={branch.branch_id}
+                    value={branch.branch_id.toString()}
+                  >
+                    {branch.branch_name}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -692,8 +773,8 @@ const generateDetailedReportHTML = (data: any) => {
           />
           <Button
             onClick={() => {
-              setSearchSlipNo('');
-              setSearchVehicleNo('');
+              setSearchSlipNo("");
+              setSearchVehicleNo("");
             }}
             className="bg-gray-500 hover:bg-gray-600 text-white"
           >
@@ -701,7 +782,6 @@ const generateDetailedReportHTML = (data: any) => {
           </Button>
         </div>
       </div>
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="purchase">Purchase</TabsTrigger>
@@ -713,94 +793,152 @@ const generateDetailedReportHTML = (data: any) => {
         <TabsContent value="purchase" className="space-y-4">
           <div className="bg-white rounded-lg shadow border-2 border-black">
             <div className="p-4 border-b-2 border-black">
-              <h2 className="text-lg font-semibold text-black">Purchase Entries</h2>
+              <h2 className="text-lg font-semibold text-black">
+                Purchase Entries
+              </h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left border border-black text-black">Slip No</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle In Time</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle Out Time</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Vendor</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">First Weight Image</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Second Weight Image</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Actions</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Slip No
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Vehicle In Time
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Vehicle Out Time
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Entry Type
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Vehicle No
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Vendor
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      First Weight Image
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Second Weight Image
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                 {purchaseRecords
-  .filter((record) => record.entry_type?.toUpperCase() === "PURCHASE" || record.entry_type?.toUpperCase() === "PURCHASE_RETURN")
-  .map((record: PurchaseRecord) => (
-
-                    <tr key={record.wb_id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 border border-black text-black">{record.slip_no}</td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        {record.slip_in_time ? new Date(record.slip_in_time).toLocaleString() : '---'}
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        {record.slip_out_time ? new Date(record.slip_out_time).toLocaleString() : '---'}
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        {record.entry_type || 'PURCHASE'}
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
-                      <td className="px-4 py-2 border border-black text-center">
-                        <img 
-                          src={`/captured_images/first_weight/slip_${record.slip_no}.jpg`}
-                          alt="First Weight"
-                          className="w-16 h-12 object-cover mx-auto cursor-pointer"
-                          onClick={() => window.open(`/captured_images/first_weight/slip_${record.slip_no}.jpg`, '_blank')}
-                          onLoad={() => console.log(`First weight image loaded for slip ${record.slip_no}`)}
-                          onError={(e) => {
-                            console.log(`First weight image error for slip ${record.slip_no}`);
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';                            target.nextElementSibling!.textContent = 'No Image';
-                          }}
-                        />
-                        <span className="text-xs text-gray-500"></span>
-                      </td>
-                      <td className="px-4 py-2 border border-black text-center">
-                        <img 
-                          src={`/captured_images/second_weight/slip_${record.slip_no}.jpg`}
-                          alt="Second Weight"
-                          className="w-16 h-12 object-cover mx-auto cursor-pointer"
-                          onClick={() => window.open(`/captured_images/second_weight/slip_${record.slip_no}.jpg`, '_blank')}
-                          onLoad={() => console.log(`Second weight image loaded for slip ${record.slip_no}`)}
-                          onError={(e) => {
-                            console.log(`Second weight image error for slip ${record.slip_no}`);
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            target.nextElementSibling!.textContent = 'No Image';
-                          }}
-                        />
-                        <span className="text-xs text-gray-500"></span>
-                      </td>
-                      <td className="px-4 py-2 border border-black">
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="border-black text-black hover:bg-gray-100"
-                            onClick={() => handleEdit(record.wb_id)}
-                          >
-                            Edit
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="border-black text-black hover:bg-gray-100"
-                            onClick={() => handlePrintRecord(record)}
-                          >
-                            Print
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {purchaseRecords
+                    .filter(
+                      (record) =>
+                        record.entry_type?.toUpperCase() === "PURCHASE" ||
+                        record.entry_type?.toUpperCase() === "PURCHASE_RETURN",
+                    )
+                    .map((record: PurchaseRecord) => (
+                      <tr key={record.wb_id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.slip_no}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.slip_in_time
+                            ? new Date(record.slip_in_time).toLocaleString()
+                            : "---"}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.slip_out_time
+                            ? new Date(record.slip_out_time).toLocaleString()
+                            : "---"}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.entry_type || "PURCHASE"}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.vehicle_no || "---"}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.vendor_name || "---"}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-center">
+                          <img
+                            src={`/captured_images/first_weight/slip_${record.slip_no}.jpg`}
+                            alt="First Weight"
+                            className="w-16 h-12 object-cover mx-auto cursor-pointer"
+                            onClick={() =>
+                              window.open(
+                                `/captured_images/first_weight/slip_${record.slip_no}.jpg`,
+                                "_blank",
+                              )
+                            }
+                            onLoad={() =>
+                              console.log(
+                                `First weight image loaded for slip ${record.slip_no}`,
+                              )
+                            }
+                            onError={(e) => {
+                              console.log(
+                                `First weight image error for slip ${record.slip_no}`,
+                              );
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              target.nextElementSibling!.textContent =
+                                "No Image";
+                            }}
+                          />
+                          <span className="text-xs text-gray-500"></span>
+                        </td>
+                        <td className="px-4 py-2 border border-black text-center">
+                          <img
+                            src={`/captured_images/second_weight/slip_${record.slip_no}.jpg`}
+                            alt="Second Weight"
+                            className="w-16 h-12 object-cover mx-auto cursor-pointer"
+                            onClick={() =>
+                              window.open(
+                                `/captured_images/second_weight/slip_${record.slip_no}.jpg`,
+                                "_blank",
+                              )
+                            }
+                            onLoad={() =>
+                              console.log(
+                                `Second weight image loaded for slip ${record.slip_no}`,
+                              )
+                            }
+                            onError={(e) => {
+                              console.log(
+                                `Second weight image error for slip ${record.slip_no}`,
+                              );
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              target.nextElementSibling!.textContent =
+                                "No Image";
+                            }}
+                          />
+                          <span className="text-xs text-gray-500"></span>
+                        </td>
+                        <td className="px-4 py-2 border border-black">
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-black text-black hover:bg-gray-100"
+                              onClick={() => handleEdit(record.wb_id)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-black text-black hover:bg-gray-100"
+                              onClick={() => handlePrintRecord(record)}
+                            >
+                              Print
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
               {purchaseError && (
@@ -827,87 +965,136 @@ const generateDetailedReportHTML = (data: any) => {
               <table className="w-full text-sm border-collapse">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left border border-black text-black">Slip No</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle In Time</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle Out Time</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Customer</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Actions</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Slip No
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Vehicle In Time
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Vehicle Out Time
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Entry Type
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Vehicle No
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Customer
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {salesRecords
-  .filter((record) => record.entry_type?.toUpperCase() === "SALE")
-  .map((record: SaleRecord) => (
-
-                    <tr key={record.wb_id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 border border-black text-black">{record.slip_no}</td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        {record.slip_in_time ? new Date(record.slip_in_time).toLocaleString() : '---'}
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        {record.slip_out_time ? new Date(record.slip_out_time).toLocaleString() : '---'}
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        {record.entry_type || 'SALE'}
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
-                      <td className="px-4 py-2 border border-black text-black">{record.customer_name || '---'}</td>
-                      <td className="px-4 py-2 border border-black text-center">
-                        <img 
-                          src={`/captured_images/first_weight/slip_${record.slip_no}.jpg`}
-                          alt="First Weight"
-                          className="w-16 h-12 object-cover mx-auto cursor-pointer"
-                          onClick={() => window.open(`/captured_images/first_weight/slip_${record.slip_no}.jpg`, '_blank')}
-                          onLoad={() => console.log(`First weight image loaded for slip ${record.slip_no}`)}
-                          onError={(e) => {
-                            console.log(`First weight image error for slip ${record.slip_no}`);
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            target.nextElementSibling!.textContent = 'No Image';
-                          }}
-                        />
-                        <span className="text-xs text-gray-500"></span>
-                      </td>
-                      <td className="px-4 py-2 border border-black text-center">
-                        <img 
-                          src={`/captured_images/second_weight/slip_${record.slip_no}.jpg`}
-                          alt="Second Weight"
-                          className="w-16 h-12 object-cover mx-auto cursor-pointer"
-                          onClick={() => window.open(`/captured_images/second_weight/slip_${record.slip_no}.jpg`, '_blank')}
-                          onLoad={() => console.log(`Second weight image loaded for slip ${record.slip_no}`)}
-                          onError={(e) => {
-                            console.log(`Second weight image error for slip ${record.slip_no}`);
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            target.nextElementSibling!.textContent = 'No Image';
-                          }}
-                        />
-                        <span className="text-xs text-gray-500"></span>
-                      </td>
-                      <td className="px-4 py-2 border border-black">
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="border-black text-black hover:bg-gray-100"
-                            onClick={() => handleEdit(record.wb_id)}
-                          >
-                            Edit
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            className="border-black text-black hover:bg-gray-100"
-                            onClick={() => handlePrintRecord(record)}
-                          >
-                            Print
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                    .filter(
+                      (record) => record.entry_type?.toUpperCase() === "SALE",
+                    )
+                    .map((record: SaleRecord) => (
+                      <tr key={record.wb_id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.slip_no}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.slip_in_time
+                            ? new Date(record.slip_in_time).toLocaleString()
+                            : "---"}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.slip_out_time
+                            ? new Date(record.slip_out_time).toLocaleString()
+                            : "---"}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.entry_type || "SALE"}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.vehicle_no || "---"}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-black">
+                          {record.customer_name || "---"}
+                        </td>
+                        <td className="px-4 py-2 border border-black text-center">
+                          <img
+                            src={`/captured_images/first_weight/slip_${record.slip_no}.jpg`}
+                            alt="First Weight"
+                            className="w-16 h-12 object-cover mx-auto cursor-pointer"
+                            onClick={() =>
+                              window.open(
+                                `/captured_images/first_weight/slip_${record.slip_no}.jpg`,
+                                "_blank",
+                              )
+                            }
+                            onLoad={() =>
+                              console.log(
+                                `First weight image loaded for slip ${record.slip_no}`,
+                              )
+                            }
+                            onError={(e) => {
+                              console.log(
+                                `First weight image error for slip ${record.slip_no}`,
+                              );
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              target.nextElementSibling!.textContent =
+                                "No Image";
+                            }}
+                          />
+                          <span className="text-xs text-gray-500"></span>
+                        </td>
+                        <td className="px-4 py-2 border border-black text-center">
+                          <img
+                            src={`/captured_images/second_weight/slip_${record.slip_no}.jpg`}
+                            alt="Second Weight"
+                            className="w-16 h-12 object-cover mx-auto cursor-pointer"
+                            onClick={() =>
+                              window.open(
+                                `/captured_images/second_weight/slip_${record.slip_no}.jpg`,
+                                "_blank",
+                              )
+                            }
+                            onLoad={() =>
+                              console.log(
+                                `Second weight image loaded for slip ${record.slip_no}`,
+                              )
+                            }
+                            onError={(e) => {
+                              console.log(
+                                `Second weight image error for slip ${record.slip_no}`,
+                              );
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = "none";
+                              target.nextElementSibling!.textContent =
+                                "No Image";
+                            }}
+                          />
+                          <span className="text-xs text-gray-500"></span>
+                        </td>
+                        <td className="px-4 py-2 border border-black">
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-black text-black hover:bg-gray-100"
+                              onClick={() => handleEdit(record.wb_id)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="border-black text-black hover:bg-gray-100"
+                              onClick={() => handlePrintRecord(record)}
+                            >
+                              Print
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
               {salesError && (
@@ -928,27 +1115,45 @@ const generateDetailedReportHTML = (data: any) => {
         <TabsContent value="offline" className="space-y-4">
           <div className="bg-white rounded-lg shadow border-2 border-black">
             <div className="p-4 border-b-2 border-black">
-              <h2 className="text-lg font-semibold text-black">Offline Entries (Click slip number to edit)</h2>
+              <h2 className="text-lg font-semibold text-black">
+                Offline Entries (Click slip number to edit)
+              </h2>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-4 py-2 text-left border border-black text-black">Slip No</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Slip Date</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">First Weight</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Second Weight</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Company Name</th>
-                    <th className="px-4 py-2 text-left border border-black text-black">Manual Trans #</th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Slip No
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Slip Date
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Entry Type
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      First Weight
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Second Weight
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Vehicle No
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Company Name
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Manual Trans #
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {offlineRecords.map((record: PurchaseRecord) => (
                     <tr key={record.wb_id} className="hover:bg-gray-50">
                       <td className="px-4 py-2 border border-black text-black">
-                        <button 
+                        <button
                           className="text-blue-600 hover:text-blue-800 font-medium underline"
                           onClick={() => handleOfflineEdit(record)}
                         >
@@ -956,14 +1161,28 @@ const generateDetailedReportHTML = (data: any) => {
                         </button>
                       </td>
                       <td className="px-4 py-2 border border-black text-black">
-                        {record.slip_in_time ? new Date(record.slip_in_time).toLocaleDateString() : '---'}
+                        {record.slip_in_time
+                          ? new Date(record.slip_in_time).toLocaleDateString()
+                          : "---"}
                       </td>
-                      <td className="px-4 py-2 border border-black text-black">{record.entry_type || 'PURCHASE'}</td>
-                      <td className="px-4 py-2 border border-black text-black">---</td>
-                      <td className="px-4 py-2 border border-black text-black">---</td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vehicle_no || '---'}</td>
-                      <td className="px-4 py-2 border border-black text-black">{record.vendor_name || '---'}</td>
-                      <td className="px-4 py-2 border border-black text-black">---</td>
+                      <td className="px-4 py-2 border border-black text-black">
+                        {record.entry_type || "PURCHASE"}
+                      </td>
+                      <td className="px-4 py-2 border border-black text-black">
+                        ---
+                      </td>
+                      <td className="px-4 py-2 border border-black text-black">
+                        ---
+                      </td>
+                      <td className="px-4 py-2 border border-black text-black">
+                        {record.vehicle_no || "---"}
+                      </td>
+                      <td className="px-4 py-2 border border-black text-black">
+                        {record.vendor_name || "---"}
+                      </td>
+                      <td className="px-4 py-2 border border-black text-black">
+                        ---
+                      </td>
                     </tr>
                   ))}
                 </tbody>
