@@ -2202,20 +2202,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { branch_id } = req.query;
 
       let query = `
-      SELECT 
-        wb.wb_id,
-        wb.slip_no,
-        wb.entry_type,
-        wb.first_weight,
-        wb.second_weight,
-        COALESCE(wbi.vehicle_no, '') as vehicle_no
-      FROM wb_weighbridge wb 
-      LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
-      WHERE wb.entry_type = 'SALE' 
-        AND wb.first_weight IS NOT NULL 
-        AND wb.first_weight > 0
-        AND wb.online_entry = 'Yes'
-    `;
+        SELECT DISTINCT ON (wb.slip_no)
+          wb.wb_id,
+          wb.slip_no,
+          wb.slip_in_time,
+          wb.slip_out_time,
+          wb.entry_type,
+          wb.first_weight,
+          wb.second_weight,
+          wb.net_weight,
+          wb.bardana_weight,
+          wb.gross_weight,
+          wb.freight,
+          wb.remarks,
+          wb.branch_id,
+          wb.online_entry,
+          wb.offline_entry,
+          COALESCE(wbi.vehicle_no, '') as vehicle_no,
+          COALESCE(wbi.customer_name, '') as customer_name,
+          wbi.igp_no,
+          wbi.item_desc,
+          wbi.item_code,
+          wbi.no_of_bags,
+          wbi.bag_condition,
+          wbi.bardana_type,
+          wbi.weight_per_bags,
+          wbi.quality_deduction
+        FROM wb_weighbridge wb
+        LEFT JOIN wb_weighbridge_items_purchase wbi ON wb.wb_id = wbi.wb_id
+        WHERE wb.entry_type = 'SALE'
+      `;
       const params: any[] = [];
 
       if (branch_id && branch_id !== "all") {
@@ -2223,13 +2239,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         params.push(parseInt(branch_id as string));
       }
 
-      query += " ORDER BY wb.wb_id DESC";
+      query += " ORDER BY wb.slip_no DESC, wb.wb_id DESC";
 
-      console.log("Running query:", query, params);
+      console.log("Running sales query:", query, params);
 
       const result = await pool.query(query, params);
 
-      console.log(`Fetched ${result.rows.length} sales records`);
+      console.log(`Fetched ${result.rows.length} sales records with details`);
       res.json(result.rows);
     } catch (error: any) {
       console.error("Error fetching sales data:", error);
