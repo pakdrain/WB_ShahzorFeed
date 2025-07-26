@@ -1,4 +1,3 @@
-typescript;
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -848,7 +847,8 @@ export default function Reports() {
                             : "---"}
                         </td>
                         <td className="px-4 py-2 border border-black text-black">
-                          {record.slip_out_time && record.slip_out_time !== "---"
+                          {record.slip_out_time &&
+                          record.slip_out_time !== "---"
                             ? new Date(record.slip_out_time).toLocaleString()
                             : "---"}
                         </td>
@@ -856,10 +856,14 @@ export default function Reports() {
                           {record.entry_type || "PURCHASE"}
                         </td>
                         <td className="px-4 py-2 border border-black text-black">
-                          {record.vehicle_no && record.vehicle_no !== "" ? record.vehicle_no : "---"}
+                          {record.vehicle_no && record.vehicle_no !== ""
+                            ? record.vehicle_no
+                            : "---"}
                         </td>
                         <td className="px-4 py-2 border border-black text-black">
-                          {record.vendor_name && record.vendor_name !== "" ? record.vendor_name : "---"}
+                          {record.vendor_name && record.vendor_name !== ""
+                            ? record.vendor_name
+                            : "---"}
                         </td>
                         <td className="px-4 py-2 border border-black text-center">
                           <img
