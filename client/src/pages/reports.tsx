@@ -243,7 +243,9 @@ export default function Reports() {
         return;
       }
 
-      const reportHTML = generateDetailedReportHTML(completeData);
+      // Check if this is a sale entry and use appropriate report format
+      const isSaleEntry = completeData.master?.entry_type === "SALE";
+      const reportHTML = isSaleEntry ? generateSalesReportHTML(completeData) : generateDetailedReportHTML(completeData);
       printWindow.document.write(reportHTML);
       printWindow.document.close();
       printWindow.print();
@@ -282,6 +284,364 @@ export default function Reports() {
     return decimalPart !== undefined
       ? integerPart + "." + decimalPart
       : integerPart;
+  };
+
+  // Generate sales report HTML (same as sales-form.tsx)
+  const generateSalesReportHTML = (data: any) => {
+    const record = {
+      ...(data.master || {}),
+      ...(data.details?.[0] || {}),
+    };
+
+    const currentDate = new Date()
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "2-digit",
+      })
+      .toUpperCase()
+      .replace(/\s/g, "-");
+
+    const currentTime = new Date().toLocaleTimeString("en-GB", {
+      hour12: false,
+    });
+
+    const currentUserName = user?.userName || "admin";
+
+    // Process sales data from details
+    const salesData = data.details || [];
+    const nonEmptyRows = salesData.filter(
+      (row: any) =>
+        row.igp_no ||
+        row.po_no ||
+        row.customer_name ||
+        row.vehicle_no ||
+        row.item_desc ||
+        row.igp_qty ||
+        row.po_qty,
+    );
+
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weighbridge Slip</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      margin: 20px;
+    }
+
+    .container {
+      border: 1px solid black;
+      padding: 20px;
+      height: 1122px;
+      box-sizing: border-box;
+    }
+
+    .title {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .copy-label {
+      text-align: right;
+      font-weight: bold;
+    }
+
+    .row-box {
+      margin: 15px 0 5px 0;
+      display: flex;
+      justify-content: space-between;
+      border-right: 1px solid black;
+    }
+
+    .section,
+    .center-wrapper {
+      width: 33.33%;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
+
+    .left-info {
+      border-left: 1px solid black;
+    }
+
+    .line-top {
+      border-top: 1px solid black;
+      height: 1px;
+      margin-bottom: 8px;
+    }
+
+    .line {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid black;
+      padding: 0 2px;
+      margin-bottom: 2px;
+    }
+
+    .line span {
+      display: inline-block;
+      font-size: 11px;
+    }
+
+    .line span:first-child {
+      width: 48%;
+      font-weight: normal;
+    }
+
+    .center-box {
+      border: 1px solid black;
+      text-align: center;
+      font-weight: bold;
+      width: 100%;
+      height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-sizing: border-box;
+      padding: 8px 10px;
+    }
+
+    .truck-label {
+      font-weight: normal;
+      font-size: 11px;
+      border-bottom: 1px solid black;
+      margin-bottom: 5px;
+      padding-bottom: 2px;
+    }
+
+    .image-box {
+      border: 1px solid black;
+      height: 62px;
+      text-align: center;
+      padding: 5px;
+      margin-top: -2px;
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    .table th, .table td {
+      border: 1px solid black;
+      padding: 4px;
+      text-align: left;
+    }
+
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
+
+    .signature-block {
+      flex: 1;
+      font-size: 12px;
+    }
+
+    .signature-label {
+      display: inline-block;
+    }
+
+    .signature-line {
+      display: inline-block;
+      border-bottom: 1px solid black;
+      width: 120px;
+      position: relative;
+    }
+
+    .signature-name {
+      font-size: 10px;
+      color: #444;
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .signature-container {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .totals {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .totals.right-only {
+      justify-content: flex-end;
+    }
+
+    hr.dashed {
+      border: 1px dashed #aaa;
+      margin: 30px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="title">SHAHZOR FEED (Pvt) LTD</div>
+  <div class="copy-label">Office Copy</div>
+
+  <div class="row-box">
+    <div class="section left-info">
+      <div class="line-top"></div>
+      <div class="line"><span>Slip No:</span><span>${record.slip_no || ""}</span></div>
+      <div class="line"><span>Time In:</span><span>${record.slip_in_time || ""}</span></div>
+      <div class="line"><span>Time Out:</span><span>${record.slip_out_time || ""}</span></div>
+      <div class="image-box">
+        <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="First Weight Image" />
+        <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
+      </div>
+    </div>
+
+    <div class="center-wrapper">
+      <div class="center-box">
+        <div class="truck-label">Truck #</div>
+        ${record.vehicle_no || ""}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="line-top"></div>
+      <div class="line"><span>Tare Weight:</span><span>${record.second_weight || ""}</span></div>
+      <div class="line"><span>Loaded Weight:</span><span>${record.first_weight || ""}</span></div>
+      <div class="line"><span>Net Weight:</span><span>${record.net_weight || ""}</span></div>
+      <div class="image-box">
+        <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="Second Weight Image" />
+        <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
+      </div>
+    </div>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>DC #</th>
+        <th>DO #</th>
+        <th>Party Name</th>
+        <th>Feed #</th>
+        <th>Feed Name</th>
+        <th>Qty</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${nonEmptyRows.map((row: any) => `
+        <tr>
+          <td>${row.igp_no || ""}</td>
+          <td>${row.po_no || ""}</td>
+          <td>${row.customer_name || ""}</td>
+          <td>${row.item_code || ""}</td>
+          <td>${row.item_desc || ""}</td>
+          <td>${row.igp_qty || ""}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div>Please Pay Freight RS: ${formatFreightWithCommas(record.freight || "0")}</div>
+    <div>Grand Total: ${nonEmptyRows.reduce((acc: number, row: any) => acc + (parseFloat(row.igp_qty) || 0), 0)}</div>
+  </div>
+
+  <div class="signatures">
+    <div class="signature-block" style="text-align: left;">
+      <div class="signature-container">
+        <span class="signature-label">Prepared By:</span>
+        <span class="signature-line">
+          <span class="signature-name">${currentUserName}</span>
+        </span>
+      </div>
+    </div>
+    <div class="signature-block" style="text-align: center;">
+      <span class="signature-label">Checked By:</span>
+      <span class="signature-line"></span>
+    </div>
+    <div class="signature-block" style="text-align: right;">
+      <span class="signature-label">Production Manager:</span>
+      <span class="signature-line"></span>
+    </div>
+  </div>
+
+  <hr class="dashed" />
+
+  <!-- CUSTOMER COPY -->
+  <div class="title">Weight Slip</div>
+  <div class="copy-label">Customer Copy</div>
+
+  <div class="row-box">
+    <div class="section left-info">
+      <div class="line-top"></div>
+      <div class="line"><span>Slip No:</span><span>${record.slip_no || ""}</span></div>
+      <div class="line"><span>Time In:</span><span>${record.slip_in_time || ""}</span></div>
+      <div class="line"><span>Time Out:</span><span>${record.slip_out_time || ""}</span></div>
+      <div class="image-box">
+        <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="First Weight Image" />
+        <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
+      </div>
+    </div>
+
+    <div class="center-wrapper">
+      <div class="center-box">
+        <div class="truck-label">Truck #</div>
+        ${record.vehicle_no || ""}
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="line-top"></div>
+      <div class="line"><span>Tare Weight:</span><span>${record.second_weight || ""}</span></div>
+      <div class="line"><span>Loaded Weight:</span><span>${record.first_weight || ""}</span></div>
+      <div class="line"><span>Net Weight:</span><span>${record.net_weight || ""}</span></div>
+      <div class="image-box">
+        <img src="/captured_images/second_weight/slip_${record.slip_no}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="Second Weight Image" />
+        <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
+      </div>
+    </div>
+  </div>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Party Name</th>
+        <th>Feed #</th>
+        <th>Feed Name</th>
+        <th>Qty</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${nonEmptyRows.map((row: any) => `
+        <tr>
+          <td>${row.customer_name || ""}</td>
+          <td>${row.item_code || ""}</td>
+          <td>${row.item_desc || ""}</td>
+          <td>${row.igp_qty || ""}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <div class="totals right-only">
+    <div>Grand Total: ${nonEmptyRows.reduce((acc: number, row: any) => acc + (parseFloat(row.igp_qty) || 0), 0)}</div>
+  </div>
+</div>
+
+</body>
+</html>
+`;
   };
 
   const generateDetailedReportHTML = (data: any) => {
