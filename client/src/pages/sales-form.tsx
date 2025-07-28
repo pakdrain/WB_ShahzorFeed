@@ -2190,13 +2190,13 @@ export default function SalesForm() {
         <div className="bg-white border-2 border-gray-400 rounded-md shadow-lg w-96 mb-6">
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
-            <div className="bg-gray-200 border-r border-gray-400 p-3 text-center text-sm font-semibold text-black">
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
               Slip No
             </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-3 text-center text-sm font-semibold text-black">
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
               Vehicle No
             </div>
-            <div className="bg-gray-200 p-3 text-center text-sm font-semibold text-black">
+            <div className="bg-gray-200 p-2 text-center text-sm font-semibold text-black">
               Entry Type
             </div>
           </div>
@@ -2241,7 +2241,7 @@ export default function SalesForm() {
                   className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50"
                 >
                   <button
-                    className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
+                    className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white"
                     onClick={() => {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
@@ -2282,25 +2282,25 @@ export default function SalesForm() {
                   >
                     {record.slip_no || "---"}
                   </button>
-                  <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
+                  <div className="border-r border-gray-400 p-2 text-center text-xs text-black bg-white">
                     {record.vehicle_no || "---"}
                   </div>
-                  <div className="p-1 text-center text-xs text-blue-600 font-semibold bg-white">
+                  <div className="p-2 text-center text-xs text-blue-600 font-semibold bg-white">
                     {record.entry_type || "SALE"}
                   </div>
                 </div>
               ))
             ) : (
               <div className="grid grid-cols-3 border-b border-gray-400">
-                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
+                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white">
                   {searchSlipNo || searchVehicleNo
                     ? "No matches"
                     : "No records"}
                 </div>
-                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
+                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white">
                   ---
                 </div>
-                <div className="p-1 text-center text-xs text-gray-500 bg-white">
+                <div className="p-2 text-center text-xs text-gray-500 bg-white">
                   ---
                 </div>
               </div>
@@ -2536,7 +2536,8 @@ export default function SalesForm() {
           name="firstWeight"
           value={formData.firstWeight}
           onChange={handleChange}
-          className="h-8 text-xs text-black w-52"
+          className={`h-8 text-xs text-black w-52 ${isEditMode ? 'bg-gray-100' : ''}`}
+          readOnly={isEditMode}
         />
       </div>
       <div className="flex items-center gap-1">
@@ -2545,7 +2546,8 @@ export default function SalesForm() {
           name="secondWeight"
           value={formData.secondWeight}
           onChange={handleChange}
-          className="h-8 text-xs text-green-600 w-52"
+          className={`h-8 text-xs text-green-600 w-52 ${isEditMode ? 'bg-gray-100' : ''}`}
+          readOnly={isEditMode}
         />
       </div>
       <div className="flex items-center gap-1">
@@ -2943,7 +2945,7 @@ export default function SalesForm() {
                         <div className="bg-white border border-gray-300 p-1">
                           <input
                             type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
+                            className={`w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none ${isEditMode ? 'bg-gray-100' : ''}`}
                             value={salesData[index]?.dcNo || ""}
                             onChange={(e) =>
                               handleSalesDataChange(
@@ -2953,14 +2955,15 @@ export default function SalesForm() {
                               )
                             }
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") {
+                              if (e.key === "Enter" && !isEditMode) {
                                 const dcNo = salesData[index]?.dcNo;
                                 if (dcNo && dcNo.trim() !== "") {
-                                  fetchDcData(dcNo.trim(), index); // ✅ index pass kar rahe hain
+                                  fetchDcData(dcNo.trim(), index);
                                 }
                               }
                             }}
-                            placeholder="Press Enter to fetch"
+                            placeholder={isEditMode ? "" : "Press Enter to fetch"}
+                            readOnly={isEditMode}
                             autoComplete="off"
                             autoCorrect="off"
                             autoCapitalize="off"

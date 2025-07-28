@@ -3849,13 +3849,13 @@ function PurchaseForm() {
         <div className="bg-white border-2 border-gray-400 rounded-md shadow-lg w-96 mb-6">
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
-            <div className="bg-gray-200 border-r border-gray-400 p-3 text-center text-sm font-semibold text-black">
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
               Slip No
             </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-3 text-center text-sm font-semibold text-black">
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
               Vehicle No
             </div>
-            <div className="bg-gray-200 p-3 text-center text-sm font-semibold text-black">
+            <div className="bg-gray-200 p-2 text-center text-sm font-semibold text-black">
               Entry Type
             </div>
           </div>
@@ -3899,7 +3899,7 @@ function PurchaseForm() {
                   className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50"
                 >
                   <button
-                    className="border-r border-gray-400 p-1 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white text-left"
+                    className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white"
                     onClick={() => {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
@@ -3960,25 +3960,25 @@ function PurchaseForm() {
                   >
                     {record.slip_no || "---"}
                   </button>
-                  <div className="border-r border-gray-400 p-1 text-center text-xs text-black bg-white">
+                  <div className="border-r border-gray-400 p-2 text-center text-xs text-black bg-white">
                     {record.vehicle_no || "---"}
                   </div>
-                  <div className="p-1 text-center text-xs text-blue-600 font-semibold bg-white">
+                  <div className="p-2 text-center text-xs text-blue-600 font-semibold bg-white">
                     {record.entry_type || "PURCHASE"}
                   </div>
                 </div>
               ))
             ) : (
               <div className="grid grid-cols-3 border-b border-gray-400">
-                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
+                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white">
                   {searchSlipNo || searchVehicleNo
                     ? "No matches"
                     : "No records"}
                 </div>
-                <div className="border-r border-gray-400 p-1 text-center text-xs text-gray-500 bg-white">
+                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white">
                   ---
                 </div>
-                <div className="p-1 text-center text-xs text-gray-500 bg-white">
+                <div className="p-2 text-center text-xs text-gray-500 bg-white">
                   ---
                 </div>
               </div>
