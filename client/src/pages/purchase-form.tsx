@@ -3860,7 +3860,7 @@ function PurchaseForm() {
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
-      <div className="absolute top-20 right-14 z-50">
+      <div className={`absolute ${isEditMode ? 'top-32' : 'top-20'} right-14 z-50`}>
         <div className="bg-white border-2 border-gray-400 rounded-md shadow-lg w-96 mb-6">
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
@@ -4012,7 +4012,7 @@ function PurchaseForm() {
 
       {/* Bag Details Table - Below Weight Display Table (hide when Sales form is active) */}
       {selectedForm === "purchase" && (
-        <div className="absolute top-50 right-14 z-50">
+        <div className={`absolute ${isEditMode ? 'top-96' : 'top-80'} right-14 z-50`}
           <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-96">
             {/* Header Row */}
             <div className="grid grid-cols-6 border-b border-gray-400">
