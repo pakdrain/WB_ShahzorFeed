@@ -835,7 +835,7 @@ export default function SalesForm() {
             doNo: item.delivery_order_no ? String(item.delivery_order_no) : "",
             customerName: item.customer_name || "",
             vehicleNo: item.vehicle_no || "",
-            doDate: item.dc_date || "",
+            doDate: item.dc_date ? new Date(item.dc_date).toISOString().split('T')[0] : "",
             itemDescription: item.item_desc || "",
             dcQty: item.dc_qty ? String(item.dc_qty) : "",
             doQty: item.del_qty ? String(item.del_qty) : "",
