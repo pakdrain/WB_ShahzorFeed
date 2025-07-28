@@ -1290,7 +1290,10 @@ function PurchaseForm() {
   };
 
   // Function to check if vehicle number already exists for today
-  const checkVehicleNumberExists = async (vehicleNo: string, excludeWbId?: number) => {
+  const checkVehicleNumberExists = async (
+    vehicleNo: string,
+    excludeWbId?: number,
+  ) => {
     if (!vehicleNo || vehicleNo.trim() === "") return false;
 
     try {
@@ -1311,15 +1314,20 @@ function PurchaseForm() {
   };
 
   // Function to check if vehicle number exists for IGP entries on the same date
-  const checkIGPVehicleNumberExists = async (vehicleNo: string, igpNo: string, excludeWbId?: number) => {
-    if (!vehicleNo || vehicleNo.trim() === "" || !igpNo || igpNo.trim() === "") return false;
+  const checkIGPVehicleNumberExists = async (
+    vehicleNo: string,
+    igpNo: string,
+    excludeWbId?: number,
+  ) => {
+    if (!vehicleNo || vehicleNo.trim() === "" || !igpNo || igpNo.trim() === "")
+      return false;
 
     try {
       const today = new Date().toISOString().split("T")[0];
       let url = `/api/purchases/check-igp-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&igp_no=${encodeURIComponent(igpNo.trim())}&date=${today}`;
 
       if (excludeWbId) {
-        url += `&exclude_wb_id=${excludeWbId}`;  
+        url += `&exclude_wb_id=${excludeWbId}`;
       }
 
       const response = await fetch(url);
@@ -1389,8 +1397,8 @@ function PurchaseForm() {
     if (formData.isPercentageMode && formData.weight) {
       // Extract percentage value from weight field (e.g., "0.50%" -> 0.50)
       const weightStr = formData.weight.toString();
-      if (weightStr.includes('%')) {
-        percentageValue = parseFloat(weightStr.replace('%', '')) || 0;
+      if (weightStr.includes("%")) {
+        percentageValue = parseFloat(weightStr.replace("%", "")) || 0;
       } else {
         percentageValue = parseFloat(weightStr) || 0;
       }
@@ -1479,10 +1487,10 @@ function PurchaseForm() {
   // Function to format numbers with commas (Pakistani style)
   const formatWithCommas = (value: string) => {
     // Remove all non-digit characters except decimal point
-    const cleanValue = value.replace(/[^\d.]/g, '');
+    const cleanValue = value.replace(/[^\d.]/g, "");
 
     // Split into integer and decimal parts
-    const parts = cleanValue.split('.');
+    const parts = cleanValue.split(".");
     let integerPart = parts[0];
     const decimalPart = parts[1];
 
@@ -1493,13 +1501,15 @@ function PurchaseForm() {
       let leftPart = integerPart.slice(0, -3);
 
       // Add commas every 2 digits from right to left for the remaining part
-      const leftPartFormatted = leftPart.replace(/\B(?=(\d{2})+(?!\d))/g, ',');
+      const leftPartFormatted = leftPart.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
 
-      integerPart = leftPartFormatted + ',' + rightPart;
+      integerPart = leftPartFormatted + "," + rightPart;
     }
 
     // Combine integer and decimal parts
-    return decimalPart !== undefined ? integerPart + '.' + decimalPart : integerPart;
+    return decimalPart !== undefined
+      ? integerPart + "." + decimalPart
+      : integerPart;
   };
 
   const handleChange = async (
@@ -2407,7 +2417,10 @@ function PurchaseForm() {
     // Check for duplicate vehicle number only for new entries, not in edit mode
     if (!isEditMode) {
       if (formData.igpNo && formData.igpNo.trim() !== "") {
-        const igpVehicleExists = await checkIGPVehicleNumberExists(formData.vehicleNo, formData.igpNo);
+        const igpVehicleExists = await checkIGPVehicleNumberExists(
+          formData.vehicleNo,
+          formData.igpNo,
+        );
         if (igpVehicleExists) {
           alert(
             `Vehicle number ${formData.vehicleNo} with IGP ${formData.igpNo} already has an entry for today. Please use a different vehicle number or IGP number.`,
@@ -2416,7 +2429,9 @@ function PurchaseForm() {
           return;
         }
       } else {
-        const vehicleExists = await checkVehicleNumberExists(formData.vehicleNo);
+        const vehicleExists = await checkVehicleNumberExists(
+          formData.vehicleNo,
+        );
         if (vehicleExists) {
           alert(
             `Vehicle number ${formData.vehicleNo} already has an entry for today. Please use a different vehicle number.`,
@@ -2974,7 +2989,7 @@ function PurchaseForm() {
         hour12: false,
       });
 
-       const currentUserName = user?.userName || "admin";
+      const currentUserName = user?.userName || "admin";
 
       if (isEditMode) {
         alert("Record updated successfully!");
@@ -3845,23 +3860,23 @@ function PurchaseForm() {
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
-      <div className={`absolute ${isEditMode ? 'top-20' : 'top-20'} right-14 z-50`}>
+      <div className="absolute top-20 right-14 z-50">
         <div className="bg-white border-2 border-gray-400 rounded-md shadow-lg w-96 mb-6">
           {/* Header Row */}
-          <div className="flex border-b border-gray-400">
-            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black w-32">
+          <div className="grid grid-cols-3 border-b border-gray-400">
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
               Slip No
             </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black w-32">
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
               Vehicle No
             </div>
-            <div className="bg-gray-200 p-2 text-center text-sm font-semibold text-black w-32">
+            <div className="bg-gray-200 p-2 text-center text-sm font-semibold text-black">
               Entry Type
             </div>
           </div>
           {/* Search Row - positioned under headers */}
-          <div className="flex border-b border-gray-400 bg-blue-50">
-            <div className="border-r border-gray-400 p-1 w-32">
+          <div className="grid grid-cols-3 border-b border-gray-400 bg-blue-50">
+            <div className="border-r border-gray-400 p-1">
               <Input
                 placeholder="Search Slip No"
                 value={searchSlipNo}
@@ -3869,7 +3884,7 @@ function PurchaseForm() {
                 className="h-5 text-xs text-black placeholder:text-gray-500 bg-white border-gray-300"
               />
             </div>
-            <div className="border-r border-gray-400 p-1 w-32">
+            <div className="border-r border-gray-400 p-1">
               <Input
                 placeholder="Search Vehicle"
                 value={searchVehicleNo}
@@ -3877,7 +3892,7 @@ function PurchaseForm() {
                 className="h-5 text-xs text-black placeholder:text-gray-500 bg-white border-gray-300"
               />
             </div>
-            <div className="p-1 w-32">
+            <div className="p-1">
               <Button
                 onClick={() => {
                   setSearchSlipNo("");
@@ -3896,10 +3911,10 @@ function PurchaseForm() {
               filteredRecords.map((record: any, index: number) => (
                 <div
                   key={index}
-                  className="flex border-b border-gray-400 hover:bg-gray-50"
+                  className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50"
                 >
                   <button
-                    className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white w-32"
+                    className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white"
                     onClick={() => {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
@@ -3960,25 +3975,25 @@ function PurchaseForm() {
                   >
                     {record.slip_no || "---"}
                   </button>
-                  <div className="border-r border-gray-400 p-2 text-center text-xs text-black bg-white w-32">
+                  <div className="border-r border-gray-400 p-2 text-center text-xs text-black bg-white">
                     {record.vehicle_no || "---"}
                   </div>
-                  <div className="p-2 text-center text-xs text-blue-600 font-semibold bg-white w-32">
+                  <div className="p-2 text-center text-xs text-blue-600 font-semibold bg-white">
                     {record.entry_type || "PURCHASE"}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="flex border-b border-gray-400">
-                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white w-32">
+              <div className="grid grid-cols-3 border-b border-gray-400">
+                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white">
                   {searchSlipNo || searchVehicleNo
                     ? "No matches"
                     : "No records"}
                 </div>
-                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white w-32">
+                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white">
                   ---
                 </div>
-                <div className="p-2 text-center text-xs text-gray-500 bg-white w-32">
+                <div className="p-2 text-center text-xs text-gray-500 bg-white">
                   ---
                 </div>
               </div>
@@ -3997,8 +4012,8 @@ function PurchaseForm() {
 
       {/* Bag Details Table - Below Weight Display Table (hide when Sales form is active) */}
       {selectedForm === "purchase" && (
-        <div className={`absolute ${isEditMode ? 'top-50' : 'top-50'} right-14 z-50`}>
-          <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-96"></div>
+        <div className="absolute top-50 right-14 z-50">
+          <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-96">
             {/* Header Row */}
             <div className="grid grid-cols-6 border-b border-gray-400">
               <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
@@ -4733,21 +4748,25 @@ function PurchaseForm() {
                           value={formData.igpNo}
                           onChange={handleChange}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter" && onlineMode && !isEditMode) {
+                            if (
+                              e.key === "Enter" &&
+                              onlineMode &&
+                              !isEditMode
+                            ) {
                               fetchIgpData();
                             }
                           }}
                           className={`h-8 text-xs w-60 ${
-                            !onlineMode || isEditMode 
-                              ? "text-gray-500 bg-gray-100 cursor-not-allowed" 
+                            !onlineMode || isEditMode
+                              ? "text-gray-500 bg-gray-100 cursor-not-allowed"
                               : "text-black"
                           }`}
                           placeholder={
                             isEditMode
                               ? "Non-editable in edit mode"
                               : onlineMode
-                              ? "Press Enter to fetch"
-                              : "Not available in offline mode"
+                                ? "Press Enter to fetch"
+                                : "Not available in offline mode"
                           }
                           readOnly={!onlineMode || isEditMode}
                         />
