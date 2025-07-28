@@ -3845,23 +3845,23 @@ function PurchaseForm() {
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
-      <div className="absolute top-20 right-14 z-50">
+      <div className={`absolute ${isEditMode ? 'top-32' : 'top-20'} right-14 z-50`}>
         <div className="bg-white border-2 border-gray-400 rounded-md shadow-lg w-96 mb-6">
           {/* Header Row */}
-          <div className="grid grid-cols-3 border-b border-gray-400">
-            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
+          <div className="flex border-b border-gray-400">
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black w-32">
               Slip No
             </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black w-32">
               Vehicle No
             </div>
-            <div className="bg-gray-200 p-2 text-center text-sm font-semibold text-black">
+            <div className="bg-gray-200 p-2 text-center text-sm font-semibold text-black w-32">
               Entry Type
             </div>
           </div>
           {/* Search Row - positioned under headers */}
-          <div className="grid grid-cols-3 border-b border-gray-400 bg-blue-50">
-            <div className="border-r border-gray-400 p-1">
+          <div className="flex border-b border-gray-400 bg-blue-50">
+            <div className="border-r border-gray-400 p-1 w-32">
               <Input
                 placeholder="Search Slip No"
                 value={searchSlipNo}
@@ -3869,7 +3869,7 @@ function PurchaseForm() {
                 className="h-5 text-xs text-black placeholder:text-gray-500 bg-white border-gray-300"
               />
             </div>
-            <div className="border-r border-gray-400 p-1">
+            <div className="border-r border-gray-400 p-1 w-32">
               <Input
                 placeholder="Search Vehicle"
                 value={searchVehicleNo}
@@ -3877,7 +3877,7 @@ function PurchaseForm() {
                 className="h-5 text-xs text-black placeholder:text-gray-500 bg-white border-gray-300"
               />
             </div>
-            <div className="p-1">
+            <div className="p-1 w-32">
               <Button
                 onClick={() => {
                   setSearchSlipNo("");
@@ -3896,10 +3896,10 @@ function PurchaseForm() {
               filteredRecords.map((record: any, index: number) => (
                 <div
                   key={index}
-                  className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50"
+                  className="flex border-b border-gray-400 hover:bg-gray-50"
                 >
                   <button
-                    className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white"
+                    className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white w-32"
                     onClick={() => {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
@@ -3960,25 +3960,25 @@ function PurchaseForm() {
                   >
                     {record.slip_no || "---"}
                   </button>
-                  <div className="border-r border-gray-400 p-2 text-center text-xs text-black bg-white">
+                  <div className="border-r border-gray-400 p-2 text-center text-xs text-black bg-white w-32">
                     {record.vehicle_no || "---"}
                   </div>
-                  <div className="p-2 text-center text-xs text-blue-600 font-semibold bg-white">
+                  <div className="p-2 text-center text-xs text-blue-600 font-semibold bg-white w-32">
                     {record.entry_type || "PURCHASE"}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="grid grid-cols-3 border-b border-gray-400">
-                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white">
+              <div className="flex border-b border-gray-400">
+                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white w-32">
                   {searchSlipNo || searchVehicleNo
                     ? "No matches"
                     : "No records"}
                 </div>
-                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white">
+                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white w-32">
                   ---
                 </div>
-                <div className="p-2 text-center text-xs text-gray-500 bg-white">
+                <div className="p-2 text-center text-xs text-gray-500 bg-white w-32">
                   ---
                 </div>
               </div>
@@ -3997,7 +3997,7 @@ function PurchaseForm() {
 
       {/* Bag Details Table - Below Weight Display Table (hide when Sales form is active) */}
       {selectedForm === "purchase" && (
-        <div className="absolute top-50 right-14 z-50">
+        <div className={`absolute ${isEditMode ? 'top-62' : 'top-50'} right-14 z-50`}
           <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-96">
             {/* Header Row */}
             <div className="grid grid-cols-6 border-b border-gray-400">
