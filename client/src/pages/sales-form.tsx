@@ -3311,7 +3311,7 @@ export default function SalesForm() {
                           />
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
-                          {salesData[index]?.dcNo ? (
+                          {!onlineMode && salesData[index]?.dcNo ? (
                             <Popover>
                               <PopoverTrigger asChild>
                                 <button className="w-full h-6 text-xs text-left px-2 border-none bg-transparent focus:outline-none flex items-center justify-between">
