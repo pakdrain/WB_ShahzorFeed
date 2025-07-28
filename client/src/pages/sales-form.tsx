@@ -3218,7 +3218,9 @@ export default function SalesForm() {
                             <input
                               type="text"
                               className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                              value=""
+                              value={salesData[index]?.doDate 
+                                ? new Date(salesData[index].doDate).toLocaleDateString('en-GB')
+                                : ""}
                               readOnly
                               placeholder=""
                               autoComplete="off"
