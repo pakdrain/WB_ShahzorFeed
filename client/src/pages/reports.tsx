@@ -1010,15 +1010,13 @@ export default function Reports() {
           <div class="left-section">
             <div class="fields">
               <div><span class="label">W.B #</span><span class="value">${record.slip_no || ""}</span></div>
-              <div><span class="label">Truck #</span><span class="value">${record.vehicle_no || ""}</span></div>
-              <div><span class="label">Freight Payment</span><span class="value">${formatFreightWithCommas(record.freight || "")}</span></div>
+
+
             </div>
           </div>
           <div class="right-section">
             <div class="fields">
-              <div><span class="label">Party:</span><span class="value">${record.vendor_name || record.customer_name || ""}</span></div>
-              <div><span class="label">Time IN:</span><span class="value">${record.slip_in_time ? new Date(record.slip_in_time).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "")}</span></div>
-              <div><span class="label">Time OUT:</span><span class="value">${record.slip_out_time ? new Date(record.slip_out_time).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : new Date().toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "")}</span></div>
+              <div class="print-date">Print Date: ${currentDate} ${currentTime}</div>
             </div>
           </div>
         </div>
@@ -1028,12 +1026,11 @@ export default function Reports() {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
+              <div><span class="label">Party:</span><span class="value">${record.vendor_name || record.customer_name || ""}</span></div>
               <div><span class="label">COMMODITY</span><span class="value">${record.item_code ? record.item_code + " - " + (record.item_desc || "") : record.item_desc || ""}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ""}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${record.weight_per_bags || ""}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${record.bardana_type || ""}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${calculateAvgWeight()}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${record.remarks || ""}</span></div>
+              <div><span class="label">Truck #</span><span class="value">${record.vehicle_no || ""}</span></div>
+                <div><span class="label">Freight Payment</span><span class="value">${formatFreightWithCommas(record.freight || "")}</span></div>
+
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${record.slip_no}.jpg"
@@ -1046,11 +1043,7 @@ export default function Reports() {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${record.first_weight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${record.second_weight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${record.gross_weight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${record.bardana_weight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${record.quality_deduction || "0"}</div>
+            <div><span class="label">QUANTITY</span><span class="value">${record.no_of_bags || ""}</span></div>
               <div><span class="label">NET WEIGHT</span> ${record.net_weight || "0"}</div>
             </div>
             <div class="image-box">
@@ -1116,37 +1109,47 @@ export default function Reports() {
         </div>
 
         {/* Search Bar */}
-        <div className="mb-4 flex items-center gap-4">
-          <label className="text-sm font-medium text-black">Search:</label>
-          <Input
-            placeholder="Search by Slip No."
-            value={searchSlipNo}
-            onChange={(e) => setSearchSlipNo(e.target.value)}
-            className="w-48 border-black"
-          />
-          <Input
-            placeholder="Search by Vehicle No."
-            value={searchVehicleNo}
-            onChange={(e) => setSearchVehicleNo(e.target.value)}
-            className="w-48 border-black"
-          />
-          <Button
-            onClick={() => {
-              setSearchSlipNo("");
-              setSearchVehicleNo("");
-            }}
-            className="bg-gray-500 hover:bg-gray-600 text-white"
-          >
-            Clear Search
-          </Button>
-        </div>
-      </div>
+       <div className="mb-4 flex items-center gap-4">
+  <label className="text-sm font-medium text-black">Search:</label>
+
+  <Input
+    placeholder="Search by Slip No."
+    value={searchSlipNo}
+    onChange={(e) => setSearchSlipNo(e.target.value)}
+    className="w-48 border-black text-black"
+  />
+
+  <Input
+    placeholder="Search by Vehicle No."
+    value={searchVehicleNo}
+    onChange={(e) => setSearchVehicleNo(e.target.value)}
+    className="w-48 border-black text-black"
+  />
+
+  <Button
+    onClick={() => {
+      setSearchSlipNo("");
+      setSearchVehicleNo("");
+    }}
+    className="bg-gray-500 hover:bg-gray-600 text-white"
+  >
+    Clear Search
+  </Button>
+</div>
+</div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="purchase">Purchase</TabsTrigger>
-          <TabsTrigger value="sale">Sale</TabsTrigger>
-          <TabsTrigger value="offline">Offline</TabsTrigger>
-        </TabsList>
+       <TabsList className="grid w-full grid-cols-3">
+  <TabsTrigger value="purchase" className="border-2 border-black rounded-none">
+    Purchase
+  </TabsTrigger>
+  <TabsTrigger value="sale" className="border-2 border-black rounded-none">
+    Sale
+  </TabsTrigger>
+  <TabsTrigger value="offline" className="border-2 border-black rounded-none">
+    Offline
+  </TabsTrigger>
+</TabsList>
+
 
         {/* Purchase Tab */}
         <TabsContent value="purchase" className="space-y-4">
@@ -1347,6 +1350,12 @@ export default function Reports() {
                       Customer
                     </th>
                     <th className="px-4 py-2 text-left border border-black text-black">
+                      First Weight Image
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
+                      Second Weight Image
+                    </th>
+                    <th className="px-4 py-2 text-left border border-black text-black">
                       Actions
                     </th>
                   </tr>
@@ -1475,94 +1484,95 @@ export default function Reports() {
         </TabsContent>
 
         {/* Offline Tab */}
-        <TabsContent value="offline" className="space-y-4">
-          <div className="bg-white rounded-lg shadow border-2 border-black">
-            <div className="p-4 border-b-2 border-black">
-              <h2 className="text-lg font-semibold text-black">
-                Offline Entries (Click slip number to edit)
-              </h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left border border-black text-black">
-                      Slip No
-                    </th>
-                    <th className="px-4 py-2 text-left border border-black text-black">
-                      Slip Date
-                    </th>
-                    <th className="px-4 py-2 text-left border border-black text-black">
-                      Entry Type
-                    </th>
-                    <th className="px-4 py-2 text-left border border-black text-black">
-                      First Weight
-                    </th>
-                    <th className="px-4 py-2 text-left border border-black text-black">
-                      Second Weight
-                    </th>
-                    <th className="px-4 py-2 text-left border border-black text-black">
-                      Vehicle No
-                    </th>
-                    <th className="px-4 py-2 text-left border border-black text-black">
-                      Company Name
-                    </th>
-                    <th className="px-4 py-2 text-left border border-black text-black">
-                      Manual Trans #
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {offlineRecords.map((record: PurchaseRecord) => (
-                    <tr key={record.wb_id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2 border border-black text-black">
-                        <button
-                          className="text-blue-600 hover:text-blue-800 font-medium underline"
-                          onClick={() => handleOfflineEdit(record)}
-                        >
-                          {record.slip_no}
-                        </button>
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        {record.slip_in_time
-                          ? new Date(record.slip_in_time).toLocaleDateString()
-                          : "---"}
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        {record.entry_type || "PURCHASE"}
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        ---
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        ---
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        {record.vehicle_no || "---"}
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        {record.vendor_name || "---"}
-                      </td>
-                      <td className="px-4 py-2 border border-black text-black">
-                        ---
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {offlineError && (
-                <div className="text-center py-8 text-red-500 border border-black">
-                  Error loading offline records. Please try again.
+       <TabsContent value="offline" className="space-y-4">
+  <div className="bg-white rounded-lg shadow border-2 border-black">
+    <div className="p-4 border-b-2 border-black">
+      <h2 className="text-lg font-semibold text-black">
+        Offline Entries (Click slip number to edit)
+      </h2>
+    </div>
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm border-collapse">
+        <thead className="bg-gray-50">
+          <tr>
+            <th className="px-4 py-2 text-left border border-black text-black">Slip No</th>
+            <th className="px-4 py-2 text-left border border-black text-black">Slip Date</th>
+            <th className="px-4 py-2 text-left border border-black text-black">Entry Type</th>
+            <th className="px-4 py-2 text-left border border-black text-black">First Weight</th>
+            <th className="px-4 py-2 text-left border border-black text-black">Second Weight</th>
+            <th className="px-4 py-2 text-left border border-black text-black">Vehicle No</th>
+            <th className="px-4 py-2 text-left border border-black text-black">Company Name</th>
+            <th className="px-4 py-2 text-left border border-black text-black">Manual Trans #</th>
+            <th className="px-4 py-2 text-left border border-black text-black">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {offlineRecords.map((record: PurchaseRecord) => (
+            <tr key={record.wb_id} className="hover:bg-gray-50">
+              <td className="px-4 py-2 border border-black text-black">
+                <button
+                  className="text-blue-600 hover:text-blue-800 font-medium underline"
+                  onClick={() => handleOfflineEdit(record)}
+                >
+                  {record.slip_no}
+                </button>
+              </td>
+              <td className="px-4 py-2 border border-black text-black">
+                {record.slip_in_time
+                  ? new Date(record.slip_in_time).toLocaleDateString()
+                  : "---"}
+              </td>
+              <td className="px-4 py-2 border border-black text-black">
+                {record.entry_type || "PURCHASE"}
+              </td>
+              <td className="px-4 py-2 border border-black text-black">---</td>
+              <td className="px-4 py-2 border border-black text-black">---</td>
+              <td className="px-4 py-2 border border-black text-black">
+                {record.vehicle_no || "---"}
+              </td>
+              <td className="px-4 py-2 border border-black text-black">
+                {record.vendor_name || "---"}
+              </td>
+              <td className="px-4 py-2 border border-black text-black">---</td>
+              <td className="px-4 py-2 border border-black">
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-black text-black hover:bg-gray-100"
+                    onClick={() => handleOfflineEdit(record)}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-black text-black hover:bg-gray-100"
+                    onClick={() => handlePrintRecord(record)}
+                  >
+                    Print
+                  </Button>
                 </div>
-              )}
-              {!offlineError && offlineRecords.length === 0 && (
-                <div className="text-center py-8 text-black border border-black">
-                  No offline records found
-                </div>
-              )}
-            </div>
-          </div>
-        </TabsContent>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {offlineError && (
+        <div className="text-center py-8 text-red-500 border border-black">
+          Error loading offline records. Please try again.
+        </div>
+      )}
+      {!offlineError && offlineRecords.length === 0 && (
+        <div className="text-center py-8 text-black border border-black">
+          No offline records found
+        </div>
+      )}
+    </div>
+  </div>
+</TabsContent>
+
       </Tabs>
     </div>
   );

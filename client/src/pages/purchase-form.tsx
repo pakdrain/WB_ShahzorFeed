@@ -553,8 +553,10 @@ function PurchaseForm() {
       hour12: false,
     });
 
+    const currentUserName = user?.userName || "admin";
+
     return `
-   <!DOCTYPE html>
+    <!DOCTYPE html>
   <html>
   <head>
     <title>Weighbridge Slip - ${formData.slipNo}</title>
@@ -740,6 +742,7 @@ function PurchaseForm() {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
+           <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -822,6 +825,7 @@ function PurchaseForm() {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
+           <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -847,15 +851,16 @@ function PurchaseForm() {
             <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
-          <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
-          </div>
+  <div class="left-section" style="display: flex; align-items: center; height: 10px;">
+    <div style="font-weight: normal;">
+      W.B # ${formData.slipNo || ""}
+    </div>
+  </div>
+
+
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div class="print-date">Print Date: ${currentDate} ${currentTime}</div>
+
           </div>
         </div>
 
@@ -864,12 +869,10 @@ function PurchaseForm() {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
+              <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
               <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
+           <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -882,11 +885,7 @@ function PurchaseForm() {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+             <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
               <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
@@ -901,6 +900,7 @@ function PurchaseForm() {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
+           <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -1296,11 +1296,11 @@ function PurchaseForm() {
     try {
       const today = new Date().toISOString().split("T")[0];
       let url = `/api/purchases/check-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&date=${today}`;
-      
+
       if (excludeWbId) {
         url += `&exclude_wb_id=${excludeWbId}`;
       }
-      
+
       const response = await fetch(url);
       const data = await response.json();
       return data.exists;
@@ -1317,11 +1317,11 @@ function PurchaseForm() {
     try {
       const today = new Date().toISOString().split("T")[0];
       let url = `/api/purchases/check-igp-vehicle?vehicle_no=${encodeURIComponent(vehicleNo.trim())}&igp_no=${encodeURIComponent(igpNo.trim())}&date=${today}`;
-      
+
       if (excludeWbId) {
         url += `&exclude_wb_id=${excludeWbId}`;  
       }
-      
+
       const response = await fetch(url);
       const data = await response.json();
       return data.exists;
@@ -1480,24 +1480,24 @@ function PurchaseForm() {
   const formatWithCommas = (value: string) => {
     // Remove all non-digit characters except decimal point
     const cleanValue = value.replace(/[^\d.]/g, '');
-    
+
     // Split into integer and decimal parts
     const parts = cleanValue.split('.');
     let integerPart = parts[0];
     const decimalPart = parts[1];
-    
+
     // Add commas to integer part (Pakistani style: 12,34,567)
     if (integerPart.length > 3) {
       // First, handle the rightmost 3 digits
       const rightPart = integerPart.slice(-3);
       let leftPart = integerPart.slice(0, -3);
-      
+
       // Add commas every 2 digits from right to left for the remaining part
       const leftPartFormatted = leftPart.replace(/\B(?=(\d{2})+(?!\d))/g, ',');
-      
+
       integerPart = leftPartFormatted + ',' + rightPart;
     }
-    
+
     // Combine integer and decimal parts
     return decimalPart !== undefined ? integerPart + '.' + decimalPart : integerPart;
   };
@@ -2406,7 +2406,7 @@ function PurchaseForm() {
 
     // Check for duplicate vehicle number (exclude current record if editing)
     const excludeWbId = isEditMode ? editingWbId : undefined;
-    
+
     if (formData.igpNo && formData.igpNo.trim() !== "") {
       const igpVehicleExists = await checkIGPVehicleNumberExists(formData.vehicleNo, formData.igpNo, excludeWbId);
       if (igpVehicleExists) {
@@ -2974,6 +2974,8 @@ function PurchaseForm() {
         hour12: false,
       });
 
+       const currentUserName = user?.userName || "admin";
+
       if (isEditMode) {
         alert("Record updated successfully!");
         // Auto-print after successful update
@@ -3166,6 +3168,7 @@ function PurchaseForm() {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
+              <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -3248,6 +3251,7 @@ function PurchaseForm() {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
+              <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -3261,7 +3265,7 @@ function PurchaseForm() {
           </div>
         </div>
         <hr style="border: 1px solid #000; margin: 20px 0;" />
-  <!-- Customer Copy -->
+   <!-- Customer Copy -->
           <div class="slip">
             <div class="slip-header">
               <div class="header-left">Customer Copy</div>
@@ -3275,13 +3279,11 @@ function PurchaseForm() {
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
+
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div class="print-date">Print Date: ${currentDate} ${currentTime}</div>
+
           </div>
         </div>
 
@@ -3290,12 +3292,10 @@ function PurchaseForm() {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
+              <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
               <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
+           <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -3308,11 +3308,7 @@ function PurchaseForm() {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+             <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
               <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
@@ -3327,6 +3323,7 @@ function PurchaseForm() {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
+              <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -3660,13 +3657,11 @@ function PurchaseForm() {
         <div class="two-column">
           <div class="left-section">
             <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
+
           </div>
           <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
+            <div class="print-date">Print Date: ${currentDate} ${currentTime}</div>
+
           </div>
         </div>
 
@@ -3675,12 +3670,10 @@ function PurchaseForm() {
           <!-- Commodity Section -->
           <div class="section-box">
             <div class="fields">
+              <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
               <div><span class="label">COMMODITY</span><span class="value">${formData.itemDesc || ""}</span></div>
-              <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
-              <div><span class="label">BAG CONDITION</span><span class="value">${formData.bagCondition || ""}</span></div>
-              <div><span class="label">BAG TYPE</span><span class="value">${formData.bardanaType || ""}</span></div>
-              <div><span class="label">AVG. WEIGHT</span><span class="value">${formData.wtPerBag || ""}</span></div>
-              <div><span class="label">REMARKS</span><span class="value">${formData.remarks || ""}</span></div>
+           <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
+            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
             </div>
             <div class="image-box">
               <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
@@ -3693,11 +3686,7 @@ function PurchaseForm() {
           <!-- Gross Weight Section -->
           <div class="section-box">
             <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
+             <div><span class="label">QUANTITY</span><span class="value">${formData.noOfBags || ""}</span></div>
               <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
             </div>
             <div class="image-box">
