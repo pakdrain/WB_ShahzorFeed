@@ -1525,18 +1525,15 @@ function PurchaseForm() {
     }
 
     // Vehicle number validation - allow editing existing records but not new entries with duplicate vehicles
-    if (name === "vehicleNo" && value.trim() !== "") {
-      if (!isEditMode) {
-        // For new entries, check if vehicle already exists
-        const vehicleExists = await checkVehicleNumberExists(value);
-        if (vehicleExists) {
-          alert(
-            `Vehicle number ${value} already has an entry for today. Please use a different vehicle number.`,
-          );
-          return;
-        }
+    if (name === "vehicleNo" && value.trim() !== "" && !isEditMode) {
+      // Only check for duplicates in new entries, not in edit mode
+      const vehicleExists = await checkVehicleNumberExists(value);
+      if (vehicleExists) {
+        alert(
+          `Vehicle number ${value} already has an entry for today. Please use a different vehicle number.`,
+        );
+        return;
       }
-      // In edit mode, allow the same vehicle number to be saved without validation
     }
 
     const numericFields = [
@@ -2407,26 +2404,26 @@ function PurchaseForm() {
       return;
     }
 
-    // Check for duplicate vehicle number (exclude current record if editing)
-    const excludeWbId = isEditMode ? editingWbId : undefined;
-
-    if (formData.igpNo && formData.igpNo.trim() !== "") {
-      const igpVehicleExists = await checkIGPVehicleNumberExists(formData.vehicleNo, formData.igpNo, excludeWbId);
-      if (igpVehicleExists) {
-        alert(
-          `Vehicle number ${formData.vehicleNo} with IGP ${formData.igpNo} already has an entry for today. Please use a different vehicle number or IGP number.`,
-        );
-        setLoading(false);
-        return;
-      }
-    } else {
-      const vehicleExists = await checkVehicleNumberExists(formData.vehicleNo, excludeWbId);
-      if (vehicleExists) {
-        alert(
-          `Vehicle number ${formData.vehicleNo} already has an entry for today. Please use a different vehicle number.`,
-        );
-        setLoading(false);
-        return;
+    // Check for duplicate vehicle number only for new entries, not in edit mode
+    if (!isEditMode) {
+      if (formData.igpNo && formData.igpNo.trim() !== "") {
+        const igpVehicleExists = await checkIGPVehicleNumberExists(formData.vehicleNo, formData.igpNo);
+        if (igpVehicleExists) {
+          alert(
+            `Vehicle number ${formData.vehicleNo} with IGP ${formData.igpNo} already has an entry for today. Please use a different vehicle number or IGP number.`,
+          );
+          setLoading(false);
+          return;
+        }
+      } else {
+        const vehicleExists = await checkVehicleNumberExists(formData.vehicleNo);
+        if (vehicleExists) {
+          alert(
+            `Vehicle number ${formData.vehicleNo} already has an entry for today. Please use a different vehicle number.`,
+          );
+          setLoading(false);
+          return;
+        }
       }
     }
 
