@@ -90,8 +90,10 @@ export default function SalesForm() {
       hour12: false,
     });
 
+     const currentUserName = user?.userName || "admin";
+
     return `
-   <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -193,7 +195,6 @@ export default function SalesForm() {
       margin-top: -2px;
     }
 
-
     .table {
       width: 100%;
       border-collapse: collapse;
@@ -212,9 +213,35 @@ export default function SalesForm() {
       margin-top: 40px;
     }
 
-    .signatures div {
+    .signature-block {
       flex: 1;
-      text-align: center;
+      font-size: 12px;
+    }
+
+    .signature-label {
+      display: inline-block;
+    }
+
+    .signature-line {
+      display: inline-block;
+      border-bottom: 1px solid black;
+      width: 120px;
+      position: relative;
+    }
+
+    .signature-name {
+      font-size: 10px;
+      color: #444;
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .signature-container {
+      display: flex;
+      align-items: center;
+      gap: 3px;
     }
 
     .totals {
@@ -237,27 +264,21 @@ export default function SalesForm() {
 <body>
 
 <div class="container">
-  <!-- ===== OFFICE COPY ===== -->
   <div class="title">SHAHZOR FEED (Pvt) LTD</div>
   <div class="copy-label">Office Copy</div>
 
-  <!-- Info Section -->
   <div class="row-box">
-    <!-- Left Info -->
     <div class="section left-info">
       <div class="line-top"></div>
       <div class="line"><span>Slip No:</span><span>${formData.slipNo}</span></div>
       <div class="line"><span>Time In:</span><span>${formData.slipInTime}</span></div>
       <div class="line"><span>Time Out:</span><span>${formData.slipOutTime}</span></div>
       <div class="image-box">
-        <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-             alt="First Weight Image" />
+        <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="First Weight Image" />
         <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
       </div>
     </div>
 
-    <!-- Center -->
     <div class="center-wrapper">
       <div class="center-box">
         <div class="truck-label">Truck #</div>
@@ -265,22 +286,18 @@ export default function SalesForm() {
       </div>
     </div>
 
-    <!-- Right Info -->
     <div class="section">
       <div class="line-top"></div>
       <div class="line"><span>Tare Weight:</span><span>${formData.secondWeight}</span></div>
       <div class="line"><span>Loaded Weight:</span><span>${formData.firstWeight}</span></div>
       <div class="line"><span>Net Weight:</span><span>${formData.netWeight}</span></div>
       <div class="image-box">
-        <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-             alt="Second Weight Image" />
+        <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="Second Weight Image" />
         <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
       </div>
     </div>
   </div>
 
-  <!-- Table -->
   <table class="table">
     <thead>
       <tr>
@@ -312,34 +329,42 @@ export default function SalesForm() {
   </div>
 
   <div class="signatures">
-    <div>Prepared By: ____________</div>
-    <div>Checked By: ____________</div>
-    <div>Production Manager: ____________</div>
+    <div class="signature-block" style="text-align: left;">
+      <div class="signature-container">
+        <span class="signature-label">Prepared By:</span>
+        <span class="signature-line">
+          <span class="signature-name">${currentUserName}</span>
+        </span>
+      </div>
+    </div>
+    <div class="signature-block" style="text-align: center;">
+      <span class="signature-label">Checked By:</span>
+      <span class="signature-line"></span>
+    </div>
+    <div class="signature-block" style="text-align: right;">
+      <span class="signature-label">Production Manager:</span>
+      <span class="signature-line"></span>
+    </div>
   </div>
 
   <hr class="dashed" />
 
-  <!-- ===== CUSTOMER COPY ===== -->
+  <!-- CUSTOMER COPY -->
   <div class="title">Weight Slip</div>
   <div class="copy-label">Customer Copy</div>
 
-  <!-- Info Section -->
   <div class="row-box">
-    <!-- Left Info -->
     <div class="section left-info">
       <div class="line-top"></div>
       <div class="line"><span>Slip No:</span><span>${formData.slipNo}</span></div>
       <div class="line"><span>Time In:</span><span>${formData.slipInTime}</span></div>
       <div class="line"><span>Time Out:</span><span>${formData.slipOutTime}</span></div>
       <div class="image-box">
-        <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-             alt="First Weight Image" />
+        <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="First Weight Image" />
         <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
       </div>
     </div>
 
-    <!-- Center -->
     <div class="center-wrapper">
       <div class="center-box">
         <div class="truck-label">Truck #</div>
@@ -347,22 +372,18 @@ export default function SalesForm() {
       </div>
     </div>
 
-    <!-- Right Info -->
     <div class="section">
       <div class="line-top"></div>
       <div class="line"><span>Tare Weight:</span><span>${formData.secondWeight}</span></div>
       <div class="line"><span>Loaded Weight:</span><span>${formData.firstWeight}</span></div>
       <div class="line"><span>Net Weight:</span><span>${formData.netWeight}</span></div>
       <div class="image-box">
-        <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
-             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-             alt="Second Weight Image" />
+        <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="Second Weight Image" />
         <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
       </div>
     </div>
   </div>
 
-  <!-- Table -->
   <table class="table">
     <thead>
       <tr>
@@ -384,16 +405,13 @@ export default function SalesForm() {
     </tbody>
   </table>
 
-  <div class="totals">
-    <div></div>
+  <div class="totals right-only">
     <div>Grand Total: ${nonEmptyRows.reduce((acc, row) => acc + (parseFloat(row.dcQty) || 0), 0)}</div>
   </div>
-
 </div>
 
 </body>
 </html>
-
 
 
 `;
@@ -1741,454 +1759,335 @@ export default function SalesForm() {
         hour12: false,
       });
 
+      const currentUserName = user?.userName || "admin";
+
       // Auto-print after successful save
       setTimeout(() => {
         try {
           const printHTML = `
- <!DOCTYPE html>
-  <html>
-  <head>
-    <title>Weighbridge Slip - ${formData.slipNo}</title>
-    <style>
-      body { font-family: Arial, sans-serif; margin: 10px; font-size: 10px; }
-      .page-container { height: 150vh; display: flex; flex-direction: column; }
+   <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weighbridge Slip</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      margin: 20px;
+    }
 
-      .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-      .copy-label { font-weight: bold; }
-      .print-date { font-size: 10px; }
+    .container {
+      border: 1px solid black;
+      padding: 20px;
+      height: 1122px;
+      box-sizing: border-box;
+    }
 
-      .slip-section { 
-        border: 2px solid #000; 
-        margin-bottom: 10px; 
-        padding: 10px; 
-        height: 150vh;
-        box-sizing: border-box;
-      }
+    .title {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
 
-      .image-box {
-        border: 1px solid #ccc;
-        width: 150px;
-        height: 120px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8f8f8;
-        font-size: 10px;
-        font-weight: bold;
-        text-align: center;
-        overflow: hidden;
-        position: relative;
-      }
+    .copy-label {
+      text-align: right;
+      font-weight: bold;
+    }
 
-      .image-box img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
+    .row-box {
+      margin: 15px 0 5px 0;
+      display: flex;
+      justify-content: space-between;
+      border-right: 1px solid black;
+    }
 
-      .company-name { font-size: 14px; font-weight: bold; margin-bottom: 3px; text-align: center; }
-      .slip-title { font-size: 12px; font-weight: bold; margin-bottom: 8px; text-align: center; }
+    .section,
+    .center-wrapper {
+      width: 33.33%;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+    }
 
-      .two-column { display: flex; justify-content: space-between; margin-bottom: 5px; }
-      .left-section, .right-section { 
-        width: 45%; 
-        border: 1px solid #666; 
-        padding: 5px; 
-        border-radius: 3px;
-      }
+    .left-info {
+      border-left: 1px solid black;
+    }
 
-      .commodity-gross-row {
-        display: flex; 
-        justify-content: space-between; 
-        gap: 20px; 
-        margin: 20px 0;
-      }
+    .line-top {
+      border-top: 1px solid black;
+      height: 1px;
+      margin-bottom: 8px;
+    }
 
-      .section-box {
-        flex: 1;
-        border: 1px solid #666;
-        padding: 10px;
-        border-radius: 3px;
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-      }
+    .line {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid black;
+      padding: 0 2px;
+      margin-bottom: 2px;
+    }
 
-      .fields {
-        display: grid; 
-        row-gap: 6px;
-      }
+    .line span {
+      display: inline-block;
+      font-size: 11px;
+    }
 
-      .fields div {
-        display: flex;
-        gap: 4px;
-      }
+    .line span:first-child {
+      width: 48%;
+      font-weight: normal;
+    }
 
-      .label {
-        font-weight: bold;
-        width: 160px;
-      }
+    .center-box {
+      border: 1px solid black;
+      text-align: center;
+      font-weight: bold;
+      width: 100%;
+      height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-sizing: border-box;
+      padding: 8px 10px;
+    }
 
-      .value {
-        font-weight: bold;
-      }
+    .truck-label {
+      font-weight: normal;
+      font-size: 11px;
+      border-bottom: 1px solid black;
+      margin-bottom: 5px;
+      padding-bottom: 2px;
+    }
 
-      .signatures {
-        margin-top: 30px;
-        margin-bottom: 30px;
-        display: flex;
-        justify-content: space-between;
-        text-align: center;
-      }
+    .image-box {
+      border: 1px solid black;
+      height: 62px;
+      text-align: center;
+      padding: 5px;
+      margin-top: -2px;
+    }
 
-      .signature-block {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-      }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
 
-      .signature-line {
-        border-bottom: 1px solid #000;
-        width: 100px;
-        margin-bottom: 5px;
-      }
+    .table th, .table td {
+      border: 1px solid black;
+      padding: 4px;
+      text-align: left;
+    }
 
-      @media print { 
-        body { margin: 0; } 
-        .slip-section { page-break-inside: avoid; }
-        .page-container { page-break-after: auto; }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="page-container">
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 40px;
+    }
 
-      <!-- Head Office Copy -->
-      <div class="slip-section">
-        <div class="header">
-          <div class="copy-label">Head Office Copy</div>
-          <div class="print-date">Print Date: ${currentDate} ${currentTime}</div>
-        </div>
-        <div class="company-name">Shahzor  Feed  Mill</div>
-        <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+    .signature-block {
+      flex: 1;
+      font-size: 12px;
+    }
 
-        <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
+    .signature-label {
+      display: inline-block;
+    }
 
-        <div class="two-column">
-          <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
-          </div>
-          <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-          </div>
-        </div>
+    .signature-line {
+      display: inline-block;
+      border-bottom: 1px solid black;
+      width: 120px;
+      position: relative;
+    }
 
-        <!-- Commodity + Gross Weight Section in One Row -->
- <<div class="commodity-gross-row">
-  <div class="section-box">
-    <div class="fields">
+    .signature-name {
+      font-size: 10px;
+      color: #444;
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
 
-      <div>
-        <span class="label">DC #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
+    .signature-container {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .totals {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .totals.right-only {
+      justify-content: flex-end;
+    }
+
+    hr.dashed {
+      border: 1px dashed #aaa;
+      margin: 30px 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="title">SHAHZOR FEED (Pvt) LTD</div>
+  <div class="copy-label">Office Copy</div>
+
+  <div class="row-box">
+    <div class="section left-info">
+      <div class="line-top"></div>
+      <div class="line"><span>Slip No:</span><span>${formData.slipNo}</span></div>
+      <div class="line"><span>Time In:</span><span>${formData.slipInTime}</span></div>
+      <div class="line"><span>Time Out:</span><span>${formData.slipOutTime}</span></div>
+      <div class="image-box">
+        <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="First Weight Image" />
+        <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
       </div>
-
-      <div>
-        <span class="label">DO #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Customer Name</span>
-        <span class="value">${nonEmptyRows.map((row) => row.customerName || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Item Description</span>
-        <span class="value">${nonEmptyRows.map((row) => row.itemDescription || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DC Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
     </div>
 
-            <div class="image-box">
-              <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="First Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-
-          <!-- Gross Weight Section -->
-          <div class="section-box">
-            <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
-            </div>
-            <div class="image-box">
-              <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="Second Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Signatures -->
-        <div class="signatures">
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Weight By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Checked By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Production Manager</div>
-          </div>
-        </div>
-        <hr style="border: 1px solid #000; margin: 20px 0;" />
-   <!-- Feed Mill Copy -->
-          <div class="slip">
-            <div class="slip-header">
-              <div class="header-left">Feed Mill Copy</div>
-              <div class="header-center">
-               <div class="company-name">Shahzor  Feed  Mill</div>
-        <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
-              </div>
-              <div class="header-right"></div>
-            </div>
- <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
-        <div class="two-column">
-          <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
-          </div>
-          <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-          </div>
-        </div>
-
-        <!-- Commodity + Gross Weight Section in One Row -->
- <<div class="commodity-gross-row">
-  <div class="section-box">
-    <div class="fields">
-
-      <div>
-        <span class="label">DC #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
+    <div class="center-wrapper">
+      <div class="center-box">
+        <div class="truck-label">Truck #</div>
+        ${formData.vehicleNo}
       </div>
-
-      <div>
-        <span class="label">DO #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Customer Name</span>
-        <span class="value">${nonEmptyRows.map((row) => row.customerName || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">Item Description</span>
-        <span class="value">${nonEmptyRows.map((row) => row.itemDescription || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DC Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
     </div>
 
-            <div class="image-box">
-              <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="First Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-
-          <!-- Gross Weight Section -->
-          <div class="section-box">
-            <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
-            </div>
-            <div class="image-box">
-              <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="Second Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Signatures -->
-        <div class="signatures">
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Weight By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Checked By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Production Manager</div>
-          </div>
-        </div>
-        <hr style="border: 1px solid #000; margin: 20px 0;" />
-
-         <!-- Customer Copy -->
-          <div class="slip">
-            <div class="slip-header">
-              <div class="header-left">Customer Copy</div>
-              <div class="header-center">
-               <div class="company-name">Shahzor  Feed  Mill</div>
-        <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
-              </div>
-
-              <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
-
-        <div class="two-column">
-          <div class="left-section">
-            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
-            <div style="margin-top: 10px;">Truck # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.vehicleNo || ""}</div>
-            <div style="margin-top: 10px;">Freight Payment &nbsp;&nbsp;&nbsp;&nbsp; ${formData.freight || ""}</div>
-          </div>
-          <div class="right-section">
-            <div>Party: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <b>${formData.vendor || ""}</b></div>
-            <div style="margin-top: 10px;">Time IN: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipInTime ? new Date(formData.slipInTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-            <div style="margin-top: 10px;">Time OUT: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipOutTime ? new Date(formData.slipOutTime).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).toUpperCase().replace(/,/, "") : ""}</div>
-          </div>
-        </div>
-
-        <!-- Commodity + Gross Weight Section in One Row -->
- <<div class="commodity-gross-row">
-  <div class="section-box">
-    <div class="fields">
-
-      <div>
-        <span class="label">DC #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
+    <div class="section">
+      <div class="line-top"></div>
+      <div class="line"><span>Tare Weight:</span><span>${formData.secondWeight}</span></div>
+      <div class="line"><span>Loaded Weight:</span><span>${formData.firstWeight}</span></div>
+      <div class="line"><span>Net Weight:</span><span>${formData.netWeight}</span></div>
+      <div class="image-box">
+        <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="Second Weight Image" />
+        <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
       </div>
+    </div>
+  </div>
 
-      <div>
-        <span class="label">DO #</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doNo || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>DC #</th>
+        <th>DO #</th>
+        <th>Party Name</th>
+        <th>Feed #</th>
+        <th>Feed Name</th>
+        <th>Qty</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${nonEmptyRows.map(row => `
+        <tr>
+          <td>${row.dcNo}</td>
+          <td>${row.doNo}</td>
+          <td>${row.customerName}</td>
+          <td>${row.feedNo}</td>
+          <td>${row.itemDescription}</td>
+          <td>${row.dcQty}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <div class="totals">
+    <div>Please Pay Freight RS: ${formData.freight || 0}</div>
+    <div>Grand Total: ${nonEmptyRows.reduce((acc, row) => acc + (parseFloat(row.dcQty) || 0), 0)}</div>
+  </div>
+
+  <div class="signatures">
+    <div class="signature-block" style="text-align: left;">
+      <div class="signature-container">
+        <span class="signature-label">Prepared By:</span>
+        <span class="signature-line">
+          <span class="signature-name">${currentUserName}</span>
+        </span>
       </div>
+    </div>
+    <div class="signature-block" style="text-align: center;">
+      <span class="signature-label">Checked By:</span>
+      <span class="signature-line"></span>
+    </div>
+    <div class="signature-block" style="text-align: right;">
+      <span class="signature-label">Production Manager:</span>
+      <span class="signature-line"></span>
+    </div>
+  </div>
 
-      <div>
-        <span class="label">Customer Name</span>
-        <span class="value">${nonEmptyRows.map((row) => row.customerName || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
+  <hr class="dashed" />
+
+  <!-- CUSTOMER COPY -->
+  <div class="title">Weight Slip</div>
+  <div class="copy-label">Customer Copy</div>
+
+  <div class="row-box">
+    <div class="section left-info">
+      <div class="line-top"></div>
+      <div class="line"><span>Slip No:</span><span>${formData.slipNo}</span></div>
+      <div class="line"><span>Time In:</span><span>${formData.slipInTime}</span></div>
+      <div class="line"><span>Time Out:</span><span>${formData.slipOutTime}</span></div>
+      <div class="image-box">
+        <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="First Weight Image" />
+        <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
       </div>
-
-      <div>
-        <span class="label">Item Description</span>
-        <span class="value">${nonEmptyRows.map((row) => row.itemDescription || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DC Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.dcQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
-      <div>
-        <span class="label">DO Qty</span>
-        <span class="value">${nonEmptyRows.map((row) => row.doQty || "").join("&nbsp;&nbsp;&nbsp;&nbsp;")}</span>
-      </div>
-
     </div>
 
-            <div class="image-box">
-              <img src="/captured_images/first_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="First Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
+    <div class="center-wrapper">
+      <div class="center-box">
+        <div class="truck-label">Truck #</div>
+        ${formData.vehicleNo}
+      </div>
+    </div>
 
-          <!-- Gross Weight Section -->
-          <div class="section-box">
-            <div class="fields">
-              <div><span class="label">GROSS WEIGHT</span> ${formData.firstWeight || "0"}</div>
-              <div><span class="label">TARE WEIGHT</span> ${formData.secondWeight || "0"}</div>
-              <div><span class="label">WITH BARDANA WEIGHT</span> ${formData.grossWeight || "0"}</div>
-              <div><span class="label">BARDANA WEIGHT</span> ${formData.bardanaWeight || "0"}</div>
-              <div><span class="label">QUALITY DEDUCTION</span> ${formData.qualityDeduction || "0"}</div>
-              <div><span class="label">NET WEIGHT</span> ${formData.netWeight || "0"}</div>
-            </div>
-            <div class="image-box">
-              <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg"
-                   onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
-                   alt="Second Weight Image" />
-              <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
-            </div>
-          </div>
-        </div>
+    <div class="section">
+      <div class="line-top"></div>
+      <div class="line"><span>Tare Weight:</span><span>${formData.secondWeight}</span></div>
+      <div class="line"><span>Loaded Weight:</span><span>${formData.firstWeight}</span></div>
+      <div class="line"><span>Net Weight:</span><span>${formData.netWeight}</span></div>
+      <div class="image-box">
+        <img src="/captured_images/second_weight/slip_${formData.slipNo}.jpg" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" alt="Second Weight Image" />
+        <div style="display: none; color: #666; font-size: 10px;">No Image Available</div>
+      </div>
+    </div>
+  </div>
 
-        <!-- Signatures -->
-        <div class="signatures">
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Weight By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Checked By</div>
-          </div>
-          <div class="signature-block">
-            <div class="signature-line"></div>
-            <div>Production Manager</div>
-          </div>
-        </div>
-        <hr style="border: 1px solid #000; margin: 20px 0;" />
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Party Name</th>
+        <th>Feed #</th>
+        <th>Feed Name</th>
+        <th>Qty</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${nonEmptyRows.map(row => `
+        <tr>
+          <td>${row.customerName}</td>
+          <td>${row.feedNo}</td>
+          <td>${row.itemDescription}</td>
+          <td>${row.dcQty}</td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+
+  <div class="totals right-only">
+    <div>Grand Total: ${nonEmptyRows.reduce((acc, row) => acc + (parseFloat(row.dcQty) || 0), 0)}</div>
+  </div>
+</div>
+
+</body>
+</html>
 
 
-           </div> <!-- .slip-section ends -->
-    </div> <!-- .page-container ends -->
-  </body>
-  </html>
+
 `;
-
           const printWindow = window.open("", "_blank");
           if (printWindow) {
             printWindow.document.write(printHTML);
