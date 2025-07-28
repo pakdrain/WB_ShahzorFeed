@@ -4013,7 +4013,7 @@ function PurchaseForm() {
       {/* Bag Details Table - Below Weight Display Table (hide when Sales form is active) */}
       {selectedForm === "purchase" && (
         <div className={`absolute ${isEditMode ? 'top-[28rem]' : 'top-80'} right-14 z-50`}>
-          <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-96"></div>
+          <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-96">
             {/* Header Row */}
             <div className="grid grid-cols-6 border-b border-gray-400">
               <div className="bg-gray-200 border-r border-gray-400 p-1 text-center text-xs font-semibold text-black">
