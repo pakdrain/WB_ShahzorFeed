@@ -1524,16 +1524,19 @@ function PurchaseForm() {
       }
     }
 
-    // Vehicle number validation - allow editing existing records
+    // Vehicle number validation - allow editing existing records but not new entries with duplicate vehicles
     if (name === "vehicleNo" && value.trim() !== "") {
-      const excludeWbId = isEditMode ? editingWbId : undefined;
-      const vehicleExists = await checkVehicleNumberExists(value, excludeWbId);
-      if (vehicleExists) {
-        alert(
-          `Vehicle number ${value} already has an entry for today. Please use a different vehicle number.`,
-        );
-        return;
+      if (!isEditMode) {
+        // For new entries, check if vehicle already exists
+        const vehicleExists = await checkVehicleNumberExists(value);
+        if (vehicleExists) {
+          alert(
+            `Vehicle number ${value} already has an entry for today. Please use a different vehicle number.`,
+          );
+          return;
+        }
       }
+      // In edit mode, allow the same vehicle number to be saved without validation
     }
 
     const numericFields = [
@@ -4343,7 +4346,8 @@ function PurchaseForm() {
                       name="firstWeight"
                       value={formData.firstWeight}
                       onChange={handleChange}
-                      className="h-8 text-xs text-black w-52"
+                      className={`h-8 text-xs w-52 ${isEditMode ? "text-gray-600 bg-gray-100 cursor-not-allowed" : "text-black"}`}
+                      readOnly={isEditMode}
                     />
                   </div>
                   <div className="flex items-center gap-1">
@@ -4354,7 +4358,8 @@ function PurchaseForm() {
                       name="secondWeight"
                       value={formData.secondWeight}
                       onChange={handleChange}
-                      className="h-8 text-xs text-green-600 w-52"
+                      className={`h-8 text-xs w-52 ${isEditMode ? "text-gray-600 bg-gray-100 cursor-not-allowed" : "text-green-600"}`}
+                      readOnly={isEditMode}
                     />
                   </div>
                   <div className="flex items-center gap-1">
@@ -4731,17 +4736,23 @@ function PurchaseForm() {
                           value={formData.igpNo}
                           onChange={handleChange}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter" && onlineMode) {
+                            if (e.key === "Enter" && onlineMode && !isEditMode) {
                               fetchIgpData();
                             }
                           }}
-                          className={`h-8 text-xs w-60 ${onlineMode ? "text-black" : "text-gray-500 bg-gray-100"}`}
+                          className={`h-8 text-xs w-60 ${
+                            !onlineMode || isEditMode 
+                              ? "text-gray-500 bg-gray-100 cursor-not-allowed" 
+                              : "text-black"
+                          }`}
                           placeholder={
-                            onlineMode
+                            isEditMode
+                              ? "Non-editable in edit mode"
+                              : onlineMode
                               ? "Press Enter to fetch"
                               : "Not available in offline mode"
                           }
-                          readOnly={!onlineMode}
+                          readOnly={!onlineMode || isEditMode}
                         />
                       </div>
 
