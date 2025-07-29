@@ -2489,8 +2489,7 @@ export default function SalesForm() {
           <div className="col-span-8">
             {/* ===== MASTER TABLE SECTION - BASIC SLIP INFORMATION ===== */}
             <div className="bg-blue-50 p-2 rounded border mb-4 w-full">
-              <div className="grid grid-cols-9 gap-4"></div>
-            </div>
+              <div className="grid grid-cols-9 gap-4">
                 {/* ===== COLUMN 1 - LEFT FORM FIELDS SECTION ===== */}
                 <div className="col-span-3 flex flex-col gap-2 items-start">
                   {/* ===== SLIP NUMBER FIELD ===== */}
