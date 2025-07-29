@@ -2189,21 +2189,21 @@ export default function SalesForm() {
       <div className={`absolute ${isEditMode ? 'top-40' : 'top-20'} right-14 z-50`}>
         <div className="bg-white border-2 border-gray-400 rounded-md shadow-lg w-96 mb-6">
           {/* Header Row */}
-          <div className="flex border-b border-gray-400">
-            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black w-32">
+          <div className="grid grid-cols-3 border-b border-gray-400">
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
               Slip No
             </div>
-            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black w-32">
+            <div className="bg-gray-200 border-r border-gray-400 p-2 text-center text-sm font-semibold text-black">
               Vehicle No
             </div>
-            <div className="bg-gray-200 p-2 text-center text-sm font-semibold text-black w-32">
+            <div className="bg-gray-200 p-2 text-center text-sm font-semibold text-black">
               Entry Type
             </div>
           </div>
 
           {/* Search Row - positioned under headers */}
-          <div className="flex border-b border-gray-400 bg-blue-50">
-            <div className="border-r border-gray-400 p-1 w-32">
+          <div className="grid grid-cols-3 border-b border-gray-400 bg-blue-50">
+            <div className="border-r border-gray-400 p-1">
               <Input
                 placeholder="Search Slip No"
                 value={searchSlipNo}
@@ -2211,7 +2211,7 @@ export default function SalesForm() {
                 className="h-5 text-xs text-black placeholder:text-gray-500 bg-white border-gray-300"
               />
             </div>
-            <div className="border-r border-gray-400 p-1 w-32">
+            <div className="border-r border-gray-400 p-1">
               <Input
                 placeholder="Search Vehicle"
                 value={searchVehicleNo}
@@ -2219,7 +2219,7 @@ export default function SalesForm() {
                 className="h-5 text-xs text-black placeholder:text-gray-500 bg-white border-gray-300"
               />
             </div>
-            <div className="p-1 w-32">
+            <div className="p-1">
               <Button
                 onClick={() => {
                   setSearchSlipNo("");
@@ -2238,10 +2238,10 @@ export default function SalesForm() {
               filteredRecords.map((record: any, index: number) => (
                 <div
                   key={index}
-                  className="flex border-b border-gray-400 hover:bg-gray-50"
+                  className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50"
                 >
                   <button
-                    className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white w-32"
+                     className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 w-[127px]"
                     onClick={() => {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
@@ -2282,25 +2282,25 @@ export default function SalesForm() {
                   >
                     {record.slip_no || "---"}
                   </button>
-                  <div className="border-r border-gray-400 p-2 text-center text-xs text-black bg-white w-32">
-                    {record.vehicle_no || "---"}
-                  </div>
-                  <div className="p-2 text-center text-xs text-blue-600 font-semibold bg-white w-32">
-                    {record.entry_type || "SALE"}
-                  </div>
+                              <div className="border-r border-gray-400 p-2 text-center text-xs text-black w-[135px]">
+    {record.vehicle_no || "---"}
+  </div>
+  <div className="p-2 text-center text-xs text-blue-600 font-semibold flex-1">
+    {record.entry_type || "PURCHASE"}
+  </div>
                 </div>
               ))
             ) : (
-              <div className="flex border-b border-gray-400">
-                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white w-32">
+              <div className="grid grid-cols-3 border-b border-gray-400">
+                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white">
                   {searchSlipNo || searchVehicleNo
                     ? "No matches"
                     : "No records"}
                 </div>
-                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white w-32">
+                <div className="border-r border-gray-400 p-2 text-center text-xs text-gray-500 bg-white">
                   ---
                 </div>
-                <div className="p-2 text-center text-xs text-gray-500 bg-white w-32">
+                <div className="p-2 text-center text-xs text-gray-500 bg-white">
                   ---
                 </div>
               </div>

@@ -3859,7 +3859,7 @@ function PurchaseForm() {
 
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
-      {/* Weight Display Table - Upper Right Side */}
+     {/* Weight Display Table - Upper Right Side */}
       <div className={`absolute ${isEditMode ? 'top-40' : 'top-20'} right-14 z-50`}>
         <div className="bg-white border-2 border-gray-400 rounded-md shadow-lg w-96 mb-6">
           {/* Header Row */}
@@ -3914,7 +3914,7 @@ function PurchaseForm() {
                   className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50"
                 >
                   <button
-                    className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 hover:text-blue-800 hover:underline bg-white"
+                   className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 w-[127px]"
                     onClick={() => {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
@@ -3975,12 +3975,12 @@ function PurchaseForm() {
                   >
                     {record.slip_no || "---"}
                   </button>
-                  <div className="border-r border-gray-400 p-2 text-center text-xs text-black bg-white">
-                    {record.vehicle_no || "---"}
-                  </div>
-                  <div className="p-2 text-center text-xs text-blue-600 font-semibold bg-white">
-                    {record.entry_type || "PURCHASE"}
-                  </div>
+                  <div className="border-r border-gray-400 p-2 text-center text-xs text-black w-[135px]">
+    {record.vehicle_no || "---"}
+  </div>
+  <div className="p-2 text-center text-xs text-blue-600 font-semibold flex-1">
+    {record.entry_type || "PURCHASE"}
+  </div>
                 </div>
               ))
             ) : (
@@ -4010,9 +4010,10 @@ function PurchaseForm() {
         </div>
       </div>
 
+
       {/* Bag Details Table - Below Weight Display Table (hide when Sales form is active) */}
       {selectedForm === "purchase" && (
-        <div className={`absolute ${isEditMode ? 'top-[28rem]' : 'top-80'} right-14 z-50`}>
+        <div className={`absolute ${isEditMode ? 'top-[40rem]' : 'bottom-80'} right-14 z-50`}>
           <div className="bg-white border-2 border-gray-400 rounded-sm shadow-lg w-96">
             {/* Header Row */}
             <div className="grid grid-cols-6 border-b border-gray-400">
