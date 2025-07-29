@@ -10,7 +10,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -90,7 +94,7 @@ export default function SalesForm() {
       hour12: false,
     });
 
-     const currentUserName = user?.userName || "admin";
+    const currentUserName = user?.userName || "admin";
 
     return `
 <!DOCTYPE html>
@@ -310,7 +314,9 @@ export default function SalesForm() {
       </tr>
     </thead>
     <tbody>
-      ${nonEmptyRows.map(row => `
+      ${nonEmptyRows
+        .map(
+          (row) => `
         <tr>
           <td>${row.dcNo}</td>
           <td>${row.doNo}</td>
@@ -319,7 +325,9 @@ export default function SalesForm() {
           <td>${row.itemDescription}</td>
           <td>${row.dcQty}</td>
         </tr>
-      `).join('')}
+      `,
+        )
+        .join("")}
     </tbody>
   </table>
 
@@ -394,14 +402,18 @@ export default function SalesForm() {
       </tr>
     </thead>
     <tbody>
-      ${nonEmptyRows.map(row => `
+      ${nonEmptyRows
+        .map(
+          (row) => `
         <tr>
           <td>${row.customerName}</td>
           <td>${row.feedNo}</td>
           <td>${row.itemDescription}</td>
           <td>${row.dcQty}</td>
         </tr>
-      `).join('')}
+      `,
+        )
+        .join("")}
     </tbody>
   </table>
 
@@ -798,7 +810,7 @@ export default function SalesForm() {
     const bardanaWeight = wtPerBag * noOfBags;
 
     // Gross Weight = First Weight - Second Weight
-    const grossWeight = secondWeight -firstWeight  ;
+    const grossWeight = secondWeight - firstWeight;
 
     // Net Weight = First Weight - Second Weight - Bardana Weight
     const netWeight = grossWeight - bardanaWeight;
@@ -853,7 +865,9 @@ export default function SalesForm() {
             doNo: item.delivery_order_no ? String(item.delivery_order_no) : "",
             customerName: item.customer_name || "",
             vehicleNo: item.vehicle_no || "",
-            doDate: item.dc_date ? new Date(item.dc_date).toISOString().split('T')[0] : "",
+            doDate: item.dc_date
+              ? new Date(item.dc_date).toISOString().split("T")[0]
+              : "",
             itemDescription: item.item_desc || "",
             dcQty: item.dc_qty ? String(item.dc_qty) : "",
             doQty: item.del_qty ? String(item.del_qty) : "",
@@ -1982,7 +1996,9 @@ export default function SalesForm() {
       </tr>
     </thead>
     <tbody>
-      ${nonEmptyRows.map(row => `
+      ${nonEmptyRows
+        .map(
+          (row) => `
         <tr>
           <td>${row.dcNo}</td>
           <td>${row.doNo}</td>
@@ -1991,7 +2007,9 @@ export default function SalesForm() {
           <td>${row.itemDescription}</td>
           <td>${row.dcQty}</td>
         </tr>
-      `).join('')}
+      `,
+        )
+        .join("")}
     </tbody>
   </table>
 
@@ -2066,14 +2084,18 @@ export default function SalesForm() {
       </tr>
     </thead>
     <tbody>
-      ${nonEmptyRows.map(row => `
+      ${nonEmptyRows
+        .map(
+          (row) => `
         <tr>
           <td>${row.customerName}</td>
           <td>${row.feedNo}</td>
           <td>${row.itemDescription}</td>
           <td>${row.dcQty}</td>
         </tr>
-      `).join('')}
+      `,
+        )
+        .join("")}
     </tbody>
   </table>
 
@@ -2126,7 +2148,9 @@ export default function SalesForm() {
 
         // Fetch next slip number for new entry after edit
         try {
-          const response = await fetch("/api/purchases/next-slip?entry_type=SALE");
+          const response = await fetch(
+            "/api/purchases/next-slip?entry_type=SALE",
+          );
           const data = await response.json();
 
           setFormData({
@@ -2164,7 +2188,10 @@ export default function SalesForm() {
             })),
           );
 
-          console.log("✅ Form reset to new entry with slip number:", data.nextSlipNo);
+          console.log(
+            "✅ Form reset to new entry with slip number:",
+            data.nextSlipNo,
+          );
         } catch (error) {
           console.error("Error fetching next slip number:", error);
           // Fallback reset
@@ -2186,7 +2213,9 @@ export default function SalesForm() {
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
-      <div className={`absolute ${isEditMode ? 'top-40' : 'top-20'} right-14 z-50`}>
+      <div
+        className={`absolute ${isEditMode ? "top-40" : "top-20"} right-14 z-50`}
+      >
         <div className="bg-white border-2 border-gray-400 rounded-md shadow-lg w-96 mb-6">
           {/* Header Row */}
           <div className="grid grid-cols-3 border-b border-gray-400">
@@ -2241,7 +2270,7 @@ export default function SalesForm() {
                   className="grid grid-cols-3 border-b border-gray-400 hover:bg-gray-50"
                 >
                   <button
-                     className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 w-[127px]"
+                    className="border-r border-gray-400 p-2 text-center text-xs text-blue-600 w-[127px]"
                     onClick={() => {
                       console.log("Clicked record:", record);
                       console.log("wb_id:", record.wb_id);
@@ -2282,12 +2311,12 @@ export default function SalesForm() {
                   >
                     {record.slip_no || "---"}
                   </button>
-                              <div className="border-r border-gray-400 p-2 text-center text-xs text-black w-[135px]">
-    {record.vehicle_no || "---"}
-  </div>
-  <div className="p-2 text-center text-xs text-blue-600 font-semibold flex-1">
-    {record.entry_type || "PURCHASE"}
-  </div>
+                  <div className="border-r border-gray-400 p-2 text-center text-xs text-black w-[135px]">
+                    {record.vehicle_no || "---"}
+                  </div>
+                  <div className="p-2 text-center text-xs text-blue-600 font-semibold flex-1">
+                    {record.entry_type || "PURCHASE"}
+                  </div>
                 </div>
               ))
             ) : (
@@ -2453,234 +2482,251 @@ export default function SalesForm() {
         <div className="grid grid-cols-12 gap-1 h-full">
           {/* Left Side - Main Form (Columns 1-8) */}
           <div className="col-span-8">
-           {/* Master Table Section */}
-<div className="bg-blue-50 p-2 rounded border mb-4 w-full">
-  <div className="grid grid-cols-9 gap-4">
-    {/* Column 1 - Left Form Fields */}
-    <div className="col-span-3 flex flex-col gap-2 items-start">
-      {/* Slip No */}
-      <div className="flex items-center gap-1">
-        <Label className="text-xs text-black w-20">Slip No</Label>
-        {isSearchMode ? (
-          <div className="flex gap-1 w-52">
-            <Input
-              name="slipNo"
-              value={formData.slipNo}
-              onChange={handleChange}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  searchAndLoadBySlipNo();
-                }
-              }}
-              placeholder="Enter slip number to search"
-              className="h-8 text-xs text-black flex-1"
-            />
-            <Button
-              onClick={searchAndLoadBySlipNo}
-              className="h-8 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
-              disabled={loading}
-            >
-              {loading ? "..." : "Search"}
-            </Button>
-          </div>
-        ) : (
-          <Input
-            name="slipNo"
-            value={formData.slipNo}
-            readOnly
-            className="h-8 text-xs text-black w-52"
-          />
-        )}
-      </div>
+            {/* Master Table Section */}
+            <div className="bg-blue-50 p-2 rounded border mb-4 w-full">
+              <div className="grid grid-cols-9 gap-4">
+                {/* Column 1 - Left Form Fields */}
+                <div className="col-span-3 flex flex-col gap-2 items-start">
+                  {/* Slip No */}
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-20">Slip No</Label>
+                    {isSearchMode ? (
+                      <div className="flex gap-1 w-52">
+                        <Input
+                          name="slipNo"
+                          value={formData.slipNo}
+                          onChange={handleChange}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              searchAndLoadBySlipNo();
+                            }
+                          }}
+                          placeholder="Enter slip number to search"
+                          className="h-8 text-xs text-black flex-1"
+                        />
+                        <Button
+                          onClick={searchAndLoadBySlipNo}
+                          className="h-8 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
+                          disabled={loading}
+                        >
+                          {loading ? "..." : "Search"}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Input
+                        name="slipNo"
+                        value={formData.slipNo}
+                        readOnly
+                        className="h-8 text-xs text-black w-52"
+                      />
+                    )}
+                  </div>
 
-      {/* Net Weight */}
-      <div className="flex items-center gap-1">
-        <Label className="text-xs text-black w-20">Net Weight</Label>
-        <Input
-          name="netWeight"
-          value={formData.netWeight}
-          onChange={handleChange}
-          className="h-8 text-xs bg-yellow-200 text-black w-52"
-        />
-      </div>
+                  {/* Net Weight */}
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-20">
+                      Net Weight
+                    </Label>
+                    <Input
+                      name="netWeight"
+                      value={formData.netWeight}
+                      onChange={handleChange}
+                      className="h-8 text-xs bg-yellow-200 text-black w-52"
+                    />
+                  </div>
 
-      {/* Freight */}
-      <div className="flex items-center gap-1">
-        <Label className="text-xs text-black w-20">Freight</Label>
-        <Input
-          name="freight"
-          value={formData.freight}
-          onChange={handleChange}
-          className="h-8 text-xs text-black w-52"
-        />
-      </div>
+                  {/* Freight */}
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-20">Freight</Label>
+                    <Input
+                      name="freight"
+                      value={formData.freight}
+                      onChange={handleChange}
+                      className="h-8 text-xs text-black w-52"
+                    />
+                  </div>
 
-      {/* Remarks */}
-      <div className="flex items-start gap-1">
-        <Label className="text-xs text-black w-20 mt-1">Remarks</Label>
-        <Textarea
-          placeholder="Add remarks"
-          name="remarks"
-          value={formData.remarks}
-          onChange={handleChange}
-          className="h-20 text-xs resize-none text-black placeholder:text-gray-500 w-60"
-        />
-      </div>
-    </div>
+                  {/* Remarks */}
+                  <div className="flex items-start gap-1">
+                    <Label className="text-xs text-black w-20 mt-1">
+                      Remarks
+                    </Label>
+                    <Textarea
+                      placeholder="Add remarks"
+                      name="remarks"
+                      value={formData.remarks}
+                      onChange={handleChange}
+                      className="h-20 text-xs resize-none text-black placeholder:text-gray-500 w-60"
+                    />
+                  </div>
+                </div>
 
-    {/* Column 2 - Weight Fields */}
-    <div className="col-span-3 flex flex-col gap-2 items-start">
-      <div className="flex items-center gap-1">
-        <Label className="text-xs text-black w-24">First Weight</Label>
-        <Input
-          name="firstWeight"
-          value={formData.firstWeight}
-          onChange={handleChange}
-          className={`h-8 text-xs text-black w-52 ${isEditMode ? 'bg-gray-100' : ''}`}
-          readOnly={isEditMode}
-        />
-      </div>
-      <div className="flex items-center gap-1">
-        <Label className="text-xs text-black w-24">Second Weight</Label>
-        <Input
-          name="secondWeight"
-          value={formData.secondWeight}
-          onChange={handleChange}
-          className={`h-8 text-xs text-green-600 w-52 ${isEditMode ? 'bg-gray-100' : ''}`}
-          readOnly={isEditMode}
-        />
-      </div>
-      <div className="flex items-center gap-1">
-        <Label className="text-xs text-black w-24">Bardana Weight</Label>
-        <Input
-          name="bardanaWeight"
-          value={formData.bardanaWeight}
-          onChange={handleChange}
-          className="h-8 text-xs text-black w-52"
-        />
-      </div>
-      <div className="flex items-center gap-1">
-        <Label className="text-xs text-black w-24">Gross Weight</Label>
-        <Input
-          name="grossWeight"
-          value={formData.grossWeight}
-          readOnly
-          className="h-8 text-xs text-black w-52"
-        />
-      </div>
-      <div className="flex items-center gap-1">
-        <Label className="text-xs text-black w-24">Branch</Label>
-        {isEditMode ? (
-          <Input
-            value={
-              branches.find(
-                (b) =>
-                  b.branch_id.toString() === formData.branchId?.toString()
-              )?.branch_name || formData.branch || ""
-            }
-            readOnly
-            className="h-8 text-xs text-black bg-gray-100 w-52"
-          />
-        ) : (
-          <Select
-            name="branch"
-            value={formData.branchId || formData.branch}
-            onValueChange={(value) =>
-              setFormData((prev) => ({
-                ...prev,
-                branch: value,
-                branchId: value,
-              }))
-            }
-          >
-            <SelectTrigger className="h-8 text-xs text-black w-52">
-              <SelectValue
-                placeholder="Select branch"
-                className="text-black"
-              />
-            </SelectTrigger>
-            <SelectContent>
-              {branches.map((branch) => (
-                <SelectItem
-                  key={branch.branch_id}
-                  value={branch.branch_id.toString()}
-                >
-                  {branch.branch_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-      </div>
-    </div>
+                {/* Column 2 - Weight Fields */}
+                <div className="col-span-3 flex flex-col gap-2 items-start">
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-24">
+                      First Weight
+                    </Label>
+                    <Input
+                      name="firstWeight"
+                      value={formData.firstWeight}
+                      onChange={handleChange}
+                      className={`h-8 text-xs text-black w-52 ${isEditMode ? "bg-gray-100" : ""}`}
+                      readOnly={isEditMode}
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-24">
+                      Second Weight
+                    </Label>
+                    <Input
+                      name="secondWeight"
+                      value={formData.secondWeight}
+                      onChange={handleChange}
+                      className={`h-8 text-xs text-green-600 w-52 ${isEditMode ? "bg-gray-100" : ""}`}
+                      readOnly={isEditMode}
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-24">
+                      Bardana Weight
+                    </Label>
+                    <Input
+                      name="bardanaWeight"
+                      value={formData.bardanaWeight}
+                      onChange={handleChange}
+                      className="h-8 text-xs text-black w-52"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-24">
+                      Gross Weight
+                    </Label>
+                    <Input
+                      name="grossWeight"
+                      value={formData.grossWeight}
+                      readOnly
+                      className="h-8 text-xs text-black w-52"
+                    />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-24">Branch</Label>
+                    {isEditMode ? (
+                      <Input
+                        value={
+                          branches.find(
+                            (b) =>
+                              b.branch_id.toString() ===
+                              formData.branchId?.toString(),
+                          )?.branch_name ||
+                          formData.branch ||
+                          ""
+                        }
+                        readOnly
+                        className="h-8 text-xs text-black bg-gray-100 w-52"
+                      />
+                    ) : (
+                      <Select
+                        name="branch"
+                        value={formData.branchId || formData.branch}
+                        onValueChange={(value) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            branch: value,
+                            branchId: value,
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="h-8 text-xs text-black w-52">
+                          <SelectValue
+                            placeholder="Select branch"
+                            className="text-black"
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {branches.map((branch) => (
+                            <SelectItem
+                              key={branch.branch_id}
+                              value={branch.branch_id.toString()}
+                            >
+                              {branch.branch_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  </div>
+                </div>
 
-    {/* Column 3 - Driver & Camera */}
-    <div className="col-span-3 flex flex-col justify-between">
-      <div className="flex flex-col gap-2">
-        {/* Driver Name */}
-        <div className="flex items-center gap-1">
-          <Label className="text-xs text-black w-20">Driver Name</Label>
-          <Input
-            placeholder="Enter driver name"
-            name="driverName"
-            value={formData.driverName}
-            onChange={handleChange}
-            className="h-8 text-xs text-black placeholder:text-gray-500 w-52"
-          />
-        </div>
-      </div>
+                {/* Column 3 - Driver & Camera */}
+                <div className="col-span-3 flex flex-col justify-between">
+                  <div className="flex flex-col gap-2">
+                    {/* Driver Name */}
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs text-black w-20">
+                        Driver Name
+                      </Label>
+                      <Input
+                        placeholder="Enter driver name"
+                        name="driverName"
+                        value={formData.driverName}
+                        onChange={handleChange}
+                        className="h-8 text-xs text-black placeholder:text-gray-500 w-52"
+                      />
+                    </div>
+                  </div>
 
-      {/* Buttons & Camera Feed */}
-      <div className="flex flex-col gap-2 mt-2">
-        <div className="grid grid-cols-2 gap-1 mb-2">
-          <Button
-            className="h-8 bg-green-600 text-xs"
-            onClick={captureFirstWeight}
-             disabled={
+                  {/* Buttons & Camera Feed */}
+                  <div className="flex flex-col gap-2 mt-2">
+                    <div className="grid grid-cols-2 gap-1 mb-2">
+                      <Button
+                        className="h-8 bg-green-600 text-xs"
+                        onClick={captureFirstWeight}
+                        disabled={
                           formData.firstWeight &&
                           formData.firstWeight.trim() !== ""
                         }
-          >
-            1st WHT
-          </Button>
-          <Button
-            className="h-8 bg-gray-500 text-xs"
-            onClick={captureSecondWeight}
-             disabled={
+                      >
+                        1st WHT
+                      </Button>
+                      <Button
+                        className="h-8 bg-gray-500 text-xs"
+                        onClick={captureSecondWeight}
+                        disabled={
                           formData.secondWeight &&
                           formData.secondWeight.trim() !== ""
                         }
-          >
-            2nd WHT
-          </Button>
-        </div>
+                      >
+                        2nd WHT
+                      </Button>
+                    </div>
 
-        <div className="h-40 w-full overflow-hidden mb-1 rounded border">
-          <VideoStreamFullscreen
-            camera={{
-              id: 1,
-              name: "Camera 01",
-              ip: "10.10.10.146",
-              port: 554,
-            }}
-            isConnected={true}
-            isStreaming={true}
-          />
-        </div>
+                    <div className="h-40 w-full overflow-hidden mb-1 rounded border">
+                      <VideoStreamFullscreen
+                        camera={{
+                          id: 1,
+                          name: "Camera 01",
+                          ip: "10.10.10.146",
+                          port: 554,
+                        }}
+                        isConnected={true}
+                        isStreaming={true}
+                      />
+                    </div>
 
-        <div className="grid grid-cols-2 gap-1">
-          <Button
-            className="h-8 bg-yellow-500 text-xs"
-            onClick={resetForm}
-          >
-            Clear
-          </Button>
-          <Button className="h-8 bg-red-500 text-xs">Exit</Button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+                    <div className="grid grid-cols-2 gap-1">
+                      <Button
+                        className="h-8 bg-yellow-500 text-xs"
+                        onClick={resetForm}
+                      >
+                        Clear
+                      </Button>
+                      <Button className="h-8 bg-red-500 text-xs">Exit</Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             {/* Large Label Between Sections */}
             <div className="text-center py-1 mb-3">
@@ -2892,11 +2938,11 @@ export default function SalesForm() {
                   {/* Sales Table Header - with delete action column */}
                   <div
                     className="grid gap-px bg-gray-300 text-xs font-semibold mb-1"
-                  style={{
-  gridTemplateColumns:
-    "100px 100px 200px 120px 120px 150px 100px 100px 100px 40px",
-  width: "1120px",
-}}
+                    style={{
+                      gridTemplateColumns:
+                        "100px 100px 200px 120px 120px 150px 100px 100px 100px 40px",
+                      width: "1120px",
+                    }}
                   >
                     <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
                       DC #
@@ -2937,15 +2983,15 @@ export default function SalesForm() {
                         key={index}
                         className="grid gap-px text-xs"
                         style={{
-  gridTemplateColumns:
-    "100px 100px 200px 120px 120px 150px 100px 100px 100px 40px",
-  width: "1120px",
-}}
+                          gridTemplateColumns:
+                            "100px 100px 200px 120px 120px 150px 100px 100px 100px 40px",
+                          width: "1120px",
+                        }}
                       >
                         <div className="bg-white border border-gray-300 p-1">
                           <input
                             type="text"
-                            className={`w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none ${isEditMode ? 'bg-gray-100' : ''}`}
+                            className={`w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none ${isEditMode ? "bg-gray-100" : ""}`}
                             value={salesData[index]?.dcNo || ""}
                             onChange={(e) =>
                               handleSalesDataChange(
@@ -2962,7 +3008,9 @@ export default function SalesForm() {
                                 }
                               }
                             }}
-                            placeholder={isEditMode ? "" : "Press Enter to fetch"}
+                            placeholder={
+                              isEditMode ? "" : "Press Enter to fetch"
+                            }
                             readOnly={isEditMode}
                             autoComplete="off"
                             autoCorrect="off"
@@ -2995,7 +3043,11 @@ export default function SalesForm() {
                             <Select
                               value={salesData[index]?.customerName || ""}
                               onValueChange={(value) => {
-                                handleSalesDataChange(index, "customerName", value);
+                                handleSalesDataChange(
+                                  index,
+                                  "customerName",
+                                  value,
+                                );
                                 setCustomerSearchQuery("");
                               }}
                               onOpenChange={(open) => {
@@ -3012,7 +3064,9 @@ export default function SalesForm() {
                                     type="text"
                                     placeholder="Search customers..."
                                     value={customerSearchQuery}
-                                    onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                                    onChange={(e) =>
+                                      setCustomerSearchQuery(e.target.value)
+                                    }
                                     className="h-6 w-full text-xs border border-gray-300 px-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     autoComplete="off"
                                     autoCorrect="off"
@@ -3027,7 +3081,9 @@ export default function SalesForm() {
                                     .filter((customer) =>
                                       customer.name
                                         .toLowerCase()
-                                        .includes(customerSearchQuery.toLowerCase())
+                                        .includes(
+                                          customerSearchQuery.toLowerCase(),
+                                        ),
                                     )
                                     .map((customer) => (
                                       <SelectItem
@@ -3039,7 +3095,9 @@ export default function SalesForm() {
                                       </SelectItem>
                                     ))
                                 ) : (
-                                  <SelectItem value="no-customers" disabled>No customers found</SelectItem>
+                                  <SelectItem value="no-customers" disabled>
+                                    No customers found
+                                  </SelectItem>
                                 )}
                               </SelectContent>
                             </Select>
@@ -3084,18 +3142,24 @@ export default function SalesForm() {
                         </div>
                         <div className="bg-white border border-gray-300 p-1">
                           {!onlineMode && salesData[index]?.dcNo ? (
-                           <Popover>
+                            <Popover>
                               <PopoverTrigger asChild>
                                 <button className="w-full h-6 text-xs text-left px-2 border-none bg-transparent focus:outline-none flex items-center justify-between text-black">
                                   <span className="text-black">
                                     {salesData[index]?.doDate
-                                      ? format(new Date(salesData[index].doDate), "dd.MM.yyyy")
+                                      ? format(
+                                          new Date(salesData[index].doDate),
+                                          "dd.MM.yyyy",
+                                        )
                                       : "Select date"}
                                   </span>
                                   <CalendarIcon className="h-3 w-3 text-black" />
                                 </button>
                               </PopoverTrigger>
-                              <PopoverContent className="w-auto p-0 bg-white border border-black" align="start">
+                              <PopoverContent
+                                className="w-auto p-0 bg-white border border-black"
+                                align="start"
+                              >
                                 <Calendar
                                   mode="single"
                                   selected={
@@ -3108,7 +3172,7 @@ export default function SalesForm() {
                                       handleSalesDataChange(
                                         index,
                                         "doDate",
-                                        format(date, "yyyy-MM-dd")
+                                        format(date, "yyyy-MM-dd"),
                                       );
                                     }
                                   }}
@@ -3120,9 +3184,13 @@ export default function SalesForm() {
                             <input
                               type="text"
                               className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                              value={salesData[index]?.doDate 
-                                ? new Date(salesData[index].doDate).toLocaleDateString('en-GB')
-                                : ""}
+                              value={
+                                salesData[index]?.doDate
+                                  ? new Date(
+                                      salesData[index].doDate,
+                                    ).toLocaleDateString("en-GB")
+                                  : ""
+                              }
                               readOnly
                               placeholder=""
                               autoComplete="off"
@@ -3138,7 +3206,11 @@ export default function SalesForm() {
                             <Select
                               value={salesData[index]?.itemDescription || ""}
                               onValueChange={(value) => {
-                                handleSalesDataChange(index, "itemDescription", value);
+                                handleSalesDataChange(
+                                  index,
+                                  "itemDescription",
+                                  value,
+                                );
                                 setItemSearchQuery("");
                               }}
                               onOpenChange={(open) => {
@@ -3155,7 +3227,9 @@ export default function SalesForm() {
                                     type="text"
                                     placeholder="Search items..."
                                     value={itemSearchQuery}
-                                    onChange={(e) => setItemSearchQuery(e.target.value)}
+                                    onChange={(e) =>
+                                      setItemSearchQuery(e.target.value)
+                                    }
                                     className="h-6 w-full text-xs border border-gray-300 px-2 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
                                     autoComplete="off"
                                     autoCorrect="off"
@@ -3170,7 +3244,9 @@ export default function SalesForm() {
                                     .filter((item) =>
                                       item.description
                                         .toLowerCase()
-                                        .includes(itemSearchQuery.toLowerCase())
+                                        .includes(
+                                          itemSearchQuery.toLowerCase(),
+                                        ),
                                     )
                                     .map((item) => (
                                       <SelectItem
@@ -3182,7 +3258,9 @@ export default function SalesForm() {
                                       </SelectItem>
                                     ))
                                 ) : (
-                                  <SelectItem value="no-items" disabled>No items found</SelectItem>
+                                  <SelectItem value="no-items" disabled>
+                                    No items found
+                                  </SelectItem>
                                 )}
                               </SelectContent>
                             </Select>
@@ -3280,7 +3358,7 @@ export default function SalesForm() {
                     style={{
                       gridTemplateColumns:
                         "100px 100px 200px 120px 120px 150px 100px 100px 100px 60px",
-  width: "1140px",
+                      width: "1140px",
                       height: "40px",
                     }}
                   >
