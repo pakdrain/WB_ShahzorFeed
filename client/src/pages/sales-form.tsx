@@ -464,20 +464,22 @@ export default function SalesForm() {
   };
 
   // ===== PERFORMANCE OPTIMIZATION - DATA FETCHING =====
-  // Fetch all first weight records with improved caching
+  // Fetch all first weight records with highly optimized caching
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    refetchInterval: 60000, // Further reduced frequency to improve performance
-    staleTime: 300000, // Cache data for 5 minutes to prevent unnecessary API calls
+    refetchInterval: 120000, // Further reduced to 2 minutes for better performance
+    staleTime: 600000, // Cache data for 10 minutes to prevent unnecessary API calls
     refetchOnWindowFocus: false, // Prevent refetch on window focus for better performance
+    refetchOnMount: false, // Prevent refetch on component mount for better performance
   });
 
-  // Fetch offline records specifically with improved caching
+  // Fetch offline records specifically with highly optimized caching
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    refetchInterval: 60000, // Further reduced frequency to improve performance
-    staleTime: 300000, // Cache data for 5 minutes to prevent unnecessary API calls
+    refetchInterval: 120000, // Further reduced to 2 minutes for better performance
+    staleTime: 600000, // Cache data for 10 minutes to prevent unnecessary API calls
     refetchOnWindowFocus: false, // Prevent refetch on window focus for better performance
+    refetchOnMount: false, // Prevent refetch on component mount for better performance
   });
 
   // State for showing offline entries
@@ -1198,30 +1200,35 @@ export default function SalesForm() {
     setPlateReading(false);
   };
 
-  // Fetch entry types, branches, customers, and items - optimized with React Query
+  // ===== OPTIMIZED DATA FETCHING SECTION - STATIC DATA WITH LONG CACHE ===== 
+  // Fetch entry types, branches, customers, and items - highly optimized with React Query
   const { data: entryTypesData = [] } = useQuery({
     queryKey: ["/api/entry-types"],
-    staleTime: 300000, // Cache for 5 minutes
+    staleTime: 1800000, // Cache for 30 minutes (static data)
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: branchesData = [] } = useQuery({
     queryKey: ["/api/branches"],
-    staleTime: 300000, // Cache for 5 minutes
+    staleTime: 1800000, // Cache for 30 minutes (static data)
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: customersData = [] } = useQuery({
     queryKey: ["/api/customers"],
-    staleTime: 300000, // Cache for 5 minutes
+    staleTime: 1800000, // Cache for 30 minutes (static data)
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     enabled: !onlineMode, // Only fetch when in offline mode
   });
 
   const { data: itemsData = [] } = useQuery({
     queryKey: ["/api/items"],
-    staleTime: 300000, // Cache for 5 minutes
+    staleTime: 1800000, // Cache for 30 minutes (static data)
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     enabled: !onlineMode, // Only fetch when in offline mode
   });
 
