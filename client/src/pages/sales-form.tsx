@@ -463,18 +463,21 @@ export default function SalesForm() {
     });
   };
 
-  // Fetch all first weight records
+  // ===== PERFORMANCE OPTIMIZATION - DATA FETCHING =====
+  // Fetch all first weight records with improved caching
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    refetchInterval: 30000, // Reduced frequency to improve performance
-    staleTime: 20000, // Cache data for 20 seconds
+    refetchInterval: 60000, // Further reduced frequency to improve performance
+    staleTime: 300000, // Cache data for 5 minutes to prevent unnecessary API calls
+    refetchOnWindowFocus: false, // Prevent refetch on window focus for better performance
   });
 
-  // Fetch offline records specifically
+  // Fetch offline records specifically with improved caching
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    refetchInterval: 30000, // Reduced frequency to improve performance
-    staleTime: 20000, // Cache data for 20 seconds
+    refetchInterval: 60000, // Further reduced frequency to improve performance
+    staleTime: 300000, // Cache data for 5 minutes to prevent unnecessary API calls
+    refetchOnWindowFocus: false, // Prevent refetch on window focus for better performance
   });
 
   // State for showing offline entries
@@ -2477,17 +2480,18 @@ export default function SalesForm() {
         <div className="text-2xl text-green-600 font-bold">2500</div>
       </div>
 
+      {/* ===== MAIN FORM LAYOUT SECTION ===== */}
       {/* Main Form Layout - 100% visible without scrolling */}
       <div className="bg-white p-1 rounded border h-[calc(100vh-60px)] overflow-hidden">
         <div className="grid grid-cols-12 gap-1 h-full">
-          {/* Left Side - Main Form (Columns 1-8) */}
+          {/* ===== LEFT SIDE - MAIN FORM AREA (COLUMNS 1-8) ===== */}
           <div className="col-span-8">
-            {/* Master Table Section */}
-            <div className="bg-blue-50 p-2 rounded border mb-4 w-full">
+            {/* ===== MASTER TABLE SECTION - BASIC SLIP INFORMATION ===== */}
+            <div className="bg-blue-50 p-2 rounded border mb-4 w-full"></div>
               <div className="grid grid-cols-9 gap-4">
-                {/* Column 1 - Left Form Fields */}
+                {/* ===== COLUMN 1 - LEFT FORM FIELDS SECTION ===== */}
                 <div className="col-span-3 flex flex-col gap-2 items-start">
-                  {/* Slip No */}
+                  {/* ===== SLIP NUMBER FIELD ===== */}
                   <div className="flex items-center gap-1">
                     <Label className="text-xs text-black w-20">Slip No</Label>
                     {isSearchMode ? (
@@ -2561,7 +2565,7 @@ export default function SalesForm() {
                   </div>
                 </div>
 
-                {/* Column 2 - Weight Fields */}
+                {/* ===== COLUMN 2 - WEIGHT MEASUREMENT FIELDS SECTION ===== */}
                 <div className="col-span-3 flex flex-col gap-2 items-start">
                   <div className="flex items-center gap-1">
                     <Label className="text-xs text-black w-24">
@@ -2658,7 +2662,7 @@ export default function SalesForm() {
                   </div>
                 </div>
 
-                {/* Column 3 - Driver & Camera */}
+                {/* ===== COLUMN 3 - DRIVER INFO & CAMERA CONTROLS SECTION ===== */}
                 <div className="col-span-3 flex flex-col justify-between">
                   <div className="flex flex-col gap-2">
                     {/* Driver Name */}
@@ -2728,7 +2732,7 @@ export default function SalesForm() {
               </div>
             </div>
 
-            {/* Large Label Between Sections */}
+            {/* ===== SALES MODE INDICATOR SECTION ===== */}
             <div className="text-center py-1 mb-3">
               <div
                 className={`inline-block px-4 py-1 rounded-lg shadow-md ${
@@ -2781,10 +2785,10 @@ export default function SalesForm() {
               </Button>
             </div>
 
-            {/* Sales Details Section or Offline Entries */}
+            {/* ===== SALES DETAILS DATA ENTRY SECTION ===== */}
             <div className="bg-blue-50 p-2 rounded border">
               {showOfflineEntries ? (
-                /* Offline Entries Table */
+                /* ===== OFFLINE ENTRIES TABLE DISPLAY ===== */
                 <div className="h-full flex flex-col">
                   <h3 className="text-lg font-semibold mb-2 text-black">
                     Sale Offline Entries
@@ -2933,9 +2937,9 @@ export default function SalesForm() {
                   </div>
                 </div>
               ) : (
-                /* Regular Sales Form */
+                /* ===== REGULAR SALES FORM - DATA ENTRY TABLE ===== */
                 <div className="h-full flex flex-col">
-                  {/* Sales Table Header - with delete action column */}
+                  {/* ===== SALES TABLE HEADER - WITH DELETE ACTION COLUMN ===== */}
                   <div
                     className="grid gap-px bg-gray-300 text-xs font-semibold mb-1"
                     style={{
