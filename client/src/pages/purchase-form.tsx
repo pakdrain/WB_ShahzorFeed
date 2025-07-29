@@ -116,16 +116,23 @@ function PurchaseForm() {
     });
   };
 
-  // Fetch all first weight records
+  // ===== PERFORMANCE OPTIMIZATION SECTION - DATA FETCHING =====
+  // Fetch all first weight records with optimized performance settings
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    refetchInterval: 3000, // Refresh every 3 seconds
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes instead of 3 seconds
+    refetchOnMount: false, // Don't refetch on component mount
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
   });
 
-  // Fetch offline records specifically
+  // Fetch offline records specifically with optimized performance settings
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    refetchInterval: 3000, // Refresh every 3 seconds
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes instead of 3 seconds
+    refetchOnMount: false, // Don't refetch on component mount
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
   });
 
   // Filter records based on search criteria and form type
@@ -1368,10 +1375,14 @@ function PurchaseForm() {
     setEditingWbId(null);
   };
 
-  // Get camera data
+  // ===== CAMERA DATA SECTION - PERFORMANCE OPTIMIZED =====
+  // Get camera data with performance optimization
   const { data: camera } = useQuery({
     queryKey: ["/api/cameras/1"],
     enabled: true,
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    refetchOnMount: false, // Don't refetch on component mount
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
   });
 
   const formatDatetimeLocal = (isoString: string) => {
@@ -5152,7 +5163,7 @@ function PurchaseForm() {
                                   <div className="px-2 py-1 sticky top-0 bg-white z-10">
                                     <Input
                                       type="text"
-                                      placeholder="Search Item Code..."
+                                      placeholder="Search Item Code or Name..."
                                       value={searchQuery}
                                       onChange={(e) =>
                                         setSearchQuery(e.target.value)
@@ -5161,10 +5172,13 @@ function PurchaseForm() {
                                     />
                                   </div>
 
-                                  {/* Filtered Items */}
+                                  {/* Filtered Items - search by both code and name */}
                                   {invItems
                                     .filter((item) =>
                                       item.item_code
+                                        .toLowerCase()
+                                        .includes(searchQuery.toLowerCase()) ||
+                                      item.item_desc
                                         .toLowerCase()
                                         .includes(searchQuery.toLowerCase()),
                                     )

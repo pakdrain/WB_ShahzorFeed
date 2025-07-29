@@ -463,21 +463,23 @@ export default function SalesForm() {
     });
   };
 
-  // ===== PERFORMANCE OPTIMIZATION - DATA FETCHING =====
-  // Fetch all first weight records with optimized caching for better performance
+  // ===== DATA FETCHING SECTION - PERFORMANCE OPTIMIZED =====
+  // Fetch all first weight records with performance optimization
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    refetchInterval: 60000, // Optimized refresh interval
-    staleTime: 300000, // Cache data for 5 minutes to prevent unnecessary API calls
-    refetchOnWindowFocus: false, // Prevent refetch on window focus for better performance
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes instead of 3 seconds
+    refetchOnMount: false, // Don't refetch on component mount
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
   });
 
-  // Fetch offline records specifically with optimized caching
+  // Fetch offline records specifically with performance optimization
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    refetchInterval: 60000, // Optimized refresh interval
-    staleTime: 300000, // Cache data for 5 minutes to prevent unnecessary API calls
-    refetchOnWindowFocus: false, // Prevent refetch on window focus for better performance
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes instead of 3 seconds
+    refetchOnMount: false, // Don't refetch on component mount
+    refetchOnWindowFocus: false, // Don't refetch when window gains focus
   });
 
   // State for showing offline entries
@@ -1908,7 +1910,8 @@ export default function SalesForm() {
       font-size: 12px;
     }
 
-    .signature-label {
+    .signature-label```javascript
+ {
       display: inline-block;
     }
 
