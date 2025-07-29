@@ -464,22 +464,20 @@ export default function SalesForm() {
   };
 
   // ===== PERFORMANCE OPTIMIZATION - DATA FETCHING =====
-  // Fetch all first weight records with highly optimized caching
+  // Fetch all first weight records with optimized caching for better performance
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    refetchInterval: 120000, // Further reduced to 2 minutes for better performance
-    staleTime: 600000, // Cache data for 10 minutes to prevent unnecessary API calls
+    refetchInterval: 60000, // Optimized refresh interval
+    staleTime: 300000, // Cache data for 5 minutes to prevent unnecessary API calls
     refetchOnWindowFocus: false, // Prevent refetch on window focus for better performance
-    refetchOnMount: false, // Prevent refetch on component mount for better performance
   });
 
-  // Fetch offline records specifically with highly optimized caching
+  // Fetch offline records specifically with optimized caching
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    refetchInterval: 120000, // Further reduced to 2 minutes for better performance
-    staleTime: 600000, // Cache data for 10 minutes to prevent unnecessary API calls
+    refetchInterval: 60000, // Optimized refresh interval
+    staleTime: 300000, // Cache data for 5 minutes to prevent unnecessary API calls
     refetchOnWindowFocus: false, // Prevent refetch on window focus for better performance
-    refetchOnMount: false, // Prevent refetch on component mount for better performance
   });
 
   // State for showing offline entries
@@ -1200,35 +1198,31 @@ export default function SalesForm() {
     setPlateReading(false);
   };
 
-  // ===== OPTIMIZED DATA FETCHING SECTION - STATIC DATA WITH LONG CACHE ===== 
-  // Fetch entry types, branches, customers, and items - highly optimized with React Query
+  // ===== OPTIMIZED DATA FETCHING SECTION - STATIC DATA WITH OPTIMIZED CACHE ===== 
+  // Fetch entry types, branches, customers, and items - optimized with React Query
   const { data: entryTypesData = [] } = useQuery({
     queryKey: ["/api/entry-types"],
-    staleTime: 1800000, // Cache for 30 minutes (static data)
+    staleTime: 300000, // Cache for 5 minutes (static data)
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
   });
 
   const { data: branchesData = [] } = useQuery({
     queryKey: ["/api/branches"],
-    staleTime: 1800000, // Cache for 30 minutes (static data)
+    staleTime: 300000, // Cache for 5 minutes (static data)
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
   });
 
   const { data: customersData = [] } = useQuery({
     queryKey: ["/api/customers"],
-    staleTime: 1800000, // Cache for 30 minutes (static data)
+    staleTime: 300000, // Cache for 5 minutes (static data)
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
     enabled: !onlineMode, // Only fetch when in offline mode
   });
 
   const { data: itemsData = [] } = useQuery({
     queryKey: ["/api/items"],
-    staleTime: 1800000, // Cache for 30 minutes (static data)
+    staleTime: 300000, // Cache for 5 minutes (static data)
     refetchOnWindowFocus: false,
-    refetchOnMount: false,
     enabled: !onlineMode, // Only fetch when in offline mode
   });
 
@@ -2494,8 +2488,9 @@ export default function SalesForm() {
           {/* ===== LEFT SIDE - MAIN FORM AREA (COLUMNS 1-8) ===== */}
           <div className="col-span-8">
             {/* ===== MASTER TABLE SECTION - BASIC SLIP INFORMATION ===== */}
-            <div className="bg-blue-50 p-2 rounded border mb-4 w-full"></div>
-              <div className="grid grid-cols-9 gap-4">
+            <div className="bg-blue-50 p-2 rounded border mb-4 w-full">
+              <div className="grid grid-cols-9 gap-4"></div>
+            </div>
                 {/* ===== COLUMN 1 - LEFT FORM FIELDS SECTION ===== */}
                 <div className="col-span-3 flex flex-col gap-2 items-start">
                   {/* ===== SLIP NUMBER FIELD ===== */}
@@ -3232,11 +3227,11 @@ export default function SalesForm() {
                                 <SelectValue placeholder="Select item" />
                               </SelectTrigger>
                               <SelectContent>
-                                {/* Search Box at top */}
+                                {/* Enhanced Search Box - search by both code and name */}
                                 <div className="px-2 py-1 sticky top-0 bg-white z-10">
                                   <input
                                     type="text"
-                                    placeholder="Search items..."
+                                    placeholder="Search by item code or name..."
                                     value={itemSearchQuery}
                                     onChange={(e) =>
                                       setItemSearchQuery(e.target.value)
@@ -3249,23 +3244,25 @@ export default function SalesForm() {
                                   />
                                 </div>
 
-                                {/* Filtered Items */}
+                                {/* Enhanced Filtered Items - search by both code and description */}
                                 {items && items.length > 0 ? (
                                   items
-                                    .filter((item) =>
-                                      item.description
-                                        .toLowerCase()
-                                        .includes(
-                                          itemSearchQuery.toLowerCase(),
-                                        ),
-                                    )
+                                    .filter((item) => {
+                                      const searchTerm = itemSearchQuery.toLowerCase();
+                                      const itemCode = (item.code || "").toLowerCase();
+                                      const itemDesc = (item.description || "").toLowerCase();
+                                      return itemCode.includes(searchTerm) || itemDesc.includes(searchTerm);
+                                    })
                                     .map((item) => (
                                       <SelectItem
                                         key={item.id}
                                         value={item.description}
                                         className="text-xs"
                                       >
-                                        {item.description}
+                                        <div className="flex justify-between w-full">
+                                          <span>{item.code}</span>
+                                          <span>{item.description}</span>
+                                        </div>
                                       </SelectItem>
                                     ))
                                 ) : (
