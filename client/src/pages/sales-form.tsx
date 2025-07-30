@@ -1200,7 +1200,7 @@ export default function SalesForm() {
     setPlateReading(false);
   };
 
-  // ===== OPTIMIZED DATA FETCHING SECTION - STATIC DATA WITH OPTIMIZED CACHE ===== 
+  // ===== OPTIMIZED DATA FETCHING SECTION - STATIC DATA WITH OPTIMIZED CACHE =====
   // Fetch entry types, branches, customers, and items - optimized with React Query
   const { data: entryTypesData = [] } = useQuery({
     queryKey: ["/api/entry-types"],
@@ -1910,7 +1910,7 @@ export default function SalesForm() {
       font-size: 12px;
     }
 
-    .signature-label```javascript
+    .signature-label
  {
       display: inline-block;
     }
@@ -3250,10 +3250,18 @@ export default function SalesForm() {
                                 {items && items.length > 0 ? (
                                   items
                                     .filter((item) => {
-                                      const searchTerm = itemSearchQuery.toLowerCase();
-                                      const itemCode = (item.code || "").toLowerCase();
-                                      const itemDesc = (item.description || "").toLowerCase();
-                                      return itemCode.includes(searchTerm) || itemDesc.includes(searchTerm);
+                                      const searchTerm =
+                                        itemSearchQuery.toLowerCase();
+                                      const itemCode = (
+                                        item.code || ""
+                                      ).toLowerCase();
+                                      const itemDesc = (
+                                        item.description || ""
+                                      ).toLowerCase();
+                                      return (
+                                        itemCode.includes(searchTerm) ||
+                                        itemDesc.includes(searchTerm)
+                                      );
                                     })
                                     .map((item) => (
                                       <SelectItem
