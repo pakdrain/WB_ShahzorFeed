@@ -3949,7 +3949,7 @@ function PurchaseForm() {
                             targetUrl,
                           );
                           setLocation(targetUrl);
-                        } else if (record.entry_type === "SALE_RETURN") {
+                        } else if (record.entry_type === "SALE_RETURN" || record.entry_type === "SALES_RETURN") {
                           const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
                           console.log(
                             "Navigating to sales return form:",
@@ -3960,22 +3960,6 @@ function PurchaseForm() {
                           const targetUrl = `/purchase-return?type=${modeParam}&edit=${record.wb_id}`;
                           console.log(
                             "Navigating to purchase return form:",
-                            targetUrl,
-                          );
-                          window.location.href = targetUrl;
-                        } else if (record.entry_type === "SALE") {
-                          // For SALE entries, navigate to sales form in edit mode
-                          const targetUrl = `/sales-form?type=${modeParam}&edit=${record.wb_id}`;
-                          console.log(
-                            "Navigating to sales form in edit mode:",
-                            targetUrl,
-                          );
-                          setLocation(targetUrl);
-                        } else if (record.entry_type === "SALE_RETURN") {
-                          // For SALE_RETURN entries, navigate to sales return form
-                          const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
-                          console.log(
-                            "Navigating to sales return form:",
                             targetUrl,
                           );
                           window.location.href = targetUrl;
