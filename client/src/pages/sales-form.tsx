@@ -2301,14 +2301,18 @@ export default function SalesForm() {
                           const typeMode = urlParams.get("type") || "online";
                           const targetUrl = `/purchase-return?type=${typeMode}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
-                        } else if (record.entry_type === "SALE_RETURN") {
+                        } else if (record.entry_type === "SALE_RETURN" || record.entry_type === "SALES_RETURN") {
                           // Navigate to sales return form
                           const urlParams = new URLSearchParams(
                             window.location.search,
                           );
                           const typeMode = urlParams.get("type") || "online";
                           const targetUrl = `/sales-return?type=${typeMode}&edit=${record.wb_id}`;
-                          setLocation(targetUrl);
+                          console.log(
+                            "Navigating to sales return form:",
+                            targetUrl,
+                          );
+                          window.location.href = targetUrl;
                         } else {
                           // Load the data for editing (sales entries)
                           loadDataByWbId(record.wb_id);
