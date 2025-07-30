@@ -1276,10 +1276,14 @@ export default function PurchaseReturnForm() {
                           // Navigate to sales form
                           const targetUrl = `/sales-form?type=${typeMode}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
-                        } else if (record.entry_type === "SALE_RETURN") {
+                        } else if (record.entry_type === "SALE_RETURN" || record.entry_type === "SALES_RETURN") {
                           // Navigate to sales return form
                           const targetUrl = `/sales-return?type=${typeMode}&edit=${record.wb_id}`;
-                          setLocation(targetUrl);
+                          console.log(
+                            "Navigating to sales return form:",
+                            targetUrl,
+                          );
+                          window.location.href = targetUrl;
                         }
                       }
                     }}
