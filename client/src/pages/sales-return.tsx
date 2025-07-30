@@ -1521,13 +1521,11 @@ export default function SalesReturnForm() {
                           // Navigate to sales form
                           const targetUrl = `/sales-form?type=${typeMode}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
-                        } else {
-                          // Load the data for editing (sales return entries)
+                        } else if (record.entry_type === "SALE_RETURN") {
+                          // Stay on sales return form and load the data
                           urlParams.set("edit", record.wb_id);
                           const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
                           window.history.replaceState({}, "", newUrl);
-                          
-                          // Set edit mode and load data directly
                           sessionStorage.setItem('salesReturnEditMode', 'true');
                           setIsLoadingEditData(true);
                           loadDataByWbId(parseInt(record.wb_id));

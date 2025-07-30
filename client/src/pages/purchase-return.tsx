@@ -1265,6 +1265,13 @@ export default function PurchaseReturnForm() {
                           // Navigate to purchase form
                           const targetUrl = `/purchase-form?type=${typeMode}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
+                        } else if (record.entry_type === "PURCHASE_RETURN") {
+                          // Stay on purchase return form and load the data
+                          urlParams.set("edit", record.wb_id);
+                          const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+                          window.history.replaceState({}, "", newUrl);
+                          sessionStorage.setItem("purchaseReturnEditMode", "true");
+                          loadDataByWbId(parseInt(record.wb_id));
                         } else if (record.entry_type === "SALE") {
                           // Navigate to sales form
                           const targetUrl = `/sales-form?type=${typeMode}&edit=${record.wb_id}`;
@@ -1273,18 +1280,6 @@ export default function PurchaseReturnForm() {
                           // Navigate to sales return form
                           const targetUrl = `/sales-return?type=${typeMode}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
-                        } else {
-                          // Load the data for editing (purchase return entries)
-                          urlParams.set("edit", record.wb_id);
-                          const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
-                          window.history.replaceState({}, "", newUrl);
-
-                          // Set edit mode and load data directly
-                          sessionStorage.setItem(
-                            "purchaseReturnEditMode",
-                            "true",
-                          );
-                          loadDataByWbId(parseInt(record.wb_id));
                         }
                       }
                     }}
