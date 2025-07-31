@@ -3066,8 +3066,8 @@ export default function SalesForm() {
                                 if (!open) setCustomerSearchQuery("");
                               }}
                             >
-                              <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0">
-                                <SelectValue placeholder="Select customer" />
+                              <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0 text-black">
+                                <SelectValue placeholder="Select customer" className="text-black" />
                               </SelectTrigger>
                               <SelectContent>
                                 {/* Search Box at top */}
@@ -3229,8 +3229,8 @@ export default function SalesForm() {
                                 if (!open) setItemSearchQuery("");
                               }}
                             >
-                              <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0">
-                                <SelectValue placeholder="Select item" />
+                              <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0 text-black">
+                                <SelectValue placeholder="Select item" className="text-black" />
                               </SelectTrigger>
                               <SelectContent>
                                 {/* Enhanced Search Box - search by both code and name */}
