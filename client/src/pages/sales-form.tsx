@@ -1473,6 +1473,13 @@ export default function SalesForm() {
       return;
     }
 
+    // Validate that vehicle number is not null/empty when saving
+    if (!formData.vehicleNo || formData.vehicleNo.trim() === "") {
+      alert("Vehicle number is required");
+      setLoading(false);
+      return;
+    }
+
     try {
       let savedWbId: number;
 
