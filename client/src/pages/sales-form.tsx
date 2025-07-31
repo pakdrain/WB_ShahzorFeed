@@ -467,19 +467,19 @@ export default function SalesForm() {
   // Fetch all first weight records with performance optimization
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    staleTime: 10 * 60 * 1000, // 10 minutes cache
-    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes instead of 3 seconds
-    refetchOnMount: false, // Don't refetch on component mount
-    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    staleTime: 30 * 1000, // 30 seconds cache for immediate updates
+    refetchInterval: 30 * 1000, // Refresh every 30 seconds for new entries
+    refetchOnMount: true, // Refetch on component mount to get latest data
+    refetchOnWindowFocus: true, // Refetch when window gains focus
   });
 
   // Fetch offline records specifically with performance optimization
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    staleTime: 10 * 60 * 1000, // 10 minutes cache
-    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes instead of 3 seconds
-    refetchOnMount: false, // Don't refetch on component mount
-    refetchOnWindowFocus: false, // Don't refetch when window gains focus
+    staleTime: 30 * 1000, // 30 seconds cache for immediate updates
+    refetchInterval: 30 * 1000, // Refresh every 30 seconds for new entries
+    refetchOnMount: true, // Refetch on component mount to get latest data
+    refetchOnWindowFocus: true, // Refetch when window gains focus
   });
 
   // State for showing offline entries
