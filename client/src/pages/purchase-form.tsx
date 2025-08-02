@@ -2353,6 +2353,15 @@ function PurchaseForm() {
           window.history.replaceState({}, "", newUrl);
           setIsSearchMode(true);
           setFormData((prev) => ({ ...prev, slipNo: "" }));
+
+          // Auto-focus the slip number input after state update
+          setTimeout(() => {
+            const slipInput = document.querySelector('input[name="slipNo"]') as HTMLInputElement;
+            if (slipInput) {
+              slipInput.focus();
+              slipInput.select();
+            }
+          }, 100);
         }
       }
     };

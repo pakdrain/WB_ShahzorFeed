@@ -941,8 +941,7 @@ export default function SalesForm() {
 
           if (entryType === "SALE_RETURN") {
             const targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
-            console.log(
-              `Found ${entryType} entry (${isOffline ? "Offline" : "Online"}), redirecting to:`,
+            console.log(              `Found ${entryType} entry (${isOffline ? "Offline" : "Online"}), redirecting to:`,
               targetUrl,
             );
             setLocation(targetUrl);
@@ -2224,6 +2223,52 @@ export default function SalesForm() {
     }
   };
 
+  // Add keyboard event listeners for Ctrl+L and F11
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // F11 to open slip search
+      if (event.key === "F11") {
+        event.preventDefault();
+        if (isSearchMode || isEditMode) {
+          // If in search mode or edit mode, reset to new form
+          resetFormToInitial();
+          setIsSearchMode(false);
+          setIsEditMode(false);
+          setEditingWbId(null);
+
+          // Clear URL parameters and set to new form mode
+          const newUrl =
+            window.location.pathname +
+            "?type=" +
+            (onlineMode ? "online" : "offline");
+          window.history.replaceState({}, "", newUrl);
+        } else {
+          // Enter search mode
+          const urlParams = new URLSearchParams(window.location.search);
+          urlParams.set("search", "true");
+          const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+          window.history.replaceState({}, "", newUrl);
+          setIsSearchMode(true);
+          setFormData((prev) => ({ ...prev, slipNo: "" }));
+
+          // Auto-focus the slip number input after state update
+          setTimeout(() => {
+            const slipInput = document.querySelector('input[name="slipNo"]') as HTMLInputElement;
+            if (slipInput) {
+              slipInput.focus();
+              slipInput.select();
+            }
+          }, 100);
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onlineMode, isEditMode, isSearchMode]);
+
   return (
     <div className="h-screen bg-gray-100 p-1 overflow-hidden relative">
       {/* Weight Display Table - Upper Right Side */}
@@ -2492,7 +2537,7 @@ export default function SalesForm() {
             OFFLINE
           </button>
         </div>
-       
+
       </div>
 
       {/* ===== MAIN FORM LAYOUT SECTION ===== */}
@@ -3399,7 +3444,7 @@ export default function SalesForm() {
                     <div className="bg-gray-200 border border-gray-400 p-1 flex items-center justify-end">
                       <span className="text-black">Total:</span>
                     </div>
-                 
+
                     <div className="bg-white border border-gray-400 p-1">
                       <input
                         type="text"
@@ -3446,8 +3491,8 @@ export default function SalesForm() {
                         />
                       </div>
 
-                     
-                      
+
+
                     </div>
 
                     <div className="flex items-center space-x-2">
