@@ -463,23 +463,25 @@ export default function SalesForm() {
     });
   };
 
-  // ===== OPTIMIZED DATA FETCHING - BETTER PERFORMANCE =====
-  // Fetch first weight records with longer cache times
+  // ===== HIGHLY OPTIMIZED DATA FETCHING - MAXIMUM PERFORMANCE =====
+  // Fetch first weight records with aggressive caching for performance
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
-    refetchInterval: 3 * 60 * 1000, // Refresh every 3 minutes instead of 30 seconds
-    refetchOnMount: false, // Reduce mount refetch for performance
-    refetchOnWindowFocus: false, // Disable focus refetch for better performance
-  });
-
-  // Fetch offline records with longer cache times
-  const { data: offlineRecords = [] } = useQuery({
-    queryKey: ["/api/purchases/offline"],
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
-    refetchInterval: 3 * 60 * 1000, // Refresh every 3 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false, // Don't refetch on network reconnect
+  });
+
+  // Fetch offline records with aggressive caching
+  const { data: offlineRecords = [] } = useQuery({
+    queryKey: ["/api/purchases/offline"],
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   // State for showing offline entries
@@ -1199,35 +1201,39 @@ export default function SalesForm() {
     setPlateReading(false);
   };
 
-  // ===== OPTIMIZED STATIC DATA FETCHING - LONGER CACHE TIMES =====
-  // Fetch entry types, branches, customers, and items with longer cache for better performance
+  // ===== MAXIMUM PERFORMANCE STATIC DATA FETCHING =====
+  // Fetch entry types, branches, customers, and items with aggressive caching
   const { data: entryTypesData = [] } = useQuery({
     queryKey: ["/api/entry-types"],
-    staleTime: 30 * 60 * 1000, // Cache for 30 minutes (static data)
+    staleTime: 60 * 60 * 1000, // Cache for 1 hour (static data)
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   const { data: branchesData = [] } = useQuery({
     queryKey: ["/api/branches"],
-    staleTime: 30 * 60 * 1000, // Cache for 30 minutes (static data)
+    staleTime: 60 * 60 * 1000, // Cache for 1 hour (static data)
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   const { data: customersData = [] } = useQuery({
     queryKey: ["/api/customers"],
-    staleTime: 15 * 60 * 1000, // Cache for 15 minutes
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    refetchOnReconnect: false,
     enabled: !onlineMode, // Only fetch when in offline mode
   });
 
   const { data: itemsData = [] } = useQuery({
     queryKey: ["/api/items"],
-    staleTime: 15 * 60 * 1000, // Cache for 15 minutes
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    refetchOnReconnect: false,
     enabled: !onlineMode, // Only fetch when in offline mode
   });
 
@@ -2237,98 +2243,94 @@ export default function SalesForm() {
           const activeElement = document.activeElement as HTMLElement;
           
           if (activeElement) {
-            // Direct check if element is a combobox
+            // Priority 1: Check if we're directly on a combobox
             if (activeElement.getAttribute('role') === 'combobox') {
               activeElement.click();
               return;
             }
             
-            // Check if we're in a select container
-            const selectContainer = activeElement.closest('[data-state]');
-            if (selectContainer) {
-              const trigger = selectContainer.querySelector('[role="combobox"]') as HTMLElement;
-              if (trigger) {
-                trigger.click();
+            // Priority 2: Check if we're inside a select wrapper (closest parent with combobox)
+            const selectWrapper = activeElement.closest('div');
+            if (selectWrapper) {
+              const comboboxInWrapper = selectWrapper.querySelector('[role="combobox"]') as HTMLElement;
+              if (comboboxInWrapper && selectWrapper.contains(activeElement)) {
+                comboboxInWrapper.click();
                 return;
               }
             }
             
-            // Check if we're focused on an input in the details table
-            const parentRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
-            if (parentRow) {
-              // Get all interactive elements in the row
-              const rowElements = parentRow.querySelectorAll('input, [role="combobox"], select');
-              const focusedIndex = Array.from(rowElements).indexOf(activeElement);
-              
-              // Map indices to appropriate selects based on table structure
-              // DC No (0), DO No (1), Customer Name (2), Vehicle No (3), Do Date (4), Item Description (5)
-              if (focusedIndex === 2) {
-                // Customer Name column - find select in same cell
-                const customerCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
-                const customerSelect = customerCell?.querySelector('[role="combobox"]') as HTMLElement;
-                if (customerSelect) {
-                  customerSelect.click();
-                  return;
-                }
-              } else if (focusedIndex === 5) {
-                // Item Description column - find select in same cell
-                const itemCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
-                const itemSelect = itemCell?.querySelector('[role="combobox"]') as HTMLElement;
-                if (itemSelect) {
-                  itemSelect.click();
+            // Priority 3: Check if we're in the sales details table
+            const tableRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
+            if (tableRow) {
+              // Find the cell containing the active element
+              const activeCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
+              if (activeCell) {
+                // Look for a combobox in the same cell
+                const cellCombobox = activeCell.querySelector('[role="combobox"]') as HTMLElement;
+                if (cellCombobox) {
+                  cellCombobox.click();
                   return;
                 }
               }
               
-              // Fallback: find any select in the current cell
-              const currentCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
-              if (currentCell) {
-                const cellSelect = currentCell.querySelector('[role="combobox"]') as HTMLElement;
-                if (cellSelect) {
-                  cellSelect.click();
+              // If no combobox in cell, find all comboboxes in the row and use proximity
+              const rowComboboxes = tableRow.querySelectorAll('[role="combobox"]');
+              if (rowComboboxes.length > 0) {
+                let closestCombobox: HTMLElement | null = null;
+                let minDistance = Infinity;
+                
+                rowComboboxes.forEach((combo) => {
+                  const comboElement = combo as HTMLElement;
+                  const rect1 = activeElement.getBoundingClientRect();
+                  const rect2 = comboElement.getBoundingClientRect();
+                  const distance = Math.abs(rect1.left - rect2.left) + Math.abs(rect1.top - rect2.top);
+                  
+                  if (distance < minDistance) {
+                    minDistance = distance;
+                    closestCombobox = comboElement;
+                  }
+                });
+                
+                if (closestCombobox) {
+                  closestCombobox.click();
                   return;
                 }
               }
             }
             
-            // Check for any focused select in the document
-            const focusedSelect = document.querySelector('[role="combobox"]:focus') as HTMLElement;
-            if (focusedSelect) {
-              focusedSelect.click();
-              return;
+            // Priority 4: Check by field attributes
+            const inputName = activeElement.getAttribute('name');
+            const placeholder = activeElement.getAttribute('placeholder');
+            
+            if (placeholder?.toLowerCase().includes('customer') || inputName === 'customerName') {
+              const customerSelects = document.querySelectorAll('[role="combobox"]');
+              // Find customer select by looking at nearby text or placeholder
+              for (const select of customerSelects) {
+                const selectElement = select as HTMLElement;
+                const selectParent = selectElement.closest('div[class*="bg-white"]');
+                if (selectParent && selectParent.textContent?.toLowerCase().includes('customer')) {
+                  selectElement.click();
+                  return;
+                }
+              }
+            }
+            
+            if (placeholder?.toLowerCase().includes('item') || inputName === 'itemDescription') {
+              const itemSelects = document.querySelectorAll('[role="combobox"]');
+              // Find item select by looking at nearby text or placeholder  
+              for (const select of itemSelects) {
+                const selectElement = select as HTMLElement;
+                const selectParent = selectElement.closest('div[class*="bg-white"]');
+                if (selectParent && selectParent.textContent?.toLowerCase().includes('item')) {
+                  selectElement.click();
+                  return;
+                }
+              }
             }
           }
           
-          // Fallback behavior: try to open LOVs in details table first, then main form
-          setTimeout(() => {
-            // First try to find and open customer dropdown in details table
-            const detailsCustomerSelects = document.querySelectorAll('div[class*="bg-white border border-gray-300"] [role="combobox"]');
-            let lovOpened = false;
-            
-            // Look for the first empty or focused customer field in details table
-            for (let i = 0; i < detailsCustomerSelects.length; i++) {
-              const selectElement = detailsCustomerSelects[i] as HTMLElement;
-              const parentRow = selectElement.closest('div[class*="grid gap-px text-xs"]');
-              
-              if (parentRow) {
-                // Check if this row has a DC number (indicating it's an active row)
-                const dcInput = parentRow.querySelector('input[type="text"]') as HTMLInputElement;
-                if (dcInput && dcInput.value.trim() !== "") {
-                  selectElement.click();
-                  lovOpened = true;
-                  break;
-                }
-              }
-            }
-            
-            // If no details table LOV was opened, fallback to main form customer dropdown
-            if (!lovOpened) {
-              const mainCustomerSelect = document.querySelector('[role="combobox"]') as HTMLElement;
-              if (mainCustomerSelect) {
-                mainCustomerSelect.click();
-              }
-            }
-          }, 100);
+          // Only if nothing else worked, show message
+          console.log('No LOV found for current focus. Please click on a dropdown field first.');
         }
       }
 

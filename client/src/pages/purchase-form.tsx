@@ -117,23 +117,25 @@ function PurchaseForm() {
     });
   };
 
-  // ===== OPTIMIZED DATA FETCHING - REDUCED FREQUENCY =====
-  // Fetch first weight records with longer cache times for better performance
+  // ===== HIGHLY OPTIMIZED DATA FETCHING - MAXIMUM PERFORMANCE =====
+  // Fetch first weight records with aggressive caching for performance
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
-    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes instead of 30 seconds
-    refetchOnMount: false, // Don't refetch on mount to reduce load
-    refetchOnWindowFocus: false, // Disable focus refetch for better performance
-  });
-
-  // Fetch offline records with longer cache times
-  const { data: offlineRecords = [] } = useQuery({
-    queryKey: ["/api/purchases/offline"],
-    staleTime: 5 * 60 * 1000, // 5 minutes cache  
-    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false, // Don't refetch on network reconnect
+  });
+
+  // Fetch offline records with aggressive caching
+  const { data: offlineRecords = [] } = useQuery({
+    queryKey: ["/api/purchases/offline"],
+    staleTime: 10 * 60 * 1000, // 10 minutes cache  
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
   });
 
   // Filter records based on search criteria and form type
@@ -2331,33 +2333,32 @@ function PurchaseForm() {
           const activeElement = document.activeElement as HTMLElement;
           
           if (activeElement) {
-            // Check if we're directly on a select trigger
+            // Priority 1: Check if we're directly on a combobox
             if (activeElement.getAttribute('role') === 'combobox') {
               activeElement.click();
               return;
             }
             
-            // Check if we're in a select container
-            const selectContainer = activeElement.closest('[data-state]');
-            if (selectContainer) {
-              const trigger = selectContainer.querySelector('[role="combobox"]') as HTMLElement;
-              if (trigger) {
-                trigger.click();
+            // Priority 2: Check if we're inside a select wrapper (closest parent with combobox)
+            const selectWrapper = activeElement.closest('div');
+            if (selectWrapper) {
+              const comboboxInWrapper = selectWrapper.querySelector('[role="combobox"]') as HTMLElement;
+              if (comboboxInWrapper && selectWrapper.contains(activeElement)) {
+                comboboxInWrapper.click();
                 return;
               }
             }
             
-            // Check by input name or data attributes
+            // Priority 3: Check by field name and find the appropriate select
             const inputName = activeElement.getAttribute('name');
-            const parentCell = activeElement.closest('td, div[class*="p-"]');
+            const placeholder = activeElement.getAttribute('placeholder');
             
-            if (inputName === 'bardanaType' || activeElement.closest('[data-bardana-select]')) {
+            if (inputName === 'bardanaType' || placeholder?.toLowerCase().includes('bardana')) {
               setBardanaSelectOpen(true);
               return;
             }
             
-            // For vendor field
-            if (inputName === 'vendor' || parentCell?.querySelector('[data-vendor-select]')) {
+            if (inputName === 'vendor' || placeholder?.toLowerCase().includes('vendor')) {
               const vendorTrigger = document.querySelector('[data-vendor-select] [role="combobox"]') as HTMLElement;
               if (vendorTrigger) {
                 vendorTrigger.click();
@@ -2365,8 +2366,7 @@ function PurchaseForm() {
               }
             }
             
-            // For item description field  
-            if (inputName === 'itemDesc' || parentCell?.querySelector('[data-item-select]')) {
+            if (inputName === 'itemDesc' || placeholder?.toLowerCase().includes('item')) {
               const itemTrigger = document.querySelector('[data-item-select] [role="combobox"]') as HTMLElement;
               if (itemTrigger) {
                 itemTrigger.click();
@@ -2374,28 +2374,37 @@ function PurchaseForm() {
               }
             }
             
-            // Check if we're in a table cell with a select
-            if (parentCell) {
-              const cellSelect = parentCell.querySelector('[role="combobox"]') as HTMLElement;
-              if (cellSelect) {
-                cellSelect.click();
+            // Priority 4: Check if we're in a table row/cell context
+            const tableRow = activeElement.closest('tr, div[class*="grid"]');
+            if (tableRow) {
+              // Find all comboboxes in this row
+              const rowComboboxes = tableRow.querySelectorAll('[role="combobox"]');
+              
+              // Try to find the closest one to the active element
+              let closestCombobox: HTMLElement | null = null;
+              let minDistance = Infinity;
+              
+              rowComboboxes.forEach((combo) => {
+                const comboElement = combo as HTMLElement;
+                const rect1 = activeElement.getBoundingClientRect();
+                const rect2 = comboElement.getBoundingClientRect();
+                const distance = Math.abs(rect1.left - rect2.left) + Math.abs(rect1.top - rect2.top);
+                
+                if (distance < minDistance) {
+                  minDistance = distance;
+                  closestCombobox = comboElement;
+                }
+              });
+              
+              if (closestCombobox) {
+                closestCombobox.click();
                 return;
               }
             }
           }
           
-          // Fallback: find any visible select that might have focus
-          const allSelects = document.querySelectorAll('[role="combobox"]:not([disabled]):not([aria-hidden="true"])');
-          for (const select of allSelects) {
-            const selectElement = select as HTMLElement;
-            if (selectElement.matches(':focus-within') || selectElement === document.activeElement) {
-              selectElement.click();
-              return;
-            }
-          }
-          
-          // Final fallback
-          setBardanaSelectOpen(true);
+          // Only if nothing else worked, show message
+          console.log('No LOV found for current focus. Please click on a dropdown field first.');
         }
       }
 
