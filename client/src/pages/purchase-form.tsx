@@ -31,6 +31,7 @@ function PurchaseForm() {
   const [isReturnMode, setIsReturnMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [bardanaSearchQuery, setBardanaSearchQuery] = useState("");
+  const [bardanaSelectOpen, setBardanaSelectOpen] = useState(false);
 
   // Deduction/Bag table state
   const [bagTableData, setBagTableData] = useState<any[]>([]);
@@ -2321,6 +2322,51 @@ function PurchaseForm() {
     formData.bardanaWeight,
     formData.supplierWeight,
   ]);
+
+  // Add keyboard event listeners for Ctrl+L and F11
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Ctrl+L to open bardana type LOV
+      if (event.ctrlKey && event.key === 'l') {
+        event.preventDefault();
+        if (!onlineMode || !igpDataFetched || isEditMode) {
+          setBardanaSelectOpen(true);
+        }
+      }
+      
+      // F11 to open slip search
+      if (event.key === 'F11') {
+        event.preventDefault();
+        if (isSearchMode || isEditMode) {
+          // If in search mode or edit mode, reset to new form
+          resetFormToInitial();
+          setIsSearchMode(false);
+          setIsEditMode(false);
+          setEditingWbId(null);
+
+          // Clear URL parameters and set to new form mode
+          const newUrl =
+            window.location.pathname +
+            "?type=" +
+            (onlineMode ? "online" : "offline");
+          window.history.replaceState({}, "", newUrl);
+        } else {
+          // Enter search mode
+          const urlParams = new URLSearchParams(window.location.search);
+          urlParams.set("search", "true");
+          const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
+          window.history.replaceState({}, "", newUrl);
+          setIsSearchMode(true);
+          setFormData((prev) => ({ ...prev, slipNo: "" }));
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [onlineMode, igpDataFetched, isEditMode, isSearchMode]);
 
   // Fetch vendor data for offline mode and clear IGP field when switching to offline
   useEffect(() => {
@@ -4613,74 +4659,68 @@ function PurchaseForm() {
                         <span className="text-xs text-black w-28">
                           Bardana Type
                         </span>
-                        {onlineMode ? (
-                          <Input
-                            name="bardanaType"
-                            value={formData.bardanaType}
-                            onChange={handleChange}
+                        <Select
+                          name="bardanaType"
+                          value={formData.bardanaType}
+                          onValueChange={(value) => {
+                            const selectedBardana = bardanaTypes.find(
+                              (item) => item.type === value,
+                            );
+                            setFormData((prev) => ({
+                              ...prev,
+                              bardanaType: value,
+                              wtPerBag:
+                                selectedBardana?.data_config_segment1 ||
+                                prev.wtPerBag,
+                            }));
+                          }}
+                          open={bardanaSelectOpen}
+                          onOpenChange={setBardanaSelectOpen}
+                        >
+                          <SelectTrigger 
                             className={`h-8 text-xs text-black w-60 ${
-                              igpDataFetched && !isEditMode
+                              onlineMode && igpDataFetched && !isEditMode
                                 ? "bg-gray-100 cursor-not-allowed"
                                 : ""
                             }`}
-                            placeholder="Enter bardana type"
-                            readOnly={igpDataFetched && !isEditMode}
-                          />
-                        ) : (
-                          <Select
-                            name="bardanaType"
-                            value={formData.bardanaType}
-                            onValueChange={(value) => {
-                              const selectedBardana = bardanaTypes.find(
-                                (item) => item.type === value,
-                              );
-                              setFormData((prev) => ({
-                                ...prev,
-                                bardanaType: value,
-                                wtPerBag:
-                                  selectedBardana?.data_config_segment1 ||
-                                  prev.wtPerBag,
-                              }));
-                            }}
+                            disabled={onlineMode && igpDataFetched && !isEditMode}
                           >
-                            <SelectTrigger className="h-8 text-xs text-black w-60">
-                              <SelectValue
-                                placeholder="Select bardana type"
-                                className="text-black"
+                            <SelectValue
+                              placeholder="Select bardana type (Ctrl+L)"
+                              className="text-black"
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {/* Search Box at top */}
+                            <div className="px-2 py-1 sticky top-0 bg-white z-10">
+                              <Input
+                                type="text"
+                                placeholder="Search Bardana Type..."
+                                value={bardanaSearchQuery}
+                                onChange={(e) =>
+                                  setBardanaSearchQuery(e.target.value)
+                                }
+                                className="h-6 text-xs border-gray-300"
                               />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {/* Search Box at top */}
-                              <div className="px-2 py-1 sticky top-0 bg-white z-10">
-                                <Input
-                                  type="text"
-                                  placeholder="Search Bardana Type..."
-                                  value={bardanaSearchQuery}
-                                  onChange={(e) =>
-                                    setBardanaSearchQuery(e.target.value)
-                                  }
-                                  className="h-6 text-xs border-gray-300"
-                                />
-                              </div>
+                            </div>
 
-                              {/* Filtered Bardana Types */}
-                              {bardanaTypes
-                                .filter((bardanaType) =>
-                                  bardanaType.type
-                                    .toLowerCase()
-                                    .includes(bardanaSearchQuery.toLowerCase()),
-                                )
-                                .map((bardanaType) => (
-                                  <SelectItem
-                                    key={bardanaType.data_config_segment1}
-                                    value={bardanaType.type}
-                                  >
-                                    {bardanaType.type}
-                                  </SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
-                        )}
+                            {/* Filtered Bardana Types */}
+                            {bardanaTypes
+                              .filter((bardanaType) =>
+                                bardanaType.type
+                                  .toLowerCase()
+                                  .includes(bardanaSearchQuery.toLowerCase()),
+                              )
+                              .map((bardanaType) => (
+                                <SelectItem
+                                  key={bardanaType.data_config_segment1}
+                                  value={bardanaType.type}
+                                >
+                                  {bardanaType.type}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       {/* Wt per Bag */}
