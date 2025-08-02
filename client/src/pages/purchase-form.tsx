@@ -4634,7 +4634,7 @@ function PurchaseForm() {
                         </span>
                         <Select
                           name="bardanaType"
-                          value={formData.bardanaType}
+                          value={formData.bardanaType || ""}
                           onValueChange={(value) => {
                             const selectedBardana = bardanaTypes.find(
                               (item) => item.type === value,
@@ -4654,7 +4654,9 @@ function PurchaseForm() {
                             <SelectValue
                               placeholder="Select bardana type (Ctrl+L)"
                               className="text-black"
-                            />
+                            >
+                              {formData.bardanaType || "Select bardana type (Ctrl+L)"}
+                            </SelectValue>
                           </SelectTrigger>
                           <SelectContent>
                             {/* Search Box at top */}
@@ -4685,6 +4687,18 @@ function PurchaseForm() {
                                   {bardanaType.type}
                                 </SelectItem>
                               ))}
+                            
+                            {/* Add the fetched bardana type if it's not in the existing list */}
+                            {formData.bardanaType && 
+                             !bardanaTypes.some(bt => bt.type === formData.bardanaType) && 
+                             formData.bardanaType.toLowerCase().includes(bardanaSearchQuery.toLowerCase()) && (
+                              <SelectItem
+                                key={`fetched-${formData.bardanaType}`}
+                                value={formData.bardanaType}
+                              >
+                                {formData.bardanaType}
+                              </SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
