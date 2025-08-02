@@ -2226,6 +2226,20 @@ export default function SalesForm() {
   // Add keyboard event listeners for Ctrl+L and F11
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Ctrl+L to open LOVs in offline mode
+      if (event.ctrlKey && event.key === "l") {
+        event.preventDefault();
+        if (!onlineMode) {
+          // In offline mode, focus on the first customer dropdown that's visible
+          setTimeout(() => {
+            const customerSelect = document.querySelector('[role="combobox"]') as HTMLElement;
+            if (customerSelect) {
+              customerSelect.click();
+            }
+          }, 100);
+        }
+      }
+
       // F11 to open slip search
       if (event.key === "F11") {
         event.preventDefault();
