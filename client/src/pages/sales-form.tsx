@@ -945,8 +945,7 @@ export default function SalesForm() {
               `Found ${entryType} entry (${isOffline ? "Offline" : "Online"}), redirecting to:`,
               targetUrl,
             );
-            ```text
-setLocation(targetUrl);
+            setLocation(targetUrl);
           } else {
             // For SALE entries, stay on current page and load the data
             await loadDataByWbId(master.wb_id);
@@ -2551,6 +2550,30 @@ setLocation(targetUrl);
                     )}
                   </div>
 
+                  {/* Slip In Time */}
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-20">Time In</Label>
+                    <Input
+                      type="datetime-local"
+                      name="slipInTime"
+                      value={formData.slipInTime}
+                      onChange={handleChange}
+                      className="h-8 text-xs text-black w-52"
+                    />
+                  </div>
+
+                  {/* Slip Out Time */}
+                  <div className="flex items-center gap-1">
+                    <Label className="text-xs text-black w-20">Time Out</Label>
+                    <Input
+                      type="datetime-local"
+                      name="slipOutTime"
+                      value={formData.slipOutTime}
+                      onChange={handleChange}
+                      className="h-8 text-xs text-black w-52"
+                    />
+                  </div>
+
                   {/* Net Weight */}
                   <div className="flex items-center gap-1">
                     <Label className="text-xs text-black w-20">
@@ -2690,6 +2713,27 @@ setLocation(targetUrl);
                 {/* ===== COLUMN 3 - DRIVER INFO & CAMERA CONTROLS SECTION ===== */}
                 <div className="col-span-3 flex flex-col justify-between">
                   <div className="flex flex-col gap-2">
+                    {/* Vehicle Number with License Plate Reading */}
+                    <div className="flex items-center gap-1">
+                      <Label className="text-xs text-black w-20">Vehicle No</Label>
+                      <div className="flex gap-1">
+                        <Input
+                          placeholder="Enter vehicle number"
+                          name="vehicleNo"
+                          value={formData.vehicleNo}
+                          onChange={handleChange}
+                          className="h-8 text-xs text-black placeholder:text-gray-500 w-40"
+                        />
+                        <Button
+                          className="h-8 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={readLicensePlate}
+                          disabled={plateReading}
+                        >
+                          {plateReading ? "Reading..." : "Read Plate"}
+                        </Button>
+                      </div>
+                    </div>
+
                     {/* Driver Name */}
                     <div className="flex items-center gap-1">
                       <Label className="text-xs text-black w-20">
@@ -3515,10 +3559,11 @@ setLocation(targetUrl);
               )}
             </div>
 
-            {/* Right Side - Weight Display and Bag Table (Columns 9-12) */}
-            <div className="col-span-4">
-              {/* This section will contain the right side components */}
             </div>
+
+          {/* ===== RIGHT SIDE - COLUMNS 9-12 ===== */}
+          <div className="col-span-4">
+            {/* Right side content can be added here */}
           </div>
         </div>
       </div>
