@@ -1199,6 +1199,13 @@ function PurchaseForm() {
           igpDate: firstItem.igp_date || "",
           igpId: firstItem.igp_id || "",
           itemId: firstItem.item_id || "",
+          // Also update item details from IGP data
+          itemCode: firstItem.item_code || "",
+          itemDesc: firstItem.item_desc || "",
+          poNo: firstItem.po_no || "",
+          poQty: firstItem.po_qty ? String(firstItem.po_qty) : "",
+          igpQty: firstItem.igp_qty ? String(firstItem.igp_qty) : "",
+          balanceQty: firstItem.balance_qty ? String(firstItem.balance_qty) : "",
           // Change status from Online to Offline when IGP data loads
           onlineEntry: "No",
         }));
@@ -2326,12 +2333,10 @@ function PurchaseForm() {
   // Add keyboard event listeners for Ctrl+L and F11
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Ctrl+L to open bardana type LOV
+      // Ctrl+L to open bardana type LOV (always available)
       if (event.ctrlKey && event.key === "l") {
         event.preventDefault();
-        if (!onlineMode || !igpDataFetched || isEditMode) {
-          setBardanaSelectOpen(true);
-        }
+        setBardanaSelectOpen(true);
       }
 
       // F11 to open slip search
@@ -4680,16 +4685,7 @@ function PurchaseForm() {
                           open={bardanaSelectOpen}
                           onOpenChange={setBardanaSelectOpen}
                         >
-                          <SelectTrigger
-                            className={`h-8 text-xs text-black w-60 ${
-                              onlineMode && igpDataFetched && !isEditMode
-                                ? "bg-gray-100 cursor-not-allowed"
-                                : ""
-                            }`}
-                            disabled={
-                              onlineMode && igpDataFetched && !isEditMode
-                            }
-                          >
+                          <SelectTrigger className="h-8 text-xs text-black w-60">
                             <SelectValue
                               placeholder="Select bardana type (Ctrl+L)"
                               className="text-black"
@@ -4885,19 +4881,37 @@ function PurchaseForm() {
                           >
                             <SelectTrigger className="h-8 text-xs text-black w-60">
                               <SelectValue
-                                placeholder="Select vendor"
+                                placeholder="Select vendor (Ctrl+L)"
                                 className="text-black"
                               />
                             </SelectTrigger>
                             <SelectContent>
-                              {vendorsData.map((vendor) => (
-                                <SelectItem
-                                  key={vendor.vendor_id}
-                                  value={vendor.vendor_name}
-                                >
-                                  {vendor.vendor_name}
-                                </SelectItem>
-                              ))}
+                              {/* Search Box at top */}
+                              <div className="px-2 py-1 sticky top-0 bg-white z-10">
+                                <Input
+                                  type="text"
+                                  placeholder="Search Vendor..."
+                                  value={searchQuery}
+                                  onChange={(e) => setSearchQuery(e.target.value)}
+                                  className="h-6 text-xs border-gray-300"
+                                />
+                              </div>
+
+                              {/* Filtered Vendors */}
+                              {vendorsData
+                                .filter((vendor) =>
+                                  vendor.vendor_name
+                                    .toLowerCase()
+                                    .includes(searchQuery.toLowerCase()),
+                                )
+                                .map((vendor) => (
+                                  <SelectItem
+                                    key={vendor.vendor_id}
+                                    value={vendor.vendor_name}
+                                  >
+                                    {vendor.vendor_name}
+                                  </SelectItem>
+                                ))}
                             </SelectContent>
                           </Select>
                         )}
@@ -4981,7 +4995,18 @@ function PurchaseForm() {
                           <Input
                             name="bags"
                             value={formData.bags}
-                            onChange={handleChange}
+                            onChange={(e) => {
+                              handleChange(e);
+                              // Auto-focus to weight field when bags are entered
+                              if (e.target.value && e.target.value.trim() !== "") {
+                                setTimeout(() => {
+                                  const weightInput = document.querySelector('input[name="weight"]') as HTMLInputElement;
+                                  if (weightInput) {
+                                    weightInput.focus();
+                                  }
+                                }, 100);
+                              }
+                            }}
                             className="h-8 text-xs text-black flex-1"
                             placeholder="Bags"
                           />
