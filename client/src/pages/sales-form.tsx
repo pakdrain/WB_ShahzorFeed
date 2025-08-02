@@ -467,7 +467,7 @@ export default function SalesForm() {
   // Fetch all first weight records with performance optimization
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    staleTime: 30 * 1000, // 30 seconds cache for immediate updates
+    staleTime: 10 * 1000, // 30 seconds cache for immediate updates
     refetchInterval: 30 * 1000, // Refresh every 30 seconds for new entries
     refetchOnMount: true, // Refetch on component mount to get latest data
     refetchOnWindowFocus: true, // Refetch when window gains focus
@@ -476,7 +476,7 @@ export default function SalesForm() {
   // Fetch offline records specifically with performance optimization
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    staleTime: 30 * 1000, // 30 seconds cache for immediate updates
+    staleTime: 10 * 1000, // 30 seconds cache for immediate updates
     refetchInterval: 30 * 1000, // Refresh every 30 seconds for new entries
     refetchOnMount: true, // Refetch on component mount to get latest data
     refetchOnWindowFocus: true, // Refetch when window gains focus
@@ -814,17 +814,17 @@ export default function SalesForm() {
     // Bardana Weight = weight per bag * number of bags
     const bardanaWeight = wtPerBag * noOfBags;
 
-    // Gross Weight = First Weight - Second Weight (can be negative)
-    const grossWeight = firstWeight - secondWeight;
+    // Gross Weight = First Weight - Second Weight
+    const grossWeight =  firstWeight - secondWeight ;
 
-    // Net Weight = Gross Weight - Bardana Weight (can be negative)
+    // Net Weight = First Weight - Second Weight - Bardana Weight
     const netWeight = grossWeight - bardanaWeight;
 
     setFormData((prev) => ({
       ...prev,
-      bardanaWeight: bardanaWeight.toFixed(2),
-      grossWeight: grossWeight.toFixed(2),
-      netWeight: netWeight.toFixed(2),
+      bardanaWeight: bardanaWeight > 0 ? bardanaWeight.toFixed(2) : "0.00",
+      grossWeight: grossWeight > 0 ? grossWeight.toFixed(2) : "0.00",
+      netWeight: netWeight > 0 ? netWeight.toFixed(2) : "0.00",
     }));
   }, [
     formData.firstWeight,
@@ -1473,19 +1473,9 @@ export default function SalesForm() {
       return;
     }
 
+    // Validate that vehicle number is not null/empty when saving
     if (!formData.vehicleNo || formData.vehicleNo.trim() === "") {
       alert("Vehicle number is required");
-      setLoading(false);
-      return;
-    }
-
-    // Validate weight difference - should not exceed ±30
-    const firstWeight = parseFloat(formData.firstWeight) || 0;
-    const secondWeight = parseFloat(formData.secondWeight) || 0;
-    const weightDifference = firstWeight - secondWeight;
-
-    if (Math.abs(weightDifference) > 30) {
-      alert(`Weight difference (${weightDifference.toFixed(2)}) exceeds allowed limit of ±30. Please check your weights before saving.`);
       setLoading(false);
       return;
     }
@@ -2132,6 +2122,7 @@ export default function SalesForm() {
 </html>
 
 
+
 `;
           const printWindow = window.open("", "_blank");
           if (printWindow) {
@@ -2486,7 +2477,7 @@ export default function SalesForm() {
         <div className="flex gap-1 items-center">
           {/* Weight Display - positioned on left side with bolder text */}
           <div className="mr-2">
-            <WeightIndicator comPort="COM6" compact={true} />
+            <WeightIndicator comPort="COM10" compact={true} />
           </div>
           <button
             className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === true ? "bg-green-500 hover:bg-green-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
@@ -2501,7 +2492,7 @@ export default function SalesForm() {
             OFFLINE
           </button>
         </div>
-        <div className="text-2xl text-green-600 font-bold">2500</div>
+
       </div>
 
       {/* ===== MAIN FORM LAYOUT SECTION ===== */}
@@ -2548,30 +2539,6 @@ export default function SalesForm() {
                         className="h-8 text-xs text-black w-52"
                       />
                     )}
-                  </div>
-
-                  {/* Slip In Time */}
-                  <div className="flex items-center gap-1">
-                    <Label className="text-xs text-black w-20">Time In</Label>
-                    <Input
-                      type="datetime-local"
-                      name="slipInTime"
-                      value={formData.slipInTime}
-                      onChange={handleChange}
-                      className="h-8 text-xs text-black w-52"
-                    />
-                  </div>
-
-                  {/* Slip Out Time */}
-                  <div className="flex items-center gap-1">
-                    <Label className="text-xs text-black w-20">Time Out</Label>
-                    <Input
-                      type="datetime-local"
-                      name="slipOutTime"
-                      value={formData.slipOutTime}
-                      onChange={handleChange}
-                      className="h-8 text-xs text-black w-52"
-                    />
                   </div>
 
                   {/* Net Weight */}
@@ -2713,27 +2680,6 @@ export default function SalesForm() {
                 {/* ===== COLUMN 3 - DRIVER INFO & CAMERA CONTROLS SECTION ===== */}
                 <div className="col-span-3 flex flex-col justify-between">
                   <div className="flex flex-col gap-2">
-                    {/* Vehicle Number with License Plate Reading */}
-                    <div className="flex items-center gap-1">
-                      <Label className="text-xs text-black w-20">Vehicle No</Label>
-                      <div className="flex gap-1">
-                        <Input
-                          placeholder="Enter vehicle number"
-                          name="vehicleNo"
-                          value={formData.vehicleNo}
-                          onChange={handleChange}
-                          className="h-8 text-xs text-black placeholder:text-gray-500 w-40"
-                        />
-                        <Button
-                          className="h-8 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white"
-                          onClick={readLicensePlate}
-                          disabled={plateReading}
-                        >
-                          {plateReading ? "Reading..." : "Read Plate"}
-                        </Button>
-                      </div>
-                    </div>
-
                     {/* Driver Name */}
                     <div className="flex items-center gap-1">
                       <Label className="text-xs text-black w-20">
@@ -2779,8 +2725,8 @@ export default function SalesForm() {
                         camera={{
                           id: 1,
                           name: "Camera 01",
-                          ip: "10.10.10.146",
-                          port: 554,
+                          ip: "192.168.6.14",
+                          port: 80,
                         }}
                         isConnected={true}
                         isStreaming={true}
@@ -3453,7 +3399,7 @@ export default function SalesForm() {
                     <div className="bg-gray-200 border border-gray-400 p-1 flex items-center justify-end">
                       <span className="text-black">Total:</span>
                     </div>
-                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
+
                     <div className="bg-white border border-gray-400 p-1">
                       <input
                         type="text"
@@ -3500,70 +3446,48 @@ export default function SalesForm() {
                         />
                       </div>
 
-                      <div className="flex items-center space-x-2">
-                        <label className="text-xs font-medium text-black">
-                          Total Weight Out:
-                        </label>
-                        <input
-                          type="text"
-                          className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
 
-                      <div className="flex items-center space-x-2">
-                        <label className="text-sm font-medium text-black">
-                          Total Feed Bags:
-                        </label>
-                        <input
-                          type="text"
-                          value={salesData.reduce(
-                            (sum, row) => sum + (parseFloat(row.doQty) || 0),
-                            0,
-                          ).toFixed(2)}
-                          readOnly
-                          className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none bg-gray-100 font-semibold"
-                        />
-                      </div>
 
-                      <div className="flex items-center space-x-2">
-                        <label className="text-sm font-medium text-black">
-                          Total Weight Difference:
-                        </label>
-                        <input
-                          type="text"
-                          value={(() => {
-                            const firstWeight = parseFloat(formData.firstWeight) || 0;
-                            const secondWeight = parseFloat(formData.secondWeight) || 0;
-                            const difference = firstWeight - secondWeight;
-                            return difference.toFixed(2);
-                          })()}
-                          readOnly
-                          className={`w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none font-semibold ${
-                            (() => {
-                              const firstWeight = parseFloat(formData.firstWeight) || 0;
-                              const secondWeight = parseFloat(formData.secondWeight) || 0;
-                              const difference = firstWeight - secondWeight;
-                              return Math.abs(difference) > 30 ? 'bg-red-200 text-red-800' : 'bg-gray-100';
-                            })()
-                          }`}
-                        />
-                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-black">
+                        Total Weight Diff:
+                      </label>
+                      <input
+                        type="text"
+                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-form-type="other"
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm font-medium text-black">
+                        Total Feed Bags:
+                      </label>
+                      <input
+                        type="text"
+                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
+                        autoComplete="off"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck="false"
+                        data-form-type="other"
+                      />
                     </div>
                   </div>
                 </div>
               )}
             </div>
 
+            {/* Right Side - Weight Display and Bag Table (Columns 9-12) */}
+            <div className="col-span-4">
+              {/* This section will contain the right side components */}
             </div>
-
-          {/* ===== RIGHT SIDE - COLUMNS 9-12 ===== */}
-          <div className="col-span-4">
-            {/* Right side content can be added here */}
           </div>
         </div>
       </div>
