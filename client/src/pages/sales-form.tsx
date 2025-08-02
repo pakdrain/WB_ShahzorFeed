@@ -814,17 +814,17 @@ export default function SalesForm() {
     // Bardana Weight = weight per bag * number of bags
     const bardanaWeight = wtPerBag * noOfBags;
 
-    // Gross Weight = First Weight - Second Weight (can be negative if second weight entered first)
-    const grossWeight = firstWeight - secondWeight;
+    // Gross Weight = First Weight - Second Weight
+    const grossWeight =  firstWeight - secondWeight ;
 
-    // Net Weight = Gross Weight - Bardana Weight
+    // Net Weight = First Weight - Second Weight - Bardana Weight
     const netWeight = grossWeight - bardanaWeight;
 
     setFormData((prev) => ({
       ...prev,
-      bardanaWeight: bardanaWeight.toFixed(2),
-      grossWeight: grossWeight.toFixed(2),
-      netWeight: netWeight.toFixed(2),
+      bardanaWeight: bardanaWeight > 0 ? bardanaWeight.toFixed(2) : "0.00",
+      grossWeight: grossWeight > 0 ? grossWeight.toFixed(2) : "0.00",
+      netWeight: netWeight > 0 ? netWeight.toFixed(2) : "0.00",
     }));
   }, [
     formData.firstWeight,
@@ -1476,17 +1476,6 @@ export default function SalesForm() {
     // Validate that vehicle number is not null/empty when saving
     if (!formData.vehicleNo || formData.vehicleNo.trim() === "") {
       alert("Vehicle number is required");
-      setLoading(false);
-      return;
-    }
-
-    // Validate weight difference (first weight - second weight) should not exceed ±30
-    const firstWeight = parseFloat(formData.firstWeight) || 0;
-    const secondWeight = parseFloat(formData.secondWeight) || 0;
-    const weightDifference = firstWeight - secondWeight;
-    
-    if (Math.abs(weightDifference) > 30) {
-      alert(`Weight difference (${weightDifference.toFixed(2)}) exceeds the allowed limit of ±30. Data cannot be saved.`);
       setLoading(false);
       return;
     }
@@ -2503,7 +2492,7 @@ export default function SalesForm() {
             OFFLINE
           </button>
         </div>
-
+       
       </div>
 
       {/* ===== MAIN FORM LAYOUT SECTION ===== */}
@@ -3410,7 +3399,7 @@ export default function SalesForm() {
                     <div className="bg-gray-200 border border-gray-400 p-1 flex items-center justify-end">
                       <span className="text-black">Total:</span>
                     </div>
-
+                 
                     <div className="bg-white border border-gray-400 p-1">
                       <input
                         type="text"
@@ -3448,9 +3437,6 @@ export default function SalesForm() {
                         </label>
                         <input
                           type="text"
-                          name="wtPerBag"
-                          value={formData.wtPerBag}
-                          onChange={handleChange}
                           className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
                           autoComplete="off"
                           autoCorrect="off"
@@ -3459,6 +3445,9 @@ export default function SalesForm() {
                           data-form-type="other"
                         />
                       </div>
+
+                     
+                      
                     </div>
 
                     <div className="flex items-center space-x-2">
@@ -3467,21 +3456,7 @@ export default function SalesForm() {
                       </label>
                       <input
                         type="text"
-                        value={(() => {
-                          const firstWeight = parseFloat(formData.firstWeight) || 0;
-                          const secondWeight = parseFloat(formData.secondWeight) || 0;
-                          const grossWeight = firstWeight - secondWeight;
-                          return `${firstWeight} - ${secondWeight} = ${grossWeight.toFixed(2)}`;
-                        })()}
-                        readOnly
-                        className={`w-40 h-8 text-sm border border-gray-300 px-2 focus:outline-none ${
-                          (() => {
-                            const firstWeight = parseFloat(formData.firstWeight) || 0;
-                            const secondWeight = parseFloat(formData.secondWeight) || 0;
-                            const diff = Math.abs(firstWeight - secondWeight);
-                            return diff > 30 ? 'bg-red-200 text-red-800' : 'bg-white';
-                          })()
-                        }`}
+                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
                         autoComplete="off"
                         autoCorrect="off"
                         autoCapitalize="off"
@@ -3496,12 +3471,7 @@ export default function SalesForm() {
                       </label>
                       <input
                         type="text"
-                        value={salesData.reduce(
-                          (sum, row) => sum + (parseFloat(row.doQty) || 0),
-                          0,
-                        )}
-                        readOnly
-                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none bg-gray-50"
+                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
                         autoComplete="off"
                         autoCorrect="off"
                         autoCapitalize="off"
