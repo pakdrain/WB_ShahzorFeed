@@ -2327,15 +2327,15 @@ function PurchaseForm() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Ctrl+L to open bardana type LOV
-      if (event.ctrlKey && event.key === 'l') {
+      if (event.ctrlKey && event.key === "l") {
         event.preventDefault();
         if (!onlineMode || !igpDataFetched || isEditMode) {
           setBardanaSelectOpen(true);
         }
       }
-      
+
       // F11 to open slip search
-      if (event.key === 'F11') {
+      if (event.key === "F11") {
         event.preventDefault();
         if (isSearchMode || isEditMode) {
           // If in search mode or edit mode, reset to new form
@@ -2362,9 +2362,9 @@ function PurchaseForm() {
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown);
     };
   }, [onlineMode, igpDataFetched, isEditMode, isSearchMode]);
 
@@ -3995,7 +3995,10 @@ function PurchaseForm() {
                             targetUrl,
                           );
                           setLocation(targetUrl);
-                        } else if (record.entry_type === "SALE_RETURN" || record.entry_type === "SALES_RETURN") {
+                        } else if (
+                          record.entry_type === "SALE_RETURN" ||
+                          record.entry_type === "SALES_RETURN"
+                        ) {
                           const targetUrl = `/sales-return?type=${modeParam}&edit=${record.wb_id}`;
                           console.log(
                             "Navigating to sales return form:",
@@ -4677,13 +4680,15 @@ function PurchaseForm() {
                           open={bardanaSelectOpen}
                           onOpenChange={setBardanaSelectOpen}
                         >
-                          <SelectTrigger 
+                          <SelectTrigger
                             className={`h-8 text-xs text-black w-60 ${
                               onlineMode && igpDataFetched && !isEditMode
                                 ? "bg-gray-100 cursor-not-allowed"
                                 : ""
                             }`}
-                            disabled={onlineMode && igpDataFetched && !isEditMode}
+                            disabled={
+                              onlineMode && igpDataFetched && !isEditMode
+                            }
                           >
                             <SelectValue
                               placeholder="Select bardana type (Ctrl+L)"
@@ -5210,13 +5215,16 @@ function PurchaseForm() {
 
                                   {/* Filtered Items - search by both code and name */}
                                   {invItems
-                                    .filter((item) =>
-                                      item.item_code
-                                        .toLowerCase()
-                                        .includes(searchQuery.toLowerCase()) ||
-                                      item.item_desc
-                                        .toLowerCase()
-                                        .includes(searchQuery.toLowerCase()),
+                                    .filter(
+                                      (item) =>
+                                        item.item_code
+                                          .toLowerCase()
+                                          .includes(
+                                            searchQuery.toLowerCase(),
+                                          ) ||
+                                        item.item_desc
+                                          .toLowerCase()
+                                          .includes(searchQuery.toLowerCase()),
                                     )
                                     .map((item) => (
                                       <SelectItem
