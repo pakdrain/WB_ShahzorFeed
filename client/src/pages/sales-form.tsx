@@ -2226,11 +2226,57 @@ export default function SalesForm() {
   // Add keyboard event listeners for Ctrl+L and F11
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Ctrl+L to open LOVs in offline mode
+      // Ctrl+L to open LOV of currently focused element
       if (event.ctrlKey && event.key === "l") {
         event.preventDefault();
         if (!onlineMode) {
-          // In offline mode, try to open LOVs in details table first, then fallback to main form
+          const activeElement = document.activeElement as HTMLElement;
+          
+          if (activeElement) {
+            // Check if the focused element is a select trigger or combobox
+            const selectTrigger = activeElement.closest('[role="combobox"]') || 
+                                activeElement.querySelector('[role="combobox"]') ||
+                                activeElement.closest('.select-trigger');
+            
+            if (selectTrigger) {
+              (selectTrigger as HTMLElement).click();
+              return;
+            }
+            
+            // Check if we're focused on an input in the details table
+            const parentRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
+            if (parentRow) {
+              // Find the appropriate select in this row based on the focused input's position
+              const rowInputs = parentRow.querySelectorAll('input, [role="combobox"]');
+              const focusedIndex = Array.from(rowInputs).indexOf(activeElement);
+              
+              // Customer Name column (index 2) or Item Description column (index 5)
+              if (focusedIndex === 2) {
+                // Open customer LOV
+                const customerSelect = parentRow.querySelector('div:nth-child(3) [role="combobox"]') as HTMLElement;
+                if (customerSelect) {
+                  customerSelect.click();
+                  return;
+                }
+              } else if (focusedIndex === 5) {
+                // Open item LOV
+                const itemSelect = parentRow.querySelector('div:nth-child(6) [role="combobox"]') as HTMLElement;
+                if (itemSelect) {
+                  itemSelect.click();
+                  return;
+                }
+              }
+              
+              // Fallback: open the first available select in this row
+              const rowSelect = parentRow.querySelector('[role="combobox"]') as HTMLElement;
+              if (rowSelect) {
+                rowSelect.click();
+                return;
+              }
+            }
+          }
+          
+          // Fallback behavior: try to open LOVs in details table first, then main form
           setTimeout(() => {
             // First try to find and open customer dropdown in details table
             const detailsCustomerSelects = document.querySelectorAll('div[class*="bg-white border border-gray-300"] [role="combobox"]');

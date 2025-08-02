@@ -2323,9 +2323,52 @@ function PurchaseForm() {
   // Add keyboard event listeners for Ctrl+L and F11
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Ctrl+L to open bardana type LOV (always available)
+      // Ctrl+L to open LOV of currently focused element
       if (event.ctrlKey && event.key === "l") {
         event.preventDefault();
+        
+        const activeElement = document.activeElement as HTMLElement;
+        
+        // Check if we're in offline mode and focused element is a select or combobox
+        if (!onlineMode && activeElement) {
+          // Find the closest select trigger or combobox
+          const selectTrigger = activeElement.closest('[role="combobox"]') || 
+                              activeElement.querySelector('[role="combobox"]') ||
+                              activeElement.closest('.select-trigger');
+          
+          if (selectTrigger) {
+            (selectTrigger as HTMLElement).click();
+            return;
+          }
+          
+          // Check for specific input fields and open appropriate LOVs
+          const inputName = activeElement.getAttribute('name');
+          
+          if (inputName === 'bardanaType' || activeElement.closest('[data-bardana-select]')) {
+            setBardanaSelectOpen(true);
+            return;
+          }
+          
+          if (inputName === 'vendor' || activeElement.closest('[data-vendor-select]')) {
+            // Find and click vendor select trigger
+            const vendorSelect = document.querySelector('[data-vendor-select] [role="combobox"]') as HTMLElement;
+            if (vendorSelect) {
+              vendorSelect.click();
+              return;
+            }
+          }
+          
+          if (inputName === 'itemDesc' || activeElement.closest('[data-item-select]')) {
+            // Find and click item select trigger
+            const itemSelect = document.querySelector('[data-item-select] [role="combobox"]') as HTMLElement;
+            if (itemSelect) {
+              itemSelect.click();
+              return;
+            }
+          }
+        }
+        
+        // Fallback to bardana type LOV if no specific LOV is found
         setBardanaSelectOpen(true);
       }
 
