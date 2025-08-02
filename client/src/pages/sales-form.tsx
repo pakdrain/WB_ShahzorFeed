@@ -3471,59 +3471,45 @@ setLocation(targetUrl);
                         />
                       </div>
 
-<div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-black">
-                        Total Feed Bags:
-                      </label>
-                      <input
-                        type="text"
-                        value={salesData.reduce(
-                          (sum, row) => sum + (parseFloat(row.doQty) || 0),
-                          0,
-                        ).toFixed(2)}
-                        readOnly
-                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none bg-gray-100 font-semibold"
-                      />
+                      <div className="flex items-center space-x-2">
+                        <label className="text-sm font-medium text-black">
+                          Total Feed Bags:
+                        </label>
+                        <input
+                          type="text"
+                          value={salesData.reduce(
+                            (sum, row) => sum + (parseFloat(row.doQty) || 0),
+                            0,
+                          ).toFixed(2)}
+                          readOnly
+                          className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none bg-gray-100 font-semibold"
+                        />
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <label className="text-sm font-medium text-black">
+                          Total Weight Difference:
+                        </label>
+                        <input
+                          type="text"
+                          value={(() => {
+                            const firstWeight = parseFloat(formData.firstWeight) || 0;
+                            const secondWeight = parseFloat(formData.secondWeight) || 0;
+                            const difference = firstWeight - secondWeight;
+                            return difference.toFixed(2);
+                          })()}
+                          readOnly
+                          className={`w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none font-semibold ${
+                            (() => {
+                              const firstWeight = parseFloat(formData.firstWeight) || 0;
+                              const secondWeight = parseFloat(formData.secondWeight) || 0;
+                              const difference = firstWeight - secondWeight;
+                              return Math.abs(difference) > 30 ? 'bg-red-200 text-red-800' : 'bg-gray-100';
+                            })()
+                          }`}
+                        />
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-black">
-                      Total Weight Difference:
-                    </label>
-                    <input
-                      type="text"
-                      value={(() => {
-                        const firstWeight = parseFloat(formData.firstWeight) || 0;
-                        const secondWeight = parseFloat(formData.secondWeight) || 0;
-                        const difference = firstWeight - secondWeight;
-                        return difference.toFixed(2);
-                      })()}
-                      readOnly
-                      className={`w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none font-semibold ${
-                        (() => {
-                          const firstWeight = parseFloat(formData.firstWeight) || 0;
-                          const secondWeight = parseFloat(formData.secondWeight) || 0;
-                          const difference = firstWeight - secondWeight;
-                          return Math.abs(difference) > 30 ? 'bg-red-200 text-red-800' : 'bg-gray-100';
-                        })()
-                      }`}
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <label className="text-sm font-medium text-black">
-                      Total Feed Bags:
-                    </label>
-                    <input
-                      type="text"
-                      value={salesData.reduce(
-                        (sum, row) => sum + (parseFloat(row.doQty) || 0),
-                        0,
-                      ).toFixed(2)}
-                      readOnly
-                      className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none bg-gray-100 font-semibold"
-                    />
                   </div>
                 </div>
               )}
