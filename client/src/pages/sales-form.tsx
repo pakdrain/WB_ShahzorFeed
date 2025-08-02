@@ -463,23 +463,23 @@ export default function SalesForm() {
     });
   };
 
-  // ===== DATA FETCHING SECTION - PERFORMANCE OPTIMIZED =====
-  // Fetch all first weight records with performance optimization
+  // ===== OPTIMIZED DATA FETCHING - BETTER PERFORMANCE =====
+  // Fetch first weight records with longer cache times
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    staleTime: 10 * 1000, // 30 seconds cache for immediate updates
-    refetchInterval: 30 * 1000, // Refresh every 30 seconds for new entries
-    refetchOnMount: true, // Refetch on component mount to get latest data
-    refetchOnWindowFocus: true, // Refetch when window gains focus
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchInterval: 3 * 60 * 1000, // Refresh every 3 minutes instead of 30 seconds
+    refetchOnMount: false, // Reduce mount refetch for performance
+    refetchOnWindowFocus: false, // Disable focus refetch for better performance
   });
 
-  // Fetch offline records specifically with performance optimization
+  // Fetch offline records with longer cache times
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    staleTime: 10 * 1000, // 30 seconds cache for immediate updates
-    refetchInterval: 30 * 1000, // Refresh every 30 seconds for new entries
-    refetchOnMount: true, // Refetch on component mount to get latest data
-    refetchOnWindowFocus: true, // Refetch when window gains focus
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchInterval: 3 * 60 * 1000, // Refresh every 3 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // State for showing offline entries
@@ -1199,31 +1199,35 @@ export default function SalesForm() {
     setPlateReading(false);
   };
 
-  // ===== OPTIMIZED DATA FETCHING SECTION - STATIC DATA WITH OPTIMIZED CACHE =====
-  // Fetch entry types, branches, customers, and items - optimized with React Query
+  // ===== OPTIMIZED STATIC DATA FETCHING - LONGER CACHE TIMES =====
+  // Fetch entry types, branches, customers, and items with longer cache for better performance
   const { data: entryTypesData = [] } = useQuery({
     queryKey: ["/api/entry-types"],
-    staleTime: 300000, // Cache for 5 minutes (static data)
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes (static data)
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: branchesData = [] } = useQuery({
     queryKey: ["/api/branches"],
-    staleTime: 300000, // Cache for 5 minutes (static data)
+    staleTime: 30 * 60 * 1000, // Cache for 30 minutes (static data)
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const { data: customersData = [] } = useQuery({
     queryKey: ["/api/customers"],
-    staleTime: 300000, // Cache for 5 minutes (static data)
+    staleTime: 15 * 60 * 1000, // Cache for 15 minutes
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     enabled: !onlineMode, // Only fetch when in offline mode
   });
 
   const { data: itemsData = [] } = useQuery({
     queryKey: ["/api/items"],
-    staleTime: 300000, // Cache for 5 minutes (static data)
+    staleTime: 15 * 60 * 1000, // Cache for 15 minutes
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     enabled: !onlineMode, // Only fetch when in offline mode
   });
 
@@ -2233,46 +2237,65 @@ export default function SalesForm() {
           const activeElement = document.activeElement as HTMLElement;
           
           if (activeElement) {
-            // Check if the focused element is a select trigger or combobox
-            const selectTrigger = activeElement.closest('[role="combobox"]') || 
-                                activeElement.querySelector('[role="combobox"]') ||
-                                activeElement.closest('.select-trigger');
-            
-            if (selectTrigger) {
-              (selectTrigger as HTMLElement).click();
+            // Direct check if element is a combobox
+            if (activeElement.getAttribute('role') === 'combobox') {
+              activeElement.click();
               return;
+            }
+            
+            // Check if we're in a select container
+            const selectContainer = activeElement.closest('[data-state]');
+            if (selectContainer) {
+              const trigger = selectContainer.querySelector('[role="combobox"]') as HTMLElement;
+              if (trigger) {
+                trigger.click();
+                return;
+              }
             }
             
             // Check if we're focused on an input in the details table
             const parentRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
             if (parentRow) {
-              // Find the appropriate select in this row based on the focused input's position
-              const rowInputs = parentRow.querySelectorAll('input, [role="combobox"]');
-              const focusedIndex = Array.from(rowInputs).indexOf(activeElement);
+              // Get all interactive elements in the row
+              const rowElements = parentRow.querySelectorAll('input, [role="combobox"], select');
+              const focusedIndex = Array.from(rowElements).indexOf(activeElement);
               
-              // Customer Name column (index 2) or Item Description column (index 5)
+              // Map indices to appropriate selects based on table structure
+              // DC No (0), DO No (1), Customer Name (2), Vehicle No (3), Do Date (4), Item Description (5)
               if (focusedIndex === 2) {
-                // Open customer LOV
-                const customerSelect = parentRow.querySelector('div:nth-child(3) [role="combobox"]') as HTMLElement;
+                // Customer Name column - find select in same cell
+                const customerCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
+                const customerSelect = customerCell?.querySelector('[role="combobox"]') as HTMLElement;
                 if (customerSelect) {
                   customerSelect.click();
                   return;
                 }
               } else if (focusedIndex === 5) {
-                // Open item LOV
-                const itemSelect = parentRow.querySelector('div:nth-child(6) [role="combobox"]') as HTMLElement;
+                // Item Description column - find select in same cell
+                const itemCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
+                const itemSelect = itemCell?.querySelector('[role="combobox"]') as HTMLElement;
                 if (itemSelect) {
                   itemSelect.click();
                   return;
                 }
               }
               
-              // Fallback: open the first available select in this row
-              const rowSelect = parentRow.querySelector('[role="combobox"]') as HTMLElement;
-              if (rowSelect) {
-                rowSelect.click();
-                return;
+              // Fallback: find any select in the current cell
+              const currentCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
+              if (currentCell) {
+                const cellSelect = currentCell.querySelector('[role="combobox"]') as HTMLElement;
+                if (cellSelect) {
+                  cellSelect.click();
+                  return;
+                }
               }
+            }
+            
+            // Check for any focused select in the document
+            const focusedSelect = document.querySelector('[role="combobox"]:focus') as HTMLElement;
+            if (focusedSelect) {
+              focusedSelect.click();
+              return;
             }
           }
           

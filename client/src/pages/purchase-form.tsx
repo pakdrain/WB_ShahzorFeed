@@ -117,23 +117,23 @@ function PurchaseForm() {
     });
   };
 
-  // ===== PERFORMANCE OPTIMIZATION SECTION - DATA FETCHING =====
-  // Fetch all first weight records with optimized performance settings
+  // ===== OPTIMIZED DATA FETCHING - REDUCED FREQUENCY =====
+  // Fetch first weight records with longer cache times for better performance
   const { data: firstWeightRecords = [] } = useQuery({
     queryKey: ["/api/purchase/first-weight-records"],
-    staleTime: 30 * 1000, // 30 seconds cache for immediate updates
-    refetchInterval: 30 * 1000, // Refresh every 30 seconds for new entries
-    refetchOnMount: true, // Refetch on component mount to get latest data
-    refetchOnWindowFocus: true, // Refetch when window gains focus
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes instead of 30 seconds
+    refetchOnMount: false, // Don't refetch on mount to reduce load
+    refetchOnWindowFocus: false, // Disable focus refetch for better performance
   });
 
-  // Fetch offline records specifically with optimized performance settings
+  // Fetch offline records with longer cache times
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    staleTime: 30 * 1000, // 30 seconds cache for immediate updates
-    refetchInterval: 30 * 1000, // Refresh every 30 seconds for new entries
-    refetchOnMount: true, // Refetch on component mount to get latest data
-    refetchOnWindowFocus: true, // Refetch when window gains focus
+    staleTime: 5 * 60 * 1000, // 5 minutes cache  
+    refetchInterval: 2 * 60 * 1000, // Refresh every 2 minutes
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 
   // Filter records based on search criteria and form type
@@ -2327,49 +2327,76 @@ function PurchaseForm() {
       if (event.ctrlKey && event.key === "l") {
         event.preventDefault();
         
-        const activeElement = document.activeElement as HTMLElement;
-        
-        // Check if we're in offline mode and focused element is a select or combobox
-        if (!onlineMode && activeElement) {
-          // Find the closest select trigger or combobox
-          const selectTrigger = activeElement.closest('[role="combobox"]') || 
-                              activeElement.querySelector('[role="combobox"]') ||
-                              activeElement.closest('.select-trigger');
+        if (!onlineMode) {
+          const activeElement = document.activeElement as HTMLElement;
           
-          if (selectTrigger) {
-            (selectTrigger as HTMLElement).click();
-            return;
+          if (activeElement) {
+            // Check if we're directly on a select trigger
+            if (activeElement.getAttribute('role') === 'combobox') {
+              activeElement.click();
+              return;
+            }
+            
+            // Check if we're in a select container
+            const selectContainer = activeElement.closest('[data-state]');
+            if (selectContainer) {
+              const trigger = selectContainer.querySelector('[role="combobox"]') as HTMLElement;
+              if (trigger) {
+                trigger.click();
+                return;
+              }
+            }
+            
+            // Check by input name or data attributes
+            const inputName = activeElement.getAttribute('name');
+            const parentCell = activeElement.closest('td, div[class*="p-"]');
+            
+            if (inputName === 'bardanaType' || activeElement.closest('[data-bardana-select]')) {
+              setBardanaSelectOpen(true);
+              return;
+            }
+            
+            // For vendor field
+            if (inputName === 'vendor' || parentCell?.querySelector('[data-vendor-select]')) {
+              const vendorTrigger = document.querySelector('[data-vendor-select] [role="combobox"]') as HTMLElement;
+              if (vendorTrigger) {
+                vendorTrigger.click();
+                return;
+              }
+            }
+            
+            // For item description field  
+            if (inputName === 'itemDesc' || parentCell?.querySelector('[data-item-select]')) {
+              const itemTrigger = document.querySelector('[data-item-select] [role="combobox"]') as HTMLElement;
+              if (itemTrigger) {
+                itemTrigger.click();
+                return;
+              }
+            }
+            
+            // Check if we're in a table cell with a select
+            if (parentCell) {
+              const cellSelect = parentCell.querySelector('[role="combobox"]') as HTMLElement;
+              if (cellSelect) {
+                cellSelect.click();
+                return;
+              }
+            }
           }
           
-          // Check for specific input fields and open appropriate LOVs
-          const inputName = activeElement.getAttribute('name');
-          
-          if (inputName === 'bardanaType' || activeElement.closest('[data-bardana-select]')) {
-            setBardanaSelectOpen(true);
-            return;
-          }
-          
-          if (inputName === 'vendor' || activeElement.closest('[data-vendor-select]')) {
-            // Find and click vendor select trigger
-            const vendorSelect = document.querySelector('[data-vendor-select] [role="combobox"]') as HTMLElement;
-            if (vendorSelect) {
-              vendorSelect.click();
+          // Fallback: find any visible select that might have focus
+          const allSelects = document.querySelectorAll('[role="combobox"]:not([disabled]):not([aria-hidden="true"])');
+          for (const select of allSelects) {
+            const selectElement = select as HTMLElement;
+            if (selectElement.matches(':focus-within') || selectElement === document.activeElement) {
+              selectElement.click();
               return;
             }
           }
           
-          if (inputName === 'itemDesc' || activeElement.closest('[data-item-select]')) {
-            // Find and click item select trigger
-            const itemSelect = document.querySelector('[data-item-select] [role="combobox"]') as HTMLElement;
-            if (itemSelect) {
-              itemSelect.click();
-              return;
-            }
-          }
+          // Final fallback
+          setBardanaSelectOpen(true);
         }
-        
-        // Fallback to bardana type LOV if no specific LOV is found
-        setBardanaSelectOpen(true);
       }
 
       // F11 to open slip search
@@ -2415,44 +2442,31 @@ function PurchaseForm() {
     };
   }, [onlineMode, igpDataFetched, isEditMode, isSearchMode]);
 
-  // Fetch vendor data for offline mode and clear IGP field when switching to offline
+  // Optimized vendor data fetching - only fetch once when needed
   useEffect(() => {
-    if (!onlineMode) {
+    if (!onlineMode && vendorData.length === 0 && vendorsData.length === 0) {
       const fetchVendorData = async () => {
         try {
-          console.log("Fetching vendor data for offline mode...");
-          const response = await fetch("/api/vendor-data");
-          if (response.ok) {
-            const data = await response.json();
+          const [vendorResponse, vendorsResponse] = await Promise.all([
+            fetch("/api/vendor-data"),
+            fetch("/api/vendors")
+          ]);
+          
+          if (vendorResponse.ok) {
+            const data = await vendorResponse.json();
             setVendorData(data);
-            console.log("Vendor data fetched successfully:", data);
-          } else {
-            console.error("Failed to fetch vendor data");
+          }
+          
+          if (vendorsResponse.ok) {
+            const data = await vendorsResponse.json();
+            setVendorsData(data);
           }
         } catch (error) {
           console.error("Error fetching vendor data:", error);
         }
       };
 
-      // Fetch proper vendors from inv_vendors table
-      const fetchVendorsData = async () => {
-        try {
-          console.log("Fetching vendors from inv_vendors table...");
-          const response = await fetch("/api/vendors");
-          if (response.ok) {
-            const data = await response.json();
-            setVendorsData(data);
-            console.log("Vendors data fetched successfully:", data);
-          } else {
-            console.error("Failed to fetch vendors data");
-          }
-        } catch (error) {
-          console.error("Error fetching vendors data:", error);
-        }
-      };
-
       fetchVendorData();
-      fetchVendorsData();
     }
 
     // Clear IGP field when switching to offline mode (only if not in edit mode)
@@ -2461,9 +2475,8 @@ function PurchaseForm() {
         ...prev,
         igpNo: "",
       }));
-      console.log("Cleared IGP field when switching to offline mode");
     }
-  }, [onlineMode, isEditMode]);
+  }, [onlineMode, isEditMode, vendorData.length, vendorsData.length]);
 
   // Load existing deduction data when editing
   const loadDeductionData = async (wbId: number) => {
