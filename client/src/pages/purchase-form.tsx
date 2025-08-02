@@ -1194,7 +1194,7 @@ function PurchaseForm() {
           vendor: firstItem.vendor_name || "",
           vehicleNo: firstItem.vehicle_no || "",
           noOfBags: firstItem.bardana_qty ? String(firstItem.bardana_qty) : "",
-          bardanaType: firstItem.bardanatype || "",
+          bardanaType: firstItem.bardanatype || firstItem.bardana_type || "",
           wtPerBag: firstItem.wtperbag ? String(firstItem.wtperbag) : "",
           igpDate: firstItem.igp_date || "",
           igpId: firstItem.igp_id || "",
@@ -1537,13 +1537,13 @@ function PurchaseForm() {
     const { name, value } = e.target;
 
     // Prevent editing IGP-fetched fields in online mode when IGP data has been fetched
+    // Note: bardanaType is now editable as per requirement
     if (onlineMode && igpDataFetched && !isEditMode) {
       const igpFetchedFields = [
         "driverName",
-        "vendor",
+        "vendor", 
         "vehicleNo",
         "noOfBags",
-        "bardanaType",
         "wtPerBag",
         "igpDate",
       ];
@@ -1553,17 +1553,7 @@ function PurchaseForm() {
       }
     }
 
-    // Vehicle number validation - allow editing existing records but not new entries with duplicate vehicles
-    if (name === "vehicleNo" && value.trim() !== "" && !isEditMode) {
-      // Only check for duplicates in new entries, not in edit mode
-      const vehicleExists = await checkVehicleNumberExists(value);
-      if (vehicleExists) {
-        alert(
-          `Vehicle number ${value} already has an entry for today. Please use a different vehicle number.`,
-        );
-        return;
-      }
-    }
+    // Vehicle number validation removed - allow duplicate vehicle numbers on same day
 
     const numericFields = [
       "firstWeight",
@@ -2476,33 +2466,8 @@ function PurchaseForm() {
       return;
     }
 
-    // Check for duplicate vehicle number only for new entries, not in edit mode
-    if (!isEditMode) {
-      if (formData.igpNo && formData.igpNo.trim() !== "") {
-        const igpVehicleExists = await checkIGPVehicleNumberExists(
-          formData.vehicleNo,
-          formData.igpNo,
-        );
-        if (igpVehicleExists) {
-          alert(
-            `Vehicle number ${formData.vehicleNo} with IGP ${formData.igpNo} already has an entry for today. Please use a different vehicle number or IGP number.`,
-          );
-          setLoading(false);
-          return;
-        }
-      } else {
-        const vehicleExists = await checkVehicleNumberExists(
-          formData.vehicleNo,
-        );
-        if (vehicleExists) {
-          alert(
-            `Vehicle number ${formData.vehicleNo} already has an entry for today. Please use a different vehicle number.`,
-          );
-          setLoading(false);
-          return;
-        }
-      }
-    }
+    // Allow multiple entries with same vehicle number on same day
+    // Vehicle duplicate check removed as per requirement
 
     // Determine entry type based on selected form and return mode
     let currentEntryType = "PURCHASE";
