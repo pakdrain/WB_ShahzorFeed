@@ -2230,11 +2230,34 @@ export default function SalesForm() {
       if (event.ctrlKey && event.key === "l") {
         event.preventDefault();
         if (!onlineMode) {
-          // In offline mode, focus on the first customer dropdown that's visible
+          // In offline mode, try to open LOVs in details table first, then fallback to main form
           setTimeout(() => {
-            const customerSelect = document.querySelector('[role="combobox"]') as HTMLElement;
-            if (customerSelect) {
-              customerSelect.click();
+            // First try to find and open customer dropdown in details table
+            const detailsCustomerSelects = document.querySelectorAll('div[class*="bg-white border border-gray-300"] [role="combobox"]');
+            let lovOpened = false;
+            
+            // Look for the first empty or focused customer field in details table
+            for (let i = 0; i < detailsCustomerSelects.length; i++) {
+              const selectElement = detailsCustomerSelects[i] as HTMLElement;
+              const parentRow = selectElement.closest('div[class*="grid gap-px text-xs"]');
+              
+              if (parentRow) {
+                // Check if this row has a DC number (indicating it's an active row)
+                const dcInput = parentRow.querySelector('input[type="text"]') as HTMLInputElement;
+                if (dcInput && dcInput.value.trim() !== "") {
+                  selectElement.click();
+                  lovOpened = true;
+                  break;
+                }
+              }
+            }
+            
+            // If no details table LOV was opened, fallback to main form customer dropdown
+            if (!lovOpened) {
+              const mainCustomerSelect = document.querySelector('[role="combobox"]') as HTMLElement;
+              if (mainCustomerSelect) {
+                mainCustomerSelect.click();
+              }
             }
           }, 100);
         }
