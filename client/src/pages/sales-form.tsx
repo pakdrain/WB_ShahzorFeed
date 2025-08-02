@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { z } from 'zod';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -10,21 +14,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-
-import WeightIndicator from "@/components/weight-indicator";
-import WeightDisplayTable from "@/components/weight-display-table";
-import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
-import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation } from "wouter";
-import { useAuth } from "@/lib/auth";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from '@/components/ui/badge';
+import { Trash2, Plus, Scale, Download, Upload, Eye, Save, EyeOff } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+import WeightIndicator from '@/components/weight-indicator';
+import { useConfig } from '@/lib/config-context';
 
 export default function SalesForm() {
   const [location, setLocation] = useLocation();
@@ -805,6 +802,7 @@ export default function SalesForm() {
   const [items, setItems] = useState<any[]>([]);
   const [customerSearchQuery, setCustomerSearchQuery] = useState("");
   const [itemSearchQuery, setItemSearchQuery] = useState("");
+  const { comPort, cameraIp, cameraPort } = useConfig();
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
@@ -1896,6 +1894,8 @@ export default function SalesForm() {
     }
 
     .image-box {
+```python
+# Applying global config context in SalesForm for dynamic settings.
       border: 1px solid black;
       height: 62px;
       text-align: center;
@@ -2241,14 +2241,14 @@ export default function SalesForm() {
         event.preventDefault();
         if (!onlineMode) {
           const activeElement = document.activeElement as HTMLElement;
-          
+
           if (activeElement) {
             // Priority 1: Check if we're directly on a combobox
             if (activeElement.getAttribute('role') === 'combobox') {
               activeElement.click();
               return;
             }
-            
+
             // Priority 2: Check if we're inside a select wrapper (closest parent with combobox)
             const selectWrapper = activeElement.closest('div');
             if (selectWrapper) {
@@ -2258,7 +2258,7 @@ export default function SalesForm() {
                 return;
               }
             }
-            
+
             // Priority 3: Check if we're in the sales details table
             const tableRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
             if (tableRow) {
@@ -2272,36 +2272,36 @@ export default function SalesForm() {
                   return;
                 }
               }
-              
+
               // If no combobox in cell, find all comboboxes in the row and use proximity
               const rowComboboxes = tableRow.querySelectorAll('[role="combobox"]');
               if (rowComboboxes.length > 0) {
                 let closestCombobox: HTMLElement | null = null;
                 let minDistance = Infinity;
-                
+
                 rowComboboxes.forEach((combo) => {
                   const comboElement = combo as HTMLElement;
                   const rect1 = activeElement.getBoundingClientRect();
                   const rect2 = comboElement.getBoundingClientRect();
                   const distance = Math.abs(rect1.left - rect2.left) + Math.abs(rect1.top - rect2.top);
-                  
+
                   if (distance < minDistance) {
                     minDistance = distance;
                     closestCombobox = comboElement;
                   }
                 });
-                
+
                 if (closestCombobox) {
                   closestCombobox.click();
                   return;
                 }
               }
             }
-            
+
             // Priority 4: Check by field attributes
             const inputName = activeElement.getAttribute('name');
             const placeholder = activeElement.getAttribute('placeholder');
-            
+
             if (placeholder?.toLowerCase().includes('customer') || inputName === 'customerName') {
               const customerSelects = document.querySelectorAll('[role="combobox"]');
               // Find customer select by looking at nearby text or placeholder
@@ -2314,7 +2314,7 @@ export default function SalesForm() {
                 }
               }
             }
-            
+
             if (placeholder?.toLowerCase().includes('item') || inputName === 'itemDescription') {
               const itemSelects = document.querySelectorAll('[role="combobox"]');
               // Find item select by looking at nearby text or placeholder  
@@ -2328,7 +2328,7 @@ export default function SalesForm() {
               }
             }
           }
-          
+
           // Only if nothing else worked, show message
           console.log('No LOV found for current focus. Please click on a dropdown field first.');
         }
@@ -2738,7 +2738,7 @@ export default function SalesForm() {
                   <div className="flex items-center gap-1">
                     <Label className="text-xs text-black w-24">
                       First Weight
-                    </Label>
+                                        </Label>
                     <Input
                       name="firstWeight"
                       value={formData.firstWeight}
@@ -2878,8 +2878,8 @@ export default function SalesForm() {
                         camera={{
                           id: 1,
                           name: "Camera 01",
-                          ip: "192.168.6.14",
-                          port: 80,
+                          ip: cameraIp,
+                          port: cameraPort,
                         }}
                         isConnected={true}
                         isStreaming={true}

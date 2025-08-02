@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, Save, TestTube, Eye, EyeOff } from 'lucide-react';
+import { useConfig } from '@/lib/config-context';
 
 // Form validation schema
 const cameraSettingsSchema = z.object({
@@ -29,6 +30,7 @@ export default function CameraSettings() {
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { cameraIp: currentCameraIp, cameraPort: currentCameraPort, refetchConfig } = useConfig();
 
   // Fetch current camera settings
   const { data: camera, isLoading } = useQuery({
@@ -39,8 +41,8 @@ export default function CameraSettings() {
     resolver: zodResolver(cameraSettingsSchema),
     defaultValues: {
       name: 'Camera 01',
-      ip: '10.10.10.146',
-      port: 554,
+      ip: currentCameraIp,
+      port: currentCameraPort,
       username: 'admin',
       password: 'admin123',
       channel: 1,
@@ -53,8 +55,8 @@ export default function CameraSettings() {
     if (camera) {
       form.reset({
         name: camera.name || 'Camera 01',
-        ip: camera.ip || '10.10.10.146',
-        port: camera.port || 554,
+        ip: camera.ip || currentCameraIp,
+        port: camera.port || currentCameraPort,
         username: camera.username || 'admin',
         password: camera.password || 'admin123',
         channel: 1,
@@ -75,6 +77,15 @@ export default function CameraSettings() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/cameras/1'] });
+      refetchConfig();
+      
+      // Broadcast to other tabs/windows
+      localStorage.setItem('config-updated', Date.now().toString());
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'config-updated',
+        newValue: Date.now().toString()
+      }));
+      
       console.log('Camera settings saved successfully:', data);
       toast({
         title: "Settings Saved",
