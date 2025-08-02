@@ -814,17 +814,17 @@ export default function SalesForm() {
     // Bardana Weight = weight per bag * number of bags
     const bardanaWeight = wtPerBag * noOfBags;
 
-    // Gross Weight = First Weight - Second Weight
-    const grossWeight = secondWeight - firstWeight;
+    // Gross Weight = First Weight - Second Weight (can be negative)
+    const grossWeight = firstWeight - secondWeight;
 
-    // Net Weight = First Weight - Second Weight - Bardana Weight
+    // Net Weight = Gross Weight - Bardana Weight (can be negative)
     const netWeight = grossWeight - bardanaWeight;
 
     setFormData((prev) => ({
       ...prev,
-      bardanaWeight: bardanaWeight > 0 ? bardanaWeight.toFixed(2) : "0.00",
-      grossWeight: grossWeight > 0 ? grossWeight.toFixed(2) : "0.00",
-      netWeight: netWeight > 0 ? netWeight.toFixed(2) : "0.00",
+      bardanaWeight: bardanaWeight.toFixed(2),
+      grossWeight: grossWeight.toFixed(2),
+      netWeight: netWeight.toFixed(2),
     }));
   }, [
     formData.firstWeight,
@@ -945,7 +945,8 @@ export default function SalesForm() {
               `Found ${entryType} entry (${isOffline ? "Offline" : "Online"}), redirecting to:`,
               targetUrl,
             );
-            setLocation(targetUrl);
+            ```text
+setLocation(targetUrl);
           } else {
             // For SALE entries, stay on current page and load the data
             await loadDataByWbId(master.wb_id);
@@ -1473,9 +1474,19 @@ export default function SalesForm() {
       return;
     }
 
-    // Validate that vehicle number is not null/empty when saving
     if (!formData.vehicleNo || formData.vehicleNo.trim() === "") {
       alert("Vehicle number is required");
+      setLoading(false);
+      return;
+    }
+
+    // Validate weight difference - should not exceed ±30
+    const firstWeight = parseFloat(formData.firstWeight) || 0;
+    const secondWeight = parseFloat(formData.secondWeight) || 0;
+    const weightDifference = firstWeight - secondWeight;
+
+    if (Math.abs(weightDifference) > 30) {
+      alert(`Weight difference (${weightDifference.toFixed(2)}) exceeds allowed limit of ±30. Please check your weights before saving.`);
       setLoading(false);
       return;
     }
@@ -2120,7 +2131,6 @@ export default function SalesForm() {
 
 </body>
 </html>
-
 
 
 `;
@@ -3461,51 +3471,59 @@ export default function SalesForm() {
                         />
                       </div>
 
-                      <div className="flex items-center space-x-2">
-                        <label className="text-xs font-medium text-black">
-                          Total Feed Bags:
-                        </label>
-                        <input
-                          type="text"
-                          className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-black">
-                        Total Weight Dill:
-                      </label>
-                      <input
-                        type="text"
-                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
+<div className="flex items-center space-x-2">
                       <label className="text-sm font-medium text-black">
                         Total Feed Bags:
                       </label>
                       <input
                         type="text"
-                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
+                        value={salesData.reduce(
+                          (sum, row) => sum + (parseFloat(row.doQty) || 0),
+                          0,
+                        ).toFixed(2)}
+                        readOnly
+                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none bg-gray-100 font-semibold"
                       />
                     </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <label className="text-sm font-medium text-black">
+                      Total Weight Difference:
+                    </label>
+                    <input
+                      type="text"
+                      value={(() => {
+                        const firstWeight = parseFloat(formData.firstWeight) || 0;
+                        const secondWeight = parseFloat(formData.secondWeight) || 0;
+                        const difference = firstWeight - secondWeight;
+                        return difference.toFixed(2);
+                      })()}
+                      readOnly
+                      className={`w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none font-semibold ${
+                        (() => {
+                          const firstWeight = parseFloat(formData.firstWeight) || 0;
+                          const secondWeight = parseFloat(formData.secondWeight) || 0;
+                          const difference = firstWeight - secondWeight;
+                          return Math.abs(difference) > 30 ? 'bg-red-200 text-red-800' : 'bg-gray-100';
+                        })()
+                      }`}
+                    />
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <label className="text-sm font-medium text-black">
+                      Total Feed Bags:
+                    </label>
+                    <input
+                      type="text"
+                      value={salesData.reduce(
+                        (sum, row) => sum + (parseFloat(row.doQty) || 0),
+                        0,
+                      ).toFixed(2)}
+                      readOnly
+                      className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none bg-gray-100 font-semibold"
+                    />
                   </div>
                 </div>
               )}
