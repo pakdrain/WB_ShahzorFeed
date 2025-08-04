@@ -1,9 +1,15 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { z } from 'zod';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useForm, useFieldArray } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { z } from "zod";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,14 +20,30 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from '@/components/ui/badge';
-import { Trash2, Plus, Scale, Download, Upload, Eye, Save, EyeOff } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils';
-import WeightIndicator from '@/components/weight-indicator';
-import { useConfig } from '@/lib/config-context';
+import { Badge } from "@/components/ui/badge";
+import {
+  Trash2,
+  Plus,
+  Scale,
+  Download,
+  Upload,
+  Eye,
+  Save,
+  EyeOff,
+} from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import WeightIndicator from "@/components/weight-indicator";
+import { useConfig } from "@/lib/config-context";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
@@ -818,7 +840,7 @@ export default function SalesForm() {
     const bardanaWeight = wtPerBag * noOfBags;
 
     // Gross Weight = First Weight - Second Weight
-    const grossWeight =  firstWeight - secondWeight ;
+    const grossWeight = firstWeight - secondWeight;
 
     // Net Weight = First Weight - Second Weight - Bardana Weight
     const netWeight = grossWeight - bardanaWeight;
@@ -944,7 +966,8 @@ export default function SalesForm() {
 
           if (entryType === "SALE_RETURN") {
             const targetUrl = `/sales-return?type=${modeParam}&edit=${master.wb_id}`;
-            console.log(              `Found ${entryType} entry (${isOffline ? "Offline" : "Online"}), redirecting to:`,
+            console.log(
+              `Found ${entryType} entry (${isOffline ? "Offline" : "Online"}), redirecting to:`,
               targetUrl,
             );
             setLocation(targetUrl);
@@ -1897,7 +1920,7 @@ export default function SalesForm() {
     }
 
     .image-box {
-```python
+
 # Applying global config context in SalesForm for dynamic settings.
       border: 1px solid black;
       height: 62px;
@@ -2247,15 +2270,17 @@ export default function SalesForm() {
 
           if (activeElement) {
             // Priority 1: Check if we're directly on a combobox
-            if (activeElement.getAttribute('role') === 'combobox') {
+            if (activeElement.getAttribute("role") === "combobox") {
               activeElement.click();
               return;
             }
 
             // Priority 2: Check if we're inside a select wrapper (closest parent with combobox)
-            const selectWrapper = activeElement.closest('div');
+            const selectWrapper = activeElement.closest("div");
             if (selectWrapper) {
-              const comboboxInWrapper = selectWrapper.querySelector('[role="combobox"]') as HTMLElement;
+              const comboboxInWrapper = selectWrapper.querySelector(
+                '[role="combobox"]',
+              ) as HTMLElement;
               if (comboboxInWrapper && selectWrapper.contains(activeElement)) {
                 comboboxInWrapper.click();
                 return;
@@ -2263,13 +2288,19 @@ export default function SalesForm() {
             }
 
             // Priority 3: Check if we're in the sales details table
-            const tableRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
+            const tableRow = activeElement.closest(
+              'div[class*="grid gap-px text-xs"]',
+            );
             if (tableRow) {
               // Find the cell containing the active element
-              const activeCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
+              const activeCell = activeElement.closest(
+                'div[class*="bg-white border border-gray-300"]',
+              );
               if (activeCell) {
                 // Look for a combobox in the same cell
-                const cellCombobox = activeCell.querySelector('[role="combobox"]') as HTMLElement;
+                const cellCombobox = activeCell.querySelector(
+                  '[role="combobox"]',
+                ) as HTMLElement;
                 if (cellCombobox) {
                   cellCombobox.click();
                   return;
@@ -2277,7 +2308,8 @@ export default function SalesForm() {
               }
 
               // If no combobox in cell, find all comboboxes in the row and use proximity
-              const rowComboboxes = tableRow.querySelectorAll('[role="combobox"]');
+              const rowComboboxes =
+                tableRow.querySelectorAll('[role="combobox"]');
               if (rowComboboxes.length > 0) {
                 let closestCombobox: HTMLElement | null = null;
                 let minDistance = Infinity;
@@ -2286,7 +2318,9 @@ export default function SalesForm() {
                   const comboElement = combo as HTMLElement;
                   const rect1 = activeElement.getBoundingClientRect();
                   const rect2 = comboElement.getBoundingClientRect();
-                  const distance = Math.abs(rect1.left - rect2.left) + Math.abs(rect1.top - rect2.top);
+                  const distance =
+                    Math.abs(rect1.left - rect2.left) +
+                    Math.abs(rect1.top - rect2.top);
 
                   if (distance < minDistance) {
                     minDistance = distance;
@@ -2302,29 +2336,47 @@ export default function SalesForm() {
             }
 
             // Priority 4: Check by field attributes
-            const inputName = activeElement.getAttribute('name');
-            const placeholder = activeElement.getAttribute('placeholder');
+            const inputName = activeElement.getAttribute("name");
+            const placeholder = activeElement.getAttribute("placeholder");
 
-            if (placeholder?.toLowerCase().includes('customer') || inputName === 'customerName') {
-              const customerSelects = document.querySelectorAll('[role="combobox"]');
+            if (
+              placeholder?.toLowerCase().includes("customer") ||
+              inputName === "customerName"
+            ) {
+              const customerSelects =
+                document.querySelectorAll('[role="combobox"]');
               // Find customer select by looking at nearby text or placeholder
               for (const select of customerSelects) {
                 const selectElement = select as HTMLElement;
-                const selectParent = selectElement.closest('div[class*="bg-white"]');
-                if (selectParent && selectParent.textContent?.toLowerCase().includes('customer')) {
+                const selectParent = selectElement.closest(
+                  'div[class*="bg-white"]',
+                );
+                if (
+                  selectParent &&
+                  selectParent.textContent?.toLowerCase().includes("customer")
+                ) {
                   selectElement.click();
                   return;
                 }
               }
             }
 
-            if (placeholder?.toLowerCase().includes('item') || inputName === 'itemDescription') {
-              const itemSelects = document.querySelectorAll('[role="combobox"]');
-              // Find item select by looking at nearby text or placeholder  
+            if (
+              placeholder?.toLowerCase().includes("item") ||
+              inputName === "itemDescription"
+            ) {
+              const itemSelects =
+                document.querySelectorAll('[role="combobox"]');
+              // Find item select by looking at nearby text or placeholder
               for (const select of itemSelects) {
                 const selectElement = select as HTMLElement;
-                const selectParent = selectElement.closest('div[class*="bg-white"]');
-                if (selectParent && selectParent.textContent?.toLowerCase().includes('item')) {
+                const selectParent = selectElement.closest(
+                  'div[class*="bg-white"]',
+                );
+                if (
+                  selectParent &&
+                  selectParent.textContent?.toLowerCase().includes("item")
+                ) {
                   selectElement.click();
                   return;
                 }
@@ -2333,7 +2385,9 @@ export default function SalesForm() {
           }
 
           // Only if nothing else worked, show message
-          console.log('No LOV found for current focus. Please click on a dropdown field first.');
+          console.log(
+            "No LOV found for current focus. Please click on a dropdown field first.",
+          );
         }
       }
 
@@ -2364,7 +2418,9 @@ export default function SalesForm() {
 
           // Auto-focus the slip number input after state update
           setTimeout(() => {
-            const slipInput = document.querySelector('input[name="slipNo"]') as HTMLInputElement;
+            const slipInput = document.querySelector(
+              'input[name="slipNo"]',
+            ) as HTMLInputElement;
             if (slipInput) {
               slipInput.focus();
               slipInput.select();
@@ -2464,7 +2520,10 @@ export default function SalesForm() {
                           const typeMode = urlParams.get("type") || "online";
                           const targetUrl = `/purchase-return?type=${typeMode}&edit=${record.wb_id}`;
                           setLocation(targetUrl);
-                        } else if (record.entry_type === "SALE_RETURN" || record.entry_type === "SALES_RETURN") {
+                        } else if (
+                          record.entry_type === "SALE_RETURN" ||
+                          record.entry_type === "SALES_RETURN"
+                        ) {
                           // Navigate to sales return form
                           const urlParams = new URLSearchParams(
                             window.location.search,
@@ -2648,7 +2707,6 @@ export default function SalesForm() {
             OFFLINE
           </button>
         </div>
-
       </div>
 
       {/* ===== MAIN FORM LAYOUT SECTION ===== */}
@@ -2741,7 +2799,7 @@ export default function SalesForm() {
                   <div className="flex items-center gap-1">
                     <Label className="text-xs text-black w-24">
                       First Weight
-                                        </Label>
+                    </Label>
                     <Input
                       name="firstWeight"
                       value={formData.firstWeight}
@@ -3230,7 +3288,10 @@ export default function SalesForm() {
                               }}
                             >
                               <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0 text-black">
-                                <SelectValue placeholder="Select customer" className="text-black" />
+                                <SelectValue
+                                  placeholder="Select customer"
+                                  className="text-black"
+                                />
                               </SelectTrigger>
                               <SelectContent>
                                 {/* Search Box at top */}
@@ -3393,7 +3454,10 @@ export default function SalesForm() {
                               }}
                             >
                               <SelectTrigger className="w-full h-6 text-xs border-none bg-transparent focus:ring-0 focus:ring-offset-0 text-black">
-                                <SelectValue placeholder="Select item" className="text-black" />
+                                <SelectValue
+                                  placeholder="Select item"
+                                  className="text-black"
+                                />
                               </SelectTrigger>
                               <SelectContent>
                                 {/* Enhanced Search Box - search by both code and name */}
@@ -3601,9 +3665,6 @@ export default function SalesForm() {
                           data-form-type="other"
                         />
                       </div>
-
-
-
                     </div>
 
                     <div className="flex items-center space-x-2">
