@@ -1057,6 +1057,11 @@ export default function PurchaseReturnForm() {
         masterData.slipDate = formatDatetimeLocal(masterData.slip_date);
         masterData.returnDate = formatDatetimeLocal(masterData.return_date);
 
+        // Load existing deduction data for this record
+        if (master.wb_id) {
+          // loadDeductionData(master.wb_id); // Function not implemented yet
+        }
+
         // Get detail data from wb_weighbridge_items_purchase table
         const detailData =
           data.details && data.details.length > 0 ? data.details[0] : {};

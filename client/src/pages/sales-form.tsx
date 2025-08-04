@@ -22,6 +22,9 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import WeightIndicator from '@/components/weight-indicator';
 import { useConfig } from '@/lib/config-context';
+import { useLocation } from "wouter";
+import { useAuth } from "@/lib/auth";
+import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
 
 export default function SalesForm() {
   const [location, setLocation] = useLocation();

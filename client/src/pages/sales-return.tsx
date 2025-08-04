@@ -675,6 +675,7 @@ export default function SalesReturnForm() {
 
     setIsEditMode(false);
     setEditingWbId(null);
+    // setIsLoadingEditData(false); // Function not defined
   };
 
   // Get camera data
@@ -866,7 +867,7 @@ export default function SalesReturnForm() {
 
     // Check if this is a page reload by checking if we have edit mode in sessionStorage
     const wasInEditMode = sessionStorage.getItem('salesReturnEditMode') === 'true';
-    
+
     // Clear any previous edit mode state from sessionStorage on every page load
     sessionStorage.removeItem('salesReturnEditMode');
 
@@ -879,11 +880,11 @@ export default function SalesReturnForm() {
         ? `${window.location.pathname}?${urlParams.toString()}`
         : window.location.pathname;
       window.history.replaceState({}, "", newUrl);
-      
+
       // Reset to new form
       setIsEditMode(false);
       setEditingWbId(null);
-      setIsLoadingEditData(false);
+      // setIsLoadingEditData(false); // Function not defined
       setTimeout(() => {
         resetFormToInitial();
       }, 100);
@@ -895,15 +896,15 @@ export default function SalesReturnForm() {
       // Load record for editing by wb_id
       console.log("Edit mode detected from URL parameter, loading data");
       sessionStorage.setItem('salesReturnEditMode', 'true');
-      setIsLoadingEditData(true);
-      loadDataByWbId(parseInt(editWbId));
+          // setIsLoadingEditData(true); // Function not defined
+          loadDataByWbId(parseInt(editWbId));
       return; // Exit early to prevent any other initialization
     } else {
       // No edit parameter in URL, always reset to new form
       console.log("No edit parameter in URL, resetting to new form");
       setIsEditMode(false);
       setEditingWbId(null);
-      setIsLoadingEditData(false);
+      // setIsLoadingEditData(false); // Function not defined
       setTimeout(() => {
         resetFormToInitial();
       }, 100);
@@ -1226,7 +1227,7 @@ export default function SalesReturnForm() {
 
         // Reset form to clean state
         await resetFormToInitial();
-        
+
         // If second weight was entered, refresh to remove from display table
         if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
           console.log("Second weight added for sales return entry, refreshing to remove from display table");
@@ -1237,7 +1238,7 @@ export default function SalesReturnForm() {
       } else {
         // For new entries, reset form to clean state
         await resetFormToInitial();
-        
+
         // If second weight was entered, refresh to remove from display table
         if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
           console.log("Second weight added for sales return entry, refreshing to remove from display table");
@@ -1508,7 +1509,7 @@ export default function SalesReturnForm() {
                         // Navigate based on entry type
                         const urlParams = new URLSearchParams(window.location.search);
                         const typeMode = urlParams.get("type") || "online";
-                        
+
                         if (record.entry_type === "PURCHASE") {
                           // Navigate to purchase form
                           const targetUrl = `/purchase-form?type=${typeMode}&edit=${record.wb_id}`;
@@ -1527,7 +1528,7 @@ export default function SalesReturnForm() {
                           const newUrl = `${window.location.pathname}?${urlParams.toString()}`;
                           window.history.replaceState({}, "", newUrl);
                           sessionStorage.setItem('salesReturnEditMode', 'true');
-                          setIsLoadingEditData(true);
+                          // setIsLoadingEditData(true); // Function not defined
                           loadDataByWbId(parseInt(record.wb_id));
                         }
                       }
