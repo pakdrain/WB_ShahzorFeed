@@ -3,6 +3,13 @@ import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -1521,7 +1528,9 @@ export default function SalesForm() {
 
     // Check vehicle number from form data or sales data
     const vehicleNoFromForm = formData.vehicleNo?.trim();
-    const vehicleNoFromSales = salesData.find(row => row.vehicleNo?.trim())?.vehicleNo?.trim();
+    const vehicleNoFromSales = salesData
+      .find((row) => row.vehicleNo?.trim())
+      ?.vehicleNo?.trim();
     const finalVehicleNo = vehicleNoFromForm || vehicleNoFromSales;
 
     // Validate that vehicle number is not null/empty when saving
@@ -1532,10 +1541,16 @@ export default function SalesForm() {
     }
 
     // Only validate Total Weight Diff if both weights are present and greater than 0
-    if (formData.firstWeight && formData.secondWeight && 
-        parseFloat(formData.firstWeight) > 0 && parseFloat(formData.secondWeight) > 0) {
+    if (
+      formData.firstWeight &&
+      formData.secondWeight &&
+      parseFloat(formData.firstWeight) > 0 &&
+      parseFloat(formData.secondWeight) > 0
+    ) {
       if (Math.abs(totalWeightDiff) > 30) {
-        alert(`Total Weight Difference (${totalWeightDiff.toFixed(2)}) is outside acceptable range of ±30. Entry cannot be saved.`);
+        alert(
+          `Total Weight Difference (${totalWeightDiff.toFixed(2)}) is outside acceptable range of ±30. Entry cannot be saved.`,
+        );
         setLoading(false);
         return;
       }
@@ -2290,7 +2305,7 @@ export default function SalesForm() {
       // Ctrl+L to open LOV of currently focused element
       if (event.ctrlKey && event.key.toLowerCase() === "l") {
         event.preventDefault();
-        
+
         const activeElement = document.activeElement as HTMLElement;
 
         if (activeElement) {
@@ -2301,7 +2316,9 @@ export default function SalesForm() {
           }
 
           // Check if we're on an input that's part of a Select component
-          const selectTrigger = activeElement.closest('[role="combobox"]') as HTMLElement;
+          const selectTrigger = activeElement.closest(
+            '[role="combobox"]',
+          ) as HTMLElement;
           if (selectTrigger) {
             selectTrigger.click();
             return;
@@ -2309,38 +2326,61 @@ export default function SalesForm() {
 
           // Get input attributes for better targeting
           const inputName = activeElement.getAttribute("name");
-          const placeholder = activeElement.getAttribute("placeholder")?.toLowerCase() || '';
-          const inputId = activeElement.getAttribute("id")?.toLowerCase() || '';
-          
+          const placeholder =
+            activeElement.getAttribute("placeholder")?.toLowerCase() || "";
+          const inputId = activeElement.getAttribute("id")?.toLowerCase() || "";
+
           // Strategy 1: Find LOV in the same container/cell
           const findLOVInContainer = (container: Element) => {
             return container.querySelector('[role="combobox"]') as HTMLElement;
           };
-          
+
           // Strategy 2: Field-specific targeting
           let targetLOV: HTMLElement | null = null;
-          
+
           // For branch field
-          if (inputName === "branch" || placeholder.includes("branch") || inputId.includes("branch")) {
-            targetLOV = document.querySelector('[name="branch"] + [role="combobox"]') as HTMLElement ||
-                       document.querySelector('[data-field="branch"] [role="combobox"]') as HTMLElement ||
-                       findLOVInContainer(activeElement.closest('.flex') || activeElement.closest('div') || activeElement.parentElement!);
+          if (
+            inputName === "branch" ||
+            placeholder.includes("branch") ||
+            inputId.includes("branch")
+          ) {
+            targetLOV =
+              (document.querySelector(
+                '[name="branch"] + [role="combobox"]',
+              ) as HTMLElement) ||
+              (document.querySelector(
+                '[data-field="branch"] [role="combobox"]',
+              ) as HTMLElement) ||
+              findLOVInContainer(
+                activeElement.closest(".flex") ||
+                  activeElement.closest("div") ||
+                  activeElement.parentElement!,
+              );
           }
-          
+
           // For customer fields in sales table
-          else if (placeholder.includes("customer") || inputName === "customerName") {
+          else if (
+            placeholder.includes("customer") ||
+            inputName === "customerName"
+          ) {
             // First check the immediate table cell
-            const tableCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
+            const tableCell = activeElement.closest(
+              'div[class*="bg-white border border-gray-300"]',
+            );
             if (tableCell) {
               targetLOV = findLOVInContainer(tableCell);
             }
-            
+
             // If not found in cell, check the table row
             if (!targetLOV) {
-              const tableRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
+              const tableRow = activeElement.closest(
+                'div[class*="grid gap-px text-xs"]',
+              );
               if (tableRow) {
                 // Find customer column specifically (usually 3rd column)
-                const cells = tableRow.querySelectorAll('div[class*="bg-white border border-gray-300"]');
+                const cells = tableRow.querySelectorAll(
+                  'div[class*="bg-white border border-gray-300"]',
+                );
                 if (cells.length >= 3) {
                   targetLOV = findLOVInContainer(cells[2]); // Customer Name column
                 }
@@ -2349,45 +2389,60 @@ export default function SalesForm() {
           }
 
           // For item fields in sales table
-          else if (placeholder.includes("item") || inputName === "itemDescription") {
+          else if (
+            placeholder.includes("item") ||
+            inputName === "itemDescription"
+          ) {
             // First check the immediate table cell
-            const tableCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
+            const tableCell = activeElement.closest(
+              'div[class*="bg-white border border-gray-300"]',
+            );
             if (tableCell) {
               targetLOV = findLOVInContainer(tableCell);
             }
-            
+
             // If not found in cell, check the table row
             if (!targetLOV) {
-              const tableRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
+              const tableRow = activeElement.closest(
+                'div[class*="grid gap-px text-xs"]',
+              );
               if (tableRow) {
                 // Find item description column specifically (usually 6th column)
-                const cells = tableRow.querySelectorAll('div[class*="bg-white border border-gray-300"]');
+                const cells = tableRow.querySelectorAll(
+                  'div[class*="bg-white border border-gray-300"]',
+                );
                 if (cells.length >= 6) {
                   targetLOV = findLOVInContainer(cells[5]); // Item Description column
                 }
               }
             }
           }
-          
+
           // Strategy 3: Look in the immediate parent container
           if (!targetLOV) {
-            const parentContainer = activeElement.closest('.flex') || 
-                                  activeElement.closest('div[class*="items-center"]') || 
-                                  activeElement.closest('div[class*="gap-"]') ||
-                                  activeElement.closest('div[class*="bg-white border border-gray-300"]') ||
-                                  activeElement.parentElement;
-            
+            const parentContainer =
+              activeElement.closest(".flex") ||
+              activeElement.closest('div[class*="items-center"]') ||
+              activeElement.closest('div[class*="gap-"]') ||
+              activeElement.closest(
+                'div[class*="bg-white border border-gray-300"]',
+              ) ||
+              activeElement.parentElement;
+
             if (parentContainer) {
               targetLOV = findLOVInContainer(parentContainer);
             }
           }
-          
+
           // Strategy 4: For table context, find LOV in the same row
           if (!targetLOV) {
-            const tableRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
+            const tableRow = activeElement.closest(
+              'div[class*="grid gap-px text-xs"]',
+            );
             if (tableRow) {
               // Get all comboboxes in this row and find the closest one
-              const rowComboboxes = tableRow.querySelectorAll('[role="combobox"]');
+              const rowComboboxes =
+                tableRow.querySelectorAll('[role="combobox"]');
               if (rowComboboxes.length > 0) {
                 let closestCombobox: HTMLElement | null = null;
                 let minDistance = Infinity;
@@ -2396,7 +2451,9 @@ export default function SalesForm() {
                   const comboElement = combo as HTMLElement;
                   const rect1 = activeElement.getBoundingClientRect();
                   const rect2 = comboElement.getBoundingClientRect();
-                  const distance = Math.abs(rect1.left - rect2.left) + Math.abs(rect1.top - rect2.top);
+                  const distance =
+                    Math.abs(rect1.left - rect2.left) +
+                    Math.abs(rect1.top - rect2.top);
 
                   if (distance < minDistance) {
                     minDistance = distance;
@@ -2408,28 +2465,32 @@ export default function SalesForm() {
               }
             }
           }
-          
+
           // Strategy 5: Look for the next/previous sibling that's a combobox
           if (!targetLOV) {
             let sibling = activeElement.nextElementSibling;
             while (sibling && !targetLOV) {
-              if (sibling.getAttribute('role') === 'combobox') {
+              if (sibling.getAttribute("role") === "combobox") {
                 targetLOV = sibling as HTMLElement;
                 break;
               }
-              targetLOV = sibling.querySelector('[role="combobox"]') as HTMLElement;
+              targetLOV = sibling.querySelector(
+                '[role="combobox"]',
+              ) as HTMLElement;
               sibling = sibling.nextElementSibling;
             }
-            
+
             // Check previous siblings if not found in next siblings
             if (!targetLOV) {
               sibling = activeElement.previousElementSibling;
               while (sibling && !targetLOV) {
-                if (sibling.getAttribute('role') === 'combobox') {
+                if (sibling.getAttribute("role") === "combobox") {
                   targetLOV = sibling as HTMLElement;
                   break;
                 }
-                targetLOV = sibling.querySelector('[role="combobox"]') as HTMLElement;
+                targetLOV = sibling.querySelector(
+                  '[role="combobox"]',
+                ) as HTMLElement;
                 sibling = sibling.previousElementSibling;
               }
             }
@@ -2437,7 +2498,8 @@ export default function SalesForm() {
 
           // Strategy 6: Last resort - find closest combobox on the page
           if (!targetLOV) {
-            const allComboboxes = document.querySelectorAll('[role="combobox"]');
+            const allComboboxes =
+              document.querySelectorAll('[role="combobox"]');
             let closestCombobox: HTMLElement | null = null;
             let minDistance = Infinity;
 
@@ -2445,23 +2507,24 @@ export default function SalesForm() {
               const comboElement = combo as HTMLElement;
               const rect1 = activeElement.getBoundingClientRect();
               const rect2 = comboElement.getBoundingClientRect();
-              
+
               // Calculate distance
               const distance = Math.sqrt(
-                Math.pow(rect1.left - rect2.left, 2) + 
-                Math.pow(rect1.top - rect2.top, 2)
+                Math.pow(rect1.left - rect2.left, 2) +
+                  Math.pow(rect1.top - rect2.top, 2),
               );
 
               // Prefer comboboxes in the same row (similar Y position)
               const sameRow = Math.abs(rect1.top - rect2.top) < 50;
               const adjustedDistance = sameRow ? distance : distance * 2;
 
-              if (adjustedDistance < minDistance && distance < 500) { // Within 500px
+              if (adjustedDistance < minDistance && distance < 500) {
+                // Within 500px
                 minDistance = adjustedDistance;
                 closestCombobox = comboElement;
               }
             });
-            
+
             targetLOV = closestCombobox;
           }
 
@@ -2472,7 +2535,9 @@ export default function SalesForm() {
           }
         }
 
-        console.log("No LOV found for current focus. Please click on a dropdown field first.");
+        console.log(
+          "No LOV found for current focus. Please click on a dropdown field first.",
+        );
       }
 
       // F11 to open slip search
@@ -3757,7 +3822,7 @@ export default function SalesForm() {
                       </label>
                       <input
                         type="text"
-                        className={`w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none ${Math.abs(totalWeightDiff) > 30 ? 'bg-red-200 text-red-800' : 'bg-white text-black'}`}
+                        className={`w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none ${Math.abs(totalWeightDiff) > 30 ? "bg-red-200 text-red-800" : "bg-white text-black"}`}
                         value={totalWeightDiff.toFixed(2)}
                         readOnly
                         autoComplete="off"
@@ -3775,7 +3840,10 @@ export default function SalesForm() {
                       <input
                         type="text"
                         className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                        value={salesData.reduce((sum, row) => sum + (parseFloat(row.doQty) || 0), 0)}
+                        value={salesData.reduce(
+                          (sum, row) => sum + (parseFloat(row.doQty) || 0),
+                          0,
+                        )}
                         readOnly
                         autoComplete="off"
                         autoCorrect="off"
