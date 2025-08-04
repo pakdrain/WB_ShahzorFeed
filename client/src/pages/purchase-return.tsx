@@ -799,13 +799,7 @@ export default function PurchaseReturnForm() {
   const handleSave = async () => {
     setLoading(true);
 
-    // Validate required fields
-    if (!formData.slipNo || formData.slipNo.trim() === "") {
-      alert("Slip number is required");
-      setLoading(false);
-      return;
-    }
-
+    // Validate that first weight is not null/empty when saving
     if (
       !formData.firstWeight ||
       formData.firstWeight.trim() === "" ||
@@ -818,12 +812,6 @@ export default function PurchaseReturnForm() {
 
     if (!formData.vehicleNo || formData.vehicleNo.trim() === "") {
       alert("Vehicle number is required");
-      setLoading(false);
-      return;
-    }
-
-    if (!formData.returnReason || formData.returnReason.trim() === "") {
-      alert("Return reason is required for purchase return");
       setLoading(false);
       return;
     }

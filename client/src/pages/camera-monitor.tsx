@@ -11,11 +11,13 @@ import WeightDisplayTable from "@/components/weight-display-table";
 import { useStream } from "@/hooks/use-stream";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useConfig } from "@/lib/config-context";
 
 export default function CameraMonitor() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [firstWeight, setFirstWeight] = useState<number | null>(null);
   const [secondWeight, setSecondWeight] = useState<number | null>(null);
+  const { cameraIp, cameraPort } = useConfig();
 
   // Fetch default camera information
   const { data: camera, isLoading: cameraLoading } = useQuery({
@@ -29,8 +31,8 @@ export default function CameraMonitor() {
     refetchInterval: 2000, // Update every 2 seconds
   });
 
-  // Default camera data if API isn't available
-  const cameraData = camera || { id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 };
+  // Use global config values with fallbacks
+  const cameraData = camera || { id: 1, name: "Camera 01", ip: cameraIp, port: cameraPort };
 
   // Initialize WebSocket stream connection
   const {

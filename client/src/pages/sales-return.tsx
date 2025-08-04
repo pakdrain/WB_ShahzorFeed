@@ -1088,25 +1088,13 @@ export default function SalesReturnForm() {
   const handleSave = async () => {
     setLoading(true);
 
-    // Validate required fields
-    if (!formData.slipNo || formData.slipNo.trim() === "") {
-      alert("Slip number is required");
-      setLoading(false);
-      return;
-    }
-
+    // Validate that first weight is not null/empty when saving
     if (
       !formData.firstWeight ||
       formData.firstWeight.trim() === "" ||
       parseFloat(formData.firstWeight) <= 0
     ) {
       alert("First weight is required and must be greater than 0");
-      setLoading(false);
-      return;
-    }
-
-    if (!formData.returnReason || formData.returnReason.trim() === "") {
-      alert("Return reason is required for sales return");
       setLoading(false);
       return;
     }

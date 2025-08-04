@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Scale, Settings, Cable, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
+import { useConfig } from '@/lib/config-context';
 
 const weighbridgeSettingsSchema = z.object({
   comPort: z.string().min(1, 'COM port is required'),
@@ -32,6 +33,7 @@ type WeighbridgeSettingsForm = z.infer<typeof weighbridgeSettingsSchema>;
 export default function WeighbridgeSettings() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { comPort: currentComPort, refetchConfig } = useConfig();
 
   // Get current weighbridge status
   const { data: weightStatus, isLoading: statusLoading } = useQuery({
@@ -42,7 +44,7 @@ export default function WeighbridgeSettings() {
   const form = useForm<WeighbridgeSettingsForm>({
     resolver: zodResolver(weighbridgeSettingsSchema),
     defaultValues: {
-      comPort: 'COM6',
+      comPort: currentComPort,
       baudRate: 9600,
       dataBits: 8,
       parity: 'none',
@@ -72,7 +74,17 @@ export default function WeighbridgeSettings() {
         title: 'Connection Successful',
         description: 'Successfully connected to weighbridge.',
       });
+      
+      // Invalidate queries and broadcast configuration update
       queryClient.invalidateQueries({ queryKey: ['/api/weight/status'] });
+      refetchConfig();
+      
+      // Broadcast to other tabs/windows
+      localStorage.setItem('config-updated', Date.now().toString());
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'config-updated',
+        newValue: Date.now().toString()
+      }));
     },
     onError: () => {
       toast({
