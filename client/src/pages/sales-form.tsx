@@ -2307,113 +2307,167 @@ export default function SalesForm() {
             return;
           }
 
-          // Check by field attributes and nearby elements
+          // Get input attributes for better targeting
           const inputName = activeElement.getAttribute("name");
-          const placeholder = activeElement.getAttribute("placeholder");
-
-          // For branch selection
-          if (inputName === "branch" || placeholder?.toLowerCase().includes("branch")) {
-            const branchTrigger = activeElement.parentElement?.querySelector('[role="combobox"]') as HTMLElement;
-            if (branchTrigger) {
-              branchTrigger.click();
-              return;
-            }
+          const placeholder = activeElement.getAttribute("placeholder")?.toLowerCase() || '';
+          const inputId = activeElement.getAttribute("id")?.toLowerCase() || '';
+          
+          // Strategy 1: Find LOV in the same container/cell
+          const findLOVInContainer = (container: Element) => {
+            return container.querySelector('[role="combobox"]') as HTMLElement;
+          };
+          
+          // Strategy 2: Field-specific targeting
+          let targetLOV: HTMLElement | null = null;
+          
+          // For branch field
+          if (inputName === "branch" || placeholder.includes("branch") || inputId.includes("branch")) {
+            targetLOV = document.querySelector('[name="branch"] + [role="combobox"]') as HTMLElement ||
+                       document.querySelector('[data-field="branch"] [role="combobox"]') as HTMLElement ||
+                       findLOVInContainer(activeElement.closest('.flex') || activeElement.closest('div') || activeElement.parentElement!);
           }
-
+          
           // For customer fields in sales table
-          if (
-            placeholder?.toLowerCase().includes("customer") ||
-            inputName === "customerName" ||
-            activeElement.closest('div[class*="bg-white border border-gray-300"]')
-          ) {
-            // Look for SelectTrigger in the same cell
-            const cell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
-            if (cell) {
-              const cellCombobox = cell.querySelector('[role="combobox"]') as HTMLElement;
-              if (cellCombobox) {
-                cellCombobox.click();
-                return;
+          else if (placeholder.includes("customer") || inputName === "customerName") {
+            // First check the immediate table cell
+            const tableCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
+            if (tableCell) {
+              targetLOV = findLOVInContainer(tableCell);
+            }
+            
+            // If not found in cell, check the table row
+            if (!targetLOV) {
+              const tableRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
+              if (tableRow) {
+                // Find customer column specifically (usually 3rd column)
+                const cells = tableRow.querySelectorAll('div[class*="bg-white border border-gray-300"]');
+                if (cells.length >= 3) {
+                  targetLOV = findLOVInContainer(cells[2]); // Customer Name column
+                }
               }
             }
           }
 
           // For item fields in sales table
-          if (
-            placeholder?.toLowerCase().includes("item") ||
-            inputName === "itemDescription" ||
-            activeElement.closest('div[class*="bg-white border border-gray-300"]')
-          ) {
-            // Look for SelectTrigger in the same cell
-            const cell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
-            if (cell) {
-              const cellCombobox = cell.querySelector('[role="combobox"]') as HTMLElement;
-              if (cellCombobox) {
-                cellCombobox.click();
-                return;
-              }
+          else if (placeholder.includes("item") || inputName === "itemDescription") {
+            // First check the immediate table cell
+            const tableCell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
+            if (tableCell) {
+              targetLOV = findLOVInContainer(tableCell);
             }
-          }
-
-          // Find the nearest SelectTrigger by traversing up the DOM
-          let currentElement = activeElement.parentElement;
-          while (currentElement && currentElement !== document.body) {
-            const selectTrigger = currentElement.querySelector('[role="combobox"]') as HTMLElement;
-            if (selectTrigger) {
-              selectTrigger.click();
-              return;
-            }
-            currentElement = currentElement.parentElement;
-          }
-
-          // If we're in a table row context, look for comboboxes in the same row
-          const tableRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
-          if (tableRow) {
-            const rowComboboxes = tableRow.querySelectorAll('[role="combobox"]');
-            if (rowComboboxes.length > 0) {
-              let closestCombobox: HTMLElement | null = null;
-              let minDistance = Infinity;
-
-              rowComboboxes.forEach((combo) => {
-                const comboElement = combo as HTMLElement;
-                const rect1 = activeElement.getBoundingClientRect();
-                const rect2 = comboElement.getBoundingClientRect();
-                const distance = Math.abs(rect1.left - rect2.left) + Math.abs(rect1.top - rect2.top);
-
-                if (distance < minDistance) {
-                  minDistance = distance;
-                  closestCombobox = comboElement;
+            
+            // If not found in cell, check the table row
+            if (!targetLOV) {
+              const tableRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
+              if (tableRow) {
+                // Find item description column specifically (usually 6th column)
+                const cells = tableRow.querySelectorAll('div[class*="bg-white border border-gray-300"]');
+                if (cells.length >= 6) {
+                  targetLOV = findLOVInContainer(cells[5]); // Item Description column
                 }
-              });
+              }
+            }
+          }
+          
+          // Strategy 3: Look in the immediate parent container
+          if (!targetLOV) {
+            const parentContainer = activeElement.closest('.flex') || 
+                                  activeElement.closest('div[class*="items-center"]') || 
+                                  activeElement.closest('div[class*="gap-"]') ||
+                                  activeElement.closest('div[class*="bg-white border border-gray-300"]') ||
+                                  activeElement.parentElement;
+            
+            if (parentContainer) {
+              targetLOV = findLOVInContainer(parentContainer);
+            }
+          }
+          
+          // Strategy 4: For table context, find LOV in the same row
+          if (!targetLOV) {
+            const tableRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
+            if (tableRow) {
+              // Get all comboboxes in this row and find the closest one
+              const rowComboboxes = tableRow.querySelectorAll('[role="combobox"]');
+              if (rowComboboxes.length > 0) {
+                let closestCombobox: HTMLElement | null = null;
+                let minDistance = Infinity;
 
-              if (closestCombobox) {
-                closestCombobox.click();
-                return;
+                rowComboboxes.forEach((combo) => {
+                  const comboElement = combo as HTMLElement;
+                  const rect1 = activeElement.getBoundingClientRect();
+                  const rect2 = comboElement.getBoundingClientRect();
+                  const distance = Math.abs(rect1.left - rect2.left) + Math.abs(rect1.top - rect2.top);
+
+                  if (distance < minDistance) {
+                    minDistance = distance;
+                    closestCombobox = comboElement;
+                  }
+                });
+
+                targetLOV = closestCombobox;
+              }
+            }
+          }
+          
+          // Strategy 5: Look for the next/previous sibling that's a combobox
+          if (!targetLOV) {
+            let sibling = activeElement.nextElementSibling;
+            while (sibling && !targetLOV) {
+              if (sibling.getAttribute('role') === 'combobox') {
+                targetLOV = sibling as HTMLElement;
+                break;
+              }
+              targetLOV = sibling.querySelector('[role="combobox"]') as HTMLElement;
+              sibling = sibling.nextElementSibling;
+            }
+            
+            // Check previous siblings if not found in next siblings
+            if (!targetLOV) {
+              sibling = activeElement.previousElementSibling;
+              while (sibling && !targetLOV) {
+                if (sibling.getAttribute('role') === 'combobox') {
+                  targetLOV = sibling as HTMLElement;
+                  break;
+                }
+                targetLOV = sibling.querySelector('[role="combobox"]') as HTMLElement;
+                sibling = sibling.previousElementSibling;
               }
             }
           }
 
-          // Last resort: find any nearby combobox within reasonable distance
-          const allComboboxes = document.querySelectorAll('[role="combobox"]');
-          let closestCombobox: HTMLElement | null = null;
-          let minDistance = Infinity;
+          // Strategy 6: Last resort - find closest combobox on the page
+          if (!targetLOV) {
+            const allComboboxes = document.querySelectorAll('[role="combobox"]');
+            let closestCombobox: HTMLElement | null = null;
+            let minDistance = Infinity;
 
-          allComboboxes.forEach((combo) => {
-            const comboElement = combo as HTMLElement;
-            const rect1 = activeElement.getBoundingClientRect();
-            const rect2 = comboElement.getBoundingClientRect();
-            const distance = Math.sqrt(
-              Math.pow(rect1.left - rect2.left, 2) + 
-              Math.pow(rect1.top - rect2.top, 2)
-            );
+            allComboboxes.forEach((combo) => {
+              const comboElement = combo as HTMLElement;
+              const rect1 = activeElement.getBoundingClientRect();
+              const rect2 = comboElement.getBoundingClientRect();
+              
+              // Calculate distance
+              const distance = Math.sqrt(
+                Math.pow(rect1.left - rect2.left, 2) + 
+                Math.pow(rect1.top - rect2.top, 2)
+              );
 
-            if (distance < minDistance && distance < 300) { // Within 300px
-              minDistance = distance;
-              closestCombobox = comboElement;
-            }
-          });
+              // Prefer comboboxes in the same row (similar Y position)
+              const sameRow = Math.abs(rect1.top - rect2.top) < 50;
+              const adjustedDistance = sameRow ? distance : distance * 2;
 
-          if (closestCombobox) {
-            closestCombobox.click();
+              if (adjustedDistance < minDistance && distance < 500) { // Within 500px
+                minDistance = adjustedDistance;
+                closestCombobox = comboElement;
+              }
+            });
+            
+            targetLOV = closestCombobox;
+          }
+
+          // Open the target LOV if found
+          if (targetLOV) {
+            targetLOV.click();
             return;
           }
         }
