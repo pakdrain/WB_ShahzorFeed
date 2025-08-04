@@ -31,32 +31,32 @@ export class ImageCaptureService {
 
   async captureFirstWeightImage(options: CaptureImageOptions): Promise<string> {
     const { slipNo, cameraIp, cameraPort, username = 'admin', password = 'admin123' } = options;
-    
+
     try {
       await this.ensureDirectoriesExist();
-      
+
       // Check if image already exists for this slip number
       const existingImages = await this.getFirstWeightImages();
       const existingImage = existingImages.find(img => img.includes(`slip_${slipNo}_`));
-      
+
       if (existingImage) {
         log(`📸 Image already exists for slip ${slipNo}, skipping capture`);
         return path.join(this.baseImagePath, this.firstWeightFolder, existingImage);
       }
-      
+
       // Generate filename with slip number and timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const filename = `slip_${slipNo}_${timestamp}.jpg`;
       const imagePath = path.join(this.baseImagePath, this.firstWeightFolder, filename);
-      
+
       // Construct RTSP URL
       const rtspUrl = `rtsp://${username}:${password}@${cameraIp}:${cameraPort}/cam/realmonitor?channel=1&subtype=0`;
-      
+
       log(`📸 Capturing image for slip ${slipNo} from camera ${cameraIp}:${cameraPort}`);
-      
+
       // Use FFmpeg to capture a single frame from RTSP stream
       const success = await this.captureImageWithFFmpeg(rtspUrl, imagePath);
-      
+
       if (success) {
         log(`✅ Image captured successfully: ${filename}`);
         return imagePath;
@@ -71,30 +71,30 @@ export class ImageCaptureService {
 
   async captureSecondWeightImage(options: CaptureImageOptions): Promise<string> {
     const { slipNo, cameraIp, cameraPort, username = 'admin', password = 'admin123' } = options;
-    
+
     try {
       await this.ensureDirectoriesExist();
-      
+
       // Check if image already exists for this slip number
       const existingImages = await this.getSecondWeightImages();
       const existingImage = existingImages.find((img: string) => img.includes(`slip_${slipNo}_`));
-      
+
       if (existingImage) {
         log(`📸 Second weight image already exists for slip ${slipNo}, skipping capture`);
         return path.join(this.baseImagePath, this.secondWeightFolder, existingImage);
       }
-      
+
       // Generate filename with slip number and timestamp
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const filename = `slip_${slipNo}_${timestamp}.jpg`;
       const imagePath = path.join(this.baseImagePath, this.secondWeightFolder, filename);
-      
+
       // Construct RTSP URL
       const rtspUrl = `rtsp://${username}:${password}@${cameraIp}:${cameraPort}/cam/realmonitor?channel=1&subtype=0`;
-      
+
       log(`📸 Capturing second weight image for slip ${slipNo}...`);
       const success = await this.captureImageWithFFmpeg(rtspUrl, imagePath);
-      
+
       if (success) {
         log(`✅ Second weight image captured successfully: ${filename}`);
         return imagePath;

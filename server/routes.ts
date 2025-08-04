@@ -151,17 +151,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Try multiple camera APIs for better ANPR detection
       const cameraApis = [
+        // Get camera settings from storage
+        const camera = await storage.getCamera(1);
+        const cameraIp = camera?.ip || "10.10.10.146";
+        const cameraPort = camera?.port || 554;
+        const cameraUser = camera?.username || "admin";
+        const cameraPass = camera?.password || "admin123";
+
         // Primary ANPR API
-        "http://admin:admin123@10.10.10.146/cgi-bin/magicBox.cgi?action=getANPRSnapshot",
+        `http://${cameraUser}:${cameraPass}@${cameraIp}/cgi-bin/magicBox.cgi?action=getANPRSnapshot`,
         // Alternative ANPR APIs
-        "http://admin:admin123@10.10.10.146/cgi-bin/anpr.cgi?action=getPlateNumber",
-        "http://admin:admin123@10.10.10.146/cgi-bin/snapManager.cgi?action=getANPRPlate",
+        `http://${cameraUser}:${cameraPass}@${cameraIp}/cgi-bin/anpr.cgi?action=getPlateNumber`,
+        `http://${cameraUser}:${cameraPass}@${cameraIp}/cgi-bin/snapManager.cgi?action=getANPRPlate`,
         // Snapshot with ANPR processing
-        "http://admin:admin123@10.10.10.146/cgi-bin/snapshot.cgi?channel=1&ANPR=true",
+        `http://${cameraUser}:${cameraPass}@${cameraIp}/cgi-bin/snapshot.cgi?channel=1&ANPR=true`,
         // Traffic detection API
-        "http://admin:admin123@10.10.10.146/cgi-bin/trafficDetector.cgi?action=getCurrentPlate",
+        `http://${cameraUser}:${cameraPass}@${cameraIp}/cgi-bin/trafficDetector.cgi?action=getCurrentPlate`,
         // Original snap manager as fallback
-        "http://admin:admin123@10.10.10.146/cgi-bin/snapManager.cgi?action=attachFileProc&Flags[0]=Event&Events=TrafficManualSnap&heartbeat=5",
+        `http://${cameraUser}:${cameraPass}@${cameraIp}/cgi-bin/snapManager.cgi?action=attachFileProc&Flags[0]=Event&Events=TrafficManualSnap&heartbeat=5`,
       ];
 
       let plateNumber = null;
@@ -1415,18 +1422,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Image capture endpoints
   app.post("/api/capture/first-weight", async (req: Request, res: Response) => {
     try {
-      const { slipNo, cameraIp = "10.10.10.146", cameraPort = 554 } = req.body;
+      const { slipNo } = req.body;
 
       if (!slipNo) {
         return res.status(400).json({ error: "Slip number is required" });
       }
 
+      // Get camera settings from storage
+      const camera = await storage.getCamera(1);
+      const cameraIp = camera?.ip || "10.10.10.146";
+      const cameraPort = camera?.port || 554;
+      const username = camera?.username || "admin";
+      const password = camera?.password || "admin123";
+
       const imagePath = await imageCaptureService.captureFirstWeightImage({
         slipNo,
         cameraIp,
         cameraPort,
-        username: "admin",
-        password: "admin123",
+        username,
+        password,
       });
 
       res.json({
@@ -1486,13 +1500,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     "/api/capture/second-weight",
     async (req: Request, res: Response) => {
       try {
-        const { slipNo, cameraIp, cameraPort, username, password } = req.body;
+        const { slipNo } = req.body;
 
-        if (!slipNo || !cameraIp || !cameraPort) {
+        if (!slipNo) {
           return res.status(400).json({
-            error: "Missing required fields: slipNo, cameraIp, cameraPort",
+            error: "Missing required field: slipNo",
           });
         }
+
+        // Get camera settings from storage
+        const camera = await storage.getCamera(1);
+        const cameraIp = camera?.ip || "10.10.10.146";
+        const cameraPort = camera?.port || 554;
+        const username = camera?.username || "admin";
+        const password = camera?.password || "admin123";
 
         const imagePath = await imageCaptureService.captureSecondWeightImage({
           slipNo,

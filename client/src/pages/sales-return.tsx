@@ -15,6 +15,7 @@ import VideoStreamFullscreen from "@/components/video-stream-fullscreen";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
+import { useConfig } from "@/lib/config-context";
 
 export default function SalesReturnForm() {
   const [location, setLocation] = useLocation();
@@ -471,6 +472,7 @@ export default function SalesReturnForm() {
   const [plateReading, setPlateReading] = useState(false);
   const [branches, setBranches] = useState<any[]>([]);
   const [entryTypes, setEntryTypes] = useState<any[]>([]);
+  const { cameraIp, cameraPort } = useConfig();
 
   // Auto-calculate formulas when relevant fields change
   useEffect(() => {
@@ -1856,8 +1858,8 @@ export default function SalesReturnForm() {
                       camera={{
                         id: 1,
                         name: "Camera 01",
-                        ip: "10.10.10.146",
-                        port: 554,
+                        ip: cameraIp || "10.10.10.146",
+                        port: cameraPort || 554,
                       }}
                       isConnected={true}
                       isStreaming={true}
