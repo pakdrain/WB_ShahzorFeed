@@ -153,10 +153,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const cameraApis = [
         // Get camera settings from storage
         const camera = await storage.getCamera(1);
-        const cameraIp = camera?.ip || "10.10.10.146";
-        const cameraPort = camera?.port || 554;
-        const cameraUser = camera?.username || "admin";
-        const cameraPass = camera?.password || "admin123";
+        if (!camera) {
+          return res.status(500).json({
+            success: false,
+            error: "Camera configuration not found"
+          });
+        }
+        const cameraIp = camera.ip;
+        const cameraPort = camera.port;
+        const cameraUser = camera.username;
+        const cameraPass = camera.password;
 
         // Primary ANPR API
         `http://${cameraUser}:${cameraPass}@${cameraIp}/cgi-bin/magicBox.cgi?action=getANPRSnapshot`,

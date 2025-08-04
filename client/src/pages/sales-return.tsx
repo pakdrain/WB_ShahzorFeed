@@ -898,7 +898,7 @@ export default function SalesReturnForm() {
       // Load record for editing by wb_id
       console.log("Edit mode detected from URL parameter, loading data");
       sessionStorage.setItem('salesReturnEditMode', 'true');
-          // setIsLoadingEditData(true); // Function not defined
+          // setIsLoadingEditData(true); // Function notdefined
           loadDataByWbId(parseInt(editWbId));
       return; // Exit early to prevent any other initialization
     } else {
@@ -1679,13 +1679,13 @@ export default function SalesReturnForm() {
             onClick={() => toggleOnlineMode(true)}
           >
             ONLINE
-          </button>
+          </Button>
           <button
             className={`h-6 px-3 text-xs font-medium rounded transition-colors ${onlineMode === false ? "bg-red-500 hover:bg-red-600 text-white" : "bg-gray-300 hover:bg-gray-400 text-gray-600"}`}
             onClick={() => toggleOnlineMode(false)}
           >
             OFFLINE
-          </button>
+          </Button>
         </div>
         <div className="text-2xl text-green-600 font-bold">2500</div>
       </div>

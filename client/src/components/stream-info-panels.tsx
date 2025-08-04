@@ -103,6 +103,14 @@ export default function StreamInfoPanels({
             <span className="text-white">640x480</span>
           </div>
           <div className="flex justify-between">
+            <span className="text-gray-400">IP:</span>
+            <span className="text-white">{camera.ip}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Port:</span>
+            <span className="text-white">{camera.port}</span>
+          </div>
+          <div className="flex justify-between">
             <span className="text-gray-400">Channel:</span>
             <span className="text-white">Main Stream</span>
           </div>
