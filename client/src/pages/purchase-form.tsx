@@ -2332,113 +2332,103 @@ function PurchaseForm() {
         const activeElement = document.activeElement as HTMLElement;
         
         if (activeElement) {
-          // Priority 1: Check if we're directly on a combobox
+          // Check if we're directly on a combobox trigger
           if (activeElement.getAttribute('role') === 'combobox') {
             activeElement.click();
             return;
           }
           
-          // Priority 2: Check if we're inside a select wrapper (closest parent with combobox)
-          const selectWrapper = activeElement.closest('div');
-          if (selectWrapper) {
-            const comboboxInWrapper = selectWrapper.querySelector('[role="combobox"]') as HTMLElement;
-            if (comboboxInWrapper && selectWrapper.contains(activeElement)) {
-              comboboxInWrapper.click();
-              return;
-            }
+          // Check if we're on an input that's part of a Select component
+          const selectTrigger = activeElement.closest('[role="combobox"]') as HTMLElement;
+          if (selectTrigger) {
+            selectTrigger.click();
+            return;
           }
           
-          // Priority 3: Check by field name and find the appropriate select
+          // Check by field attributes and nearby elements
           const inputName = activeElement.getAttribute('name');
           const placeholder = activeElement.getAttribute('placeholder');
           
           // For branch selection
           if (inputName === 'branch' || placeholder?.toLowerCase().includes('branch')) {
-            const branchSelect = document.querySelector('[name="branch"] [role="combobox"]') as HTMLElement;
+            const branchSelect = document.querySelector('select[name="branch"]') as HTMLSelectElement;
             if (branchSelect) {
+              branchSelect.focus();
               branchSelect.click();
+              return;
+            }
+            // Try finding the SelectTrigger for branch
+            const branchTrigger = activeElement.parentElement?.querySelector('[role="combobox"]') as HTMLElement;
+            if (branchTrigger) {
+              branchTrigger.click();
               return;
             }
           }
           
+          // For bardana type selection
           if (inputName === 'bardanaType' || placeholder?.toLowerCase().includes('bardana')) {
-            setBardanaSelectOpen(true);
-            return;
+            const bardanaTrigger = activeElement.parentElement?.querySelector('[role="combobox"]') as HTMLElement;
+            if (bardanaTrigger) {
+              bardanaTrigger.click();
+              return;
+            }
           }
           
+          // For vendor selection
           if (inputName === 'vendor' || placeholder?.toLowerCase().includes('vendor')) {
-            const vendorTrigger = document.querySelector('[data-vendor-select] [role="combobox"]') as HTMLElement;
+            const vendorTrigger = activeElement.parentElement?.querySelector('[role="combobox"]') as HTMLElement;
             if (vendorTrigger) {
               vendorTrigger.click();
               return;
             }
           }
           
+          // For item description selection
           if (inputName === 'itemDesc' || placeholder?.toLowerCase().includes('item')) {
-            const itemTrigger = document.querySelector('[data-item-select] [role="combobox"]') as HTMLElement;
+            const itemTrigger = activeElement.parentElement?.querySelector('[role="combobox"]') as HTMLElement;
             if (itemTrigger) {
               itemTrigger.click();
               return;
             }
           }
           
-          // Priority 4: Check if we're in a table row/cell context
-          const tableRow = activeElement.closest('tr, div[class*="grid"]');
-          if (tableRow) {
-            // Find all comboboxes in this row
-            const rowComboboxes = tableRow.querySelectorAll('[role="combobox"]');
-            
-            // Try to find the closest one to the active element
-            let closestCombobox: HTMLElement | null = null;
-            let minDistance = Infinity;
-            
-            rowComboboxes.forEach((combo) => {
-              const comboElement = combo as HTMLElement;
-              const rect1 = activeElement.getBoundingClientRect();
-              const rect2 = comboElement.getBoundingClientRect();
-              const distance = Math.abs(rect1.left - rect2.left) + Math.abs(rect1.top - rect2.top);
-              
-              if (distance < minDistance) {
-                minDistance = distance;
-                closestCombobox = comboElement;
-              }
-            });
-            
-            if (closestCombobox) {
-              closestCombobox.click();
+          // Find the nearest SelectTrigger by traversing up the DOM
+          let currentElement = activeElement.parentElement;
+          while (currentElement && currentElement !== document.body) {
+            const selectTrigger = currentElement.querySelector('[role="combobox"]') as HTMLElement;
+            if (selectTrigger) {
+              selectTrigger.click();
               return;
             }
+            currentElement = currentElement.parentElement;
           }
+          
+          // Last resort: find any nearby combobox within reasonable distance
+          const allComboboxes = document.querySelectorAll('[role="combobox"]');
+          let closestCombobox: HTMLElement | null = null;
+          let minDistance = Infinity;
 
-          // Priority 5: Generic combobox search in vicinity
-          const nearbyComboboxes = document.querySelectorAll('[role="combobox"]');
-          if (nearbyComboboxes.length > 0) {
-            let closestCombobox: HTMLElement | null = null;
-            let minDistance = Infinity;
+          allComboboxes.forEach((combo) => {
+            const comboElement = combo as HTMLElement;
+            const rect1 = activeElement.getBoundingClientRect();
+            const rect2 = comboElement.getBoundingClientRect();
+            const distance = Math.sqrt(
+              Math.pow(rect1.left - rect2.left, 2) + 
+              Math.pow(rect1.top - rect2.top, 2)
+            );
 
-            nearbyComboboxes.forEach((combo) => {
-              const comboElement = combo as HTMLElement;
-              const rect1 = activeElement.getBoundingClientRect();
-              const rect2 = comboElement.getBoundingClientRect();
-              const distance = Math.sqrt(
-                Math.pow(rect1.left - rect2.left, 2) + 
-                Math.pow(rect1.top - rect2.top, 2)
-              );
-
-              if (distance < minDistance && distance < 200) { // Within 200px
-                minDistance = distance;
-                closestCombobox = comboElement;
-              }
-            });
-
-            if (closestCombobox) {
-              closestCombobox.click();
-              return;
+            if (distance < minDistance && distance < 300) { // Within 300px
+              minDistance = distance;
+              closestCombobox = comboElement;
             }
+          });
+
+          if (closestCombobox) {
+            closestCombobox.click();
+            return;
           }
         }
         
-        // Only if nothing else worked, show message
         console.log('No LOV found for current focus. Please click on a dropdown field first.');
       }
 

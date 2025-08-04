@@ -2294,47 +2294,81 @@ export default function SalesForm() {
         const activeElement = document.activeElement as HTMLElement;
 
         if (activeElement) {
-          // Priority 1: Check if we're directly on a combobox
+          // Check if we're directly on a combobox trigger
           if (activeElement.getAttribute("role") === "combobox") {
             activeElement.click();
             return;
           }
 
-          // Priority 2: Check if we're inside a select wrapper (closest parent with combobox)
-          const selectWrapper = activeElement.closest("div");
-          if (selectWrapper) {
-            const comboboxInWrapper = selectWrapper.querySelector(
-              '[role="combobox"]',
-            ) as HTMLElement;
-            if (comboboxInWrapper && selectWrapper.contains(activeElement)) {
-              comboboxInWrapper.click();
+          // Check if we're on an input that's part of a Select component
+          const selectTrigger = activeElement.closest('[role="combobox"]') as HTMLElement;
+          if (selectTrigger) {
+            selectTrigger.click();
+            return;
+          }
+
+          // Check by field attributes and nearby elements
+          const inputName = activeElement.getAttribute("name");
+          const placeholder = activeElement.getAttribute("placeholder");
+
+          // For branch selection
+          if (inputName === "branch" || placeholder?.toLowerCase().includes("branch")) {
+            const branchTrigger = activeElement.parentElement?.querySelector('[role="combobox"]') as HTMLElement;
+            if (branchTrigger) {
+              branchTrigger.click();
               return;
             }
           }
 
-          // Priority 3: Check if we're in the sales details table
-          const tableRow = activeElement.closest(
-            'div[class*="grid gap-px text-xs"]',
-          );
-          if (tableRow) {
-            // Find the cell containing the active element
-            const activeCell = activeElement.closest(
-              'div[class*="bg-white border border-gray-300"]',
-            );
-            if (activeCell) {
-              // Look for a combobox in the same cell
-              const cellCombobox = activeCell.querySelector(
-                '[role="combobox"]',
-              ) as HTMLElement;
+          // For customer fields in sales table
+          if (
+            placeholder?.toLowerCase().includes("customer") ||
+            inputName === "customerName" ||
+            activeElement.closest('div[class*="bg-white border border-gray-300"]')
+          ) {
+            // Look for SelectTrigger in the same cell
+            const cell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
+            if (cell) {
+              const cellCombobox = cell.querySelector('[role="combobox"]') as HTMLElement;
               if (cellCombobox) {
                 cellCombobox.click();
                 return;
               }
             }
+          }
 
-            // If no combobox in cell, find all comboboxes in the row and use proximity
-            const rowComboboxes =
-              tableRow.querySelectorAll('[role="combobox"]');
+          // For item fields in sales table
+          if (
+            placeholder?.toLowerCase().includes("item") ||
+            inputName === "itemDescription" ||
+            activeElement.closest('div[class*="bg-white border border-gray-300"]')
+          ) {
+            // Look for SelectTrigger in the same cell
+            const cell = activeElement.closest('div[class*="bg-white border border-gray-300"]');
+            if (cell) {
+              const cellCombobox = cell.querySelector('[role="combobox"]') as HTMLElement;
+              if (cellCombobox) {
+                cellCombobox.click();
+                return;
+              }
+            }
+          }
+
+          // Find the nearest SelectTrigger by traversing up the DOM
+          let currentElement = activeElement.parentElement;
+          while (currentElement && currentElement !== document.body) {
+            const selectTrigger = currentElement.querySelector('[role="combobox"]') as HTMLElement;
+            if (selectTrigger) {
+              selectTrigger.click();
+              return;
+            }
+            currentElement = currentElement.parentElement;
+          }
+
+          // If we're in a table row context, look for comboboxes in the same row
+          const tableRow = activeElement.closest('div[class*="grid gap-px text-xs"]');
+          if (tableRow) {
+            const rowComboboxes = tableRow.querySelectorAll('[role="combobox"]');
             if (rowComboboxes.length > 0) {
               let closestCombobox: HTMLElement | null = null;
               let minDistance = Infinity;
@@ -2343,9 +2377,7 @@ export default function SalesForm() {
                 const comboElement = combo as HTMLElement;
                 const rect1 = activeElement.getBoundingClientRect();
                 const rect2 = comboElement.getBoundingClientRect();
-                const distance =
-                  Math.abs(rect1.left - rect2.left) +
-                  Math.abs(rect1.top - rect2.top);
+                const distance = Math.abs(rect1.left - rect2.left) + Math.abs(rect1.top - rect2.top);
 
                 if (distance < minDistance) {
                   minDistance = distance;
@@ -2360,93 +2392,33 @@ export default function SalesForm() {
             }
           }
 
-          // Priority 4: Check by field attributes and context
-          const inputName = activeElement.getAttribute("name");
-          const placeholder = activeElement.getAttribute("placeholder");
+          // Last resort: find any nearby combobox within reasonable distance
+          const allComboboxes = document.querySelectorAll('[role="combobox"]');
+          let closestCombobox: HTMLElement | null = null;
+          let minDistance = Infinity;
 
-          // For branch selection
-          if (inputName === "branch" || placeholder?.toLowerCase().includes("branch")) {
-            const branchSelect = document.querySelector('[name="branch"] [role="combobox"]') as HTMLElement;
-            if (branchSelect) {
-              branchSelect.click();
-              return;
+          allComboboxes.forEach((combo) => {
+            const comboElement = combo as HTMLElement;
+            const rect1 = activeElement.getBoundingClientRect();
+            const rect2 = comboElement.getBoundingClientRect();
+            const distance = Math.sqrt(
+              Math.pow(rect1.left - rect2.left, 2) + 
+              Math.pow(rect1.top - rect2.top, 2)
+            );
+
+            if (distance < minDistance && distance < 300) { // Within 300px
+              minDistance = distance;
+              closestCombobox = comboElement;
             }
-          }
+          });
 
-          // For customer fields
-          if (
-            placeholder?.toLowerCase().includes("customer") ||
-            inputName === "customerName" ||
-            activeElement.closest('[class*="customerName"]')
-          ) {
-            const customerSelects = document.querySelectorAll('[role="combobox"]');
-            for (const select of customerSelects) {
-              const selectElement = select as HTMLElement;
-              const selectParent = selectElement.closest('div[class*="bg-white"]');
-              if (selectParent && (
-                selectParent.textContent?.toLowerCase().includes("customer") ||
-                selectParent.querySelector('input[placeholder*="customer" i]') ||
-                selectParent.querySelector('[placeholder*="Select customer" i]')
-              )) {
-                selectElement.click();
-                return;
-              }
-            }
-          }
-
-          // For item fields
-          if (
-            placeholder?.toLowerCase().includes("item") ||
-            inputName === "itemDescription" ||
-            activeElement.closest('[class*="itemDescription"]')
-          ) {
-            const itemSelects = document.querySelectorAll('[role="combobox"]');
-            for (const select of itemSelects) {
-              const selectElement = select as HTMLElement;
-              const selectParent = selectElement.closest('div[class*="bg-white"]');
-              if (selectParent && (
-                selectParent.textContent?.toLowerCase().includes("item") ||
-                selectParent.querySelector('input[placeholder*="item" i]') ||
-                selectParent.querySelector('[placeholder*="Select item" i]')
-              )) {
-                selectElement.click();
-                return;
-              }
-            }
-          }
-
-          // Priority 5: Generic combobox search in vicinity
-          const nearbyComboboxes = document.querySelectorAll('[role="combobox"]');
-          if (nearbyComboboxes.length > 0) {
-            let closestCombobox: HTMLElement | null = null;
-            let minDistance = Infinity;
-
-            nearbyComboboxes.forEach((combo) => {
-              const comboElement = combo as HTMLElement;
-              const rect1 = activeElement.getBoundingClientRect();
-              const rect2 = comboElement.getBoundingClientRect();
-              const distance = Math.sqrt(
-                Math.pow(rect1.left - rect2.left, 2) + 
-                Math.pow(rect1.top - rect2.top, 2)
-              );
-
-              if (distance < minDistance && distance < 200) { // Within 200px
-                minDistance = distance;
-                closestCombobox = comboElement;
-              }
-            });
-
-            if (closestCombobox) {
-              closestCombobox.click();
-              return;
-            }
+          if (closestCombobox) {
+            closestCombobox.click();
+            return;
           }
         }
 
-        // Only if nothing else worked, show message
-        console.log(
-          "No LOV found for current focus. Please click on a dropdown field first.",
-        );
+        console.log("No LOV found for current focus. Please click on a dropdown field first.");
       }
 
       // F11 to open slip search
@@ -3749,6 +3721,8 @@ export default function SalesForm() {
                       <input
                         type="text"
                         className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
+                        value={salesData.reduce((sum, row) => sum + (parseFloat(row.doQty) || 0), 0)}
+                        readOnly
                         autoComplete="off"
                         autoCorrect="off"
                         autoCapitalize="off"
