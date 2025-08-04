@@ -41,8 +41,8 @@ export default function CameraSettings() {
     resolver: zodResolver(cameraSettingsSchema),
     defaultValues: {
       name: 'Camera 01',
-      ip: currentCameraIp,
-      port: currentCameraPort,
+      ip: currentCameraIp || '10.10.10.146',
+      port: currentCameraPort || 554,
       username: 'admin',
       password: 'admin123',
       channel: 1,
@@ -50,20 +50,31 @@ export default function CameraSettings() {
     },
   });
 
-  // Update form when camera data loads
+  // Update form when camera data loads or config changes
   React.useEffect(() => {
     if (camera) {
       form.reset({
         name: camera.name || 'Camera 01',
-        ip: camera.ip || currentCameraIp,
-        port: camera.port || currentCameraPort,
+        ip: camera.ip || currentCameraIp || '10.10.10.146',
+        port: camera.port || currentCameraPort || 554,
         username: camera.username || 'admin',
         password: camera.password || 'admin123',
         channel: 1,
         subtype: 0,
       });
+    } else {
+      // If no camera data, use config context values
+      form.reset({
+        name: 'Camera 01',
+        ip: currentCameraIp || '10.10.10.146',
+        port: currentCameraPort || 554,
+        username: 'admin',
+        password: 'admin123',
+        channel: 1,
+        subtype: 0,
+      });
     }
-  }, [camera, form]);
+  }, [camera, currentCameraIp, currentCameraPort, form]);
 
   // Save settings mutation
   const saveSettingsMutation = useMutation({
@@ -79,17 +90,20 @@ export default function CameraSettings() {
       queryClient.invalidateQueries({ queryKey: ['/api/cameras/1'] });
       refetchConfig();
       
-      // Broadcast to other tabs/windows
+      // Broadcast to other tabs/windows via localStorage
       localStorage.setItem('config-updated', Date.now().toString());
       window.dispatchEvent(new StorageEvent('storage', {
         key: 'config-updated',
         newValue: Date.now().toString()
       }));
       
+      // Broadcast to current tab via custom event
+      window.dispatchEvent(new CustomEvent('config-updated'));
+      
       console.log('Camera settings saved successfully:', data);
       toast({
         title: "Settings Saved",
-        description: "Camera settings have been updated successfully. The camera stream will use the new settings.",
+        description: "Camera settings have been updated successfully. All pages will use the new camera configuration.",
       });
     },
     onError: (error: any) => {

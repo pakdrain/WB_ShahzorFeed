@@ -39,13 +39,25 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === 'config-updated') {
+        console.log('Config update detected, refreshing...');
         refetchConfig();
       }
     };
 
+    // Also listen for custom events for immediate updates within the same tab
+    const handleConfigUpdate = () => {
+      console.log('Config update event received, refreshing...');
+      refetchConfig();
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
+    window.addEventListener('config-updated', handleConfigUpdate);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('config-updated', handleConfigUpdate);
+    };
+  }, [refetchConfig]);
 
   const value: ConfigContextType = {
     comPort,

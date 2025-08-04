@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Camera, Video, Clock, FileText } from "lucide-react";
 import { Link } from "wouter";
@@ -31,8 +31,15 @@ export default function CameraMonitor() {
     refetchInterval: 2000, // Update every 2 seconds
   });
 
-  // Use global config values with fallbacks
-  const cameraData = camera || { id: 1, name: "Camera 01", ip: cameraIp, port: cameraPort };
+  // Use global config values with fallbacks, updating when config changes
+  const cameraData = React.useMemo(() => ({
+    id: 1,
+    name: camera?.name || "Camera 01",
+    ip: camera?.ip || cameraIp || '10.10.10.146',
+    port: camera?.port || cameraPort || 554,
+    username: camera?.username || 'admin',
+    password: camera?.password || 'admin123',
+  }), [camera, cameraIp, cameraPort]);
 
   // Initialize WebSocket stream connection
   const {
@@ -65,6 +72,19 @@ export default function CameraMonitor() {
       return () => clearTimeout(timer);
     }
   }, [cameraData.id, startStream]);
+
+  // Restart stream when camera IP or port changes
+  useEffect(() => {
+    if (isStreaming && (cameraData.ip || cameraData.port)) {
+      console.log('Camera configuration changed, restarting stream...');
+      stopStream();
+      const timer = setTimeout(() => {
+        startStream();
+      }, 1000); // Give time for the old stream to stop
+
+      return () => clearTimeout(timer);
+    }
+  }, [cameraData.ip, cameraData.port, isStreaming, stopStream, startStream]);
 
   if (cameraLoading) {
     return (
