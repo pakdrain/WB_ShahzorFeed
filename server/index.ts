@@ -131,11 +131,11 @@ function parseWeightData(rawData: string) {
 app.post('/api/weight/connect', (req, res) => {
   const { port, baudRate } = req.body;
   log(`🔌 Connecting to ${port || currentComPort} at ${baudRate || 9600} baud...`);
-  
+
   if (!isPortConnected) {
     connectToWeightScale();
   }
-  
+
   res.json({ 
     success: true, 
     message: `Connecting to ${port || currentComPort}`,
@@ -177,9 +177,39 @@ app.use((req, res, next) => {
 
 (async () => {
   const server = await registerRoutes(app);
-  
+
   // Add Sales API route
   addSalesRoute(app);
+
+  // Database connection and error handling
+  app.use((err: any, req: Request, res: Response, next: NextFunction) => {
+    console.error('Unhandled error:', err);
+
+    // Handle specific database errors
+    if (err.code === 'ECONNREFUSED') {
+      res.status(503).json({ error: 'Database connection refused' });
+    } else if (err.code === 'ENOTFOUND') {
+      res.status(503).json({ error: 'Database host not found' });
+    } else if (err.code === '23505') {
+      res.status(409).json({ error: 'Duplicate key violation' });
+    } else if (err.code === '23503') {
+      res.status(400).json({ error: 'Foreign key constraint violation' });
+    } else {
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  // Health check endpoint
+  app.get('/api/health', async (req: Request, res: Response) => {
+    try {
+        const db = require('./db');
+        const result = await db.query('SELECT 1');
+        res.json({ status: 'healthy', database: 'connected' });
+    } catch (error) {
+        console.error("Health check failed:", error);
+        res.status(503).json({ status: 'unhealthy', database: 'disconnected', error: error.message });
+    }
+});
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -205,7 +235,7 @@ app.use((req, res, next) => {
   server.listen(port, '0.0.0.0', () => {
     log(`serving on port ${port}`);
     log(`📡 Attempting to connect to ${currentComPort} weight indicator...`);
-    
+
     // Auto-connect to weight scale on startup
     setTimeout(() => {
       connectToWeightScale();
