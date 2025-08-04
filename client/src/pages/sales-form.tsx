@@ -1519,18 +1519,26 @@ export default function SalesForm() {
       return;
     }
 
+    // Check vehicle number from form data or sales data
+    const vehicleNoFromForm = formData.vehicleNo?.trim();
+    const vehicleNoFromSales = salesData.find(row => row.vehicleNo?.trim())?.vehicleNo?.trim();
+    const finalVehicleNo = vehicleNoFromForm || vehicleNoFromSales;
+
     // Validate that vehicle number is not null/empty when saving
-    if (!formData.vehicleNo || formData.vehicleNo.trim() === "") {
+    if (!finalVehicleNo || finalVehicleNo === "") {
       alert("Vehicle number is required");
       setLoading(false);
       return;
     }
 
-    // Validate Total Weight Diff is within acceptable range
-    if (Math.abs(totalWeightDiff) > 30) {
-      alert(`Total Weight Difference (${totalWeightDiff.toFixed(2)}) is outside acceptable range of ±30. Entry cannot be saved.`);
-      setLoading(false);
-      return;
+    // Only validate Total Weight Diff if both weights are present and greater than 0
+    if (formData.firstWeight && formData.secondWeight && 
+        parseFloat(formData.firstWeight) > 0 && parseFloat(formData.secondWeight) > 0) {
+      if (Math.abs(totalWeightDiff) > 30) {
+        alert(`Total Weight Difference (${totalWeightDiff.toFixed(2)}) is outside acceptable range of ±30. Entry cannot be saved.`);
+        setLoading(false);
+        return;
+      }
     }
 
     try {
@@ -1598,10 +1606,7 @@ export default function SalesForm() {
           // Include sales data fields in update
           vendor_name:
             salesData.find((row) => row.customerName)?.customerName || null,
-          vehicle_no:
-            salesData.find((row) => row.vehicleNo)?.vehicleNo ||
-            formData.vehicleNo ||
-            null,
+          vehicle_no: finalVehicleNo || null,
           po_no: salesData.find((row) => row.doNo)?.doNo || null,
           igp_no: salesData.find((row) => row.dcNo)?.dcNo || null,
           item_desc:
@@ -1749,7 +1754,7 @@ export default function SalesForm() {
             wb_id: savedWbId,
             bardana_type: null,
             igp_no: row.dcNo || null,
-            vehicle_no: row.vehicleNo || null,
+            vehicle_no: finalVehicleNo || row.vehicleNo || null,
             weight_per_bags: null,
             igp_date: row.doDate || null,
             supplier_weight: null,
@@ -2283,7 +2288,7 @@ export default function SalesForm() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Ctrl+L to open LOV of currently focused element
-      if (event.ctrlKey && event.key === "l") {
+      if (event.ctrlKey && event.key.toLowerCase() === "l") {
         event.preventDefault();
         
         const activeElement = document.activeElement as HTMLElement;
@@ -2355,51 +2360,85 @@ export default function SalesForm() {
             }
           }
 
-          // Priority 4: Check by field attributes
+          // Priority 4: Check by field attributes and context
           const inputName = activeElement.getAttribute("name");
           const placeholder = activeElement.getAttribute("placeholder");
 
+          // For branch selection
+          if (inputName === "branch" || placeholder?.toLowerCase().includes("branch")) {
+            const branchSelect = document.querySelector('[name="branch"] [role="combobox"]') as HTMLElement;
+            if (branchSelect) {
+              branchSelect.click();
+              return;
+            }
+          }
+
+          // For customer fields
           if (
             placeholder?.toLowerCase().includes("customer") ||
-            inputName === "customerName"
+            inputName === "customerName" ||
+            activeElement.closest('[class*="customerName"]')
           ) {
-            const customerSelects =
-              document.querySelectorAll('[role="combobox"]');
-            // Find customer select by looking at nearby text or placeholder
+            const customerSelects = document.querySelectorAll('[role="combobox"]');
             for (const select of customerSelects) {
               const selectElement = select as HTMLElement;
-              const selectParent = selectElement.closest(
-                'div[class*="bg-white"]',
-              );
-              if (
-                selectParent &&
-                selectParent.textContent?.toLowerCase().includes("customer")
-              ) {
+              const selectParent = selectElement.closest('div[class*="bg-white"]');
+              if (selectParent && (
+                selectParent.textContent?.toLowerCase().includes("customer") ||
+                selectParent.querySelector('input[placeholder*="customer" i]') ||
+                selectParent.querySelector('[placeholder*="Select customer" i]')
+              )) {
                 selectElement.click();
                 return;
               }
             }
           }
 
+          // For item fields
           if (
             placeholder?.toLowerCase().includes("item") ||
-            inputName === "itemDescription"
+            inputName === "itemDescription" ||
+            activeElement.closest('[class*="itemDescription"]')
           ) {
-            const itemSelects =
-              document.querySelectorAll('[role="combobox"]');
-            // Find item select by looking at nearby text or placeholder
+            const itemSelects = document.querySelectorAll('[role="combobox"]');
             for (const select of itemSelects) {
               const selectElement = select as HTMLElement;
-              const selectParent = selectElement.closest(
-                'div[class*="bg-white"]',
-              );
-              if (
-                selectParent &&
-                selectParent.textContent?.toLowerCase().includes("item")
-              ) {
+              const selectParent = selectElement.closest('div[class*="bg-white"]');
+              if (selectParent && (
+                selectParent.textContent?.toLowerCase().includes("item") ||
+                selectParent.querySelector('input[placeholder*="item" i]') ||
+                selectParent.querySelector('[placeholder*="Select item" i]')
+              )) {
                 selectElement.click();
                 return;
               }
+            }
+          }
+
+          // Priority 5: Generic combobox search in vicinity
+          const nearbyComboboxes = document.querySelectorAll('[role="combobox"]');
+          if (nearbyComboboxes.length > 0) {
+            let closestCombobox: HTMLElement | null = null;
+            let minDistance = Infinity;
+
+            nearbyComboboxes.forEach((combo) => {
+              const comboElement = combo as HTMLElement;
+              const rect1 = activeElement.getBoundingClientRect();
+              const rect2 = comboElement.getBoundingClientRect();
+              const distance = Math.sqrt(
+                Math.pow(rect1.left - rect2.left, 2) + 
+                Math.pow(rect1.top - rect2.top, 2)
+              );
+
+              if (distance < minDistance && distance < 200) { // Within 200px
+                minDistance = distance;
+                closestCombobox = comboElement;
+              }
+            });
+
+            if (closestCombobox) {
+              closestCombobox.click();
+              return;
             }
           }
         }

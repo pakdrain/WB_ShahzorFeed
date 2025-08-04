@@ -2326,86 +2326,120 @@ function PurchaseForm() {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Ctrl+L to open LOV of currently focused element
-      if (event.ctrlKey && event.key === "l") {
+      if (event.ctrlKey && event.key.toLowerCase() === "l") {
         event.preventDefault();
         
-        if (!onlineMode) {
-          const activeElement = document.activeElement as HTMLElement;
+        const activeElement = document.activeElement as HTMLElement;
+        
+        if (activeElement) {
+          // Priority 1: Check if we're directly on a combobox
+          if (activeElement.getAttribute('role') === 'combobox') {
+            activeElement.click();
+            return;
+          }
           
-          if (activeElement) {
-            // Priority 1: Check if we're directly on a combobox
-            if (activeElement.getAttribute('role') === 'combobox') {
-              activeElement.click();
+          // Priority 2: Check if we're inside a select wrapper (closest parent with combobox)
+          const selectWrapper = activeElement.closest('div');
+          if (selectWrapper) {
+            const comboboxInWrapper = selectWrapper.querySelector('[role="combobox"]') as HTMLElement;
+            if (comboboxInWrapper && selectWrapper.contains(activeElement)) {
+              comboboxInWrapper.click();
               return;
-            }
-            
-            // Priority 2: Check if we're inside a select wrapper (closest parent with combobox)
-            const selectWrapper = activeElement.closest('div');
-            if (selectWrapper) {
-              const comboboxInWrapper = selectWrapper.querySelector('[role="combobox"]') as HTMLElement;
-              if (comboboxInWrapper && selectWrapper.contains(activeElement)) {
-                comboboxInWrapper.click();
-                return;
-              }
-            }
-            
-            // Priority 3: Check by field name and find the appropriate select
-            const inputName = activeElement.getAttribute('name');
-            const placeholder = activeElement.getAttribute('placeholder');
-            
-            if (inputName === 'bardanaType' || placeholder?.toLowerCase().includes('bardana')) {
-              setBardanaSelectOpen(true);
-              return;
-            }
-            
-            if (inputName === 'vendor' || placeholder?.toLowerCase().includes('vendor')) {
-              const vendorTrigger = document.querySelector('[data-vendor-select] [role="combobox"]') as HTMLElement;
-              if (vendorTrigger) {
-                vendorTrigger.click();
-                return;
-              }
-            }
-            
-            if (inputName === 'itemDesc' || placeholder?.toLowerCase().includes('item')) {
-              const itemTrigger = document.querySelector('[data-item-select] [role="combobox"]') as HTMLElement;
-              if (itemTrigger) {
-                itemTrigger.click();
-                return;
-              }
-            }
-            
-            // Priority 4: Check if we're in a table row/cell context
-            const tableRow = activeElement.closest('tr, div[class*="grid"]');
-            if (tableRow) {
-              // Find all comboboxes in this row
-              const rowComboboxes = tableRow.querySelectorAll('[role="combobox"]');
-              
-              // Try to find the closest one to the active element
-              let closestCombobox: HTMLElement | null = null;
-              let minDistance = Infinity;
-              
-              rowComboboxes.forEach((combo) => {
-                const comboElement = combo as HTMLElement;
-                const rect1 = activeElement.getBoundingClientRect();
-                const rect2 = comboElement.getBoundingClientRect();
-                const distance = Math.abs(rect1.left - rect2.left) + Math.abs(rect1.top - rect2.top);
-                
-                if (distance < minDistance) {
-                  minDistance = distance;
-                  closestCombobox = comboElement;
-                }
-              });
-              
-              if (closestCombobox) {
-                closestCombobox.click();
-                return;
-              }
             }
           }
           
-          // Only if nothing else worked, show message
-          console.log('No LOV found for current focus. Please click on a dropdown field first.');
+          // Priority 3: Check by field name and find the appropriate select
+          const inputName = activeElement.getAttribute('name');
+          const placeholder = activeElement.getAttribute('placeholder');
+          
+          // For branch selection
+          if (inputName === 'branch' || placeholder?.toLowerCase().includes('branch')) {
+            const branchSelect = document.querySelector('[name="branch"] [role="combobox"]') as HTMLElement;
+            if (branchSelect) {
+              branchSelect.click();
+              return;
+            }
+          }
+          
+          if (inputName === 'bardanaType' || placeholder?.toLowerCase().includes('bardana')) {
+            setBardanaSelectOpen(true);
+            return;
+          }
+          
+          if (inputName === 'vendor' || placeholder?.toLowerCase().includes('vendor')) {
+            const vendorTrigger = document.querySelector('[data-vendor-select] [role="combobox"]') as HTMLElement;
+            if (vendorTrigger) {
+              vendorTrigger.click();
+              return;
+            }
+          }
+          
+          if (inputName === 'itemDesc' || placeholder?.toLowerCase().includes('item')) {
+            const itemTrigger = document.querySelector('[data-item-select] [role="combobox"]') as HTMLElement;
+            if (itemTrigger) {
+              itemTrigger.click();
+              return;
+            }
+          }
+          
+          // Priority 4: Check if we're in a table row/cell context
+          const tableRow = activeElement.closest('tr, div[class*="grid"]');
+          if (tableRow) {
+            // Find all comboboxes in this row
+            const rowComboboxes = tableRow.querySelectorAll('[role="combobox"]');
+            
+            // Try to find the closest one to the active element
+            let closestCombobox: HTMLElement | null = null;
+            let minDistance = Infinity;
+            
+            rowComboboxes.forEach((combo) => {
+              const comboElement = combo as HTMLElement;
+              const rect1 = activeElement.getBoundingClientRect();
+              const rect2 = comboElement.getBoundingClientRect();
+              const distance = Math.abs(rect1.left - rect2.left) + Math.abs(rect1.top - rect2.top);
+              
+              if (distance < minDistance) {
+                minDistance = distance;
+                closestCombobox = comboElement;
+              }
+            });
+            
+            if (closestCombobox) {
+              closestCombobox.click();
+              return;
+            }
+          }
+
+          // Priority 5: Generic combobox search in vicinity
+          const nearbyComboboxes = document.querySelectorAll('[role="combobox"]');
+          if (nearbyComboboxes.length > 0) {
+            let closestCombobox: HTMLElement | null = null;
+            let minDistance = Infinity;
+
+            nearbyComboboxes.forEach((combo) => {
+              const comboElement = combo as HTMLElement;
+              const rect1 = activeElement.getBoundingClientRect();
+              const rect2 = comboElement.getBoundingClientRect();
+              const distance = Math.sqrt(
+                Math.pow(rect1.left - rect2.left, 2) + 
+                Math.pow(rect1.top - rect2.top, 2)
+              );
+
+              if (distance < minDistance && distance < 200) { // Within 200px
+                minDistance = distance;
+                closestCombobox = comboElement;
+              }
+            });
+
+            if (closestCombobox) {
+              closestCombobox.click();
+              return;
+            }
+          }
         }
+        
+        // Only if nothing else worked, show message
+        console.log('No LOV found for current focus. Please click on a dropdown field first.');
       }
 
       // F11 to open slip search
