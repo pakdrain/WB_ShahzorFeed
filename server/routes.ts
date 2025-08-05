@@ -149,21 +149,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { wbId } = req.body;
       console.log("Camera snap manager requested for wb_id:", wbId);
 
+      // Get camera settings from storage first
+      const camera = await storage.getCamera(1);
+      if (!camera) {
+        return res.status(500).json({
+          success: false,
+          error: "Camera configuration not found"
+        });
+      }
+      const cameraIp = camera.ip;
+      const cameraPort = camera.port;
+      const cameraUser = camera.username;
+      const cameraPass = camera.password;
+
       // Try multiple camera APIs for better ANPR detection
       const cameraApis = [
-        // Get camera settings from storage
-        const camera = await storage.getCamera(1);
-        if (!camera) {
-          return res.status(500).json({
-            success: false,
-            error: "Camera configuration not found"
-          });
-        }
-        const cameraIp = camera.ip;
-        const cameraPort = camera.port;
-        const cameraUser = camera.username;
-        const cameraPass = camera.password;
-
         // Primary ANPR API
         `http://${cameraUser}:${cameraPass}@${cameraIp}/cgi-bin/magicBox.cgi?action=getANPRSnapshot`,
         // Alternative ANPR APIs
@@ -964,6 +964,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Database wake-up endpoint
+  app.get("/api/db/wake", async (req, res) => {
+    try {
+      const result = await pool.query("SELECT 1 as wake_up");
+      res.json({ 
+        success: true, 
+        message: "Database is awake",
+        timestamp: new Date().toISOString()
+      });
+    } catch (error: any) {
+      console.error("Database wake-up error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Database wake-up failed",
+        error: error.message 
+      });
+    }
+  });
+
   // Health check endpoint
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok", timestamp: new Date().toISOString() });
@@ -1726,10 +1745,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET customers from inv_customers table for dropdown
   app.get("/api/customers", async (req: Request, res: Response) => {
     try {
-      // Check if database connection exists
-      const client = await pool.connect();
-      client.release();
-      
       const query = "SELECT customer_id as id, customer_name as name FROM inv_customers WHERE customer_name IS NOT NULL ORDER BY customer_name";
       const result = await pool.query(query);
 
@@ -1753,10 +1768,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET items from inv_items table for dropdown
   app.get("/api/items", async (req: Request, res: Response) => {
     try {
-      // Check if database connection exists
-      const client = await pool.connect();
-      client.release();
-      
       const query = "SELECT item_id as id, item_desc as description, item_code FROM inv_items WHERE item_desc IS NOT NULL ORDER BY item_desc";
       const result = await pool.query(query);
 
@@ -1774,6 +1785,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ];
       console.log("Using fallback items data");
       res.status(200).json(fallbackItems);
+    }
+  });
+
+  // GET bardana types for dropdown
+  app.get("/api/bardana-types", async (req: Request, res: Response) => {
+    try {
+      const query = "SELECT id, type_name FROM bardana_types WHERE is_active = true ORDER BY type_name";
+      const result = await pool.query(query);
+
+      console.log(`Fetched ${result.rows.length} bardana types`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching bardana types:", error);
+      // Fallback data when database is not available
+      const fallbackBardanaTypes = [
+        { id: 1, type_name: "Jute Bag" },
+        { id: 2, type_name: "PP Bag" },
+        { id: 3, type_name: "Cotton Bag" },
+        { id: 4, type_name: "Plastic Bag" },
+        { id: 5, type_name: "Paper Bag" },
+      ];
+      console.log("Using fallback bardana types data");
+      res.status(200).json(fallbackBardanaTypes);
+    }
+  });
+
+  // GET vendor data for dropdown
+  app.get("/api/vendor-data", async (req: Request, res: Response) => {
+    try {
+      const query = "SELECT vendor_id as id, vendor_name as name FROM vendors WHERE vendor_name IS NOT NULL ORDER BY vendor_name";
+      const result = await pool.query(query);
+
+      console.log(`Fetched ${result.rows.length} vendors from vendor_data`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching vendor data:", error);
+      // Fallback data when database is not available
+      const fallbackVendors = [
+        { id: 1, name: "ABC Suppliers" },
+        { id: 2, name: "XYZ Trading" },
+        { id: 3, name: "Premium Goods" },
+        { id: 4, name: "Quality Vendors" },
+        { id: 5, name: "Reliable Supply Co." },
+      ];
+      console.log("Using fallback vendor data");
+      res.status(200).json(fallbackVendors);
+    }
+  });
+
+  // GET vendors for dropdown
+  app.get("/api/vendors", async (req: Request, res: Response) => {
+    try {
+      const query = "SELECT vendor_id as id, vendor_name as name FROM vendors WHERE vendor_name IS NOT NULL ORDER BY vendor_name";
+      const result = await pool.query(query);
+
+      console.log(`Fetched ${result.rows.length} vendors`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching vendors:", error);
+      // Fallback data when database is not available
+      const fallbackVendors = [
+        { id: 1, name: "ABC Suppliers" },
+        { id: 2, name: "XYZ Trading" },
+        { id: 3, name: "Premium Goods" },
+        { id: 4, name: "Quality Vendors" },
+        { id: 5, name: "Reliable Supply Co." },
+      ];
+      console.log("Using fallback vendors data");
+      res.status(200).json(fallbackVendors);
+    }
+  });
+
+  // GET percentage data for dropdown
+  app.get("/api/percentage-data", async (req: Request, res: Response) => {
+    try {
+      const query = "SELECT id, percentage_value, description FROM percentage_data WHERE is_active = true ORDER BY percentage_value";
+      const result = await pool.query(query);
+
+      console.log(`Fetched ${result.rows.length} percentage data records`);
+      res.json(result.rows);
+    } catch (error: any) {
+      console.error("Error fetching percentage data:", error);
+      // Fallback data when database is not available
+      const fallbackPercentageData = [
+        { id: 1, percentage_value: 0.5, description: "Low Quality" },
+        { id: 2, percentage_value: 1.0, description: "Standard Quality" },
+        { id: 3, percentage_value: 1.5, description: "Medium Quality" },
+        { id: 4, percentage_value: 2.0, description: "High Quality" },
+        { id: 5, percentage_value: 2.5, description: "Premium Quality" },
+      ];
+      console.log("Using fallback percentage data");
+      res.status(200).json(fallbackPercentageData);
     }
   });
 

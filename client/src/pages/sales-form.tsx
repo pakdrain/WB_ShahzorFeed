@@ -1961,8 +1961,7 @@ export default function SalesForm() {
 
     .image-box {
 
-# Applying global config context in SalesForm for dynamic settings.
-      border: 1px solid black;
+border: 1px solid black;
       height: 62px;
       text-align: center;
       padding: 5px;
@@ -1992,8 +1991,7 @@ export default function SalesForm() {
       font-size: 12px;
     }
 
-    .signature-label
- {
+    .signature-label {
       display: inline-block;
     }
 
@@ -2953,9 +2951,17 @@ export default function SalesForm() {
                       name="firstWeight"
                       value={formData.firstWeight}
                       onChange={handleChange}
-                      className={`h-8 text-xs text-black w-52 ${isEditMode ? "bg-gray-100" : ""}`}
+                      className={`h-8 text-xs text-black w-40 ${isEditMode ? "bg-gray-100" : ""}`}
                       readOnly={isEditMode}
                     />
+                    {!isEditMode && (
+                      <Button
+                        onClick={captureFirstWeight}
+                        className="h-8 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Scale className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <Label className="text-xs text-black w-24">
@@ -2965,9 +2971,17 @@ export default function SalesForm() {
                       name="secondWeight"
                       value={formData.secondWeight}
                       onChange={handleChange}
-                      className={`h-8 text-xs text-green-600 w-52 ${isEditMode ? "bg-gray-100" : ""}`}
+                      className={`h-8 text-xs text-green-600 w-40 ${isEditMode ? "bg-gray-100" : ""}`}
                       readOnly={isEditMode}
                     />
+                    {!isEditMode && (
+                      <Button
+                        onClick={captureSecondWeight}
+                        className="h-8 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        <Scale className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                   <div className="flex items-center gap-1">
                     <Label className="text-xs text-black w-24">

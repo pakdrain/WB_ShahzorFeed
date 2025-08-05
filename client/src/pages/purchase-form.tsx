@@ -131,7 +131,7 @@ function PurchaseForm() {
   // Fetch offline records with aggressive caching
   const { data: offlineRecords = [] } = useQuery({
     queryKey: ["/api/purchases/offline"],
-    staleTime: 10 * 60 * 1000, // 10 minutes cache  
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
     refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes
     refetchOnMount: false,
     refetchOnWindowFocus: false,
@@ -693,7 +693,7 @@ function PurchaseForm() {
         </div>
         <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH   BRIDGE  SLIP</div>
 
         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
@@ -774,7 +774,7 @@ function PurchaseForm() {
               <div class="header-center">
                <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH   BRIDGE   SLIP</div>
               </div>
               <div class="header-right"></div>
             </div>
@@ -856,18 +856,15 @@ function PurchaseForm() {
               <div class="header-center">
                <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH   BRIDGE   SLIP</div>
               </div>
             <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
         <div class="two-column">
-  <div class="left-section" style="display: flex; align-items: center; height: 10px;">
-    <div style="font-weight: normal;">
-      W.B # ${formData.slipNo || ""}
-    </div>
-  </div>
+          <div class="left-section">
+            <div style="margin-top: 10px;">W.B # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ${formData.slipNo || ""}</div>
 
-
+          </div>
           <div class="right-section">
             <div class="print-date">Print Date: ${currentDate} ${currentTime}</div>
 
@@ -1409,7 +1406,7 @@ function PurchaseForm() {
   const handleDeduction = () => {
     const bags = parseInt(formData.bags) || 0; // Use formData.bags instead of formData.noOfBags
     const pb = parseFloat(formData.wtPerBag) || 0;
-    const percentage = parseFloat(formData.qualityDed) || 0;
+    const percentage = parseFloat(formData.qualityDed) || 0; // Corrected field name to qualityDed
     const weightValue = parseFloat(formData.weight) || 0;
     const calculatedWeight = weightValue * bags; // Weight field value multiplied by Bags field value
 
@@ -1543,7 +1540,7 @@ function PurchaseForm() {
     if (onlineMode && igpDataFetched && !isEditMode) {
       const igpFetchedFields = [
         "driverName",
-        "vendor", 
+        "vendor",
         "vehicleNo",
         "noOfBags",
         "wtPerBag",
@@ -1994,7 +1991,7 @@ function PurchaseForm() {
   }, [window.location.search]);
 
   useEffect(() => {
-    // Don't fetch new slip number if we're in edit mode or editing a specific record
+    // Don't fetch next slip number if we're in edit mode or editing a specific record
     if (isEditMode || editingWbId) {
       return;
     }
@@ -2328,36 +2325,36 @@ function PurchaseForm() {
       // Ctrl+L to open LOV of currently focused element
       if (event.ctrlKey && event.key.toLowerCase() === "l") {
         event.preventDefault();
-        
+
         const activeElement = document.activeElement as HTMLElement;
-        
+
         if (activeElement) {
           // Check if we're directly on a combobox trigger
           if (activeElement.getAttribute('role') === 'combobox') {
             activeElement.click();
             return;
           }
-          
+
           // Check if we're on an input that's part of a Select component
           const selectTrigger = activeElement.closest('[role="combobox"]') as HTMLElement;
           if (selectTrigger) {
             selectTrigger.click();
             return;
           }
-          
+
           // Get input attributes for better targeting
           const inputName = activeElement.getAttribute('name');
           const placeholder = activeElement.getAttribute('placeholder')?.toLowerCase() || '';
           const inputId = activeElement.getAttribute('id')?.toLowerCase() || '';
-          
+
           // Strategy 1: Find LOV in the same container/row/section as the focused input
           const findLOVInContainer = (container: Element) => {
             return container.querySelector('[role="combobox"]') as HTMLElement;
           };
-          
+
           // Strategy 2: Find LOV by field-specific selectors
           let targetLOV: HTMLElement | null = null;
-          
+
           // For branch field
           if (inputName === 'branch' || placeholder.includes('branch') || inputId.includes('branch')) {
             // Look for branch select specifically
@@ -2365,40 +2362,40 @@ function PurchaseForm() {
                        document.querySelector('[data-field="branch"] [role="combobox"]') as HTMLElement ||
                        findLOVInContainer(activeElement.closest('.flex') || activeElement.closest('div') || activeElement.parentElement!);
           }
-          
+
           // For bardana/bag type field
           else if (inputName === 'bardanaType' || placeholder.includes('bardana') || placeholder.includes('bag')) {
             targetLOV = document.querySelector('[name="bardanaType"] + [role="combobox"]') as HTMLElement ||
                        document.querySelector('[data-field="bardanaType"] [role="combobox"]') as HTMLElement ||
                        findLOVInContainer(activeElement.closest('.flex') || activeElement.closest('div') || activeElement.parentElement!);
           }
-          
+
           // For vendor field
           else if (inputName === 'vendor' || placeholder.includes('vendor') || placeholder.includes('party')) {
             targetLOV = document.querySelector('[name="vendor"] + [role="combobox"]') as HTMLElement ||
                        document.querySelector('[data-field="vendor"] [role="combobox"]') as HTMLElement ||
                        findLOVInContainer(activeElement.closest('.flex') || activeElement.closest('div') || activeElement.parentElement!);
           }
-          
+
           // For item description field
           else if (inputName === 'itemDesc' || placeholder.includes('item') || placeholder.includes('description')) {
             targetLOV = document.querySelector('[name="itemDesc"] + [role="combobox"]') as HTMLElement ||
                        document.querySelector('[data-field="itemDesc"] [role="combobox"]') as HTMLElement ||
                        findLOVInContainer(activeElement.closest('.flex') || activeElement.closest('div') || activeElement.parentElement!);
           }
-          
+
           // Strategy 3: Look in the immediate parent container
           if (!targetLOV) {
-            const parentContainer = activeElement.closest('.flex') || 
-                                  activeElement.closest('div[class*="items-center"]') || 
-                                  activeElement.closest('div[class*="gap-"]') || 
+            const parentContainer = activeElement.closest('.flex') ||
+                                  activeElement.closest('div[class*="items-center"]') ||
+                                  activeElement.closest('div[class*="gap-"]') ||
                                   activeElement.parentElement;
-            
+
             if (parentContainer) {
               targetLOV = findLOVInContainer(parentContainer);
             }
           }
-          
+
           // Strategy 4: Look for the next/previous sibling that's a combobox
           if (!targetLOV) {
             let sibling = activeElement.nextElementSibling;
@@ -2410,7 +2407,7 @@ function PurchaseForm() {
               targetLOV = sibling.querySelector('[role="combobox"]') as HTMLElement;
               sibling = sibling.nextElementSibling;
             }
-            
+
             // Check previous siblings if not found in next siblings
             if (!targetLOV) {
               sibling = activeElement.previousElementSibling;
@@ -2424,7 +2421,7 @@ function PurchaseForm() {
               }
             }
           }
-          
+
           // Strategy 5: Find closest combobox within same row/section (last resort)
           if (!targetLOV) {
             const allComboboxes = document.querySelectorAll('[role="combobox"]');
@@ -2435,10 +2432,10 @@ function PurchaseForm() {
               const comboElement = combo as HTMLElement;
               const rect1 = activeElement.getBoundingClientRect();
               const rect2 = comboElement.getBoundingClientRect();
-              
+
               // Calculate distance
               const distance = Math.sqrt(
-                Math.pow(rect1.left - rect2.left, 2) + 
+                Math.pow(rect1.left - rect2.left, 2) +
                 Math.pow(rect1.top - rect2.top, 2)
               );
 
@@ -2451,7 +2448,7 @@ function PurchaseForm() {
                 closestCombobox = comboElement;
               }
             });
-            
+
             targetLOV = closestCombobox;
           }
 
@@ -2461,7 +2458,7 @@ function PurchaseForm() {
             return;
           }
         }
-        
+
         console.log('No LOV found for current focus. Please click on a dropdown field first.');
       }
 
@@ -2517,12 +2514,12 @@ function PurchaseForm() {
             fetch("/api/vendor-data"),
             fetch("/api/vendors")
           ]);
-          
+
           if (vendorResponse.ok) {
             const data = await vendorResponse.json();
             setVendorData(data);
           }
-          
+
           if (vendorsResponse.ok) {
             const data = await vendorsResponse.json();
             setVendorsData(data);
@@ -3282,7 +3279,7 @@ function PurchaseForm() {
         </div>
         <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH   BRIDGE   SLIP</div>
 
         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
@@ -3363,7 +3360,7 @@ function PurchaseForm() {
               <div class="header-center">
                <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH   BRIDGE   SLIP</div>
               </div>
               <div class="header-right"></div>
             </div>
@@ -3438,14 +3435,14 @@ function PurchaseForm() {
           </div>
         </div>
         <hr style="border: 1px solid #000; margin: 20px 0;" />
-   <!-- Customer Copy -->
+  <!-- Customer Copy -->
           <div class="slip">
             <div class="slip-header">
               <div class="header-left">Customer Copy</div>
               <div class="header-center">
                <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH   BRIDGE   SLIP</div>
               </div>
             <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
@@ -3496,7 +3493,6 @@ function PurchaseForm() {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
-              <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -3662,7 +3658,7 @@ function PurchaseForm() {
         </div>
         <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH   BRIDGE   SLIP</div>
 
         <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
@@ -3721,6 +3717,7 @@ function PurchaseForm() {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
+              <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -3742,7 +3739,7 @@ function PurchaseForm() {
               <div class="header-center">
                <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH   BRIDGE   SLIP</div>
               </div>
               <div class="header-right"></div>
             </div>
@@ -3803,6 +3800,7 @@ function PurchaseForm() {
         <!-- Signatures -->
         <div class="signatures">
           <div class="signature-block">
+              <div style="font-size: 10px; margin-bottom: 2px;">${currentUserName}</div>
             <div class="signature-line"></div>
             <div>Weight By</div>
           </div>
@@ -3823,7 +3821,7 @@ function PurchaseForm() {
               <div class="header-center">
                <div class="company-name">Shahzor  Feed  Mill</div>
         <div style="height: 10px;"></div>
-        <div class="slip-title">WEIGH  BRIDGE  SLIP</div>
+        <div class="slip-title">WEIGH   BRIDGE   SLIP</div>
               </div>
             <div><b>IGP #</b> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <span class="value">${formData.igpNo || ""}</span></div>
 
@@ -3908,11 +3906,15 @@ function PurchaseForm() {
         resetFormToInitial();
       }
 
-      // If second weight was entered, refresh to remove from display table
+      // If second weight was entered, refresh to remove from display table for consistent behavior
       if (formData.secondWeight && parseFloat(formData.secondWeight) > 0) {
+        console.log(
+          "Second weight added for purchase entry, refreshing to remove from display table",
+        );
         setTimeout(() => {
           window.location.reload();
         }, 1000);
+        return; // Exit here to prevent form reset before refresh
       }
 
       // Auto-increment slip number for next entry regardless of mode
@@ -4306,7 +4308,7 @@ function PurchaseForm() {
             Sale
           </Button>
           <Button
-            className="h-8 px-2 text-sm font-medium bg-gray-300 hover:bg-gray-400 text-black"
+            className="h-8 px-2 text-sm bg-gray-300 hover:bg-gray-400 text-black"
             onClick={() => {
               // Navigate to sales return form with same type
               const urlParams = new URLSearchParams(window.location.search);
@@ -4748,6 +4750,19 @@ function PurchaseForm() {
               >
                 Offline
               </Button>
+
+              <Button
+                className="h-6 text-xs px-3 bg-gray-300 text-black"
+                onClick={() => {
+                  // Navigate to sales return form with same type
+                  const urlParams = new URLSearchParams(window.location.search);
+                  const typeMode = urlParams.get("type") || "online";
+                  const targetUrl = `/sales-return?type=${typeMode}`;
+                  window.location.href = targetUrl;
+                }}
+              >
+                Sales Return
+              </Button>
             </div>
 
             {/* Details Section */}
@@ -4818,10 +4833,10 @@ function PurchaseForm() {
                                   {bardanaType.type}
                                 </SelectItem>
                               ))}
-                            
+
                             {/* Add the fetched bardana type if it's not in the existing list */}
-                            {formData.bardanaType && 
-                             !bardanaTypes.some(bt => bt.type === formData.bardanaType) && 
+                            {formData.bardanaType &&
+                             !bardanaTypes.some(bt => bt.type === formData.bardanaType) &&
                              formData.bardanaType.toLowerCase().includes(bardanaSearchQuery.toLowerCase()) && (
                               <SelectItem
                                 key={`fetched-${formData.bardanaType}`}
@@ -5416,386 +5431,6 @@ function PurchaseForm() {
                         )}
                       </tbody>
                     </table>
-                  </div>
-                </div>
-              )}
-
-              {/* Show Sales Form when selectedForm is 'sales' */}
-              {selectedForm === "sales" && (
-                <div className="h-full flex flex-col">
-                  {/* Sales Table Header - with delete action column */}
-                  <div
-                    className="grid gap-px bg-gray-300 text-xs font-semibold mb-1"
-                    style={{
-                      gridTemplateColumns:
-                        "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px",
-                      width: "1250px",
-                    }}
-                  >
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      DC #
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      DO #
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Customer Name
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Vehicle No
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Do Date
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Item Description
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      DC Qty
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      DO Qty
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      Branch
-                    </div>
-                    <div className="bg-blue-100 p-1 text-center border border-gray-400 text-black">
-                      ✖
-                    </div>
-                  </div>
-
-                  {/* Sales Table Body - Fixed height with 8 rows */}
-                  <div className="bg-gray-200 mb-4" style={{ height: "240px" }}>
-                    {[...Array(8)].map((_, index) => (
-                      <div
-                        key={index}
-                        className="grid gap-px text-xs"
-                        style={{
-                          gridTemplateColumns:
-                            "100px 100px 240px 140px 120px 180px 100px 100px 140px 30px",
-                          width: "1250px",
-                          height: "30px",
-                        }}
-                      >
-                        <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.dcNo || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "dcNo",
-                                e.target.value,
-                              )
-                            }
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                const dcNo = salesData[index]?.dcNo;
-                                if (dcNo && dcNo.trim() !== "") {
-                                  fetchDcData(dcNo.trim());
-                                }
-                              }
-                            }}
-                            placeholder="Press Enter to fetch"
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
-                        </div>
-                        <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.doNo || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "doNo",
-                                e.target.value,
-                              )
-                            }
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
-                        </div>
-                        <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.customerName || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "customerName",
-                                e.target.value,
-                              )
-                            }
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
-                        </div>
-                        <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.vehicleNo || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "vehicleNo",
-                                e.target.value,
-                              )
-                            }
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
-                        </div>
-                        <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.doDate || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "doDate",
-                                e.target.value,
-                              )
-                            }
-                            placeholder="DD.MM.YYYY"
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
-                        </div>
-                        <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.itemDescription || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "itemDescription",
-                                e.target.value,
-                              )
-                            }
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
-                        </div>
-                        <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
-                            value={salesData[index]?.dcQty || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "dcQty",
-                                e.target.value,
-                              )
-                            }
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
-                        </div>
-                        <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right"
-                            value={salesData[index]?.doQty || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "doQty",
-                                e.target.value,
-                              )
-                            }
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
-                        </div>
-                        <div className="bg-white border border-gray-300 p-1">
-                          <input
-                            type="text"
-                            className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none"
-                            value={salesData[index]?.branch || ""}
-                            onChange={(e) =>
-                              handleSalesDataChange(
-                                index,
-                                "branch",
-                                e.target.value,
-                              )
-                            }
-                            autoComplete="off"
-                            autoCorrect="off"
-                            autoCapitalize="off"
-                            spellCheck="false"
-                            data-form-type="other"
-                          />
-                        </div>
-                        <div className="bg-white border border-gray-300 p-1 flex items-center justify-center">
-                          <button
-                            type="button"
-                            onClick={() => handleSalesRowDelete(index)}
-                            className="text-red-500 hover:text-red-700 text-lg font-bold"
-                            title="Delete row"
-                          >
-                            ✖
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Total Row */}
-                  <div
-                    className="grid gap-px text-xs font-semibold mb-4"
-                    style={{
-                      gridTemplateColumns:
-                        "100px 100px 240px 140px 120px 180px 100px 100px 140px",
-                      width: "1220px",
-                      height: "30px",
-                    }}
-                  >
-                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                    <div className="bg-gray-200 border border-gray-400 p-1 flex items-center justify-end">
-                      <span className="text-black">Total:</span>
-                    </div>
-                    <div className="bg-white border border-gray-400 p-1">
-                      <input
-                        type="text"
-                        className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
-                        readOnly
-                        value={salesData.reduce(
-                          (sum, row) => sum + (parseFloat(row.dcQty) || 0),
-                          0,
-                        )}
-                      />
-                    </div>
-                    <div className="bg-white border border-gray-400 p-1">
-                      <input
-                        type="text"
-                        className="w-full h-6 text-xs text-black px-2 border-none bg-transparent focus:outline-none text-right font-semibold"
-                        readOnly
-                        value={salesData.reduce(
-                          (sum, row) => sum + (parseFloat(row.doQty) || 0),
-                          0,
-                        )}
-                      />
-                    </div>
-                    <div className="bg-gray-200 border border-gray-400 p-1"></div>
-                  </div>
-
-                  {/* Bottom section with Weight Per Bags, Total Weight Out, and Total Feed Bags - matching image layout */}
-                  <div
-                    className="bg-gray-100 p-2 flex justify-between items-center border border-gray-300 mt-2"
-                    style={{ width: "1220px" }}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-2">
-                        <label className="text-xs font-medium text-black">
-                          Weight Per Bags:
-                        </label>
-                        <input
-                          type="text"
-                          className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <label className="text-xs font-medium text-black">
-                          Total Weight Out:
-                        </label>
-                        <input
-                          type="text"
-                          className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <label className="text-xs font-medium text-black">
-                          Total Feed Bags:
-                        </label>
-                        <input
-                          type="text"
-                          className="w-24 h-6 text-xs border border-gray-300 px-2 focus:outline-none"
-                          autoComplete="off"
-                          autoCorrect="off"
-                          autoCapitalize="off"
-                          spellCheck="false"
-                          data-form-type="other"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-black">
-                        Total Weight Dill:
-                      </label>
-                      <input
-                        type="text"
-                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm font-medium text-black">
-                        Total Feed Bags:
-                      </label>
-                      <input
-                        type="text"
-                        className="w-32 h-8 text-sm border border-gray-300 px-2 focus:outline-none"
-                        autoComplete="off"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck="false"
-                        data-form-type="other"
-                      />
-                    </div>
                   </div>
                 </div>
               )}
