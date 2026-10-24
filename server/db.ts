@@ -1,15 +1,53 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
-import ws from "ws";
+import pg from "pg";
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+const { Pool } = pg;
 
-if (!process.env.DATABASE_URL) {
+// ============================================================
+// LOCAL DATABASE
+// ============================================================
+
+if (
+  !process.env.PGHOST ||
+  !process.env.PGDATABASE ||
+  !process.env.PGUSER
+) {
   throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+    "Local PostgreSQL environment variables are missing."
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-export const db = drizzle({ client: pool, schema });
+export const pool = new Pool({
+  host: process.env.PGHOST,
+  port: Number(process.env.PGPORT || 5432),
+  database: process.env.PGDATABASE,
+  user: process.env.PGUSER,
+  password: process.env.PGPASSWORD || "",
+});
+
+// ============================================================
+// DATABASE CONNECTION TEST
+// ============================================================
+
+pool
+  .connect()
+  .then((client) => {
+    console.log(
+      "✅ PostgreSQL database connected successfully"
+    );
+
+    client.release();
+  })
+  .catch((error) => {
+    console.error(
+      "❌ PostgreSQL database connection failed:",
+      error.message
+    );
+  });
+
+// ============================================================
+// EXPORT DATABASE
+// ============================================================
+
+export { schema };
+

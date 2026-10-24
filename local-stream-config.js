@@ -6,11 +6,11 @@
 const localStreamConfig = {
   // Camera settings (IP and port are now dynamic via camera settings page)
   camera: {
-    ip: '10.10.10.146', // Fallback default only
+    ip: '192.168.6.108', // Fallback default only
     port: 554, // Fallback default only
     username: 'admin',
-    password: 'admin123',
-    channel: 1,
+    password: 'Abc@12345',
+    channel: 5,
     subtype: 0
   },
 

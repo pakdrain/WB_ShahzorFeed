@@ -2,7 +2,7 @@
 
 ## Camera ANPR Integration
 
-Your camera at IP 10.10.10.146 has built-in ANPR (Automatic Number Plate Recognition) functionality. The license plate recognition system is now configured to:
+Your camera at IP 192.168.6.108 has built-in ANPR (Automatic Number Plate Recognition) functionality. The license plate recognition system is now configured to:
 
 1. **Primary Method**: Use camera's built-in ANPR API
 2. **Secondary Method**: Capture live images and perform OCR analysis
@@ -12,7 +12,7 @@ Your camera at IP 10.10.10.146 has built-in ANPR (Automatic Number Plate Recogni
 
 When you run this system locally on Windows:
 
-1. Ensure your camera is accessible on your local network (10.10.10.146)
+1. Ensure your camera is accessible on your local network (192.168.6.108)
 2. The system will automatically try these methods in order:
    - Camera ANPR API endpoints
    - Direct camera snapshot capture
@@ -21,9 +21,9 @@ When you run this system locally on Windows:
 ## Camera API Endpoints Tested
 
 The system attempts to connect to your camera's ANPR functionality via:
-- `http://admin:admin123@10.10.10.146/cgi-bin/anpr/info`
-- `http://admin:admin123@10.10.10.146/cgi-bin/anpr/latest`
-- `http://admin:admin123@10.10.10.146/anpr.cgi`
+- `http://admin:Abc@12345@192.168.6.108/cgi-bin/anpr/info`
+- `http://admin:Abc@12345@192.168.6.108/cgi-bin/anpr/latest`
+- `http://admin:Abc@12345@192.168.6.108/anpr.cgi`
 
 ## Usage Instructions
 
@@ -36,7 +36,7 @@ The system attempts to connect to your camera's ANPR functionality via:
 
 - Camera must be on the same network as the application
 - Ports 80 (HTTP) and 554 (RTSP) must be accessible
-- Camera credentials: admin/admin123 (as configured)
+- Camera credentials: admin/Abc@12345 (as configured)
 
 ## Troubleshooting
 

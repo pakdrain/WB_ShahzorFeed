@@ -41,11 +41,11 @@ export default function CameraSettings() {
     resolver: zodResolver(cameraSettingsSchema),
     defaultValues: {
       name: 'Camera 01',
-      ip: currentCameraIp || '10.10.10.146',
+      ip: currentCameraIp || '192.168.6.108',
       port: currentCameraPort || 554,
       username: 'admin',
-      password: 'admin123',
-      channel: 1,
+      password: 'Abc@12345',
+      channel: 5,
       subtype: 0,
     },
   });
@@ -55,22 +55,22 @@ export default function CameraSettings() {
     if (camera) {
       form.reset({
         name: camera.name || 'Camera 01',
-        ip: camera.ip || currentCameraIp || '10.10.10.146',
+        ip: camera.ip || currentCameraIp || '192.168.6.108',
         port: camera.port || currentCameraPort || 554,
         username: camera.username || 'admin',
-        password: camera.password || 'admin123',
-        channel: 1,
+        password: camera.password || 'Abc@12345',
+        channel: 5,
         subtype: 0,
       });
     } else {
       // If no camera data, use config context values
       form.reset({
         name: 'Camera 01',
-        ip: currentCameraIp || '10.10.10.146',
+        ip: currentCameraIp || '192.168.6.108',
         port: currentCameraPort || 554,
         username: 'admin',
-        password: 'admin123',
-        channel: 1,
+        password: 'Abc@12345',
+        channel: 5,
         subtype: 0,
       });
     }

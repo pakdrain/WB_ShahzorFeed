@@ -585,7 +585,7 @@ export default function PurchaseForm() {
                 <h3 className="text-white text-center text-xs mb-2">Camera Feed</h3>
                 <div className="bg-black rounded h-[calc(100%-30px)] overflow-hidden">
                   <VideoStreamFullscreen
-                    camera={{ id: 1, name: "Camera 01", ip: "10.10.10.146", port: 554 }}
+                    camera={{ id: 1, name: "Camera 01", ip: "192.168.6.108", port: 554 }}
                     isConnected={true}
                     isStreaming={true}
                   />

@@ -14,7 +14,7 @@ from urllib.parse import quote
 import re
 
 class LicensePlateOCR:
-    def __init__(self, camera_ip="10.10.10.146", username="admin", password="admin123"):
+    def __init__(self, camera_ip="192.168.6.108", username="admin", password="Abc@12345"):
         self.camera_ip = camera_ip
         self.username = username
         self.password = password
@@ -25,18 +25,18 @@ class LicensePlateOCR:
         try:
             # Try multiple camera ANPR APIs first
             anpr_apis = [
-                "http://admin:admin123@10.10.10.146/cgi-bin/magicBox.cgi?action=getANPRSnapshot",
-                "http://admin:admin123@10.10.10.146/cgi-bin/anpr.cgi?action=getPlateNumber",
-                "http://admin:admin123@10.10.10.146/cgi-bin/snapManager.cgi?action=getANPRPlate",
-                "http://admin:admin123@10.10.10.146/cgi-bin/snapshot.cgi?channel=1&ANPR=true",
-                "http://admin:admin123@10.10.10.146/cgi-bin/trafficDetector.cgi?action=getCurrentPlate",
-                "http://admin:admin123@10.10.10.146/cgi-bin/eventManager.cgi?action=attach&codes=[TrafficManualSnap]"
+                "http://admin:Abc@12345@192.168.6.108/cgi-bin/magicBox.cgi?action=getANPRSnapshot",
+                "http://admin:Abc@12345@192.168.6.108/cgi-bin/anpr.cgi?action=getPlateNumber",
+                "http://admin:Abc@12345@192.168.6.108/cgi-bin/snapManager.cgi?action=getANPRPlate",
+                "http://admin:Abc@12345@192.168.6.108/cgi-bin/snapshot.cgi?channel=1&ANPR=true",
+                "http://admin:Abc@12345@192.168.6.108/cgi-bin/trafficDetector.cgi?action=getCurrentPlate",
+                "http://admin:Abc@12345@192.168.6.108/cgi-bin/eventManager.cgi?action=attach&codes=[TrafficManualSnap]"
             ]
 
             for url in anpr_apis:
                 try:
                     print(f"Trying ANPR API: {url}")
-                    response = requests.get(url, timeout=8, auth=('admin', 'admin123'))
+                    response = requests.get(url, timeout=8, auth=('admin', 'Abc@12345'))
 
                     if response.status_code == 200:
                         content = response.text
@@ -126,9 +126,9 @@ class LicensePlateOCR:
 
             # Fallback to RTSP stream capture for computer vision OCR
             rtsp_urls = [
-                "rtsp://admin:admin123@10.10.10.146:554/cam/realmonitor?channel=1&subtype=0",
-                "rtsp://admin:admin123@10.10.10.146:554/cam/realmonitor?channel=1&subtype=1",
-                "rtsp://admin:admin123@10.10.10.146/cam/realmonitor?channel=1&subtype=0"
+                "rtsp://admin:Abc@12345@192.168.6.108:554/cam/realmonitor?channel=1&subtype=0",
+                "rtsp://admin:Abc@12345@192.168.6.108:554/cam/realmonitor?channel=1&subtype=1",
+                "rtsp://admin:Abc@12345@192.168.6.108/cam/realmonitor?channel=1&subtype=0"
             ]
 
             for rtsp_url in rtsp_urls:

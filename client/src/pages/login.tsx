@@ -159,7 +159,7 @@ export default function Login() {
               <Scale className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Weighbridge System</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Weighbridge System </h1>
           <p className="text-gray-400">Industrial Weight Management Platform</p>
         </div>
 

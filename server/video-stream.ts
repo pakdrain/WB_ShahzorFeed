@@ -5,12 +5,14 @@ import path from 'path';
 import fs from 'fs';
 import { Readable } from 'stream';
 
+// ✅ FFmpeg full path
+const FFMPEG_PATH = 'C:\\Users\\Wajid Ali\\Downloads\\ffmpeg-7.1.1-essentials_build\\bin\\ffmpeg.exe';
+
 class VideoStreamService {
   private ffmpegProcesses: Map<number, ChildProcess> = new Map();
   private streamPaths: Map<number, string> = new Map();
 
   constructor() {
-    // Create streams directory if it doesn't exist
     const streamsDir = path.join(process.cwd(), 'streams');
     if (!fs.existsSync(streamsDir)) {
       fs.mkdirSync(streamsDir, { recursive: true });
@@ -25,27 +27,24 @@ class VideoStreamService {
         return null;
       }
 
-      // Stop existing stream if running
       this.stopStream(cameraId);
 
       const streamPath = path.join(process.cwd(), 'streams', `camera_${cameraId}`);
-      const playlistPath = path.join(streamPath, 'playlist.m3u8');
 
-      // Create stream directory
       if (!fs.existsSync(streamPath)) {
         fs.mkdirSync(streamPath, { recursive: true });
       }
 
       console.log(`Starting FFmpeg stream for camera ${cameraId}: ${camera.rtspUrl}`);
 
-      // FFmpeg command to convert RTSP to MJPEG stream for better browser compatibility
-      const ffmpeg = spawn('ffmpeg', [
+      // ✅ FFMPEG_PATH use ho raha hai
+      const ffmpeg = spawn(FFMPEG_PATH, [
         '-rtsp_transport', 'tcp',
         '-i', camera.rtspUrl,
-        '-q:v', '5',  // Good quality
-        '-r', '15',   // 15 FPS for smooth streaming
+        '-q:v', '5',
+        '-r', '15',
         '-f', 'mjpeg',
-        '-'  // Output to stdout
+        '-'
       ]);
 
       ffmpeg.stdout.on('data', (data) => {
@@ -88,7 +87,6 @@ class VideoStreamService {
 
     const streamPath = this.streamPaths.get(cameraId);
     if (streamPath) {
-      // Clean up stream files
       try {
         if (fs.existsSync(streamPath)) {
           fs.rmSync(streamPath, { recursive: true, force: true });
@@ -113,7 +111,7 @@ class VideoStreamService {
     // MJPEG stream endpoint
     app.get('/api/stream/:cameraId/mjpeg', async (req: Request, res: Response) => {
       const cameraId = parseInt(req.params.cameraId);
-      
+
       try {
         const camera = await storage.getCamera(cameraId);
         if (!camera) {
@@ -122,7 +120,6 @@ class VideoStreamService {
 
         console.log(`Starting MJPEG stream for camera ${cameraId}`);
 
-        // Set proper headers for MJPEG stream
         res.writeHead(200, {
           'Content-Type': 'multipart/x-mixed-replace; boundary=--myboundary',
           'Cache-Control': 'no-store, no-cache, must-revalidate, pre-check=0, post-check=0, max-age=0',
@@ -132,28 +129,37 @@ class VideoStreamService {
           'Access-Control-Allow-Origin': '*'
         });
 
-        // Start FFmpeg process with compatible settings for local environment
-        const ffmpeg = spawn('ffmpeg', [
-          '-fflags', '+genpts',
+        // ✅ FFMPEG_PATH use ho raha hai
+        const ffmpeg = spawn(FFMPEG_PATH, [
           '-rtsp_transport', 'tcp',
-          '-analyzeduration', '3000000',
-          '-probesize', '3000000',
           '-i', camera.rtspUrl,
-          '-f', 'mjpeg',
+          '-r', '15',
           '-q:v', '5',
-          '-r', '8',
-          '-s', '640x480',
-          '-vf', 'fps=8',
+          '-pix_fmt', 'yuvj420p',
+          '-f', 'mjpeg',
           '-'
         ]);
 
-        // Handle FFmpeg output
-        ffmpeg.stdout.on('data', (data: Buffer) => {
-          res.write('--myboundary\r\n');
-          res.write('Content-Type: image/jpeg\r\n');
-          res.write(`Content-Length: ${data.length}\r\n\r\n`);
-          res.write(data);
-          res.write('\r\n');
+        let frameBuffer = Buffer.alloc(0);
+
+        ffmpeg.stdout.on('data', (chunk: Buffer) => {
+          frameBuffer = Buffer.concat([frameBuffer, chunk]);
+
+          let start = frameBuffer.indexOf(Buffer.from([0xff, 0xd8]));
+          let end = frameBuffer.indexOf(Buffer.from([0xff, 0xd9]), start + 1);
+
+          while (start !== -1 && end !== -1) {
+            const jpegFrame = frameBuffer.slice(start, end + 2);
+            res.write('--myboundary\r\n');
+            res.write('Content-Type: image/jpeg\r\n');
+            res.write(`Content-Length: ${jpegFrame.length}\r\n\r\n`);
+            res.write(jpegFrame);
+            res.write('\r\n');
+
+            frameBuffer = frameBuffer.slice(end + 2);
+            start = frameBuffer.indexOf(Buffer.from([0xff, 0xd8]));
+            end = frameBuffer.indexOf(Buffer.from([0xff, 0xd9]), start + 1);
+          }
         });
 
         ffmpeg.stderr.on('data', (data) => {
@@ -170,7 +176,6 @@ class VideoStreamService {
           res.status(500).end();
         });
 
-        // Clean up when client disconnects
         req.on('close', () => {
           console.log('Client disconnected, stopping FFmpeg');
           ffmpeg.kill('SIGTERM');
@@ -182,10 +187,9 @@ class VideoStreamService {
       }
     });
 
-    // Start stream endpoint
     app.post('/api/stream/:cameraId/start', async (req, res) => {
       const cameraId = parseInt(req.params.cameraId);
-      
+
       try {
         const streamUrl = await this.startStream(cameraId);
         if (streamUrl) {
@@ -199,14 +203,12 @@ class VideoStreamService {
       }
     });
 
-    // Stop stream endpoint
     app.post('/api/stream/:cameraId/stop', (req, res) => {
       const cameraId = parseInt(req.params.cameraId);
       this.stopStream(cameraId);
       res.json({ success: true });
     });
 
-    // Stream status endpoint
     app.get('/api/stream/:cameraId/status', (req, res) => {
       const cameraId = parseInt(req.params.cameraId);
       const isActive = this.isStreamActive(cameraId);

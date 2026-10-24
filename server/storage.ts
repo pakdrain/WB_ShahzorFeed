@@ -40,11 +40,11 @@ export class MemStorage implements IStorage {
     const camera: Camera = {
       id,
       name: "Camera 01",
-      ip: "10.10.10.146",
+      ip: "192.168.6.108",
       port: 554,
       username: "admin",
-      password: "admin123",
-      rtspUrl: "rtsp://admin:admin123@10.10.10.146:554/cam/realmonitor?channel=1&subtype=0",
+      password: "Abc@12345",
+      rtspUrl: "rtsp://admin:Abc@12345@192.168.6.108:554/cam/realmonitor?channel=1&subtype=0",
       isActive: true,
       createdAt: new Date(),
     };
